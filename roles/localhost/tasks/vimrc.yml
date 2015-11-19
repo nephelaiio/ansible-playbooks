@@ -26,7 +26,7 @@
 
 - name: install vimrc
   template: >
-    src=vimrc.j2
+    src=vimrc
     dest=~/.vim/vimrc
 
 - name: install neobundle artifacts
