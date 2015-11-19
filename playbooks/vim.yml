@@ -1,9 +1,0 @@
----
-- hosts: all
-  become: yes
-  become_user: root
-  tasks:
-  - name: install vim
-    apt: name={{ item }} state=latest
-    with_items:
-      - vim-nox
