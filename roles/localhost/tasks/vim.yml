@@ -1,0 +1,5 @@
+- name: install vim
+  apt: name={{ item }} state=latest
+  with_items:
+    - vim-nox
+  become: yes

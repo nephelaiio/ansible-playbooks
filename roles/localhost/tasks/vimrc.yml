@@ -1,0 +1,34 @@
+- name: install apt plugins
+  apt: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - vim-youcompleteme
+    - vim-addon-manager
+    - silversearcher-ag
+  become: yes
+
+- name: activate apt plugins
+  shell: >
+    vam install {{ item }}
+  with_items:
+    - youcompleteme
+
+- name: create plugin directory
+  file: >
+    path={{ plugins }}
+    state=directory
+    
+- name: install neobundle
+  git: >
+    repo=https://github.com/Shougo/neobundle.vim 
+    dest="{{ plugins }}/neobundle.vim"
+
+- name: install vimrc
+  template: >
+    src=vimrc.j2
+    dest=~/.vim/vimrc
+
+- name: install neobundle artifacts
+  shell: >
+    vim +NeoBundleInstall +NeoBundleClean +qall

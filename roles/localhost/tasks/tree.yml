@@ -1,0 +1,7 @@
+- name: install tree
+  apt: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - tree
+  become: yes

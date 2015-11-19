@@ -1,0 +1,5 @@
+- include: vim.yml 
+- include: vimrc.yml
+- include: tree.yml
+- include: virtualbox.yml
+- include: vagrant.yml
