@@ -1,0 +1,12 @@
+- name: activate apt plugins
+  shell: >
+    vam install {{ item }}
+  with_items:
+    - youcompleteme
+    - conqueterm
+    - jinja
+    - python-jedi
+
+- name: install neobundle plugins
+  shell: >
+    vim +NeoBundleInstall +NeoBundleClean +qall

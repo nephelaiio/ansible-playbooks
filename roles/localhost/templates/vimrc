@@ -1,17 +1,17 @@
 " neobundle configuration
 if !1 | finish | endif
 
-if !isdirectory('{{ plugins }}')
-  call mkdir('{{ plugins }}', 'p')
+if !isdirectory('{{ vimplugins }}')
+  call mkdir('{{ vimplugins }}', 'p')
 endif
 
 if has('vim_starting')
   set nocompatible
-  set runtimepath+={{ plugins }}/neobundle.vim/
+  set runtimepath+={{ vimplugins }}/neobundle.vim/
 endif
 
 filetype off
-call neobundle#begin(expand('{{ plugins }}'))
+call neobundle#begin(expand('{{ vimplugins }}'))
 
 " my bundles
 NeoBundle 'kien/ctrlp.vim'
@@ -88,6 +88,11 @@ function! CommittedFiles()
   call setqflist(qf_list, '')
 endfunction
 nnoremap <silent> <leader>g? :call CommittedFiles()<CR>:copen<CR>
+
+" conque settings
+nnoremap <Leader>tv :ConqueTermVSplit bash<cr>
+nnoremap <Leader>th :ConqueTermSplit bash<cr>
+nnoremap <Leader>tt :ConqueTermTab bash<cr>
 
 " vagrant settings
 nnoremap <Leader>vi :Vagrant init<cr>

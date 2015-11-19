@@ -7,30 +7,24 @@
     - vim-addon-manager
     - silversearcher-ag
     - vim-conque
+    - vim-python-jedi
+  notify:
+    - activate apt plugins
   become: yes
-
-- name: activate apt plugins
-  shell: >
-    vam install {{ item }}
-  with_items:
-    - youcompleteme
-    - conque
 
 - name: create plugin directory
   file: >
-    path={{ plugins }}
+    path={{ vimplugins }}
     state=directory
     
 - name: install neobundle
   git: >
     repo=https://github.com/Shougo/neobundle.vim 
-    dest="{{ plugins }}/neobundle.vim"
+    dest="{{ vimplugins }}/neobundle.vim"
 
 - name: install vimrc
   template: >
     src=vimrc
     dest=~/.vim/vimrc
-
-- name: install neobundle artifacts
-  shell: >
-    vim +NeoBundleInstall +NeoBundleClean +qall
+  notify:
+    - install neobundle plugins
