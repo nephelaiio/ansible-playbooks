@@ -6,6 +6,7 @@
     - vim-youcompleteme
     - vim-addon-manager
     - silversearcher-ag
+    - vim-conque
   become: yes
 
 - name: activate apt plugins
@@ -13,6 +14,7 @@
     vam install {{ item }}
   with_items:
     - youcompleteme
+    - conque
 
 - name: create plugin directory
   file: >
