@@ -1,4 +1,4 @@
-- name: activate apt plugins
+- name: activate vim apt plugins
   shell: >
     vam install {{ item }}
   with_items:
@@ -7,6 +7,6 @@
     - jinja
     - python-jedi
 
-- name: install neobundle plugins
+- name: install vim neobundle plugins
   shell: >
     vim +NeoBundleInstall +NeoBundleClean +qall

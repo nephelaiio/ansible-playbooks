@@ -1,4 +1,4 @@
-- name: install apt plugins
+- name: install vim apt plugins
   apt: >
     name={{ item }} 
     state=latest
@@ -9,15 +9,15 @@
     - vim-conque
     - vim-python-jedi
   notify:
-    - activate apt plugins
+    - activate vim apt plugins
   become: yes
 
-- name: create plugin directory
+- name: create vim plugin directory
   file: >
     path={{ vimplugins }}
     state=directory
     
-- name: install neobundle
+- name: install vim neobundle
   git: >
     repo=https://github.com/Shougo/neobundle.vim 
     dest="{{ vimplugins }}/neobundle.vim"
@@ -27,4 +27,4 @@
     src=vimrc
     dest=~/.vim/vimrc
   notify:
-    - install neobundle plugins
+    - install vim neobundle plugins
