@@ -1,0 +1,4 @@
+- name: upgrade system packages
+  shell: >
+    apt-get dist-upgrade -y
+  become: yes

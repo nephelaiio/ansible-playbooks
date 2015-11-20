@@ -1,3 +1,4 @@
+- include: upgrade.yml
 - include: ansible.yml
 - include: vim.yml 
 - include: vimrc.yml
