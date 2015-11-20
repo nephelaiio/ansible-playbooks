@@ -1,3 +1,4 @@
+- include: ansible.yml
 - include: vim.yml 
 - include: vimrc.yml
 - include: tree.yml

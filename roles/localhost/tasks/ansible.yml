@@ -1,0 +1,7 @@
+- name: install ansible
+  apt: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - ansible
+  become: yes
