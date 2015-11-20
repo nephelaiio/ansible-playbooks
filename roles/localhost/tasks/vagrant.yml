@@ -17,7 +17,7 @@
 
 - name: install vagrant plugins
   shell: >
-    vagrant plugin install {{ item }}
+    vagrant plugin list | grep {{ item }} > /dev/null && vagrant plugin update {{ item }} || vagrant plugin install {{ item }}
   with_items:
     - landrush
     - vagrant-vbguest
