@@ -1,7 +1,40 @@
-- include: upgrade.yml
-- include: ansible.yml
-- include: vim.yml 
-- include: vimrc.yml
-- include: tree.yml
-- include: virtualbox.yml
-- include: vagrant.yml
+- include: >
+    rollback.yml
+  when:
+    - rollback is defined
+
+- include: >
+    upgrade.yml
+  when:
+    - rollback is not defined
+    - upgrade is defined
+
+- include: >
+    ansible.yml
+  when:
+    rollback is not defined
+
+- include: >
+    vim.yml
+  when:
+    rollback is not defined
+
+- include: >
+    vimrc.yml
+  when:
+    rollback is not defined
+
+- include: >
+    tree.yml
+  when:
+    rollback is not defined
+
+- include: >
+    virtualbox.yml
+  when:
+    rollback is not defined
+
+- include: >
+    vagrant.yml
+  when:
+    rollback is not defined
