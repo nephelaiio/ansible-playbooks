@@ -1,10 +1,6 @@
 " neobundle configuration
 if !1 | finish | endif
 
-if !isdirectory('{{ vimplugins }}')
-  call mkdir('{{ vimplugins }}', 'p')
-endif
-
 if has('vim_starting')
   set nocompatible
   set runtimepath+={{ vimplugins }}/neobundle.vim/
