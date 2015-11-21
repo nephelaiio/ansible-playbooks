@@ -1,8 +1,9 @@
 - include: ansible.yml
+- include: tmux.yml
 - include: vim.yml
-- include: vimrc.yml
 - include: tree.yml
 - include: virtualbox.yml
 - include: vagrant.yml
 - include: openconnect.yml
 - include: docker.yml
+- include: r.yml

@@ -9,3 +9,33 @@
     name=editor 
     path=/usr/bin/vim.nox
 
+- name: install vim apt plugins
+  apt: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - vim-youcompleteme
+    - vim-addon-manager
+    - silversearcher-ag
+    - vim-conque
+    - vim-python-jedi
+  notify:
+    - activate vim apt plugins
+  become: yes
+
+- name: create vim plugin directory
+  file: >
+    path={{ vimplugins }}
+    state=directory
+    
+- name: install vim neobundle
+  git: >
+    repo=https://github.com/Shougo/neobundle.vim 
+    dest="{{ vimplugins }}/neobundle.vim"
+
+- name: install vimrc
+  template: >
+    src=vimrc
+    dest={{ vimconf }}
+  notify:
+    - install vim neobundle plugins
