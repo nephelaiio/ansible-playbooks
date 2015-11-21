@@ -4,6 +4,7 @@
     state=latest
   with_items:
     - vagrant
+    - vagrant-lxc
   become: yes
 
 - name: install vagrant plugin dependencies
@@ -14,10 +15,3 @@
     - zlib1g-dev
     - ruby-dev
   become: yes
-
-- name: install vagrant plugins
-  shell: >
-    vagrant plugin list | grep {{ item }} > /dev/null && vagrant plugin update {{ item }} || vagrant plugin install {{ item }}
-  with_items:
-    - landrush
-    - vagrant-vbguest
