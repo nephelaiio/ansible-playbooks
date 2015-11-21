@@ -1,4 +1,4 @@
-- name: install openconnect
+- name: install docker
   apt: >
     name={{ item }} 
     state=latest
