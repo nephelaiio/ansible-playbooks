@@ -15,6 +15,7 @@
     state=latest
   with_items:
     - docker-engine
+    - docker-compose
   become: yes
 
 - name: configure docker for current user
