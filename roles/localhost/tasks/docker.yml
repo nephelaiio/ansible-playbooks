@@ -1,9 +1,20 @@
+- name: install docker key
+  apt_key: >
+    keyserver=hkp://p80.pool.sks-keyservers.net:80
+    id=58118E89F3A912897C070ADBF76221572C52609D
+  become: yes
+
+- name: install docker repo
+  apt_repository: >
+    repo="deb https://apt.dockerproject.org/repo {{ ansible_distribution|lower }}-{{ ansible_distribution_release }} {{ dockerrepo }}"
+  become: yes
+
 - name: install docker
   apt: >
     name={{ item }} 
     state=latest
   with_items:
-    - docker.io
+    - docker-engine
   become: yes
 
 - name: configure docker for current user

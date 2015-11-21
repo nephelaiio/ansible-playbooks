@@ -1,9 +1,36 @@
 - include: ansible.yml
+  when: 
+    ansible_distribution == "Ubuntu"
+
 - include: tmux.yml
+  when: 
+    ansible_distribution == "Ubuntu"
+
 - include: vim.yml
+  when: 
+    ansible_distribution == "Ubuntu"
+
 - include: tree.yml
+  when: 
+    ansible_distribution == "Ubuntu"
+
 - include: virtualbox.yml
+  when: 
+    ansible_distribution == "Ubuntu"
+
 - include: vagrant.yml
+  when: 
+    ansible_distribution == "Ubuntu"
+
 - include: openconnect.yml
+  when: 
+    ansible_distribution == "Ubuntu"
+
 - include: docker.yml
+  when: 
+    ansible_distribution == "Ubuntu"
+
 - include: r.yml
+  when: 
+    ansible_distribution == "Ubuntu"
+
