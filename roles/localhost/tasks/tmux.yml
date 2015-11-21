@@ -1,0 +1,22 @@
+- name: install tmux
+  apt: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - tmux
+  become: yes
+
+- name: create tmux plugin directory
+  file: >
+    path={{ tmuxplugins }}
+    state=directory
+
+- name: install tmux plugin manager 
+  git: >
+    repo=https://github.com/tmux-plugins/tpm.git
+    dest="{{ tmuxplugins }}/tpm"
+
+- name: configure tmux
+  template:
+    src=tmux.conf
+    dest={{ tmuxconf }}
