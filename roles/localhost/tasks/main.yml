@@ -26,11 +26,6 @@
   when: 
     ansible_distribution == "Ubuntu"
 
-- include: docker.yml
-  when: 
-    ansible_distribution == "Ubuntu"
-
 - include: r.yml
   when: 
     ansible_distribution == "Ubuntu"
-
