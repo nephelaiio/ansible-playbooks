@@ -5,7 +5,7 @@
   become: yes
 
 - name: install vim alternative
-  alternative: >
+  alternatives: >
     name=editor 
     path=/usr/bin/vim.nox
 
