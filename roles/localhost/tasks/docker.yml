@@ -5,3 +5,8 @@
   with_items:
     - docker.io
   become: yes
+
+- name: configure docker for current user
+  user: name={{ ansible_ssh_user }}  append=yes  groups=docker 
+  when: current_user is defined
+  become: yes
