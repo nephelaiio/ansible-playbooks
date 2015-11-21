@@ -3,3 +3,9 @@
   with_items:
     - vim-nox
   become: yes
+
+- name: install vim alternative
+  alternative: >
+    name=editor 
+    path=/usr/bin/vim.nox
+
