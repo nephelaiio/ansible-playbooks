@@ -6,12 +6,3 @@
     - vagrant
     - vagrant-lxc
   become: yes
-
-- name: install vagrant plugin dependencies
-  apt: >
-    name={{ item }}
-    state=latest
-  with_items:
-    - zlib1g-dev
-    - ruby-dev
-  become: yes
