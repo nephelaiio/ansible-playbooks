@@ -1,10 +1,9 @@
 #!/bin/sh
 DIR="$(dirname $0)"
-VAGRANT_INVENTORY="local"
-#VAGRANT_INVENTORY="$DIR/../.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory"
+VAGRANT_INVENTORY="$DIR/../.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory"
 
 if [ -f $VAGRANT_INVENTORY ]; then
-  echo $VAGRANT_INVENTORY 2>/dev/null
+  cat $VAGRANT_INVENTORY 2>/dev/null
 else
   echo {}
 fi

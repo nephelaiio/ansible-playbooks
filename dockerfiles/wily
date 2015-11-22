@@ -1,0 +1,17 @@
+FROM ubuntu:wily
+MAINTAINER Ted Cook <teodoro.cook@gmail.com>
+
+RUN apt-get install -y openssh-server python sudo ; \
+    mkdir /var/run/sshd ; \
+    chmod 0755 /var/run/sshd ; \
+    useradd -m -d /home/vagrant -p vagrant vagrant ; \
+    usermod -a -G sudo vagrant ; \
+    mkdir /home/vagrant/.ssh ; \
+    chmod 700 /home/vagrant/.ssh ; \
+    wget --no-check-certificate \
+      https://raw.githubusercontent.com/mitchellh/vagrant/master/keys/vagrant.pub \
+      -O /home/vagrant/.ssh/authorized_keys 2>&1 > /dev/null ; \
+    echo 'vagrant ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/vagrant ; \
+    chown -R vagrant /home/vagrant/.ssh ; \
+    chmod 600 /home/vagrant/.ssh/authorized_keys
+CMD ["/usr/sbin/sshd", "-D", "-o UseDNS=no", "-o UsePAM=no", -o PasswordAuthentication=yes", -o PublicKeyAuthentication=yes"]

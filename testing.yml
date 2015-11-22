@@ -1,0 +1,4 @@
+---
+- hosts: testing
+  roles:
+    - docker
