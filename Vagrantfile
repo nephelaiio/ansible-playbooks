@@ -25,7 +25,7 @@ Vagrant.configure(2) do |config|
   config.vm.provision "ansible" do |ansible|
     ansible.groups = {
       "ubuntu" => ubuntu,
-      "centos" => centos,
+      "centos" => centos.map { |x| "centos#{x}" },
       "testing:children" => ["ubuntu", "centos"]
     }
     ansible.playbook = "testing.yml"
