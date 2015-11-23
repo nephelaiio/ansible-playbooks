@@ -5,7 +5,8 @@ Vagrant.configure(2) do |config|
 
   config.landrush.enabled = true
 
-  ubuntu = ["trusty", "wily"]
+  # Note that scripts only support systemd based distributions
+  ubuntu = ["wily"]
 
   centos = ["7"]
 
