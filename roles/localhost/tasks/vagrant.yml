@@ -5,5 +5,4 @@
     state=latest
   with_items:
     - vagrant
-    - vagrant-lxc
   become: yes

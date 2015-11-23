@@ -2,4 +2,4 @@
 - hosts: localhost
   roles:
     - localhost
-    - docker
+    - docker.core
