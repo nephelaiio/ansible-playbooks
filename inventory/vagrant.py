@@ -61,7 +61,6 @@ def empty_json_inventory():
 if (os.path.isfile(inventory_path())):
     with open(inventory_path()) as inventory:
         output = build_json_inventory(inventory.readlines())
-        output = empty_json_inventory()
 else:
     output = empty_json_inventory()
 print(output)
