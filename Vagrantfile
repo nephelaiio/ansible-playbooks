@@ -3,31 +3,21 @@
 
 Vagrant.configure(2) do |config|
 
+  config.landrush.enabled = true
+
   ubuntu = ["trusty", "wily"]
 
-  centos = ["centos6", "centos7"]
+  centos = ["7"]
 
   ubuntu.each do |codename|
     config.vm.define codename do |box|
-      box.vm.provider "docker" do |docker|
-        docker.build_dir = "dockerfiles"
-        docker.dockerfile = "#{codename}"
-        docker.has_ssh = true
-        docker.cmd = ["/usr/sbin/sshd", "-D"]
-        docker.build_args = ["-t", "vagrant:#{codename}"]
-      end
+      box.vm.box = "ubuntu/#{codename}64"
     end
   end
 
   centos.each do |version|
-    config.vm.define version do |box|
-      box.vm.provider "docker" do |docker|
-        docker.build_dir = "dockerfiles"
-        docker.dockerfile = "#{version}"
-        docker.has_ssh = true
-        docker.build_args = ["-t", "vagrant:#{version}"]
-      end
-      box.vm.hostname = "#{version}.vagrant.dev"
+    config.vm.define "centos#{version}" do |box|
+      box.vm.box = "centos/#{version}"
     end
   end
 
