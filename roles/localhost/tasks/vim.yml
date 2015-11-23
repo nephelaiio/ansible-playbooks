@@ -1,3 +1,4 @@
+---
 - name: install vim
   apt: name={{ item }} state=latest
   with_items:

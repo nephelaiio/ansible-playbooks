@@ -1,3 +1,4 @@
+---
 - name: activate vim apt plugins
   shell: >
     vam install {{ item }}

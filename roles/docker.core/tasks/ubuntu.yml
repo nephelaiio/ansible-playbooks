@@ -1,3 +1,4 @@
+---
 - name: install docker key
   apt_key: >
     keyserver=hkp://p80.pool.sks-keyservers.net:80
@@ -15,9 +16,4 @@
     state=latest
   with_items:
     - docker-engine
-    - docker-compose
-  become: yes
-
-- name: configure docker for current user
-  user: name={{ ansible_ssh_user }}  append=yes  groups=docker 
   become: yes

@@ -1,0 +1,12 @@
+---
+- name: install docker tools
+  apt: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - docker-compose
+  become: yes
+
+- name: configure docker for current user
+  user: name={{ ansible_ssh_user }}  append=yes  groups=docker 
+  become: yes

@@ -1,3 +1,4 @@
+---
 - name: install tmux
   apt: >
     name={{ item }} 

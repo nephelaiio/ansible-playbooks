@@ -1,3 +1,4 @@
+---
 - name: install ansible
   apt: >
     name={{ item }} 

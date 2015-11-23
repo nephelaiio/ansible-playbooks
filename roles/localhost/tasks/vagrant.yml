@@ -1,3 +1,4 @@
+---
 - name: install vagrant
   apt: >
     name={{ item }} 
