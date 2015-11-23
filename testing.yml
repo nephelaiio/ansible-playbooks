@@ -1,4 +1,4 @@
 ---
 - hosts: testing
   roles:
-    - docker
+    - docker.core
