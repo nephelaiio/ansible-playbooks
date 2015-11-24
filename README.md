@@ -1,5 +1,4 @@
 #Personal Ansible Playbooks
-===========================
 
 ##Description
 This is an attempt to use ansible to unify my personal workstation settings into a single repository. It has also grown a bit to add support for some time saving configurations used at work and training.
