@@ -2,4 +2,6 @@
 - hosts: localhost
   roles:
     - localhost
+    - tmux
+    - virtualbox
     - docker.core

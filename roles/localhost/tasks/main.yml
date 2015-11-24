@@ -3,15 +3,9 @@
 
 - include: git.yml
 
-- include: tmux.yml
-
 - include: vim.yml
-  when: 
-    ansible_distribution == "Ubuntu"
 
 - include: tree.yml
-
-- include: virtualbox.yml
 
 - include: vagrant.yml
   when: 

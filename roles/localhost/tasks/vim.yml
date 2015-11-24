@@ -1,15 +1,19 @@
 ---
-- name: install vim
+- name: install vim apt package
   apt: name={{ item }} state=latest
   with_items:
     - vim-nox
   become: yes
+  when: 
+    ansible_distribution == "Ubuntu"
 
 - name: install vim alternative
   alternatives: >
     name=editor 
     path=/usr/bin/vim.nox
   become: yes
+  when: 
+    ansible_distribution == "Ubuntu"
 
 - name: install vim apt plugins
   apt: >
@@ -24,6 +28,16 @@
   notify:
     - activate vim apt plugins
   become: yes
+  when: 
+    ansible_distribution == "Ubuntu"
+
+- name: install vim yum package
+  yum: name={{ item }} state=latest
+  with_items:
+    - vim-enhanced
+  become: yes
+  when: 
+    ansible_distribution == "CentOS"
 
 - name: create vim plugin directory
   file: >
