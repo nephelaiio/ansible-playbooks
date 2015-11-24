@@ -1,8 +1,32 @@
 ---
-- name: install virtualbox
+- name: install virtualbox apt package
   apt: >
     name={{ item }} 
     state=latest
   with_items:
     - virtualbox
   become: yes
+  when: 
+    ansible_distribution == "Ubuntu"
+
+- name: install virtualbox yum repo
+  copy: >
+    src=virtualbox.repo
+    dest=/etc/yum.repos.d
+  become: yes
+  when: 
+    ansible_distribution == "CentOS"
+
+- name: install virtualbox repo key
+  rpm_key: >
+    state=present
+    key=https://www.virtualbox.org/download/oracle_vbox.asc
+  when: 
+    ansible_distribution == "CentOS"
+
+- name: install
+  yum: >
+    name={{ item }}
+    state=latest
+  with_items:
+    - virtualbox-5.0

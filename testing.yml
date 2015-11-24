@@ -1,4 +1,5 @@
 ---
 - hosts: testing
   roles:
+    - localhost
     - docker.core
