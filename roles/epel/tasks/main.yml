@@ -1,4 +1,10 @@
 ---
-- include: centos.yml
+- name: install epel repo
+  yum: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - epel-release
+  become: yes
   when: 
     ansible_distribution == "CentOS"
