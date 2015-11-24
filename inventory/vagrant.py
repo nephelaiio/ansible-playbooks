@@ -15,20 +15,28 @@ def build_json_inventory(raw_lines):
     pruned_lines = [x for x in content_lines if not x == "" and not x.startswith('#')]
     sections = build_sections(pruned_lines)
     output = []
+    meta = []
     for section in sections:
         if isinstance(section, basestring):
-            output.append(build_section_line_output(section)) 
+            output.append(build_section_host_output(section)) 
+            meta.append(build_section_meta_output(section))
         elif isinstance(section, list):
-            output.append(build_section_list_output(section))
+            output.append(build_section_group_output(section))
         else:
             assert False, "Unrecognized object {0}".format(section)
+    output.append(('_meta', { 'hostvars': dict(meta) }))
     return json.dumps(dict(output))
 
-def build_section_line_output(line):
-    params = line.split(' ')
-    return (params[0], " ".join(params[1:]))
+def build_section_host_output(line):
+    name = line.split(' ')[0]
+    return (name, [name])
 
-def build_section_list_output(params):
+def build_section_meta_output(line):
+    name = line.split(' ')[0]
+    attrs = line.split(' ')[1:] + ["ansible_ssh_user=vagrant"]
+    return (name, dict([tuple(x.split('=')) for x in attrs]))
+
+def build_section_group_output(params):
     if not re.search("children", params[0]):
         name = re.sub("[\[\]]", '', params[0])
         result = (name , params[1:])
