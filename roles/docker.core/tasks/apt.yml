@@ -9,3 +9,11 @@
   apt_repository: >
     repo="deb https://apt.dockerproject.org/repo {{ ansible_distribution|lower }}-{{ ansible_distribution_release }} {{ dockerrepo }}"
   become: yes
+
+- name: install docker apt package
+  apt: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - docker-engine
+  become: yes
