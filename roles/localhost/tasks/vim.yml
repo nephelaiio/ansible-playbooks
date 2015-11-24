@@ -9,6 +9,7 @@
   alternatives: >
     name=editor 
     path=/usr/bin/vim.nox
+  become: yes
 
 - name: install vim apt plugins
   apt: >
