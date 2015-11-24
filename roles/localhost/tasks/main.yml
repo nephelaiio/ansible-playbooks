@@ -3,12 +3,6 @@
 
 - include: vim.yml
 
-- include: tree.yml
-
-- include: vagrant.yml
-  when: 
-    ansible_distribution == "Ubuntu"
-
 - include: openconnect.yml
   when: 
     ansible_distribution == "Ubuntu"

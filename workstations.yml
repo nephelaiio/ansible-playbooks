@@ -3,5 +3,7 @@
   roles:
     - localhost
     - tmux
+    - tree
     - virtualbox
+    - vagrant
     - docker.core
