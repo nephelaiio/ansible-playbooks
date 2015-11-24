@@ -1,11 +1,9 @@
 ---
 - include: ansible.yml
-  when: 
-    ansible_distribution == "Ubuntu"
+
+- include: git.yml
 
 - include: tmux.yml
-  when: 
-    ansible_distribution == "Ubuntu"
 
 - include: vim.yml
   when: 
@@ -30,3 +28,5 @@
 - include: r.yml
   when: 
     ansible_distribution == "Ubuntu"
+
+- include: ruby.yml

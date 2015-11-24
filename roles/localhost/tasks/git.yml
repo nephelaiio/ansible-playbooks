@@ -1,5 +1,5 @@
 ---
-- name: install ansible apt package
+- name: install git apt package
   apt: >
     name={{ item }} 
     state=latest
@@ -9,12 +9,12 @@
   when:
     ansible_distribution == "Ubuntu"
 
-- name: install ansible yum package
+- name: install git yum package
   yum: >
     name={{ item }} 
     state=latest
   with_items:
-    - ansible
+    - git
   become: yes
   when:
     ansible_distribution == "CentOS"

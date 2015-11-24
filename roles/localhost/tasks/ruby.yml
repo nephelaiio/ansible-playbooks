@@ -1,0 +1,20 @@
+---
+- name: install rbenv
+  git: >
+    repo=https://github.com/sstephenson/rbenv.git
+    dest=~/.rbenv
+
+- name: create rbenv plugins directory
+  file: >
+    dest=~/.rbenv/plugins
+    state=directory
+
+- name: install ruby-build rbenv plugin
+  git: >
+    repo=https://github.com/sstephenson/ruby-build.git
+    dest=~/.rbenv/plugins/ruby-build
+
+- name: configure rbenv
+  lineinfile: >
+    dest=~/.bashrc
+    line='export PATH="$HOME/.rbenv/bin:$PATH"'
