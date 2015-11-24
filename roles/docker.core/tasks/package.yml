@@ -1,0 +1,8 @@
+---
+- name: install docker
+  apt: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - docker-engine
+  become: yes

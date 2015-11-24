@@ -1,7 +1,10 @@
 ---
-- include: ubuntu.yml
+- include: apt.yml
   when: 
     ansible_distribution == "Ubuntu"
-- include: centos.yml
+
+- include: yum.yml
   when:
     ansible_distribution == "CentOS"
+
+- include: package.yml
