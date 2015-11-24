@@ -10,12 +10,8 @@
     ansible_distribution == "Ubuntu"
 
 - include: tree.yml
-  when: 
-    ansible_distribution == "Ubuntu"
 
 - include: virtualbox.yml
-  when: 
-    ansible_distribution == "Ubuntu"
 
 - include: vagrant.yml
   when: 

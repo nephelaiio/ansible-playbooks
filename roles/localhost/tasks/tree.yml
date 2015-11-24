@@ -1,8 +1,20 @@
 ---
-- name: install tree
+- name: install tree apt package
   apt: >
     name={{ item }} 
     state=latest
   with_items:
     - tree
   become: yes
+  when:
+    ansible_distribution == "Ubuntu"
+
+- name: install tree yum package
+  yum: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - tree
+  become: yes
+  when:
+    ansible_distribution == "CentOS"
