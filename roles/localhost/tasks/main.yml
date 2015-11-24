@@ -1,6 +1,4 @@
 ---
-- include: ansible.yml
-
 - include: git.yml
 
 - include: vim.yml
