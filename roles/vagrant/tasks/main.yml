@@ -6,3 +6,6 @@
   with_items:
     - vagrant
   become: yes
+  when: 
+    ansible_distribution == "Ubuntu"
+
