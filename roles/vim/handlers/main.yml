@@ -7,10 +7,11 @@
     - conqueterm
     - jinja
     - python-jedi
+  become: yes
 
 - name: install vim neobundle plugins
   shell: >
-    vim +NeoBundleInstall +NeoBundleClean +qall
+    vim +NeoBundleInstall +qall
   become: yes
   become_user: "{{ item }}"
   with_items:
