@@ -11,3 +11,7 @@
 - name: install vim neobundle plugins
   shell: >
     vim +NeoBundleInstall +NeoBundleClean +qall
+  become: yes
+  become_user: "{{ item }}"
+  with_items:
+    - "{{ users }}"

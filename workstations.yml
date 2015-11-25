@@ -4,6 +4,7 @@
     - localhost
     - git
     - tree
+    - vim
     - { role: tmux, users: ["{{ ansible_ssh_user }}"] }
     - virtualbox
     - vagrant
