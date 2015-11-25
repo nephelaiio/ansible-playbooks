@@ -1,5 +1,3 @@
 ---
 vimplugins: ~/.vim/bundle
 vimconf: ~/.vim/vimrc
-tmuxplugins: ~/.tmux/plugins
-tmuxconf: ~/.tmux.conf

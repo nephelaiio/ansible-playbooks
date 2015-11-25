@@ -1,0 +1,3 @@
+---
+tmuxplugins: .tmux/plugins
+tmuxconf: .tmux.conf

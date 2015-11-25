@@ -3,8 +3,8 @@
   roles:
     - localhost
     - git
-    - tmux
     - tree
+    - { role: tmux, users: ["{{ ansible_ssh_user }}"] }
     - virtualbox
     - vagrant
     - docker.core
