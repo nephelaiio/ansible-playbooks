@@ -8,3 +8,5 @@
     - virtualbox
     - vagrant
     - docker.core
+    - { role: docker.tools, users: ["{{ ansible_ssh_user }}"] }
+

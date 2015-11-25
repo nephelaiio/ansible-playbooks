@@ -1,7 +1,19 @@
 ---
-- include: ubuntu.yml
+- name: install docker tools apt packages
+  apt: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - docker-compose
+  become: yes
   when: 
     ansible_distribution == "Ubuntu"
-- include: centos.yml
-  when:
-    ansible_distribution == "CentOS"
+
+- name: configure docker for current user
+  user: >
+    name={{ item }}
+    append=yes
+    groups=docker
+  with_items:
+    - "{{ users }}"
+  become: yes
