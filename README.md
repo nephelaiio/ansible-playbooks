@@ -16,8 +16,7 @@ fi
 For other roles, you can clone the repo and define custom playbooks and inventory sources
 
 ## Support
-* _localhost_ role is only supported under Ubuntu Wily and higher.
-* Only systemd based Ubuntu and CentOS distros are supported for other roles. To date this means Ubuntu Vivid, Wily and CentOS 7.
+* Roles are only supported under Ubuntu Wily, Debian Jesse, RHEL 7, CentOS 7 or later versions.
 
 ## Testing
 Please use the vagrant provided images to ensure roles work as intended on supported distribution versions

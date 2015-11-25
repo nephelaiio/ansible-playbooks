@@ -12,21 +12,18 @@ Vagrant.configure(2) do |config|
   ubuntu.each do |codename|
     config.vm.define codename do |box|
       box.vm.box = "ubuntu/#{codename}64"
-      box.vm.hostname = "#{codename}.vagrant.dev"
     end
   end
 
   debian.each do |codename|
     config.vm.define codename do |box|
       box.vm.box = "debian/#{codename}64"
-      box.vm.hostname = "#{codename}.vagrant.dev"
     end
   end
 
   centos.each do |version|
     config.vm.define "centos#{version}" do |box|
       box.vm.box = "centos/#{version}"
-      box.vm.hostname = "centos#{version}.vagrant.dev"
     end
   end
 

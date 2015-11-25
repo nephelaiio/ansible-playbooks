@@ -1,0 +1,28 @@
+---
+- name: download apt package
+  get_url: >
+    url="https://opscode-omnibus-packages.s3.amazonaws.com/{{ ansible_distribution|lower }}/{{ '6' if ansible_distribution == 'Debian' else '12.04'}}/x86_64/chefdk_0.10.0-1_amd64.deb"
+    dest=/tmp/chefdk.deb 
+  when:
+    ansible_os_family == "Debian"
+
+- name: download rpm apt package
+  get_url: >
+    url="https://opscode-omnibus-packages.s3.amazonaws.com/el/{{ ansible_distribution_major_version }}/x86_64/chefdk-0.10.0-1.el{{ ansible_distribution_major_version }}.x86_64.rpm"
+    dest=/tmp/chefdk.rpm
+  when:
+    ansible_distribution == "CentOS"
+
+- name: install apt package
+  apt: >
+    deb=/tmp/chefdk.deb
+  become: yes
+  when:
+    ansible_os_family == "Debian"
+
+- name: install rpm package
+  yum: >
+    name=/tmp/chefdk.deb
+  become: yes
+  when:
+    ansible_distribution == "Debian"

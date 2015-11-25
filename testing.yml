@@ -1,11 +1,11 @@
 ---
 - hosts: testing
   roles:
-    - git
-    - tree
-    - vim
+    - { role: git }
+    - { role: tree }
+    - { role: vim }
     - { role: tmux, users: ["{{ ansible_ssh_user }}"] }
-    - virtualbox
-    - vagrant
-    - docker.core
-    - { role: docker.tools, users: ["{{ ansible_ssh_user }}"] }
+    - { role: virtualbox }
+    - { role: vagrant }
+    - { role: docker.core, users: ["{{ ansible_ssh_user }}"] }
+    - { role: chef.dk }
