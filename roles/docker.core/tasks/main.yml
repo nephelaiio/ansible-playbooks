@@ -1,8 +1,8 @@
 ---
 - include: apt.yml
   when: 
-    ansible_distribution == "Ubuntu"
+    ansible_os_family == "Debian"
 
 - include: yum.yml
   when:
-    ansible_distribution == "CentOS"
+    ansible_os_family == "RedHat"

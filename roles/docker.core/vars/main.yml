@@ -1,2 +1,4 @@
 ---
 dockerrepo: main
+users:
+  - "{{ ansible_ssh_user }}"
