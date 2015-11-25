@@ -24,6 +24,7 @@
     path="~{{ item }}/{{ tmuxplugins }}"
     state=directory
   become: yes
+  become_user: "{{ item }}"
   with_items:
     - "{{ users }}"
 
@@ -32,15 +33,7 @@
     repo=https://github.com/tmux-plugins/tpm.git
     dest="~{{ item }}/{{ tmuxplugins }}/tpm"
   become: yes
-  with_items:
-    - "{{ users }}"
-
-- name: configure tmux plugin permissions
-  file: >
-    path="~{{ item }}/{{ tmuxplugins }}"
-    owner={{ item }}
-    recurse=yes
-  become: yes
+  become_user: "{{ item }}"
   with_items:
     - "{{ users }}"
 
@@ -50,6 +43,7 @@
     dest="~{{ item }}/{{ tmuxconf }}"
     owner={{ item }}
   become: yes
+  become_user: "{{ item }}"
   with_items:
     - "{{ users }}"
 
