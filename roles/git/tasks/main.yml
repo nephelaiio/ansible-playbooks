@@ -4,7 +4,7 @@
     name={{ item }} 
     state=latest
   with_items:
-    - ansible
+    - git
   become: yes
   when:
     ansible_os_family == "Debian"
