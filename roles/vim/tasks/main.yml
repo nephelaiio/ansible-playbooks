@@ -51,7 +51,7 @@
 - name: install vim neobundle
   git: >
     repo=https://github.com/Shougo/neobundle.vim 
-    dest="~{{ item}}/{{ vimplugins }}/neobundle.vim"
+    dest="~{{ item }}/{{ vimplugins }}/neobundle.vim"
   become: yes
   become_user: "{{ item }}"
   with_items:

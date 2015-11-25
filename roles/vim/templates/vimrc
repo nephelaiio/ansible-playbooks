@@ -3,11 +3,11 @@ if !1 | finish | endif
 
 if has('vim_starting')
   set nocompatible
-  set runtimepath+={{ vimplugins }}/neobundle.vim/
+  set runtimepath+=~/{{ vimplugins }}/neobundle.vim/
 endif
 
 filetype off
-call neobundle#begin(expand('{{ vimplugins }}'))
+call neobundle#begin(expand('~/{{ vimplugins }}'))
 
 " my bundles
 NeoBundle 'kien/ctrlp.vim'
