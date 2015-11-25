@@ -7,7 +7,7 @@
     - ansible
   become: yes
   when:
-    ansible_distribution == "Ubuntu"
+    ansible_os_family == "Debian"
 
 - name: install git yum package
   yum: >
@@ -17,4 +17,4 @@
     - git
   become: yes
   when:
-    ansible_distribution == "CentOS"
+    ansible_os_family == "RedHat"

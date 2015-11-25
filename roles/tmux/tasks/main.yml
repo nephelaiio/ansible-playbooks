@@ -7,7 +7,7 @@
     - tmux
   become: yes
   when: 
-    ansible_distribution == "Ubuntu"
+    ansible_os_family == "Debian"
 
 - name: install tmux yum package
   yum: >
@@ -17,7 +17,7 @@
     - tmux
   become: yes
   when: 
-    ansible_distribution == "CentOS"
+    ansible_os_family == "RedHat"
 
 - name: create tmux plugin directory
   file: >

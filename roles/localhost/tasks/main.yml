@@ -1,10 +1,10 @@
 ---
 - include: openconnect.yml
   when: 
-    ansible_distribution == "Ubuntu"
+    ansible_os_family == "Debian"
 
 - include: r.yml
   when: 
-    ansible_distribution == "Ubuntu"
+    ansible_os_family == "Debian"
 
 - include: ruby.yml

@@ -7,7 +7,7 @@
     - virtualbox
   become: yes
   when: 
-    ansible_distribution == "Ubuntu"
+    ansible_os_family == "Debian"
 
 - name: install virtualbox yum repo
   copy: >
@@ -15,7 +15,7 @@
     dest=/etc/yum.repos.d
   become: yes
   when: 
-    ansible_distribution == "CentOS"
+    ansible_os_family == "RedHat"
 
 - name: install virtualbox repo key
   rpm_key: >
@@ -23,7 +23,7 @@
     key=https://www.virtualbox.org/download/oracle_vbox.asc
   become: yes
   when: 
-    ansible_distribution == "CentOS"
+    ansible_os_family == "RedHat"
 
 - name: install virtualbox yum package
   yum: >
@@ -33,4 +33,4 @@
     - VirtualBox-5.0
   become: yes
   when: 
-    ansible_distribution == "CentOS"
+    ansible_os_family == "RedHat"

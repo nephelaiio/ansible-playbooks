@@ -7,7 +7,7 @@
     - docker-compose
   become: yes
   when: 
-    ansible_distribution == "Ubuntu"
+    ansible_os_family == "Debian"
 
 - name: configure docker for current user
   user: >

@@ -7,4 +7,4 @@
     - vagrant
   become: yes
   when: 
-    ansible_distribution == "Ubuntu"
+    ansible_os_family == "Debian"

@@ -5,7 +5,7 @@
     - vim-nox
   become: yes
   when: 
-    ansible_distribution == "Ubuntu"
+    ansible_os_family == "Debian"
 
 - name: install vim alternative
   alternatives: >
@@ -13,7 +13,7 @@
     path=/usr/bin/vim.nox
   become: yes
   when: 
-    ansible_distribution == "Ubuntu"
+    ansible_os_family == "Debian"
 
 - name: install vim apt plugins
   apt: >
@@ -29,7 +29,7 @@
     - activate vim apt plugins
   become: yes
   when: 
-    ansible_distribution == "Ubuntu"
+    ansible_os_family == "Debian"
 
 - name: install vim yum package
   yum: name={{ item }} state=latest
@@ -37,7 +37,7 @@
     - vim-enhanced
   become: yes
   when: 
-    ansible_distribution == "CentOS"
+    ansible_os_family == "RedHat"
 
 - name: create vim plugin directory
   file: >
