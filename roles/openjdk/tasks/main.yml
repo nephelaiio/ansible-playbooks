@@ -1,0 +1,20 @@
+---
+- name: install openjdk apt package
+  apt: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - "{{ openjdk_packages }}"
+  become: yes
+  when:
+    ansible_os_family == "Debian"
+
+- name: install openjdk yum package
+  yum: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - "{{ openjdk_packages }}"
+  become: yes
+  when:
+    ansible_os_family == "RedHat"

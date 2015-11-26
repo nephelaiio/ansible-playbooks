@@ -11,3 +11,4 @@
     - { role: chef.dk }
     - { role: r.core }
     - { role: rbenv }
+    - { role: openjdk, openjdk_flavor: "jdk" }

@@ -1,0 +1,7 @@
+---
+openjdk_version: 8
+
+openjdk_flavor: jre-headless
+
+openjdk_packages:
+  - "openjdk-{{ openjdk_version}}-{{ openjdk_flavor }}"
