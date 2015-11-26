@@ -1,6 +1,0 @@
----
-- include: openconnect.yml
-  when: 
-    ansible_os_family == "Debian"
-
-- include: ruby.yml
