@@ -8,11 +8,3 @@
     - jinja
     - python-jedi
   become: yes
-
-- name: install vim neobundle plugins
-  shell: >
-    vim +NeoBundleInstall +qall
-  become: yes
-  become_user: "{{ item }}"
-  with_items:
-    - "{{ users }}"
