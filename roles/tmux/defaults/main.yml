@@ -1,5 +1,5 @@
 ---
-tmuxplugins: .tmux/plugins
-tmuxconf: .tmux.conf
-users:
+tmux_plugins: .tmux/plugins
+tmux_conf: .tmux.conf
+tmux_users:
   - "{{ ansible_ssh_user }}"

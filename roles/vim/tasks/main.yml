@@ -41,30 +41,28 @@
 
 - name: create vim plugin directory
   file: >
-    path="~{{ item}}/{{ vimplugins }}"
+    path="~{{ item}}/{{ vim_plugins }}"
     state=directory
   become: yes
   become_user: "{{ item }}"
   with_items:
-    - "{{ users }}"
+    - "{{ vim_users }}"
 
 - name: install vim neobundle
   git: >
     repo=https://github.com/Shougo/neobundle.vim 
-    dest="~{{ item }}/{{ vimplugins }}/neobundle.vim"
+    dest="~{{ item }}/{{ vim_plugins }}/neobundle.vim"
   become: yes
   become_user: "{{ item }}"
   with_items:
-    - "{{ users }}"
+    - "{{ vim_users }}"
 
 - name: install vimrc
   template: >
     src=vimrc
-    dest="~{{ item }}/{{ vimconf }}"
+    dest="~{{ item }}/{{ vim_conf }}"
     owner={{ item }}
   become: yes
   become_user: "{{ item }}"
   with_items:
-    - "{{ users }}"
-  notify:
-    - install vim neobundle plugins
+    - "{{ vim_users }}"

@@ -21,29 +21,29 @@
 
 - name: create tmux plugin directory
   file: >
-    path="~{{ item }}/{{ tmuxplugins }}"
+    path="~{{ item }}/{{ tmux_plugins }}"
     state=directory
   become: yes
   become_user: "{{ item }}"
   with_items:
-    - "{{ users }}"
+    - "{{ tmux_users }}"
 
 - name: install tmux plugin manager 
   git: >
     repo=https://github.com/tmux-plugins/tpm.git
-    dest="~{{ item }}/{{ tmuxplugins }}/tpm"
+    dest="~{{ item }}/{{ tmux_plugins }}/tpm"
   become: yes
   become_user: "{{ item }}"
   with_items:
-    - "{{ users }}"
+    - "{{ tmux_users }}"
 
 - name: configure tmux
   template:
     src=tmux.conf
-    dest="~{{ item }}/{{ tmuxconf }}"
+    dest="~{{ item }}/{{ tmux_conf }}"
     owner={{ item }}
   become: yes
   become_user: "{{ item }}"
   with_items:
-    - "{{ users }}"
+    - "{{ tmux_users }}"
 
