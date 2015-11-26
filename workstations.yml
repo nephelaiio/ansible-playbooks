@@ -1,7 +1,6 @@
 ---
 - hosts: localhost
   roles:
-    - { role: localhost }
     - { role: git }
     - { role: tree }
     - { role: vim }
@@ -11,3 +10,4 @@
     - { role: docker.core, users: ["{{ ansible_ssh_user }}"] }
     - { role: chef.dk }
     - { role: r.core }
+    - { role: rbenv }
