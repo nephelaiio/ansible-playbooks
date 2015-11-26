@@ -4,7 +4,7 @@
     name={{ item }} 
     state=latest
   with_items:
-    - "{{ packages }}"
+    - "{{ epel_packages }}"
   become: yes
   when: 
     ansible_distribution == "CentOS"
