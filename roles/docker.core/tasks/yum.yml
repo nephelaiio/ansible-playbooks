@@ -5,10 +5,10 @@
     dest=/etc/yum.repos.d
   become: yes
 
-- name: install docker rpm package
+- name: install docker rpm packages
   yum: >
     name={{ item }} 
     state=latest
   with_items:
-    - docker-engine
+    - "{{ docker_core_packages }}"
   become: yes
