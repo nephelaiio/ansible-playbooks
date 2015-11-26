@@ -9,6 +9,6 @@
     - { role: vagrant }
     - { role: docker.core, users: ["{{ ansible_ssh_user }}"] }
     - { role: chef.dk }
-    - { role: r.core }
+    - { role: r }
     - { role: rbenv }
     - { role: openjdk, openjdk_flavor: "jdk" }
