@@ -1,0 +1,21 @@
+---
+- name: install debian apt contrib debian repo
+  apt_repository: >
+    repo="deb http://httpredir.debian.org/debian {{ ansible_lsb.codename }} contrib" 
+  become: yes
+  when:
+    ansible_distribution == "Debian"
+  tags:
+    - contrib
+
+- name: install apt transports
+  apt: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - apt-transport-https
+  become: yes
+  when:
+    ansible_os_family == "Debian"
+  tags:
+    - transports
