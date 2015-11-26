@@ -4,17 +4,25 @@
     name={{ item }} 
     state=latest
   with_items:
-    - "{{ openjdk_packages }}"
+    - "{{ openjdk_jdk_apt_packages }}"
   become: yes
   when:
     ansible_os_family == "Debian"
+  tags:
+    - openjdk 
+    - debian
+    - ubuntu
 
 - name: install openjdk yum package
   yum: >
-    name={{ item }} 
+    name={{ item }}
     state=latest
   with_items:
-    - "{{ openjdk_packages }}"
+    - "{{ openjdk_jdk_yum_packages }}"
   become: yes
   when:
     ansible_os_family == "RedHat"
+  tags:
+    - openjdk
+    - redhat
+    - centos

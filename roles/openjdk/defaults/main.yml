@@ -1,7 +1,10 @@
 ---
 openjdk_version: 8
 
-openjdk_flavor: jre-headless
+openjdk_jdk: no
 
-openjdk_packages:
-  - "openjdk-{{ openjdk_version}}-{{ openjdk_flavor }}"
+openjdk_jdk_apt_packages:
+  - "{{ 'openjdk-' ~ openjdk_version ~ ('-jdk' if openjdk_jdk else '-jre') }}"
+
+openjdk_jdk_yum_packages:
+  - "{{ 'java-1.' ~ openjdk_version ~ '.0-openjdk' ~ ('-devel' if openjdk_jdk else '') }}"
