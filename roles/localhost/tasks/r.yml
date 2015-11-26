@@ -1,8 +1,0 @@
----
-- name: install R
-  apt: >
-    name={{ item }} 
-    state=latest
-  with_items:
-    - r-base-core
-  become: yes

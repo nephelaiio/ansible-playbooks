@@ -3,8 +3,6 @@
 
 Vagrant.configure(2) do |config|
 
-  config.landrush.enabled = true
-
   ubuntu = ["wily"]
   debian = ["jessie"]
   centos = ["7"]

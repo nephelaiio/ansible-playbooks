@@ -1,0 +1,44 @@
+---
+- name: install CRAN debian repository key
+  apt_key: >
+    keyserver=keys.gnupg.net
+    id=381BA480
+  become: yes
+  when:
+    ansible_distribution == "Debian"
+
+- name: install CRAN ubuntu repository key
+  apt_key: >
+    keyserver=keyserver.ubuntu.com
+    id=E084DAB9
+  become: yes
+  when:
+    ansible_distribution == "Ubuntu"
+
+- name: install CRAN repository
+  apt_repository: >
+    repo="deb http://cran.rstudio.com/bin/linux/{{ ansible_distribution|lower }} {{ ansible_distribution_release }}{{ '-cran3' if ansible_distribution == "Debian" else '' }}/"
+  become: yes
+  when:
+    ansible_os_family == "Debian"
+
+- name: install CRAN R apt packages
+  apt: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - r-base
+    - r-base-dev
+  become: yes
+  when:
+    ansible_os_family == "Debian"
+
+- name: install CRAN R yum packages
+  yum:
+    name={{ item }}
+  with_items:
+    - r-base
+    - r-base-dev
+  become: yes
+  when:
+    ansible_os_family == "RedHat"

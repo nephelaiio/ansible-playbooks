@@ -3,8 +3,4 @@
   when: 
     ansible_os_family == "Debian"
 
-- include: r.yml
-  when: 
-    ansible_os_family == "Debian"
-
 - include: ruby.yml
