@@ -8,3 +8,5 @@
   become: yes
   when: 
     ansible_distribution == "CentOS"
+  tags:
+    - epel

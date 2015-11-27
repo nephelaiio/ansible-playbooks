@@ -4,20 +4,24 @@
     name={{ item }} 
     state=latest
   with_items:
-    - tmux
+    - "{{ tmux_packages }}"
   become: yes
   when: 
     ansible_os_family == "Debian"
+  tags:
+    - tmux
 
 - name: install tmux yum package
   yum: >
     name={{ item }} 
     state=latest
   with_items:
-    - tmux
+    - "{{ tmux_packages }}"
   become: yes
   when: 
     ansible_os_family == "RedHat"
+  tags:
+    - tmux
 
 - name: create tmux plugin directory
   file: >
@@ -27,6 +31,9 @@
   become_user: "{{ item }}"
   with_items:
     - "{{ tmux_users }}"
+  tags:
+    - tmux
+    - tmux.conf
 
 - name: install tmux plugin manager 
   git: >
@@ -36,6 +43,9 @@
   become_user: "{{ item }}"
   with_items:
     - "{{ tmux_users }}"
+  tags:
+    - tmux
+    - tmux.conf
 
 - name: configure tmux
   template:
@@ -46,4 +56,7 @@
   become_user: "{{ item }}"
   with_items:
     - "{{ tmux_users }}"
+  tags:
+    - tmux
+    - tmux.conf
 

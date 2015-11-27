@@ -4,17 +4,21 @@
     name={{ item }} 
     state=latest
   with_items:
-    - tree
+    - "{{ tree_packages }}"
   become: yes
   when:
     ansible_os_family == "Debian"
+  tags:
+    - tree
 
 - name: install tree yum package
   yum: >
     name={{ item }} 
     state=latest
   with_items:
-    - tree
+    - "{{ tree_packages }}"
   become: yes
   when:
     ansible_os_family == "RedHat"
+  tags:
+    - tree

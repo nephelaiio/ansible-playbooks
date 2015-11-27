@@ -6,6 +6,9 @@
   become: yes
   when:
     ansible_distribution == "Debian"
+  tags:
+    - cran
+    - r
 
 - name: install CRAN ubuntu repository key
   apt_key: >
@@ -14,6 +17,9 @@
   become: yes
   when:
     ansible_distribution == "Ubuntu"
+  tags:
+    - cran
+    - r
 
 - name: install CRAN yum repository
   apt_repository: >
@@ -21,6 +27,9 @@
   become: yes
   when:
     ansible_os_family == "Debian"
+  tags:
+    - cran
+    - r
 
 - name: install CRAN R apt packages
   apt: >
@@ -32,6 +41,8 @@
   become: yes
   when:
     ansible_os_family == "Debian"
+  tags:
+    - r
 
 - name: install CRAN R yum packages
   yum:
@@ -42,3 +53,5 @@
   become: yes
   when:
     ansible_os_family == "RedHat"
+  tags:
+    - r

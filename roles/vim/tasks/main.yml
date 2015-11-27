@@ -6,6 +6,8 @@
   become: yes
   when: 
     ansible_os_family == "Debian"
+  tags:
+    - vim
 
 - name: install vim alternative
   alternatives: >
@@ -14,6 +16,8 @@
   become: yes
   when: 
     ansible_os_family == "Debian"
+  tags:
+    - vim
 
 - name: install vim apt plugins
   apt: >
@@ -30,6 +34,9 @@
   become: yes
   when: 
     ansible_os_family == "Debian"
+  tags:
+    - vim
+    - vimrc
 
 - name: install vim yum package
   yum: name={{ item }} state=latest
@@ -38,6 +45,8 @@
   become: yes
   when: 
     ansible_os_family == "RedHat"
+  tags:
+    - vim
 
 - name: create vim plugin directory
   file: >
@@ -47,6 +56,9 @@
   become_user: "{{ item }}"
   with_items:
     - "{{ vim_users }}"
+  tags:
+    - vim
+    - vimrc
 
 - name: install vim neobundle
   git: >
@@ -56,6 +68,9 @@
   become_user: "{{ item }}"
   with_items:
     - "{{ vim_users }}"
+  tags:
+    - vim
+    - vimrc
 
 - name: install vimrc
   template: >
@@ -66,3 +81,6 @@
   become_user: "{{ item }}"
   with_items:
     - "{{ vim_users }}"
+  tags:
+    - vim
+    - vimrc

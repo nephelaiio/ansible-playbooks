@@ -6,6 +6,7 @@
   when:
     ansible_distribution == "Debian"
   tags:
+    - apt
     - contrib
 
 - name: install apt transports
@@ -18,4 +19,5 @@
   when:
     ansible_os_family == "Debian"
   tags:
+    - apt
     - transports

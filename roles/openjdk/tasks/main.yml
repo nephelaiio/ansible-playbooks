@@ -10,8 +10,6 @@
     ansible_os_family == "Debian"
   tags:
     - openjdk 
-    - debian
-    - ubuntu
 
 - name: install openjdk yum package
   yum: >
@@ -24,5 +22,3 @@
     ansible_os_family == "RedHat"
   tags:
     - openjdk
-    - redhat
-    - centos
