@@ -8,7 +8,7 @@ def inventory_path():
     script_basepath = os.path.dirname(os.path.abspath(__file__))
     inventory_relpath = os.path.join(*"../.vagrant/provisioners/ansible/inventory/vagrant_ansible_inventory".split('/'))
     inventory_fulpath = os.path.join(script_basepath, inventory_relpath)
-    return(inventory_fulpath)
+    return inventory_fulpath
 
 def build_json_inventory(raw_lines):
     content_lines = [ x.strip() for x in raw_lines]
@@ -34,7 +34,7 @@ def build_section_host_output(line):
 def build_section_meta_output(line):
     name = line.split(' ')[0]
     attrs = line.split(' ')[1:] + ["ansible_ssh_user=vagrant"]
-    return (name, dict([tuple(x.split('=')) for x in attrs]))
+    return name, dict([tuple(x.split('=')) for x in attrs])
 
 def build_section_group_output(params):
     if not re.search("children", params[0]):
