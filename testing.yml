@@ -12,3 +12,4 @@
     - { role: r }
     - { role: rbenv }
     - { role: openjdk, open_jdk_flavor: "jdk" }
+    - { role: puppet, puppet_version: 3 }

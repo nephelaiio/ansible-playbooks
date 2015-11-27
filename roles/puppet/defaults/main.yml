@@ -1,0 +1,4 @@
+---
+puppet_version: 3
+puppet_client: yes
+puppet_server: no
