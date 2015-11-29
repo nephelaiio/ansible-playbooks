@@ -27,7 +27,6 @@
     - vim-youcompleteme
     - vim-addon-manager
     - silversearcher-ag
-    - vim-conque
     - vim-python-jedi
   notify:
     - activate vim apt plugins
@@ -45,6 +44,15 @@
   become: yes
   when: 
     ansible_os_family == "RedHat"
+  tags:
+    - vim
+
+- name: install vim arch package
+  pacman: name={{ item }} state=latest
+  with_items:
+    - vim
+  when:
+    ansible_os_family == "Archlinux"
   tags:
     - vim
 
