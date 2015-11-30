@@ -23,6 +23,18 @@
   tags:
     - tmux
 
+- name: install tmux arch package
+  pacman: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - "{{ tmux_packages }}"
+  become: yes
+  when: 
+    ansible_os_family == "Archlinux"
+  tags:
+    - tmux
+
 - name: create tmux plugin directory
   file: >
     path="~{{ item }}/{{ tmux_plugins }}"

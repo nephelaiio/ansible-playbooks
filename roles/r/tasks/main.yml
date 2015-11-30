@@ -45,7 +45,7 @@
     - r
 
 - name: install CRAN R yum packages
-  yum:
+  yum: >
     name={{ item }}
   with_items:
     - R
@@ -57,7 +57,7 @@
     - r
 
 - name: install R arch packages
-  pacman:
+  pacman: >
     name={{ item }}
   with_items:
     - r

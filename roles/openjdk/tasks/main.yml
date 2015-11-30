@@ -24,7 +24,7 @@
     - openjdk
 
 - name: install openjdk arch package
-  yum: >
+  pacman: >
     name={{ item }}
     state=latest
   with_items:
