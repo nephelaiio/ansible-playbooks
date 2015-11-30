@@ -1,10 +1,20 @@
 ---
-- name: install vagrant
+- name: install vagrant apt package
   apt: >
     name={{ item }} 
     state=latest
   with_items:
-    - vagrant
+    - "{{ vagrant_packages }}"
+  become: yes
+  when: 
+    ansible_os_family == "Debian"
+
+- name: install vagrant arch package
+  apt: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - "{{ vagrant_packages }}"
   become: yes
   when: 
     ansible_os_family == "Debian"
