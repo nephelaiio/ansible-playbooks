@@ -22,3 +22,15 @@
     ansible_os_family == "RedHat"
   tags:
     - git
+
+- name: install git arch package
+  pacman: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - "{{ git_packages }}"
+  become: yes
+  when:
+    ansible_os_family == "Archlinux"
+  tags:
+    - git
