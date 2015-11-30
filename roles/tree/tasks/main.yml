@@ -22,3 +22,15 @@
     ansible_os_family == "RedHat"
   tags:
     - tree
+
+- name: install tree arch package
+  pacman: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - "{{ tree_packages }}"
+  become: yes
+  when:
+    ansible_os_family == "Archlinux"
+  tags:
+    - tree
