@@ -3,8 +3,13 @@ openjdk_version: 8
 
 openjdk_jdk: no
 
+openjdk_headless: no
+
 openjdk_jdk_apt_packages:
-  - "{{ 'openjdk-' ~ openjdk_version ~ ('-jdk' if openjdk_jdk else '-jre') }}"
+  - "{{ 'openjdk-' ~ openjdk_version ~ ('-jdk' if openjdk_jdk else '-jre') ~ ('-headless' if openjdk_headless  else '') }}"
 
 openjdk_jdk_yum_packages:
-  - "{{ 'java-1.' ~ openjdk_version ~ '.0-openjdk' ~ ('-devel' if openjdk_jdk else '') }}"
+  - "{{ 'java-1.' ~ openjdk_version ~ '.0-openjdk' ~ ('-devel' if openjdk_jdk else '') ~ ('-headless' if openjdk_headless else '') }}"
+
+opendk_jdk_arch_packages:
+  - "{{ ('jdk' if openjdk_jdk else 'jre') ~ openjdk_version ~ '-openjdk' ~ ('-headless' if openjdk_headless else '') }}

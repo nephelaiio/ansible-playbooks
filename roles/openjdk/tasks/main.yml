@@ -22,3 +22,15 @@
     ansible_os_family == "RedHat"
   tags:
     - openjdk
+
+- name: install openjdk arch package
+  yum: >
+    name={{ item }}
+    state=latest
+  with_items:
+    - "{{ openjdk_jdk_arch_packages }}"
+  become: yes
+  when:
+    ansible_os_family == "Archlinux"
+  tags:
+    - openjdk
