@@ -55,3 +55,14 @@
     ansible_os_family == "RedHat"
   tags:
     - r
+
+- name: install R arch packages
+  pacman:
+    name={{ item }}
+  with_items:
+    - r
+  become: yes
+  when:
+    ansible_os_family == "Archlinux"
+  tags:
+    - r
