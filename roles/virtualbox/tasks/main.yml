@@ -34,3 +34,13 @@
   become: yes
   when: 
     ansible_os_family == "RedHat"
+
+- name: install virtualbox arch package
+  yum: >
+    name={{ item }}
+    state=latest
+  with_items:
+    - virtualbox
+  become: yes
+  when: 
+    ansible_os_family == "Archlinux"

@@ -10,11 +10,11 @@
     ansible_os_family == "Debian"
 
 - name: install vagrant arch package
-  apt: >
+  pacman: >
     name={{ item }} 
     state=latest
   with_items:
     - "{{ vagrant_packages }}"
   become: yes
   when: 
-    ansible_os_family == "Debian"
+    ansible_os_family == "Archlinux"
