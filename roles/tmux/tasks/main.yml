@@ -1,48 +1,26 @@
 ---
-- name: install tmux apt package
-  apt: >
-    name={{ item }} 
-    state=latest
-  with_items:
-    - "{{ tmux_packages }}"
-  become: yes
-  when: 
-    ansible_os_family == "Debian"
-  tags:
-    - tmux
+- include_vars: "{{ item }}"
+  with_first_found:
+    - "vars/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "vars/{{ ansible_distrubition }}.yml"
+    - "vars/{{ ansible_os_family }}.yml"
+    - "vars/default.yml"
+  when: tmux_pacakges is not defined
 
-- name: install tmux yum package
-  yum: >
+- name: install tmux package
+  package: >
     name={{ item }} 
     state=latest
   with_items:
     - "{{ tmux_packages }}"
-  become: yes
-  when: 
-    ansible_os_family == "RedHat"
-  tags:
-    - tmux
-
-- name: install tmux arch package
-  pacman: >
-    name={{ item }} 
-    state=latest
-  with_items:
-    - "{{ tmux_packages }}"
-  become: yes
-  when: 
-    ansible_os_family == "Archlinux"
   tags:
     - tmux
 
 - name: create tmux plugin directory
   file: >
-    path="~{{ item }}/{{ tmux_plugins }}"
+    path="~/{{ tmux_plugins }}"
     state=directory
   become: yes
-  become_user: "{{ item }}"
-  with_items:
-    - "{{ tmux_users }}"
   tags:
     - tmux
     - tmux.conf
@@ -50,25 +28,31 @@
 - name: install tmux plugin manager 
   git: >
     repo=https://github.com/tmux-plugins/tpm.git
-    dest="~{{ item }}/{{ tmux_plugins }}/tpm"
-  become: yes
-  become_user: "{{ item }}"
-  with_items:
-    - "{{ tmux_users }}"
+    dest="~/{{ tmux_plugins }}/tpm"
   tags:
     - tmux
     - tmux.conf
 
-- name: configure tmux
+- name: tmux 2.0 configuration file
+  template:
+    src=tmux_20.conf
+    dest="~/{{ tmux_conf_20 }}"
+  tags:
+    - tmux
+    - tmux.conf
+
+- name: tmux 2.1 configuration file
+  template:
+    src=tmux_21.conf
+    dest="~/{{ tmux_conf_21 }}"
+  tags:
+    - tmux
+    - tmux.conf
+
+- name: tmux main configuration file
   template:
     src=tmux.conf
-    dest="~{{ item }}/{{ tmux_conf }}"
-    owner={{ item }}
-  become: yes
-  become_user: "{{ item }}"
-  with_items:
-    - "{{ tmux_users }}"
+    dest="~/{{ tmux_conf }}"
   tags:
     - tmux
     - tmux.conf
-
