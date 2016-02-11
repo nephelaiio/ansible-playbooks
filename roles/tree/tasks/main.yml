@@ -7,7 +7,7 @@
     - "vars/default.yml"
   when: tree_packages is not defined
 
-- name: install tree apt package
+- name: install tree package
   package: >
     name={{ item }} 
     state=latest
