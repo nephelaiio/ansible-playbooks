@@ -1,20 +1,16 @@
 ---
-- name: install vagrant apt package
-  apt: >
-    name={{ item }} 
-    state=latest
-  with_items:
-    - "{{ vagrant_packages }}"
-  become: yes
-  when: 
-    ansible_os_family == "Debian"
+- include_vars: "{{ item }}"
+  with_first_found:
+    - "vars/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "vars/{{ ansible_distrubition }}.yml"
+    - "vars/{{ ansible_os_family }}.yml"
+    - "vars/default.yml"
+  when: vagrant_packages is not defined
 
-- name: install vagrant arch package
-  pacman: >
+- name: install vagrant package
+  package: >
     name={{ item }} 
     state=latest
   with_items:
     - "{{ vagrant_packages }}"
   become: yes
-  when: 
-    ansible_os_family == "Archlinux"
