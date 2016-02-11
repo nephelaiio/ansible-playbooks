@@ -1,4 +1,12 @@
 ---
+- include_vars: "{{ item }}"
+  with_first_found:
+    - "vars/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "vars/{{ ansible_distrubition }}.yml"
+    - "vars/{{ ansible_os_family }}.yml"
+    - "vars/default.yml"
+  when: r_packages is not defined
+
 - name: install CRAN debian repository key
   apt_key: >
     keyserver=keys.gnupg.net
@@ -31,38 +39,12 @@
     - cran
     - r
 
-- name: install CRAN R apt packages
-  apt: >
+- name: install CRAN R packages
+  package: >
     name={{ item }} 
     state=latest
   with_items:
-    - r-base
-    - r-base-dev
+    - "{{ r_packages }}"
   become: yes
-  when:
-    ansible_os_family == "Debian"
-  tags:
-    - r
-
-- name: install CRAN R yum packages
-  yum: >
-    name={{ item }}
-  with_items:
-    - R
-    - R-devel
-  become: yes
-  when:
-    ansible_os_family == "RedHat"
-  tags:
-    - r
-
-- name: install R arch packages
-  pacman: >
-    name={{ item }}
-  with_items:
-    - r
-  become: yes
-  when:
-    ansible_os_family == "Archlinux"
   tags:
     - r
