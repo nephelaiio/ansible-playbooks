@@ -1,0 +1,22 @@
+---
+- include_vars: "{{ item }}"
+  with_first_found:
+    - "vars/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "vars/{{ ansible_distrubition }}.yml"
+    - "vars/{{ ansible_os_family }}.yml"
+    - "vars/default.yml"
+  when: openjdk_jdk_packages is not defined
+  tags:
+    - openjdk
+    - jdk
+
+- name: install openjdk jdk packages
+  package: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - "{{ openjdk_jdk_packages }}"
+  become: yes
+  tags:
+    - openjdk 
+    - jdk
