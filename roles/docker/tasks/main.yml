@@ -1,0 +1,63 @@
+---
+- include_vars: "{{ item }}"
+  with_first_found:
+    - "vars/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "vars/{{ ansible_distrubition }}.yml"
+    - "vars/{{ ansible_os_family }}.yml"
+    - "vars/default.yml"
+  when: docker_core_packages is not defined
+  tags:
+    - docker
+
+- name: install docker apt key
+  apt_key: >
+    keyserver=hkp://p80.pool.sks-keyservers.net:80
+    id=58118E89F3A912897C070ADBF76221572C52609D
+  become: yes
+  when:
+    ansible_os_family == "Debian" 
+  tags:
+    - docker
+
+- name: install docker apt repo
+  apt_repository: >
+    repo="deb https://apt.dockerproject.org/repo {{ ansible_distribution|lower }}-{{ ansible_distribution_release }} {{ dockerrepo }}"
+  become: yes
+  when:
+    ansible_os_family == "Debian" 
+  tags:
+    - docker
+
+- name: install docker yum repo
+  copy: >
+    src=docker.repo
+    dest=/etc/yum.repos.d
+  become: yes
+  when:
+    ansible_os_family == "RedHat" 
+  tags:
+    - docker
+
+- name: install docker packages
+  package: >
+    name={{ item }} 
+    state=latest
+  with_items:
+    - "{{ docker_core_packages }}"
+  become: yes
+  tags:
+    - docker
+
+- name: configure docker users
+  user: >
+    name={{ lookup('env', 'USER') }}
+    append=yes
+    groups=docker
+  become: yes
+  tags:
+    - docker
+
+- name: configure docker service
+- service: >
+    enabled=yes
+    name={{ docker_service }}
