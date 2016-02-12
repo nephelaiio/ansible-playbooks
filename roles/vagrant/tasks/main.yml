@@ -6,6 +6,8 @@
     - "vars/{{ ansible_os_family }}.yml"
     - "vars/default.yml"
   when: vagrant_packages is not defined
+  tags:
+    - vagrant
 
 - name: install vagrant package
   package: >
@@ -14,3 +16,5 @@
   with_items:
     - "{{ vagrant_packages }}"
   become: yes
+  tags:
+    - vagrant

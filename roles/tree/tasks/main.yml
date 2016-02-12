@@ -6,6 +6,8 @@
     - "vars/{{ ansible_os_family }}.yml"
     - "vars/default.yml"
   when: tree_packages is not defined
+  tags:
+    - tree
 
 - name: install tree package
   package: >
