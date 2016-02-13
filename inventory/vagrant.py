@@ -17,7 +17,7 @@ def build_json_inventory(raw_lines):
     output = []
     meta = []
     for section in sections:
-        if isinstance(section, basestring):
+        if isinstance(section, str):
             output.append(build_section_host_output(section)) 
             meta.append(build_section_meta_output(section))
         elif isinstance(section, list):
