@@ -34,7 +34,7 @@
     name={{ item }} 
     state=latest
   with_items:
-    - virtualbox
+    - "{{ virtualbox_packages }}"
   become: yes
   tags:
     - virtualbox

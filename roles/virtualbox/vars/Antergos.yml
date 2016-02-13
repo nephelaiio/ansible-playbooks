@@ -1,0 +1,3 @@
+---
+virtualbox_packages:
+  - virtualbox
