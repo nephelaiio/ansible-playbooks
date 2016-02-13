@@ -2,13 +2,14 @@
 - hosts: localhost
   roles:
     - { role: git }
+    - { role: rsync }
     - { role: tree }
-    - { role: vim }
-    - { role: tmux, users: ["{{ ansible_ssh_user }}"] }
+#    - { role: vim }
+    - { role: tmux }
     - { role: virtualbox }
     - { role: vagrant }
-    - { role: docker.core, users: ["{{ ansible_ssh_user }}"] }
-    - { role: chef.dk }
+    - { role: docker }
+#    - { role: chef.dk }
     - { role: r }
     - { role: rbenv }
     - { role: openjdk, openjdk_jdk: yes }

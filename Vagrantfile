@@ -25,12 +25,17 @@ Vagrant.configure(2) do |config|
     end
   end
 
+  config.vm.define "arch" do |box|
+    box.vm.box = "terrywang/archlinux"
+  end
+
   config.vm.provision "ansible" do |ansible|
     ansible.groups = {
       "ubuntu" => ubuntu,
       "debian" => debian,
       "centos" => centos.map { |x| "centos#{x}" },
-      "testing:children" => ["ubuntu", "centos", "debian"]
+      "arch" => "arch",
+      "testing:children" => ["ubuntu", "centos", "debian", "arch" ]
     }
     ansible.playbook = "testing.yml"
   end
