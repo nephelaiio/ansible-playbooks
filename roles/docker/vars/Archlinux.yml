@@ -1,3 +1,4 @@
 ---
-docker_core_packages:
+docker_packages:
   - docker
+docker_service: docker

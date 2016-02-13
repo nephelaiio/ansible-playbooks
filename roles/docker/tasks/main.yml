@@ -5,7 +5,7 @@
     - "vars/{{ ansible_distrubition }}.yml"
     - "vars/{{ ansible_os_family }}.yml"
     - "vars/default.yml"
-  when: docker_core_packages is not defined
+  when: docker_packages is not defined
   tags:
     - docker
 
@@ -43,7 +43,7 @@
     name={{ item }} 
     state=latest
   with_items:
-    - "{{ docker_core_packages }}"
+    - "{{ docker_packages }}"
   become: yes
   tags:
     - docker
@@ -58,6 +58,9 @@
     - docker
 
 - name: configure docker service
-- service: >
+  service: >
     enabled=yes
     name={{ docker_service }}
+  become: yes
+  tags:
+    - docker
