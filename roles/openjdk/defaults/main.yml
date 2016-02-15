@@ -1,4 +1,2 @@
 ---
-openjdk_version: 8
-
 openjdk_headless: no

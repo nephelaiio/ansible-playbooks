@@ -2,8 +2,9 @@
 - hosts: testing
   roles:
     - { role: git }
+    - { role: rsync }
     - { role: tree }
-    - { role: vim }
+#    - { role: vim }
     - { role: tmux }
     - { role: virtualbox }
     - { role: vagrant }
@@ -11,5 +12,5 @@
     - { role: chef.dk }
     - { role: r }
     - { role: rbenv }
-    - { role: openjdk, open_jdk_flavor: "jdk" }
-    - { role: puppet, puppet_version: 3 }
+    - { role: openjdk }
+#    - { role: puppet }

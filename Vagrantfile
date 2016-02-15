@@ -10,34 +10,39 @@ Vagrant.configure(2) do |config|
   ubuntu.each do |codename|
     config.vm.define codename do |box|
       box.vm.box = "ubuntu/#{codename}64"
+      box.vm.provision "shell", inline: "apt-get clean ; apt-get update"
+      box.vm.provision "ansible" do |ansible|
+        ansible.groups = {
+          "testing" => codename
+        }
+        ansible.playbook = "testing.yml"
+      end
     end
   end
 
   debian.each do |codename|
     config.vm.define codename do |box|
       box.vm.box = "debian/#{codename}64"
+      box.vm.provision "shell", inline: "apt-get clean ; apt-get update"
+      box.vm.provision "ansible" do |ansible|
+        ansible.groups = {
+          "testing" => codename
+        }
+        ansible.playbook = "testing.yml"
+      end
     end
   end
 
   centos.each do |version|
     config.vm.define "centos#{version}" do |box|
       box.vm.box = "centos/#{version}"
+      box.vm.provision "ansible" do |ansible|
+        ansible.groups = {
+          "testing" => "centos#{version}"
+        }
+        ansible.playbook = "testing.yml"
+      end
     end
-  end
-
-  config.vm.define "arch" do |box|
-    box.vm.box = "terrywang/archlinux"
-  end
-
-  config.vm.provision "ansible" do |ansible|
-    ansible.groups = {
-      "ubuntu" => ubuntu,
-      "debian" => debian,
-      "centos" => centos.map { |x| "centos#{x}" },
-      "arch" => "arch",
-      "testing:children" => ["ubuntu", "centos", "debian", "arch" ]
-    }
-    ansible.playbook = "testing.yml"
   end
 
 end

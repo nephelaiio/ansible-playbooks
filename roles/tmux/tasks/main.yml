@@ -13,6 +13,7 @@
     state=latest
   with_items:
     - "{{ tmux_packages }}"
+  become: yes
   tags:
     - tmux
 

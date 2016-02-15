@@ -1,6 +1,6 @@
 ---
 openjdk_jdk_packages:
-  - "{{ 'jdk' ~ openjdk_version ~ '-openjdk' ~ ('-headless' if openjdk_headless else '') }}"
+  - "{{ 'jdk8-openjdk' ~ ('-headless' if openjdk_headless else '') }}"
 
 openjdk_jre_packages:
-  - "{{ 'jre' ~ openjdk_version ~ '-openjdk' ~ ('-headless' if openjdk_headless else '') }}"
+  - "{{ 'jre8-openjdk' ~ ('-headless' if openjdk_headless else '') }}"

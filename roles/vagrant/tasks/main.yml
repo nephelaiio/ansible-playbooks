@@ -9,12 +9,33 @@
   tags:
     - vagrant
 
+- name: download vagrant yum package
+  get_url: >
+    dest=/tmp/vagrant.rpm
+    url=https://releases.hashicorp.com/vagrant/1.8.1/vagrant_1.8.1_x86_64.rpm
+  when:
+    ansible_os_family == "RedHat" 
+  become: yes
+  tags:
+    - vagrant
+
+- name: install vagrant yum package
+  yum: >
+    name=/tmp/vagrant.rpm
+  when:
+    ansible_os_family == "RedHat" 
+  become: yes
+  tags:
+    - vagrant
+    
 - name: install vagrant package
   package: >
     name={{ item }} 
     state=latest
   with_items:
     - "{{ vagrant_packages }}"
+  when:
+    ansible_os_family != "RedHat"
   become: yes
   tags:
     - vagrant
