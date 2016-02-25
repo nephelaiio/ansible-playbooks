@@ -1,11 +1,11 @@
 ---
-- name: install vim apt package
-  apt: name={{ item }} state=latest
-  with_items:
-    - vim-nox
-  become: yes
-  when: 
-    ansible_os_family == "Debian"
+- include_vars: "{{ item }}"
+  with_first_found:
+    - "vars/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "vars/{{ ansible_distrubition }}.yml"
+    - "vars/{{ ansible_os_family }}.yml"
+    - "vars/default.yml"
+  when: vim_packages is not defined
   tags:
     - vim
 
@@ -19,51 +19,19 @@
   tags:
     - vim
 
-- name: install vim apt plugins
-  apt: >
-    name={{ item }} 
-    state=latest
+- name: install vim packages
+  package: name={{ item }} state=latest
   with_items:
-    - vim-youcompleteme
-    - vim-addon-manager
-    - silversearcher-ag
-    - vim-python-jedi
-  notify:
-    - activate vim apt plugins
+    - "{{ vim_packages }}"
   become: yes
-  when: 
-    ansible_os_family == "Debian"
-  tags:
-    - vim
-    - vimrc
-
-- name: install vim yum package
-  yum: name={{ item }} state=latest
-  with_items:
-    - vim-enhanced
-  become: yes
-  when: 
-    ansible_os_family == "RedHat"
-  tags:
-    - vim
-
-- name: install vim arch package
-  pacman: name={{ item }} state=latest
-  with_items:
-    - vim
-  when:
-    ansible_os_family == "Archlinux"
   tags:
     - vim
 
 - name: create vim plugin directory
   file: >
-    path="~{{ item}}/{{ vim_plugins }}"
+    path="~/{{ vim_plugins }}"
     state=directory
-  become: yes
-  become_user: "{{ item }}"
-  with_items:
-    - "{{ vim_users }}"
+  become: no
   tags:
     - vim
     - vimrc
@@ -71,11 +39,8 @@
 - name: install vim neobundle
   git: >
     repo=https://github.com/Shougo/neobundle.vim 
-    dest="~{{ item }}/{{ vim_plugins }}/neobundle.vim"
-  become: yes
-  become_user: "{{ item }}"
-  with_items:
-    - "{{ vim_users }}"
+    dest="~/{{ vim_plugins }}/neobundle.vim"
+  become: no
   tags:
     - vim
     - vimrc
@@ -83,12 +48,8 @@
 - name: install vimrc
   template: >
     src=vimrc
-    dest="~{{ item }}/{{ vim_conf }}"
-    owner={{ item }}
-  become: yes
-  become_user: "{{ item }}"
-  with_items:
-    - "{{ vim_users }}"
+    dest="~/{{ vim_conf }}"
+  become: no
   tags:
     - vim
     - vimrc

@@ -1,0 +1,4 @@
+---
+vim_packages:
+  - the_silver_searcher
+  - vim-enhanced

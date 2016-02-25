@@ -27,7 +27,6 @@ NeoBundle 'pearofducks/ansible-vim'
 
 call neobundle#end()
 
-NeoBundleClean
 NeoBundleCheck
 
 filetype plugin indent on
@@ -106,9 +105,10 @@ let g:slime_target = "tmux"
 nnoremap <Leader>ss :SlimeSend<cr>
 
 " ultisnips settings
-let g:UltiSnipsExpandTrigger="<c-Space>"
-let g:UltiSnipsJumpForwardTrigger="<c-b>"
-let g:UltiSnipsJumpBackwardTrigger="<c-z>"
+let g:UltiSnipsExpandTrigger="<c-j>"
+let g:UltiSnipsListSnippets="<c-l>"
+let g:UltiSnipsJumpForwardTrigger="<c-j>"
+let g:UltiSnipsJumpBackwardTrigger="<c-k>"
 
 " gui console settings
 if has("gui_running")
