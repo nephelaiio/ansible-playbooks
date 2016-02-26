@@ -110,6 +110,9 @@ let g:UltiSnipsListSnippets="<c-l>"
 let g:UltiSnipsJumpForwardTrigger="<c-j>"
 let g:UltiSnipsJumpBackwardTrigger="<c-k>"
 
+" silversearcher settings
+nnoremap \ :Ag<SPACE>
+
 " gui console settings
 if has("gui_running")
   if has("gui_gtk2")
