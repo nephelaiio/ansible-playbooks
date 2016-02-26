@@ -40,31 +40,4 @@
   tags:
     - vagrant
 
-- name: verify vagrant-berkshelf plugin
-  shell: "vagrant plugin list | grep vagrant-berkshelf"
-  register: vagrant_berkshelf
-  ignore_errors: yes
-  changed_when: "vagrant_berkshelf.rc != 0"
-  tags:
-    - vagrant
-
-- name: install vagrant-berkshelf plugin
-  shell: "vagrant plugin install vagrant-berkshelf"
-  when: vagrant_berkshelf|failed
-  tags:
-    - vagrant
-
-- name: verify vagrant-vbguest plugin
-  shell: "vagrant plugin list | grep vagrant-vbguest"
-  register: vagrant_vbguest
-  ignore_errors: yes
-  changed_when: "vagrant_vbguest.rc != 0"
-  tags:
-    - vagrant
-
-- name: install vagrant-vbguest plugin
-  shell: "vagrant plugin install vagrant=vbguest"
-  when: vagrant_vbguest|failed
-  tags:
-    - vagrant
-
+- include: plugins.yml
