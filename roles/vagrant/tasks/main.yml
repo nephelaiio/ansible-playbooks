@@ -63,7 +63,7 @@
     - vagrant
 
 - name: install vagrant-vbguest plugin
-  shell: "vagrant plugin install vagrant=vbguest"
+  shell: "vagrant plugin install vagrant-vbguest"
   when: vagrant_vbguest|failed
   tags:
     - vagrant
