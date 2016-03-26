@@ -40,4 +40,5 @@
   tags:
     - vagrant
 
-- include: plugins.yml
+<<<<<<< HEAD
+>>>>>>> efd5c6b9fc4749c52a29debfd9bcc408832ca1d2
