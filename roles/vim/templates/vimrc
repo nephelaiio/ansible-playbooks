@@ -24,6 +24,7 @@ NeoBundle 'honza/vim-snippets'
 NeoBundle 'markcornick/vim-vagrant'
 NeoBundle 'rking/ag.vim'
 NeoBundle 'pearofducks/ansible-vim'
+NeoBundle 'PotatoesMaster/i3-vim-syntax'
 
 call neobundle#end()
 
