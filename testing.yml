@@ -4,7 +4,7 @@
     - { role: git }
     - { role: rsync }
     - { role: tree }
-#    - { role: vim }
+    - { role: vim }
     - { role: tmux }
     - { role: virtualbox }
     - { role: vagrant }
@@ -13,4 +13,4 @@
     - { role: r }
     - { role: rbenv }
     - { role: openjdk }
-#    - { role: puppet }
+    - { role: puppet }

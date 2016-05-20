@@ -9,7 +9,7 @@
     - { role: virtualbox }
     - { role: vagrant }
     - { role: docker }
-#    - { role: chef.dk }
+    - { role: chef.dk }
     - { role: r }
     - { role: rbenv }
     - { role: openjdk, openjdk_jdk: yes }
