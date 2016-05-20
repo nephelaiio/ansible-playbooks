@@ -14,3 +14,4 @@
     - { role: rbenv }
     - { role: openjdk }
     - { role: puppet }
+    - { role: i3 }

@@ -1,0 +1,34 @@
+---
+- include_vars: "{{ item }}"
+  with_first_found:
+    - "vars/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "vars/{{ ansible_distrubition }}.yml"
+    - "vars/{{ ansible_os_family }}.yml"
+    - "vars/default.yml"
+  when: i3_packages is not defined
+  tags:
+    - i3
+
+- name: install i3 packages
+  package: name={{ item }} state=latest
+  with_items:
+    - "{{ i3_packages }}"
+  become: yes
+  tags:
+    - i3
+
+- name: create i3 config directory
+  file: >
+    path="~/{{ i3_config_dir }}"
+    state=directory
+  become: no
+  tags:
+    - i3
+
+- name: install i3 config
+  template: >
+    src=config
+    dest="~/{{ i3_config }}"
+  become: no
+  tags:
+    - i3
