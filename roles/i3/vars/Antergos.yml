@@ -1,0 +1,8 @@
+---
+i3_packages:
+  - i3-wm
+  - i3status
+
+i3_config_dir: '.config/i3/'
+
+i3_config: '.config/i3/config'
