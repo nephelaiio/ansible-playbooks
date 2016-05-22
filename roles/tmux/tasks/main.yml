@@ -5,7 +5,9 @@
     - "vars/{{ ansible_distrubition }}.yml"
     - "vars/{{ ansible_os_family }}.yml"
     - "vars/default.yml"
-  when: tmux_pacakges is not defined
+  when: tmux_packages is not defined
+  tags:
+    - tmux
 
 - name: install tmux package
   package: >
