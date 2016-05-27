@@ -1,0 +1,62 @@
+---
+- include_vars: "{{ item }}"
+  with_first_found:
+    - "vars/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "vars/{{ ansible_distrubition }}.yml"
+    - "vars/{{ ansible_os_family }}.yml"
+    - "vars/default.yml"
+  when: neovim_packages is not defined
+  tags:
+    - neovim
+
+- name: install neovim apt repository
+  apt_repository:
+    repo="ppa:neovim-ppa/unstable"
+  become: yes
+  when: 
+    ansible_distribution == "Ubuntu"
+  tags:
+    - neovim
+
+- name: install neovim packages
+  package: name={{ item }} state=latest
+  with_items:
+    - "{{ neovim_packages }}"
+  become: yes
+  tags:
+    - neovim
+
+- name: install neovim pip packages
+  pip:
+    name={{ item }}
+  with_items:
+    - "{{ neovim_pip_packages }}"
+  become: yes
+  when: 
+    ansible_os_family == "Debian"
+  tags:
+    - neovim
+
+- name: create vim plugin directory
+  file: >
+    path="~/{{ vim_plugins }}"
+    state=directory
+  become: no
+  tags:
+    - neovim
+
+- name: install vim neobundle
+  git: >
+    repo=https://github.com/Shougo/neobundle.vim 
+    dest="~/{{ vim_plugins }}/neobundle.vim"
+  become: no
+  tags:
+    - neovim
+
+- name: install vimrc
+  template: >
+    src=vimrc
+    dest="~/{{ vim_conf }}"
+  become: no
+  tags:
+    - neovim
