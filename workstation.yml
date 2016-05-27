@@ -5,6 +5,7 @@
     - { role: rsync }
     - { role: tree }
     - { role: vim }
+    - { role: neovim }
     - { role: tmux }
     - { role: virtualbox }
     - { role: vagrant }
