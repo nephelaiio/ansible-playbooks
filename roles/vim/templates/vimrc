@@ -25,6 +25,7 @@ NeoBundle 'markcornick/vim-vagrant'
 NeoBundle 'rking/ag.vim'
 NeoBundle 'pearofducks/ansible-vim'
 NeoBundle 'PotatoesMaster/i3-vim-syntax'
+NeoBundle 'elzr/vim-json'
 
 call neobundle#end()
 
@@ -124,3 +125,11 @@ if has("gui_running")
     set guifont=Consolas:h9:cANSI
   endif
 endif
+
+" split/resize settings
+set splitbelow
+set splitright
+nnoremap <C-w>J :resize -5<cr>
+nnoremap <C-w>K :resize +5<cr>
+nnoremap <C-w>H :vertical resize +5<cr>
+nnoremap <C-w>L :vertical resize -5<cr>
