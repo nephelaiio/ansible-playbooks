@@ -3,3 +3,6 @@
 *.swp
 *.retry
 .idea/
+.kitchen/
+.kitchen.local.yml
+*.lock
