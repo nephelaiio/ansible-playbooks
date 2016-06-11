@@ -27,8 +27,16 @@
 
 - name: install i3 config
   template: >
-    src=config
+    src=i3.conf
     dest="~/{{ i3_config }}"
+  become: no
+  tags:
+    - i3
+
+- name: install i3status config
+  template: >
+    src=i3status.conf
+    dest="~/{{ i3status_config }}"
   become: no
   tags:
     - i3
