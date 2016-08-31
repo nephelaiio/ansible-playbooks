@@ -2,15 +2,36 @@ plugins {
   id "com.linkedin.python" version "0.3.9"
 }
 
-dependencies {
-  python 'pypi:ansible:2.1.1'
-}
-
-repositories {
-  pyGradlePyPi()
-}
-
-task vagrant(type:Exec) {
+task test(type:Exec) {
+  doFirst {
+    println ''
+  }
   commandLine 'vagrant'
   args 'up'
 }
+
+task workstation(type:Exec) {
+  doFirst {
+    println ''
+  }
+  commandLine 'ansible-playbook'
+  args 'workstation.yml', '--ask-become-pass'
+}
+
+task destroy(type:Exec) {
+  doFirst {
+    println ''
+  }
+  commandLine 'vagrant'
+  args 'destroy'
+}
+
+task status(type:Exec) {
+  doFirst {
+    println ''
+  }
+  commandLine 'vagrant'
+  args 'status'
+}
+
+build.dependsOn destroy
