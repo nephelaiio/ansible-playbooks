@@ -1,0 +1,18 @@
+---
+- include_vars: "{{ item }}"
+  with_first_found:
+    - "vars/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+    - "vars/{{ ansible_distrubition }}.yml"
+    - "vars/{{ ansible_os_family }}.yml"
+    - "vars/default.yml"
+  when: tools_packages is not defined
+  tags:
+    - i3
+
+- name: install tools packages
+  package: name={{ item }} state=latest
+  with_items:
+    - "{{ tools_packages }}"
+  become: yes
+  tags:
+    - i3

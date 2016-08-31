@@ -15,3 +15,4 @@
     - { role: rbenv }
     - { role: openjdk, openjdk_jdk: yes }
     - { role: i3 }
+    - { role: tools }

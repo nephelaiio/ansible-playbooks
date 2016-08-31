@@ -1,0 +1,4 @@
+---
+tools_packages:
+  - bind-tools
+  - debootstrap
