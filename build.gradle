@@ -1,0 +1,16 @@
+plugins {
+  id "com.linkedin.python" version "0.3.9"
+}
+
+dependencies {
+  python 'pypi:ansible:2.1.1'
+}
+
+repositories {
+  pyGradlePyPi()
+}
+
+task vagrant(type:Exec) {
+  commandLine 'vagrant'
+  args 'up'
+}

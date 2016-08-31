@@ -6,3 +6,4 @@
 .kitchen/
 .kitchen.local.yml
 *.lock
+.gradle/
