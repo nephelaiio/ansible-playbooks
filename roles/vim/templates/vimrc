@@ -26,6 +26,8 @@ NeoBundle 'rking/ag.vim'
 NeoBundle 'pearofducks/ansible-vim'
 NeoBundle 'PotatoesMaster/i3-vim-syntax'
 NeoBundle 'elzr/vim-json'
+NeoBundle 'tmux-plugins/vim-tmux'
+NeoBundle 'tfnico/vim-gradle'
 
 call neobundle#end()
 
