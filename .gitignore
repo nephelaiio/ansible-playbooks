@@ -7,5 +7,4 @@
 .kitchen.local.yml
 *.lock
 .gradle/
-roles/rbenv
-roles/epel
+galaxy/
