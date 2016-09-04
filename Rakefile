@@ -1,7 +1,11 @@
 require 'rake'
+require 'erb'
+require 'find'
+require 'pathname'
 
 galaxy_path = './galaxy'
-role_path = './roles'
+roles_path = './roles'
+templates_path = './templates'
 
 namespace 'roles' do
 
@@ -19,8 +23,29 @@ namespace 'roles' do
 
   task 'bootstrap', [:roles] do |t, args|
     args[:roles].each do |role|
-      sh "ansible-galaxy init #{role} -p #{role_path}/#{role}"
+      sh "ansible-galaxy init #{role} -p #{roles_path}"
+      Rake::Task['roles:template'].invoke(role, "#{roles_path}/#{role}")
     end
+  end
+
+  task 'template', [:role, :path] do |t, args|
+    role_name = args[:role]
+    role_path = args[:path]
+    template_path = "#{templates_path}/role/#{role_name}"
+    Find.find("#{templates_path}/role/") { |file|
+      templates_pathname = Pathname.new("#{templates_path}/role")
+      file_relname = Pathname.new(file).relative_path_from(templates_pathname)
+      target_relname = File.basename("#{roles_path}/#{file_relname}", '.erb')
+      target = "#{roles_path}/#{role_name}/#{target_relname}"
+      if FileTest.directory?(file)
+        Dir.mkdir(target) unless File.exists?(target)
+      else
+        File.open(file, File::RDWR) do |f|
+          template = ERB.new(f.read).result
+          File.write(target, template) unless File.exists?(target)
+        end 
+      end
+    }
   end
 
 end
