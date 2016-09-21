@@ -1,8 +1,7 @@
 ---
 i3_packages:
-  - i3-wm
-  - i3status
-  - ttf-inconsolata
+  - i3
+  - fonts-inconsolata
 
 i3_config_dir: '.config/i3/'
 
