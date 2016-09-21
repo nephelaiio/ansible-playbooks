@@ -1,2 +1,1 @@
 ansible>=2.1.1.0
-molecule>=1.11.1
