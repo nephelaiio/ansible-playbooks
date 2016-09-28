@@ -1,4 +1,5 @@
 #Personal Ansible Playbooks
+[![Build Status](https://travis-ci.org/nephelaiio/ansible-playbooks.svg?branch=master)](https://travis-ci.org/nephelaiio/ansible-playbooks)
 
 ##Description
 Ansible playbooks for work and play.
