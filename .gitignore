@@ -6,3 +6,5 @@
 .idea/
 .test/
 **/.molecule/
+**/.cache/
+**/__pycache__/

@@ -1,7 +1,7 @@
 #Personal Ansible Playbooks
 
 ##Description
-This is an attempt to use ansible to unify my personal workstation settings into a single repository. It has also grown a bit to add support for some time saving configurations used at work and training.
+Ansible playbooks for work and play.
 
 ## Requirements
 [Ansible](https://www.ansible.com/) must be available on your path. You can also install it using pip globally or to a [virtualenv](https://virtualenv.pypa.io/en/stable/) (recommended). A self contained example using [virtualenv]() and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/) follows:
@@ -14,18 +14,26 @@ workon ansible
 pip install -r requirements.txt
 ```
 
+## Testing
+[Docker](https://docker.io) must be available to your account on your system. Issue the following commands to trigger a test run:
+
+```
+pip install -r requirements.txt
+pytest
+```
+
+You can check the [Travis configuration file](/.travis.yml) for an example/more details.
+
 ##Usage
-To bootstrap a workstation machine
+To apply a playbook called workstation.yml, do
 
 ```
 ansible-galaxy install -r requirements.yml
-ansible-playbook localhost.yml --ask-become-pass
+ansible-playbook setup.yml
+ansible-playbook workstation.yml
 ```
 
-For other roles, you can clone the repo and define custom playbooks and inventory sources
+Simply add the --ask-become-pass swtich to both 'ansible-playbook' commands if you do not have passwordless sudo configured in the target host.
 
 ## OS Support
-Roles are only supported under Arch, Ubuntu Wily, Debian Jesse, RHEL 7, CentOS 6, CentOS 7 and later versions
-
-## To Do
-* Add testing harness using [molecule](molecule.readthedocs.io)
+Roles are only supported under Arch, Ubuntu Xenial, Debian Jesse, CentOS 7 and later versions
