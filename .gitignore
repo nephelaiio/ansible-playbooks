@@ -2,9 +2,7 @@
 *.swo
 *.swp
 *.retry
-.idea/
-.kitchen/
-.kitchen.local.yml
 *.lock
-.gradle/
-galaxy/
+.idea/
+.test/
+**/.molecule/

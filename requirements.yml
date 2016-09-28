@@ -1,4 +1,5 @@
 ---
-- src: zzet.rbenv 
-- src: nephelaiio.vim
-- src: nephelaiio.tree
+- zzet.rbenv
+- nephelaiio.vim
+- nephelaiio.tree
+- dochang.docker

@@ -3,6 +3,4 @@
   hosts: localhost
   tasks:
     - name: run ansible galaxy
-      local_action: command ansible-galaxy install -r requirements.yml -p galaxy/
-
-
+      local_action: command ansible-galaxy install -r dependencies.yml -p galaxy/

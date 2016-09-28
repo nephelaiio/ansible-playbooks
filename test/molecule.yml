@@ -1,0 +1,12 @@
+---
+driver:
+  name: docker
+
+ansible:
+  requirements_file: requirements.yml
+
+docker:
+  containers:
+      - name: ansible-playbooks-xenial
+        image: ubuntu
+        image_version: xenial
