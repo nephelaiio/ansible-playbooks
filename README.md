@@ -8,7 +8,7 @@ Ansible playbooks for work and play.
 [Ansible](https://www.ansible.com/) must be available on your path. You can also install it using pip globally or to a [virtualenv](https://virtualenv.pypa.io/en/stable/) (recommended). A self contained example using [virtualenv]() and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/) follows:
 
 ```
-git clone https://github.com/teddyphreak/ansible-playbooks.git ansible-playbooks
+git clone https://github.com/nephelaiio/ansible-playbooks.git ansible-playbooks
 cd ansible-playbooks
 mkvirtualenv ansible
 workon ansible
