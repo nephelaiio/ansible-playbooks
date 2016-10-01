@@ -1,0 +1,8 @@
+---
+- name: install profile prerequisites
+  hosts: localhost
+  tasks:
+    - name: delete ansble cache
+      file: dest=galaxy/ state=absent
+    - name: run ansible galaxy
+      local_action: command ansible-galaxy install -r requirements.yml -p galaxy/

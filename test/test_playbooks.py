@@ -12,6 +12,7 @@ test_src_dir = 'test'
 test_exe_dir = '.test'
 molecule_playbook = 'playbook.yml'
 playbook_dir = 'playbooks'
+playbook_ignore = ['requirements.yml']
 playbook_lint_command = 'ansible-lint'
 playbook_lint_success = 0
 playbook_test_command = 'molecule test'
@@ -25,7 +26,8 @@ def list_playbooks(playbook_dir):
     """
     playbook_files = [f  for f in os.listdir(playbook_dir)
             if os.path.isfile(os.path.join(cwd, playbook_dir, f)) and
-            re.match(".*.yml$", f)]
+            re.match(".*-playbook.yml$", f) and
+            not f in playbook_ignore]
     playbook_files = [os.path.join(playbook_dir, f) for f in playbook_files]
     return(playbook_files)
 
