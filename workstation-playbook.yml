@@ -5,10 +5,10 @@
     - { role: nephelaiio.vim }
     - { role: nephelaiio.devtools }
     - { role: nephelaiio.rbenv }
+    - { role: nephelaiio.tmux }
+    - { role: nephelaiio.vagrant }
   #  - { role: dochang.docker }
-  #  - { role: tmux }
   #  - { role: virtualbox }
-  #  - { role: vagrant }
   #  - { role: chef.dk }
   #  - { role: r }
   #  - { role: openjdk, openjdk_jdk: yes }
