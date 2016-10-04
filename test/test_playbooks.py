@@ -11,8 +11,8 @@ from os.path import curdir as cwd
 test_src_dir = 'test'
 test_exe_dir = '.test'
 molecule_playbook = 'playbook.yml'
-playbook_dir = 'playbooks'
-playbook_ignore = ['requirements.yml']
+playbook_dir = '.'
+playbook_ignore = ['setup-playbook.yml']
 playbook_lint_command = 'ansible-lint'
 playbook_lint_success = 0
 playbook_test_command = 'molecule test'
