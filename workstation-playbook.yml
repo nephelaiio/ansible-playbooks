@@ -7,6 +7,7 @@
     - { role: nephelaiio.rbenv }
     - { role: nephelaiio.tmux }
     - { role: nephelaiio.vagrant }
+    - { role: nephelaiio.octave }
   #  - { role: dochang.docker }
   #  - { role: virtualbox }
   #  - { role: chef.dk }
