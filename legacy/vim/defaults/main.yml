@@ -1,5 +1,0 @@
----
-vim_plugins: .vim/bundle
-vim_conf: .vim/vimrc
-vim_users:
-  - "{{ ansible_ssh_user }}"

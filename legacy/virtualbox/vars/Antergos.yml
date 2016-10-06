@@ -1,5 +1,0 @@
----
-virtualbox_packages:
-  - virtualbox
-  - virtualbox-host-dkms
-  - linux-headers
