@@ -8,10 +8,10 @@
     - { role: nephelaiio.tmux }
     - { role: nephelaiio.vagrant }
     - { role: nephelaiio.octave }
+    - { role: nephelaiio.i3 }
   #  - { role: dochang.docker }
   #  - { role: virtualbox }
   #  - { role: chef.dk }
   #  - { role: r }
   #  - { role: openjdk, openjdk_jdk: yes }
-  #  - { role: i3 }
   #  - { role: tools }
