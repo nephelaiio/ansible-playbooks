@@ -9,6 +9,7 @@
     - { role: nephelaiio.vagrant }
     - { role: nephelaiio.octave }
     - { role: nephelaiio.i3 }
+    - { role: nephelaiio.docker }
   #  - { role: dochang.docker }
   #  - { role: virtualbox }
   #  - { role: chef.dk }

@@ -1,7 +1,6 @@
 import pytest
 import os
 import re
-import sys
 import shutil
 import yaml
 from subprocess import call
@@ -24,10 +23,10 @@ def list_playbooks(playbook_dir):
     retrieve the list of playbooks in a directory
     :param playbook_dir: the path to search for playbooks
     """
-    playbook_files = [f  for f in os.listdir(playbook_dir)
-            if os.path.isfile(os.path.join(cwd, playbook_dir, f)) and
-            re.match(".*-playbook.yml$", f) and
-            not f in playbook_ignore]
+    playbook_files = [f for f in os.listdir(playbook_dir)
+                      if os.path.isfile(os.path.join(cwd, playbook_dir, f)) and
+                      re.match(".*-playbook.yml$", f) and
+                      f not in playbook_ignore]
     playbook_files = [os.path.join(playbook_dir, f) for f in playbook_files]
     return(playbook_files)
 
@@ -50,12 +49,14 @@ def bootstrap_test_tree(playbook):
     shutil.copytree(test_src_dir, test_dir)
     playbook_stream = open(playbook, 'r')
     molecule_playbook_data = yaml.load(playbook_stream)
+
     def update_hosts(yaml_data):
-       yaml_data['hosts'] = 'all'
-       return yaml_data
+        yaml_data['hosts'] = 'all'
+        return yaml_data
     molecule_playbook_data = [update_hosts(x) for x in molecule_playbook_data]
     with open(os.path.join(test_dir, molecule_playbook), 'w') as test_playbook:
-        test_playbook.write(yaml.dump(molecule_playbook_data, default_flow_style=False))
+        test_playbook.write(yaml.dump(molecule_playbook_data,
+                                      default_flow_style=False))
     return(test_dir)
 
 
@@ -83,4 +84,4 @@ def test_lint_playbook(playbook):
     :param playbooks: the paths of the playbook file to test
     """
     print("Linting playbook {0}".format(playbook))
-    assert call([playbook_lint_command] + [playbook]) == playbook_lint_success
+    assert call([playbook_lint_command, playbook]) == playbook_lint_success
