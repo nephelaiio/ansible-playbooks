@@ -85,3 +85,19 @@ def test_lint_playbook(playbook):
     """
     print("Linting playbook {0}".format(playbook))
     assert call([playbook_lint_command, playbook]) == playbook_lint_success
+
+
+def test_workstation_playbook():
+    """
+    run tests for workstation-playbook.yml
+    """
+    playbook = 'workstation-playbook.yml'
+    test_run_playbook(playbook)
+    test_lint_playbook(playbook)
+
+
+def test_lint():
+    """
+    run lint test for all playbooks
+    """
+    [test_lint_playbook(x) for x in list_playbooks(playbook_dir)]
