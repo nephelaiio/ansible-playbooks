@@ -1,6 +1,6 @@
 from paver.tasks import cmdopts, task, needs
+from getpass import getuser
 import pytest
-import getpass
 from subprocess import call
 
 
@@ -39,7 +39,7 @@ def setup(options):
 def workstation(options):
     run_playbook('workstation-playbook.yml',
                  build_args(options,
-                            'workstation', {'user': getpass.getuser()}))
+                            'workstation', {'user': getuser()}))
 
 
 @task
@@ -49,6 +49,17 @@ def test_workstation():
 
 
 @task
+@needs(['setup'])
+@cmdopts([
+    ('user=', 'u', 'connect as this user'),
+    ('inventory_file=', 'i', 'inventory host path or csv host list')
+], share_with=['setup'])
+def openstack(options):
+    run_playbook('openstack-playbook.yml',
+                 build_args(options,
+                            'openstack', {'user': getuser()}))
+
+
 def test_openstack():
     args = 'test/test_playbooks.py::test_openstack_playbook -s'.split()
     pytest.main(args)
