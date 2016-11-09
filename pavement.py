@@ -44,7 +44,13 @@ def workstation(options):
 
 @task
 def test_workstation():
-    args = 'test/test_playbooks.py::test_workstation_playbook'.split()
+    args = 'test/test_playbooks.py::test_workstation_playbook -s'.split()
+    pytest.main(args)
+
+
+@task
+def test_openstack():
+    args = 'test/test_playbooks.py::test_openstack_playbook -s'.split()
     pytest.main(args)
 
 
@@ -56,4 +62,5 @@ def lint():
 
 @task
 def test():
-    pytest.main(['-s'])
+    test_openstack()
+    test_workstation()

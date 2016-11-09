@@ -9,4 +9,7 @@ docker:
   containers:
       - name: ansible-playbooks-xenial
         image: ubuntu
+        privileged: True
+        volume_mounts:
+          - '/var/run/docker.sock:/var/run/docker.sock'
         image_version: xenial

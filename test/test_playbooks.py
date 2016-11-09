@@ -92,8 +92,17 @@ def test_workstation_playbook():
     run tests for workstation-playbook.yml
     """
     playbook = 'workstation-playbook.yml'
-    test_run_playbook(playbook)
     test_lint_playbook(playbook)
+    test_run_playbook(playbook)
+
+
+def test_openstack_playbook():
+    """
+    run tests for openstack-playbook.yml
+    """
+    playbook = 'openstack-playbook.yml'
+    test_lint_playbook(playbook)
+    test_run_playbook(playbook)
 
 
 def test_lint():
