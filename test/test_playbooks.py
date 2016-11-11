@@ -105,6 +105,15 @@ def test_openstack_playbook():
     test_run_playbook(playbook)
 
 
+def test_unifi_playbook():
+    """
+    run tests for unifi-playbook.yml
+    """
+    playbook = 'unifi-playbook.yml'
+    test_lint_playbook(playbook)
+    test_run_playbook(playbook)
+
+
 def test_lint():
     """
     run lint test for all playbooks

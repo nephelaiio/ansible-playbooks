@@ -1,0 +1,6 @@
+---
+- hosts: unifi
+  vars:
+    unifi_controller_packages_state: latest
+  roles:
+    - { role: nephelaiio.unifi-controller }

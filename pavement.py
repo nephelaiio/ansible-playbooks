@@ -1,7 +1,7 @@
 from paver.tasks import cmdopts, task, needs
 from getpass import getuser
-import pytest
 from subprocess import call
+import pytest
 
 
 def run_playbook(playbook, args):
@@ -62,6 +62,21 @@ def openstack(options):
 
 def test_openstack():
     args = 'test/test_playbooks.py::test_openstack_playbook -s'.split()
+    pytest.main(args)
+
+
+@task
+@needs(['setup'])
+@cmdopts([
+    ('inventory_file=', 'i', 'inventory host path or comma separated host list')
+], share_with=['setup'])
+def unifi(options):
+    run_playbook('unifi-playbook.yml', build_args(options, 'unifi'))
+
+
+@task
+def test_unifi():
+    args = 'test/test_playbooks.py::test_unifi_playbook -s'.split()
     pytest.main(args)
 
 
