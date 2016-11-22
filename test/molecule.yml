@@ -2,8 +2,9 @@
 driver:
   name: docker
 
-ansible:
+dependency:
   requirements_file: requirements.yml
+  name: galaxy
 
 docker:
   containers:
