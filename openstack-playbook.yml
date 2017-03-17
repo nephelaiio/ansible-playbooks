@@ -1,8 +1,0 @@
----
-- hosts: localhost
-  vars:
-    docker_registry_service_restart_policy: always
-  roles:
-    - { role: nephelaiio.devtools }
-    - { role: nephelaiio.docker }
-    - { role: nephelaiio.docker-registry }
