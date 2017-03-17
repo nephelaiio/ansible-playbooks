@@ -4,3 +4,11 @@
     unifi_controller_packages_state: latest
   roles:
     - { role: nephelaiio.unifi-controller }
+  tasks:
+    - name: upgrade unify host
+      apt:
+        upgrade: dist
+      when: 
+        - upgrade|default(false)|bool == true
+        - ansible_os_family == 'Debian'
+      become: yes
