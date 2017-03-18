@@ -1,0 +1,116 @@
+---
+- hosts: local
+  name: Install AWS cli
+  tasks:
+    - name: install jq
+      package:
+        name: 
+          - awscli
+      become: yes
+
+- hosts: local
+  name: Provision jupyter.nephelai.io
+  vars:
+    vpc_name: default
+    region: us-east-1
+    availability_zone: a
+    action: running
+    instance_type: p2.xlarge
+    ami_owner: 099720109477
+    ami_name: "ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"
+  tasks:
+    - name: retrieve vpc_id
+      local_action: command aws ec2 describe-vpcs --region {{ region }} --filters "Name=tag:Name,Values={{ vpc_name }}" --query "Vpcs[*].VpcId" --output text
+      register: vpc_id
+      changed_when: false
+    - name: retrieve image id
+      local_action:
+        module: ec2_ami_find
+        name: "{{ ami_name }}"
+        owner: "{{ ami_owner }}"
+        sort: name
+        sort_order: descending
+        sort_end: 1
+        region: "{{ region }}"
+      register: ami
+      changed_when: false
+    - name: retrieve subnet id
+      local_action: command aws ec2 describe-subnets --filter Name=vpc-id,Values={{ vpc_id.stdout }},Name=availability-zone,Values={{ region }}{{availability_zone}} --query "Subnets[*].SubnetId" --output text
+      register: subnet_id
+      changed_when: false
+    - name: delete jupyter security group
+      local_action:
+        module: ec2_group
+        name: jupyter
+        region: "{{ region }}"
+        description: Jupyter access group
+        state: absent
+    - name: create http security group
+      local_action:
+        module: ec2_group
+        name: httpd
+        region: "{{ region }}"
+        description: HTTP access group
+        state: present
+        vpc_id: "{{ vpc_id.stdout }}"
+        rules:
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 443
+            to_port: 443
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: 0.0.0.0/0
+          - proto: icmp
+            from_port: 8
+            to_port: -1
+            cidr_ip: 0.0.0.0/0
+        rules_egress:
+          - proto: tcp
+            from_port: 0
+            to_port: 65535
+            cidr_ip: 0.0.0.0/0
+          - proto: udp
+            from_port: 0
+            to_port: 65535
+            cidr_ip: 0.0.0.0/0
+          - proto: icmp
+            from_port: 8
+            to_port: -1
+            cidr_ip: 0.0.0.0/0
+    - name: create jupyter vm
+      local_action:
+        module: ec2
+        id: jupyter01
+        region: "{{ region }}"
+        vpc_subnet_id: "{{ subnet.id.stdout }}"
+        instance_type: "{{ instance_type }}"
+        image: "{{ ami.results[0].ami_id }}"
+        wait: true
+        keypair:
+        groups:
+          - httpd
+      register: ec2
+    - name: wait for ssh
+      local_action:
+        module: wait_for
+        host: "{{ item.public_ip }}"
+        port: 22
+        state: started
+      with_items: ec2.instances
+      when: action == 'running'
+    - name: tag instances
+      local_action:
+        module: ec2_tag
+        resource: "{{ item.id }}"
+        region: "{{ region }}"
+        state: present
+        tags: 
+          stack: jupyter
+      with_items: ec2.instances
+      when: action == 'running'
