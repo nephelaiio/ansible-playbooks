@@ -88,10 +88,11 @@
         module: ec2
         id: jupyter01
         region: "{{ region }}"
-        vpc_subnet_id: "{{ subnet.id.stdout }}"
+        vpc_subnet_id: "{{ subnet_id.stdout }}"
         instance_type: "{{ instance_type }}"
         image: "{{ ami.results[0].ami_id }}"
         wait: true
+        state: "{{ state }}"
         keypair:
         groups:
           - httpd
@@ -102,8 +103,8 @@
         host: "{{ item.public_ip }}"
         port: 22
         state: started
-      with_items: ec2.instances
-      when: action == 'running'
+      with_items: "{{ ec2.instances }}"
+      when: state == 'running'
     - name: tag instances
       local_action:
         module: ec2_tag
@@ -112,5 +113,5 @@
         state: present
         tags: 
           stack: jupyter
-      with_items: ec2.instances
-      when: action == 'running'
+      with_items: "{{ ec2.instances }}"
+      when: state == 'running'
