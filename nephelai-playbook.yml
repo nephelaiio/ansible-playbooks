@@ -1,36 +1,39 @@
 ---
-- hosts: local
+- name: Install AWS cli
 
-  name: Install AWS cli
+  hosts: local
 
   tasks:
 
     - name: install packages
-      pip:
+      local_action:
+        module: pip
         name: 
           - awscli
       become: yes
 
     - name: create inventory groups
-      lineinfile:
+      local_action:
+        module: lineinfile
         line: '[jupyter]'
         dest: 'inventory/aws'
         insertafter: EOF
         create: yes
 
 
-- hosts: local
+- name: Provision jupyter.nephelai.io
 
-  name: Provision jupyter.nephelai.io
+  hosts: local
 
   vars:
+
     vpc_name: default
     region: us-east-1
-    availability_zone: a
+    availability_zone: b
     action: present
-    instance_type: p2.xlarge
+    instance_type: t2.micro
     instance_count: 1
-    instance_id: jupyter01
+    instance_id: "{{ 'test04' | to_uuid }}"
     ami_owner: 099720109477
     ami_name: "ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"
 
@@ -108,74 +111,132 @@
     - name: retrieve instance ids
       local_action: command aws ec2 describe-instances --region {{ region }} --filter Name=client-token,Values={{ instance_id }} --query "Reservations[].Instances[].InstanceId"
       register: instance_query
+      changed_when: false
 
     - name: register instance ids
       set_fact:
         instances: "{{ instance_query.stdout|from_json }}"
 
-    - debug:
-        var: instances
+    - block:
 
-    - name: create jupyter instances
-      local_action:
-        module: ec2
-        region: "{{ region }}"
-        vpc_subnet_id: "{{ subnet_id.stdout }}"
-        instance_type: "{{ instance_type }}"
-        image: "{{ ami.results[0].ami_id }}"
-        wait: true
-        state: "{{ action }}"
-        id: "{{ instance_id }}"
-        count: "{{ instance_count }}"
-        groups:
-          - httpd
-      register: ec2
+      - name: create jupyter instances
+        local_action:
+          module: ec2
+          region: "{{ region }}"
+          vpc_subnet_id: "{{ subnet_id.stdout }}"
+          instance_type: "{{ instance_type }}"
+          image: "{{ ami.results[0].ami_id }}"
+          wait: true
+          state: "{{ action }}"
+          id: "{{ instance_id }}"
+          count: "{{ instance_count }}"
+          groups:
+            - httpd
+        register: ec2
+
+      - name: add instances to persistent inventory
+        local_action:
+          module: lineinfile
+          dest: 'inventory/aws'
+          insertafter: '[jupyter]'
+          line: "{{ item.public_dns_name }} id={{ item.id }}"
+          create: true
+        with_items: "{{ ec2.instances }}"
+
+      - name: add instances to in-memory inventory
+        local_action:
+          module: add_host
+          groups: jupyter
+          name: "{{ item.public_dns_name }}"
+        with_items: "{{ ec2.instances }}"
+
+      - name: tag instances
+        local_action:
+          module: ec2_tag
+          resource: "{{ item.id }}"
+          region: "{{ region }}"
+          state: present
+          tags: 
+            stack: jupyter
+        with_items: "{{ ec2.instances }}"
+
+      - name: wait for ssh
+        local_action:
+          module: wait_for
+          host: "{{ item.public_ip }}"
+          port: 22
+          state: started
+        with_items: "{{ ec2.instances }}"
+
+      - name: create dns record
+        local_action:
+          module: route53
+          command: create
+          zone: nephelai.io
+          record: jupyter.nephelai.io
+          value: "{{ ec2.instances | map(attribute='public_ip') | join(' ') }}"
+          type: A
+
       when: instances|length == 0
 
-    - name: manage jupyter instances
-      local_action:
-        module: ec2
-        region: "{{ region }}"
-        vpc_subnet_id: "{{ subnet_id.stdout }}"
-        instance_type: "{{ instance_type }}"
-        image: "{{ ami.results[0].ami_id }}"
-        wait: true
-        state: "{{ action }}"
-        id: "{{ instance_id }}"
-        instance_ids: "{{ instances }}"
-        count: "{{ instance_count }}"
-        groups:
-          - httpd
-      register: ec2
+    - block:
+
+      - name: manage jupyter instances
+        local_action:
+          module: ec2
+          region: "{{ region }}"
+          vpc_subnet_id: "{{ subnet_id.stdout }}"
+          instance_type: "{{ instance_type }}"
+          image: "{{ ami.results[0].ami_id }}"
+          wait: true
+          state: "{{ action }}"
+          id: "{{ instance_id }}"
+          instance_ids: "{{ instances }}"
+          count: "{{ instance_count }}"
+          groups:
+            - httpd
+        register: ec2
+
       when: 
         - instances|length > 0
         - action != 'present'
 
-    - debug:
-        var: ec2
+    - block:
 
-    - name: add instances to persistent inventory
-      local_action:
-        module: line_in_file
-        dest: 'inventory/hosts'
-        insertafter: '[jupyter]'
-        line: "{{ item.public_ip }} id={{ item.id }}"
-      with_items: "{{ ec2.instances }}"
+      - name: remove instances from persistent inventory
+        local_action:
+          module: lineinfile
+          dest: 'inventory/aws'
+          insertafter: '[jupyter]'
+          line: "{{ item.public_dns_name }} id={{ item.id }}"
+          state: "{{ action }}"
+        with_items: "{{ ec2.instances }}"
 
-    - name: tag instances
-      local_action:
-        module: ec2_tag
-        resource: "{{ item.id }}"
-        region: "{{ region }}"
-        state: present
-        tags: 
-          stack: jupyter
-      with_items: "{{ ec2.instances }}"
+      - name: delete dns record
+        local_action:
+          module: route53
+          command: delete
+          zone: nephelai.io
+          record: jupyter.nephelai.io
+          value: "{{ ec2.instances | map(attribute='public_ip') | join(' ') }}"
+          type: A
 
-    - name: wait for ssh
-      local_action:
-        module: wait_for
-        host: "{{ item.public_ip }}"
-        port: 22
+      when: action == 'absent'
+
+- name: Configure instances
+
+  hosts: jupyter
+
+  tasks:
+
+    - name: install packages
+      package:
+        name: 
+          - nginx
+      become: yes
+
+    - name: start nginx
+      systemd:
+        name: nginx
         state: started
-      with_items: "{{ ec2.instances }}"
+        enabled: yes
