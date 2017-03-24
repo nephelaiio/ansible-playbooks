@@ -1,0 +1,11 @@
+vpc_name: default
+region: us-east-1
+availability_zone: b
+state: present # one of [ 'present', 'absent', 'running', 'restarted', 'stopped' ]
+route53_state: create
+instance_type: t2.micro
+instance_count: 1
+instance_id: "{{ 'test05' | to_uuid }}"
+ami_owner: 099720109477
+ami_name: "ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"
+key: teodoro.cook@gmail.com
