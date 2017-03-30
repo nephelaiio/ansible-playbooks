@@ -11,10 +11,7 @@
     - name: install packages
       local_action:
         module: pip
-        name: 
-          - awscli
-      become: yes
-
+        name: awscli
     - name: create inventory groups
       local_action:
         module: lineinfile
@@ -229,45 +226,3 @@
         dest: 'inventory/aws'
         state: absent
       when: state == 'absent'
-
-
-
-- hosts: bootstrap jupyter nodes
-
-
-- hosts: jupyter
-  roles:
-    - role: jdauphant.nginx
-      become: yes
-      nginx_sites:
-        jupyter:
-          - listen 80
-          - server_name "jupyter.{{ route53_domain }}"
-          - client_max_body_size 300M
-          - |
-            location / { 
-              proxy_pass http://jupyter; 
-              proxy_set_header Host $host; 
-            }
-          - |
-            location ~ /api/kernels { 
-              proxy_pass http://notebook;
-              proxy_set_header Host $host;
-              proxy_http_version 1.1;
-              proxy_set_header Upgrade "websocket";
-              proxy_set_header Connection "Upgrade";
-              proxy_read_timeout 86400;
-            }
-          - |
-            location ~ /terminals/ {
-              proxy_pass http://notebook;
-              proxy_set_header Host $host;
-              proxy_http_version 1.1;
-              proxy_set_header Upgrade "websocket";
-              proxy_set_header Connection "Upgrade";
-              proxy_read_timeout 86400;
-            }
-      nginx_configs:
-        upstream:
-          - upstream jupyter { server localhost:8888; }
-
