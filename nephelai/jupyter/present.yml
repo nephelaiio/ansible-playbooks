@@ -148,10 +148,21 @@
         - state in ['running']
         - route53_rrs_query.stdout | from_json | list | length > 0
 
-    - name: retrieve instances
+    - name: pause until instance values are updated
+      pause:
+          seconds: 15
+
+    - name: query instances
       changed_when: false
       local_action: command aws ec2 describe-instances --region {{ region }} --filter Name=client-token,Values={{ client_token }} --query "Reservations[].Instances[]"
       register: instance_query
+
+    - name: register query
+      set_fact:
+        instances: "{{ instance_query.stdout | from_json }}"
+
+    - debug:
+        var: instances
 
     - block:
 
@@ -162,7 +173,7 @@
           host: "{{ item.PublicDnsName }}"
           port: 22
           state: started
-        with_items: "{{ instance_query.stdout | from_json }}"
+        with_items: "{{ instances }}"
 
       - name: provision route53 record
         local_action:
@@ -170,7 +181,7 @@
           command: "{{ route53_state }}"
           zone: "{{ route53_zone }}"
           record: "jupyter.{{ route53_zone }}"
-          value: "{{ instance_query.stdout | from_json | map(attribute='PublicIpAddress') | join(' ') }}"
+          value: "{{ instances | map(attribute='PublicIpAddress') | join(' ') }}"
           type: A
           overwrite: yes
 
