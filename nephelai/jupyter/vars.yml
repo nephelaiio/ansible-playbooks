@@ -1,12 +1,10 @@
-vpc_name: default
-region: us-east-1
+region: us-west-2
 availability_zone: b
 state: 'present' # one of [ 'present', 'absent', 'running', 'restarted', 'stopped' ]
 route53_zone: nephelai.io.
 route53_state: create
-instance_type: t2.micro
+instance_type: p2.xlarge
 instance_count: 1
-client_token: "{{ 'test07' | to_uuid }}"
-ami_owner: 099720109477
-ami_name: "ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"
+client_token: "{{ 'test03' | to_uuid }}"
+ami_id: ami-e9038d89
 key: teodoro.cook@gmail.com

@@ -1,0 +1,177 @@
+- name: provision jupyter.nephelai.io artifacts
+
+  hosts: local
+
+  vars_files: 
+    - vars.yml
+
+  tasks:
+
+    - name: create inventory groups
+      local_action:
+        module: lineinfile
+        line: '[jupyter]'
+        dest: 'inventory/aws'
+        insertafter: EOF
+        create: yes
+
+    - name: query available vpcs
+      changed_when: false
+      local_action: command aws ec2 describe-vpcs --region {{ region }} --query "Vpcs[*].VpcId"
+      register: vpc_query
+
+    - name: define vpc_id
+      set_fact: 
+        vpc_id: "{{ vpc_query.stdout | from_json | list | first }}"
+
+    - name: query subnet id
+      changed_when: false
+      local_action: command aws ec2 describe-subnets --region {{ region }} --filter Name=vpc-id,Values={{ vpc_id }},Name=availability-zone,Values={{ region }}{{availability_zone}} --query "Subnets[*].SubnetId" --output text
+      register: subnet_query
+
+    - name: define subnet id
+      set_fact:
+        subnet_id: "{{ subnet_query.stdout }}"
+
+    - name: create http security group
+      local_action:
+        module: ec2_group
+        name: httpd
+        region: "{{ region }}"
+        description: HTTP access group
+        state: present
+        vpc_id: "{{ vpc_id }}"
+        rules:
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 443
+            to_port: 443
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: 0.0.0.0/0
+          - proto: icmp
+            from_port: 8
+            to_port: -1
+            cidr_ip: 0.0.0.0/0
+        rules_egress:
+          - proto: tcp
+            from_port: 0
+            to_port: 65535
+            cidr_ip: 0.0.0.0/0
+          - proto: udp
+            from_port: 0
+            to_port: 65535
+            cidr_ip: 0.0.0.0/0
+          - proto: icmp
+            from_port: 8
+            to_port: -1
+            cidr_ip: 0.0.0.0/0
+
+    - name: query instance ids
+      changed_when: false
+      local_action: command aws ec2 describe-instances --region {{ region }} --filter Name=client-token,Values={{ client_token }} --query "Reservations[].Instances[].InstanceId"
+      register: instance_query
+
+    - name: define instance_id
+      set_fact: 
+        instance_id: "{{ instance_query.stdout | from_json | list }}"
+
+    - name: provision jupyter instances
+      local_action:
+        module: ec2
+        region: "{{ region }}"
+        vpc_subnet_id: "{{ subnet_id }}"
+        instance_type: "{{ instance_type }}"
+        id: "{{ client_token }}"
+        instance_ids: "{{ instance_id }}"
+        image: "{{ ami_id }}"
+        state: "{{ state }}"
+        count: "{{ instance_count }}"
+        key_name: "{{ key }}"
+        groups:
+          - httpd
+      register: ec2
+
+    - name: configure persistent inventory
+      local_action:
+        module: lineinfile
+        dest: 'inventory/aws'
+        insertafter: '[jupyter]'
+        line: "{{ item.public_dns_name }}"
+        create: true
+        state: present
+      with_items: "{{ ec2.instances }}"
+
+    - name: provision in-memory inventory
+      local_action:
+        module: add_host
+        groups: jupyter
+        name: "{{ item.public_dns_name }}"
+      with_items: "{{ ec2.instances }}"
+
+    - name: tag instances
+      local_action:
+        module: ec2_tag
+        resource: "{{ item.id }}"
+        region: "{{ region }}"
+        state: "{{ state }}"
+        tags: 
+          stack: jupyter
+      with_items: "{{ ec2.instances }}"
+      when: state == 'present'
+
+    - name: retrieve route53 zone
+      changed_when: false
+      local_action: command aws route53 list-hosted-zones --query 'HostedZones[?Name==`{{ route53_zone }}`].Id' --output text
+      register: route53_zone_query
+
+    - name: retrieve route53 record
+      changed_when: false
+      local_action: command aws route53 list-resource-record-sets --hosted-zone-id={{ route53_zone_query.stdout }} --query "ResourceRecordSets[?Name==`jupyter.{{ route53_zone }}`]"
+      register: route53_rrs_query
+
+    - name: delete route53 record
+      local_action:
+        module: route53
+        command: delete
+        zone: "{{ route53_zone }}"
+        record: "{{ route53_rrs_query.stdout | from_json | map(attribute='Name') | list | first | string }}"
+        value: "{{ item | string }}"
+        type: "{{ route53_rrs_query.stdout | from_json | map(attribute='Type') | list | first | string }}"
+      with_items: "{{ route53_rrs_query.stdout | from_json | map(attribute='ResourceRecords') | list | first | map(attribute='Value') | list }}"
+      when: 
+        - state in ['running']
+        - route53_rrs_query.stdout | from_json | list | length > 0
+
+    - name: retrieve instances
+      changed_when: false
+      local_action: command aws ec2 describe-instances --region {{ region }} --filter Name=client-token,Values={{ client_token }} --query "Reservations[].Instances[]"
+      register: instance_query
+
+    - block:
+
+      - name: wait for ssh
+        changed_when: false
+        local_action:
+          module: wait_for
+          host: "{{ item.PublicDnsName }}"
+          port: 22
+          state: started
+        with_items: "{{ instance_query.stdout | from_json }}"
+
+      - name: provision route53 record
+        local_action:
+          module: route53
+          command: "{{ route53_state }}"
+          zone: "{{ route53_zone }}"
+          record: "jupyter.{{ route53_zone }}"
+          value: "{{ instance_query.stdout | from_json | map(attribute='PublicIpAddress') | join(' ') }}"
+          type: A
+          overwrite: yes
+
+      when: state in ["present", "running"]
