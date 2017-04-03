@@ -1,0 +1,51 @@
+# vim: ts=2 sw=2 et :
+---
+- name: manage jupyter.nephelai.io route53 artifacts
+
+  hosts: local
+
+  vars_files:
+    - vars.yml
+
+  tasks:
+
+    - name: retrieve route53 zone
+      changed_when: false
+      local_action: command aws route53 list-hosted-zones --query 'HostedZones[?Name==`{{ route53_zone }}`].Id' --output text
+      register: route53_zone_query
+
+    - name: retrieve route53 record
+      changed_when: false
+      local_action: command aws route53 list-resource-record-sets --hosted-zone-id={{ route53_zone_query.stdout }} --query "ResourceRecordSets[?Name==`jupyter.{{ route53_zone }}`]"
+      register: route53_rrs_query
+
+    - name: delete route53 record
+      local_action:
+        module: route53
+        command: delete
+        zone: "{{ route53_zone }}"
+        record: "{{ route53_rrs_query.stdout | from_json | map(attribute='Name') | list | first | string }}"
+        value: "{{ item | string }}"
+        type: "{{ route53_rrs_query.stdout | from_json | map(attribute='Type') | list | first | string }}"
+      with_items: "{{ route53_rrs_query.stdout | from_json | map(attribute='ResourceRecords') | list | first | map(attribute='Value') | list }}"
+      when: 
+        - state in ['running']
+        - route53_rrs_query.stdout | from_json | list | length > 0
+
+    - name: query instances
+      changed_when: false
+      local_action: command aws ec2 describe-instances --region {{ region }} --filter Name=client-token,Values={{ client_token }} --query "Reservations[].Instances[]"
+      register: instance_query
+
+    - name: register query
+      set_fact:
+        instances: "{{ instance_query.stdout | from_json }}"
+
+    - name: wait for ssh
+      changed_when: false
+      local_action:
+        module: wait_for
+        host: "{{ item.PublicDnsName }}"
+        port: 22
+        state: started
+      with_items: "{{ instances }}"

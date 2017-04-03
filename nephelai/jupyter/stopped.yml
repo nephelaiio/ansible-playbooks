@@ -1,3 +1,31 @@
 # vim: ts=2 sw=2 et :
 ---
-- include: manage.yml
+- include: provision.yml
+
+- name: manage jupyter.nephelai.io artifacts
+
+  hosts: local
+
+  vars_files: 
+    - vars.yml
+
+  tasks:
+
+    - name: query instance ids
+      changed_when: false
+      local_action: command aws ec2 describe-instances --region {{ region }} --filter Name=client-token,Values={{ client_token }} --query "Reservations[].Instances[]"
+      register: instance_query
+
+    - name: define instances
+      set_fact: 
+        instances: "{{ instance_query.stdout | from_json | list }}"
+
+    - name: manage jupyter instances
+      local_action:
+        module: ec2
+        region: "{{ region }}"
+        id: "{{ client_token }}"
+        instance_ids: "{{ instances | map(attribute='InstanceId') | list }}"
+        state: "{{ state }}"
+      when: 
+        - instances | length > 0

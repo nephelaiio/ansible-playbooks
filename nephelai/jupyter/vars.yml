@@ -5,6 +5,7 @@ route53_zone: nephelai.io.
 route53_state: create
 instance_type: p2.xlarge
 instance_count: 1
-client_token: "{{ 'test03' | to_uuid }}"
+client_token: "{{ 'test04' | to_uuid }}"
 ami_id: ami-e9038d89
 key: teodoro.cook@gmail.com
+pause_seconds: 30

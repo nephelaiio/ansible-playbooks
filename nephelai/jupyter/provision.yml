@@ -1,10 +1,10 @@
 # vim: ts=2 sw=2 et :
 ---
-- name: provision jupyter.nephelai.io artifacts
+- name: provision jupyter.nephelai.io ec2 artifacts
 
   hosts: local
 
-  vars_files: 
+  vars_files:
     - vars.yml
 
   tasks:
@@ -121,70 +121,7 @@
         module: ec2_tag
         resource: "{{ item.id }}"
         region: "{{ region }}"
-        state: "{{ state }}"
+        state: present
         tags: 
           stack: jupyter
       with_items: "{{ ec2.instances }}"
-      when: state == 'present'
-
-    - name: retrieve route53 zone
-      changed_when: false
-      local_action: command aws route53 list-hosted-zones --query 'HostedZones[?Name==`{{ route53_zone }}`].Id' --output text
-      register: route53_zone_query
-
-    - name: retrieve route53 record
-      changed_when: false
-      local_action: command aws route53 list-resource-record-sets --hosted-zone-id={{ route53_zone_query.stdout }} --query "ResourceRecordSets[?Name==`jupyter.{{ route53_zone }}`]"
-      register: route53_rrs_query
-
-    - name: delete route53 record
-      local_action:
-        module: route53
-        command: delete
-        zone: "{{ route53_zone }}"
-        record: "{{ route53_rrs_query.stdout | from_json | map(attribute='Name') | list | first | string }}"
-        value: "{{ item | string }}"
-        type: "{{ route53_rrs_query.stdout | from_json | map(attribute='Type') | list | first | string }}"
-      with_items: "{{ route53_rrs_query.stdout | from_json | map(attribute='ResourceRecords') | list | first | map(attribute='Value') | list }}"
-      when: 
-        - state in ['running']
-        - route53_rrs_query.stdout | from_json | list | length > 0
-
-    - name: pause until instance values are updated
-      pause:
-          seconds: 15
-
-    - name: query instances
-      changed_when: false
-      local_action: command aws ec2 describe-instances --region {{ region }} --filter Name=client-token,Values={{ client_token }} --query "Reservations[].Instances[]"
-      register: instance_query
-
-    - name: register query
-      set_fact:
-        instances: "{{ instance_query.stdout | from_json }}"
-
-    - debug:
-        var: instances
-
-    - block:
-
-      - name: wait for ssh
-        changed_when: false
-        local_action:
-          module: wait_for
-          host: "{{ item.PublicDnsName }}"
-          port: 22
-          state: started
-        with_items: "{{ instances }}"
-
-      - name: provision route53 record
-        local_action:
-          module: route53
-          command: "{{ route53_state }}"
-          zone: "{{ route53_zone }}"
-          record: "jupyter.{{ route53_zone }}"
-          value: "{{ instances | map(attribute='PublicIpAddress') | join(' ') }}"
-          type: A
-          overwrite: yes
-
-      when: state in ["present", "running"]

@@ -1,0 +1,8 @@
+# vim: ts=2 sw=2 et :
+---
+- name: Pause playbook
+  hosts: local
+  tasks:
+  - name: pause until instance values are updated
+    pause:
+        seconds: 30
