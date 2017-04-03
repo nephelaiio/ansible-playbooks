@@ -1,3 +1,5 @@
+# vim: ts=2 sw=2 et :
+---
 - name: provision jupyter.nephelai.io artifacts
 
   hosts: local
@@ -90,7 +92,7 @@
         id: "{{ client_token }}"
         instance_ids: "{{ instance_id }}"
         image: "{{ ami_id }}"
-        state: "{{ state }}"
+        state: present
         count: "{{ instance_count }}"
         key_name: "{{ key }}"
         groups:
