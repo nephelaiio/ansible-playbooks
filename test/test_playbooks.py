@@ -27,7 +27,7 @@ def list_playbooks(playbook_dir, ignore=playbook_ignore):
                                                      playbook_dir,
                                                      f)) and
                       re.match(".*.yml$", f) and
-                      f not in ignore]
+                      os.path.basename(f) not in ignore]
     playbook_files = [os.path.join(playbook_dir, f) for f in playbook_files]
     return(playbook_files)
 
@@ -70,7 +70,6 @@ def test_run_playbook(playbook):
     run tests for a particular playbook
     :arg playbook: the target playbook
     """
-    print("\nCurrent dir is {0}".format(os.getcwd()))
     print("Bootstrapping test for playbook {0}".format(playbook))
     test_dir = bootstrap_test_tree(playbook)
     last_dir = os.getcwd()
@@ -90,37 +89,3 @@ def test_lint_playbook(playbook):
     """
     print("Linting playbook {0}".format(playbook))
     assert call([playbook_lint_command, playbook]) == playbook_lint_success
-
-
-def test_workstation_playbook():
-    """
-    run tests for workstation.yml
-    """
-    playbook = 'workstation.yml'
-    test_lint_playbook(playbook)
-    test_run_playbook(playbook)
-
-
-def test_openstack_playbook():
-    """
-    run tests for openstack.yml
-    """
-    playbook = 'openstack.yml'
-    test_lint_playbook(playbook)
-    test_run_playbook(playbook)
-
-
-def test_unifi_playbook():
-    """
-    run tests for unifi.yml
-    """
-    playbook = 'unifi.yml'
-    test_lint_playbook(playbook)
-    test_run_playbook(playbook)
-
-
-def test_lint():
-    """
-    run lint test for all playbooks
-    """
-    [test_lint_playbook(x) for x in list_playbooks(playbook_dir)]

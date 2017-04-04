@@ -27,7 +27,7 @@ def build_args(options, task, defaults={}):
     ('inventory_file=', 'i', 'inventory host path or csv host list')
 ])
 def setup(options):
-    run_playbook('setup-playbook.yml', build_args(options, 'setup'))
+    run_playbook('setup.yml', build_args(options, 'setup'))
 
 
 @task
@@ -37,7 +37,7 @@ def setup(options):
     ('inventory_file=', 'i', 'inventory host path or csv host list')
 ], share_with=['setup'])
 def workstation(options):
-    run_playbook('workstation-playbook.yml',
+    run_playbook('workstation.yml',
                  build_args(options,
                             'workstation', {'user': getuser()}))
 
@@ -51,27 +51,10 @@ def test_workstation():
 @task
 @needs(['setup'])
 @cmdopts([
-    ('user=', 'u', 'connect as this user'),
-    ('inventory_file=', 'i', 'inventory host path or csv host list')
-], share_with=['setup'])
-def openstack(options):
-    run_playbook('openstack-playbook.yml',
-                 build_args(options,
-                            'openstack', {'user': getuser()}))
-
-
-def test_openstack():
-    args = 'test/test_playbooks.py::test_openstack_playbook -s'.split()
-    pytest.main(args)
-
-
-@task
-@needs(['setup'])
-@cmdopts([
-    ('inventory_file=', 'i', 'inventory host path or comma separated host list')
+    ('inventory_file=', 'i', 'inventory host path or comma separated hostlist')
 ], share_with=['setup'])
 def unifi(options):
-    run_playbook('unifi-playbook.yml', build_args(options, 'unifi'))
+    run_playbook('unifi.yml', build_args(options, 'unifi'))
 
 
 @task
@@ -88,5 +71,5 @@ def lint():
 
 @task
 def test():
-    test_openstack()
     test_workstation()
+    test_unifi()

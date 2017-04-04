@@ -1,3 +1,2 @@
 ansible>=2.1.1.0
 molecule<=1.20.3
-paver>=1.2.4
