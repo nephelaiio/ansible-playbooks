@@ -1,6 +1,12 @@
+# vim: ts=2 sw=2 et :
 ---
+- include: setup.yml
+
+
 - hosts: localhost
+
   roles:
+
     - { role: nephelaiio.tree }
     - { role: nephelaiio.vim }
     - { role: nephelaiio.devtools }
@@ -8,6 +14,5 @@
     - { role: nephelaiio.pyenv }
     - { role: nephelaiio.tmux }
     - { role: nephelaiio.vagrant }
-    - { role: nephelaiio.octave }
     - { role: nephelaiio.i3 }
     - { role: nephelaiio.docker }

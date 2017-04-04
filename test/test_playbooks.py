@@ -4,29 +4,30 @@ import re
 import shutil
 import yaml
 from subprocess import call
-from os.path import curdir as cwd
 
 
 test_src_dir = 'test'
 test_exe_dir = '.test'
 molecule_playbook = 'playbook.yml'
-playbook_dir = '.'
-playbook_ignore = ['setup-playbook.yml']
+playbook_dir = 'playbooks'
+playbook_ignore = ['setup.yml', 'nephelai.yml']
 playbook_lint_command = 'ansible-lint'
 playbook_lint_success = 0
 playbook_test_command = 'molecule test'
 playbook_test_success = 0
 
 
-def list_playbooks(playbook_dir):
+def list_playbooks(playbook_dir, ignore=playbook_ignore):
     """
     retrieve the list of playbooks in a directory
     :param playbook_dir: the path to search for playbooks
     """
     playbook_files = [f for f in os.listdir(playbook_dir)
-                      if os.path.isfile(os.path.join(cwd, playbook_dir, f)) and
-                      re.match(".*-playbook.yml$", f) and
-                      f not in playbook_ignore]
+                      if os.path.isfile(os.path.join(os.getcwd(),
+                                                     playbook_dir,
+                                                     f)) and
+                      re.match(".*.yml$", f) and
+                      f not in ignore]
     playbook_files = [os.path.join(playbook_dir, f) for f in playbook_files]
     return(playbook_files)
 
@@ -51,9 +52,12 @@ def bootstrap_test_tree(playbook):
     molecule_playbook_data = yaml.load(playbook_stream)
 
     def update_hosts(yaml_data):
-        yaml_data['hosts'] = 'all'
+        if 'hosts' in yaml_data:
+            yaml_data['hosts'] = 'all'
         return yaml_data
     molecule_playbook_data = [update_hosts(x) for x in molecule_playbook_data]
+    for aux_playbook in list_playbooks(playbook_dir, [playbook]):
+        shutil.copy(aux_playbook, test_dir)
     with open(os.path.join(test_dir, molecule_playbook), 'w') as test_playbook:
         test_playbook.write(yaml.dump(molecule_playbook_data,
                                       default_flow_style=False))
@@ -66,9 +70,10 @@ def test_run_playbook(playbook):
     run tests for a particular playbook
     :arg playbook: the target playbook
     """
+    print("\nCurrent dir is {0}".format(os.getcwd()))
     print("Bootstrapping test for playbook {0}".format(playbook))
     test_dir = bootstrap_test_tree(playbook)
-    last_dir = cwd
+    last_dir = os.getcwd()
     print("Testing playbook {0}".format(playbook))
     try:
         os.chdir(test_dir)
@@ -89,27 +94,27 @@ def test_lint_playbook(playbook):
 
 def test_workstation_playbook():
     """
-    run tests for workstation-playbook.yml
+    run tests for workstation.yml
     """
-    playbook = 'workstation-playbook.yml'
+    playbook = 'workstation.yml'
     test_lint_playbook(playbook)
     test_run_playbook(playbook)
 
 
 def test_openstack_playbook():
     """
-    run tests for openstack-playbook.yml
+    run tests for openstack.yml
     """
-    playbook = 'openstack-playbook.yml'
+    playbook = 'openstack.yml'
     test_lint_playbook(playbook)
     test_run_playbook(playbook)
 
 
 def test_unifi_playbook():
     """
-    run tests for unifi-playbook.yml
+    run tests for unifi.yml
     """
-    playbook = 'unifi-playbook.yml'
+    playbook = 'unifi.yml'
     test_lint_playbook(playbook)
     test_run_playbook(playbook)
 
