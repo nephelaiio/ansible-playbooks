@@ -9,28 +9,34 @@
 
   tasks:
 
-    - name: retrieve route53 zone
+    - name: query route53 zone
       changed_when: false
       local_action: command aws route53 list-hosted-zones --query 'HostedZones[?Name==`{{ route53_zone }}`].Id' --output text
       register: route53_zone_query
 
-    - name: retrieve route53 record
+    - name: query route53 record
       changed_when: false
       local_action: command aws route53 list-resource-record-sets --hosted-zone-id={{ route53_zone_query.stdout }} --query "ResourceRecordSets[?Name==`jupyter.{{ route53_zone }}`]"
       register: route53_rrs_query
+
+    - name: register recordset
+      set_fact:
+        route53_rrs: "{{ route53_rrs_query.stdout | from_json }}"
+
+    - debug:
+        var: route53_rrs
 
     - name: delete route53 record
       local_action:
         module: route53
         command: delete
         zone: "{{ route53_zone }}"
-        record: "{{ route53_rrs_query.stdout | from_json | map(attribute='Name') | list | first | string }}"
-        value: "{{ item | string }}"
-        type: "{{ route53_rrs_query.stdout | from_json | map(attribute='Type') | list | first | string }}"
-      with_items: "{{ route53_rrs_query.stdout | from_json | map(attribute='ResourceRecords') | list | first | map(attribute='Value') | list }}"
+        record: "{{ route53_rrs | map(attribute='Name') | list }}"
+        value: "{{ item | map(attribute='Value') | list }}"
+        type: "{{ route53_rrs | map(attribute='Type') | list }}"
+      with_items: "{{ route53_rrs | map(attribute='ResourceRecords') | list }}"
       when: 
-        - state in ['running']
-        - route53_rrs_query.stdout | from_json | list | length > 0
+        - route53_rrs | list | length > 0
 
     - name: query instances
       changed_when: false
@@ -41,11 +47,14 @@
       set_fact:
         instances: "{{ instance_query.stdout | from_json }}"
 
-    - name: wait for ssh
-      changed_when: false
+    - debug:
+        var: instances
+
+    - name: create route53 record
       local_action:
-        module: wait_for
-        host: "{{ item.PublicDnsName }}"
-        port: 22
-        state: started
-      with_items: "{{ instances }}"
+        module: route53
+        command: create
+        zone: "{{ route53_zone }}"
+        record: "jupyter.{{ route53_zone }}"
+        value: "{{ instances | map(attribute='PublicIpAddress') | join(' ') }}"
+        type: A
