@@ -1,6 +1,0 @@
----
-openjdk_jdk_packages:
-  - "{{ 'openjdk-7-jdk' ~ ('-headless' if openjdk_headless  else '') }}"
-
-openjdk_jre_packages:
-  - "{{ 'openjdk-7-jre' ~ ('-headless' if openjdk_headless  else '') }}"
