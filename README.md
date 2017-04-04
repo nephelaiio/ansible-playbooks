@@ -2,16 +2,12 @@
 [![Build Status](https://travis-ci.org/nephelaiio/ansible-playbooks.svg?branch=master)](https://travis-ci.org/nephelaiio/ansible-playbooks)
 
 ##Description
-Ansible playbooks for work and play.
+Ansible playbooks for fun and profit
 
 ## Requirements
-[Ansible](https://www.ansible.com/) must be available on your path. You can also install it using pip globally or to a [virtualenv](https://virtualenv.pypa.io/en/stable/) (recommended). A self contained example using [virtualenv]() and [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/) follows:
+[Ansible](https://www.ansible.com/) must be available on your path. You can also install it using pip globally or to a [virtualenv](https://virtualenv.pypa.io/en/stable/) (recommended). 
 
 ```
-git clone https://github.com/nephelaiio/ansible-playbooks.git ansible-playbooks
-cd ansible-playbooks
-mkvirtualenv ansible
-workon ansible
 pip install -r requirements.txt
 ```
 
@@ -20,21 +16,19 @@ pip install -r requirements.txt
 
 ```
 pip install -r requirements.txt
-pytest
+pytest -s
 ```
 
 You can check the [Travis configuration file](/.travis.yml) for an example/more details.
 
 ##Usage
-To apply a playbook called workstation.yml, do
+To apply playbook workstation.yml, do
 
 ```
-ansible-galaxy install -r requirements.yml
-ansible-playbook setup.yml
-ansible-playbook workstation.yml
+ansible-playbook playbooks/workstation.yml -u $(whoami)
 ```
 
-Simply add the --ask-become-pass swtich to both 'ansible-playbook' commands if you do not have passwordless sudo configured in the target host.
+Remember to add the --ask-become-pass swtich to all 'ansible-playbook' commands if you do not have passwordless sudo configured in the target host.
 
 ## OS Support
-Roles are only supported under Arch, Ubuntu Xenial, Debian Jesse, CentOS 7 and later versions
+Playbooks are tested under Ubuntu, support for Arch, Debian Jessie and Centos 7 (and higher) is available in most playbooks
