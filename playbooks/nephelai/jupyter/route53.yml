@@ -31,10 +31,12 @@
         module: route53
         command: delete
         zone: "{{ route53_zone }}"
-        record: "{{ route53_rrs | map(attribute='Name') | list }}"
-        value: "{{ item | map(attribute='Value') | list }}"
-        type: "{{ route53_rrs | map(attribute='Type') | list }}"
-      with_items: "{{ route53_rrs | map(attribute='ResourceRecords') | list }}"
+        record: "{{ item.0.Name }}"
+        value: "{{ item.1.Value }}"
+        type: "{{ item.0.Type }}"
+      with_subelements: 
+        - "{{ route53_rrs }}"
+        - ResourceRecords
       when: 
         - route53_rrs | list | length > 0
 
