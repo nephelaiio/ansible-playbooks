@@ -1,2 +1,2 @@
 [jupyter]
-ec2-34-209-38-156.us-west-2.compute.amazonaws.com ansible_user=ubuntu client_token=8ab140fd-af39-5763-bffc-597264f7aaf0
+ec2-54-69-246-221.us-west-2.compute.amazonaws.com ansible_user=ubuntu client_token=8ab140fd-af39-5763-bffc-597264f7aaf0
