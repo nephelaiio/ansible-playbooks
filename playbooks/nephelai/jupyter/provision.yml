@@ -101,7 +101,7 @@
     - name: create persistent inventory
       local_action:
         module: lineinfile
-        dest: 'inventory/aws'
+        dest: '../../../inventory/aws'
         line: '[jupyter]'
         insertbefore: BOF
         create: true
