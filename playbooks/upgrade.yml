@@ -6,6 +6,13 @@
 
   tasks:
 
+    - name: Install apt prerequisites
+      apt:
+        name: aptitude
+        state: present
+      when: ansible_os_family == 'Debian'
+      become: yes
+
     - name: Upgrade apt
       apt:
         upgrade: safe
