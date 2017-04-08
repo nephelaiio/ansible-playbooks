@@ -1,22 +1,25 @@
 # vim: ts=2 sw=2 et :
 ---
-- name: upgrade hosts 
+- name: upgrade hosts
 
   hosts: "{{ target_hosts }}"
 
   tasks:
 
-    - apt:
+    - name: Upgrade apt
+      apt:
         upgrade: safe
       when: ansible_os_family == 'Debian'
       become: yes
 
-    - pacman:
+    - name: Upgrade pacman
+      pacman:
         upgrade: yes
       when: ansible_os_family == 'Archlinux'
       become: yes
 
-    - yum:
+    - name: Upgrade yum
+      yum:
         name: '*'
         state: latest
       when: ansible_os_family == 'RedHat'
