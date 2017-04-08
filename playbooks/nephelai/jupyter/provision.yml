@@ -93,7 +93,6 @@
         instance_ids: "{{ instance_id }}"
         image: "{{ ami_id }}"
         state: present
-        count: "{{ instance_count }}"
         key_name: "{{ key }}"
         groups:
           - httpd

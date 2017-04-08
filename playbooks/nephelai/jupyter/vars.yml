@@ -2,9 +2,7 @@ region: us-west-2
 availability_zone: b
 state: stopped  # one of [ absent, running, stopped ]
 route53_zone: nephelai.io.
-route53_state: create
 instance_type: p2.xlarge
-instance_count: 1
 client_token: "{{ 'test04' | to_uuid }}"
 ami_id: ami-e9038d89
 ami_user: ubuntu
