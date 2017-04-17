@@ -6,5 +6,5 @@
   tasks:
 
     - name: run ansible galaxy
-      local_action: command ansible-galaxy install -r ../requirements.yml -p galaxy/ --force
+      local_action: command ansible-galaxy install -r ../requirements.yml -p ../galaxy/ --force
       changed_when: false
