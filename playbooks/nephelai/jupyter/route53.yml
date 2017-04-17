@@ -23,9 +23,6 @@
       set_fact:
         route53_rrs: "{{ route53_rrs_query.stdout | from_json }}"
 
-    - debug:
-        var: route53_rrs
-
     - name: delete route53 record
       local_action:
         module: route53
@@ -42,7 +39,7 @@
 
     - name: query instances
       changed_when: false
-      local_action: command aws ec2 describe-instances --region {{ region }} --filter Name=client-token,Values={{ client_token }} --query "Reservations[].Instances[]"
+      local_action: command aws ec2 describe-instances --region {{ region }} --filter "Name=client-token,Values={{ client_token }}" "Name=instance-state-name,Values=running" --query "Reservations[].Instances[]"
       register: instance_query
 
     - name: register query

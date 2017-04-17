@@ -13,7 +13,7 @@
 
     - name: query instances
       changed_when: false
-      local_action: command aws ec2 describe-instances --region {{ region }} --filter Name=client-token,Values={{ client_token }} --query "Reservations[].Instances[]"
+      local_action: command aws ec2 describe-instances --region {{ region }} --filter "Name=client-token,Values={{ client_token }}" "Name=instance-state-name,Values=running,stopped" --query "Reservations[].Instances[]"
       register: instance_query
 
     - name: register instances
@@ -27,6 +27,7 @@
         id: "{{ client_token }}"
         instance_ids: "{{ instances | map(attribute='InstanceId') | list }}"
         state: "{{ state }}"
+      register: ec2
 
     - name: pause until instance values are updated
       pause:
@@ -34,12 +35,44 @@
 
     - name: query instances
       changed_when: false
-      local_action: command aws ec2 describe-instances --region {{ region }} --filter Name=client-token,Values={{ client_token }} --query "Reservations[].Instances[]"
+      local_action: command aws ec2 describe-instances --region {{ region }} --filter "Name=client-token,Values={{ client_token }}" "Name=instance-state-name,Values=running" --query "Reservations[].Instances[]"
       register: instance_query
 
     - name: register instances
       set_fact:
         instances: "{{ instance_query.stdout | from_json }}"
+
+    - name: destroy persistent inventory
+      local_action:
+        module: file
+        path: '../../../inventory/aws'
+        state: absent
+
+    - name: create persistent inventory
+      local_action:
+        module: lineinfile
+        dest: '../../../inventory/aws'
+        line: '[jupyter]'
+        insertbefore: BOF
+        create: true
+        state: present
+
+    - name: configure persistent inventory
+      local_action:
+        module: lineinfile
+        dest: '../../../inventory/aws'
+        insertafter: '[jupyter]'
+        regexp: ".*client_token={{ client_token }}"
+        line: "{{ item.public_dns_name }} ansible_user={{ ami_user }} client_token={{ client_token }}"
+        state: present
+      with_items: "{{ ec2.instances }}"
+
+    - name: provision in-memory inventory
+      local_action:
+        module: add_host
+        groups: jupyter
+        name: "{{ item.public_dns_name }}"
+      with_items: "{{ ec2.instances }}"
 
     - name: wait for ssh
       changed_when: false
@@ -50,42 +83,29 @@
         state: started
       with_items: "{{ instances }}"
 
+
 - include: route53.yml
 
-  #- name: manage services
-  #
-  #  hosts: jupyter
-  #
-  #  become: yes
-  #
-  #  roles:
-  #
-  #    - role: nephelaiio.nginx
-  #      nginx_configs:
-  #        upstream:
-  #          - upstream notebok { localhost: 8888; }
-  #      nginx_sites:
-  #        jupyter:
-  #          - listen 80
-  #          - "server_name jupyter.{{ route53_zone }}"
-  #          - client_max_body_size 3M;
-  #          - location / { 
-  #            proxy_pass http://notebook; 
-  #            proxy_set_header Host $host; 
-  #            }
-  #          - location ~ /api/kernels { 
-  #            proxy_pass http://notebook; 
-  #            proxy_set_header Host $host; 
-  #            proxy_http_version 1.1;
-  #            proxy_set_header Upgrade "websocket";
-  #            proxy_set_header Connection "Upgrade";
-  #            proxy_read_timeout 86400;
-  #            }
-  #          - location ~ /terminals { 
-  #            proxy_pass http://notebook; 
-  #            proxy_set_header Host $host; 
-  #            proxy_http_version 1.1;
-  #            proxy_set_header Upgrade "websocket";
-  #            proxy_set_header Connection "Upgrade";
-  #            proxy_read_timeout 86400;
-  #            }
+
+- name: manage services
+
+  hosts: jupyter
+
+  become: yes
+
+  tasks:
+
+    - name: configure jupyter service
+      include_role: 
+        name: nephelaiio.jupyter
+      vars:
+        jupyter_user: ubuntu
+        jupyter_group: ubuntu
+        jupyter_password: 'sha1:40fc69fc333e:2d76af7b1ce1fd4b889bbebddd0d5b0be1aba9e4'
+
+    - name: start jupyter
+      service:
+        name: "{{ systemd_service_name }}"
+        state:
+          - running
+          - enabled

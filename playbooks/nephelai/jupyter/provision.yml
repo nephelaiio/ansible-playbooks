@@ -13,7 +13,7 @@
       local_action:
         module: lineinfile
         line: '[jupyter]'
-        dest: 'inventory/aws'
+        dest: '../../../inventory/aws'
         insertafter: EOF
         create: yes
 
@@ -76,60 +76,64 @@
 
     - name: query instance ids
       changed_when: false
-      local_action: command aws ec2 describe-instances --region {{ region }} --filter Name=client-token,Values={{ client_token }} --query "Reservations[].Instances[].InstanceId"
+      local_action: command aws ec2 describe-instances --region {{ region }} --filter "Name=client-token,Values={{ client_token }}" "Name=instance-state-name,Values=running,stopped" --query "Reservations[].Instances[].InstanceId"
       register: instance_query
 
     - name: define instance_id
       set_fact: 
         instance_id: "{{ instance_query.stdout | from_json | list }}"
 
-    - name: provision jupyter instances
-      local_action:
-        module: ec2
-        region: "{{ region }}"
-        vpc_subnet_id: "{{ subnet_id }}"
-        instance_type: "{{ instance_type }}"
-        id: "{{ client_token }}"
-        instance_ids: "{{ instance_id }}"
-        image: "{{ ami_id }}"
-        state: present
-        key_name: "{{ key }}"
-        groups:
-          - httpd
-      register: ec2
+    - block:
 
-    - name: create persistent inventory
-      local_action:
-        module: lineinfile
-        dest: '../../../inventory/aws'
-        line: '[jupyter]'
-        insertbefore: BOF
-        create: true
-        state: present
+      - name: provision jupyter instances
+        local_action:
+          module: ec2
+          region: "{{ region }}"
+          vpc_subnet_id: "{{ subnet_id }}"
+          instance_type: "{{ instance_type }}"
+          id: "{{ client_token }}"
+          instance_ids: "{{ instance_id }}"
+          image: "{{ ami_id }}"
+          state: present
+          key_name: "{{ key }}"
+          groups:
+            - httpd
+        register: ec2
 
-    - name: configure persistent inventory
-      local_action:
-        module: lineinfile
-        dest: 'inventory/aws'
-        insertafter: '[jupyter]'
-        regexp: ".*client_token={{ client_token }}"
-        line: "{{ item.public_dns_name }} ansible_user={{ ami_user }} client_token={{ client_token }}"
-        state: present
-      with_items: "{{ ec2.instances }}"
+      - name: create persistent inventory
+        local_action:
+          module: lineinfile
+          dest: '../../../inventory/aws'
+          line: '[jupyter]'
+          insertbefore: BOF
+          create: true
+          state: present
 
-    - name: provision in-memory inventory
-      local_action:
-        module: add_host
-        groups: jupyter
-        name: "{{ item.public_dns_name }}"
-      with_items: "{{ ec2.instances }}"
+      - name: configure persistent inventory
+        local_action:
+          module: lineinfile
+          dest: '../../../inventory/aws'
+          insertafter: '[jupyter]'
+          regexp: ".*client_token={{ client_token }}"
+          line: "{{ item.public_dns_name }} ansible_user={{ ami_user }} client_token={{ client_token }}"
+          state: present
+        with_items: "{{ ec2.instances }}"
 
-    - name: tag instances
-      local_action:
-        module: ec2_tag
-        resource: "{{ item.id }}"
-        region: "{{ region }}"
-        state: present
-        tags: 
-          stack: jupyter
-      with_items: "{{ ec2.instances }}"
+      - name: provision in-memory inventory
+        local_action:
+          module: add_host
+          groups: jupyter
+          name: "{{ item.public_dns_name }}"
+        with_items: "{{ ec2.instances }}"
+
+      - name: tag instances
+        local_action:
+          module: ec2_tag
+          resource: "{{ item.id }}"
+          region: "{{ region }}"
+          state: present
+          tags: 
+            stack: jupyter
+        with_items: "{{ ec2.instances }}"
+
+      when: instance_id | length == 0

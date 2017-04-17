@@ -65,5 +65,5 @@
     - name: delete persistent inventory
       local_action:
         module: file
-        path: 'inventory/aws'
+        path: '../../../inventory/aws'
         state: "{{ state }}"
