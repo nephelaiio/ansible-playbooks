@@ -46,9 +46,6 @@
       set_fact:
         instances: "{{ instance_query.stdout | from_json }}"
 
-    - debug:
-        var: instances
-
     - name: create route53 record
       local_action:
         module: route53

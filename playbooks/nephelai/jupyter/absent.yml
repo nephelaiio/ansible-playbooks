@@ -18,9 +18,6 @@
       set_fact:
         instances: "{{ instance_query.stdout }}"
 
-    - debug:
-        var: instances
-
     - block:
 
       - name: provision jupyter instances
