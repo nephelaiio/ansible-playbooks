@@ -96,19 +96,27 @@
 
   become: yes
 
+  vars:
+    notebookdir: /home/ubuntu/notebooks
+
   tasks:
 
     - name: configure jupyter service
       include_role: 
         name: nephelaiio.jupyter
       vars:
-        jupyter_user: ubuntu
-        jupyter_group: ubuntu
+        jupyter_user: root
+        jupyter_group: root
         jupyter_password: 'sha1:40fc69fc333e:2d76af7b1ce1fd4b889bbebddd0d5b0be1aba9e4'
+        jupyter_notebookdir: "{{ notebookdir }}"
+
+    - name:
+      file:
+        path: "{{ notebookdir }}"
+        state: directory
 
     - name: start jupyter
       service:
         name: jupyter
-        state:
-          - running
-          - enabled
+        state: running
+        enabled: yes
