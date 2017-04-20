@@ -1,0 +1,8 @@
+---
+jupyter_user: root
+jupyter_group: root
+jupyter_password: "{{ vault_jupyter_password }}"
+jupyter_notebookdir: /home/ubuntu/notebooks
+jupyter_confdir: /home/ubuntu/.jupyter
+jupyter_certfile: fullchain.pem
+jupyter_keyfile: privkey.pem
