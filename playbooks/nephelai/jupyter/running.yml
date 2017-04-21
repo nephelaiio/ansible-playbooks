@@ -105,7 +105,7 @@
     - name: copy ssl certificate
       copy:
         src: "{{ jupyter_certfile }}"
-        dst: "{{ jupyter_confdir }}/{{ jupyter_certfile }}"
+        dest: "{{ jupyter_confdir }}/{{ jupyter_certfile }}"
         owner: "{{ jupyter_user }}"
         group: "{{ jupyter_group }}"
         mode: 0600
@@ -113,7 +113,7 @@
     - name: copy ssl key
       copy:
         src: "{{ jupyter_keyfile }}"
-        dst: "{{ jupyter_confdir }}/{{ jupyter_keyfile }}"
+        dest: "{{ jupyter_confdir }}/{{ jupyter_keyfile }}"
         owner: "{{ jupyter_user }}"
         group: "{{ jupyter_group }}"
         mode: 0600
@@ -123,9 +123,11 @@
         path: "{{ jupyter_notebookdir }}"
         state: directory
 
-    - name: start jupyter
-      service:
-        name: jupyter
-        state: running
-        enabled: yes
+    - name: restart jupyter
+      changed_when: false
+      command: service jupyter restart
       become: yes
+      args:
+        warn: false
+      tags:
+        - skip_ansible_lint

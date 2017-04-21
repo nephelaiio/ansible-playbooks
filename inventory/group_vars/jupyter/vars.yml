@@ -1,8 +1,10 @@
 ---
 jupyter_user: root
 jupyter_group: root
+jupyter_port: 443
 jupyter_password: "{{ vault_jupyter_password }}"
 jupyter_notebookdir: /home/ubuntu/notebooks
 jupyter_confdir: /home/ubuntu/.jupyter
 jupyter_certfile: fullchain.pem
 jupyter_keyfile: privkey.pem
+jupyter_exec_args: "--certfile {{ jupyter_confdir }}/{{ jupyter_certfile }} --keyfile {{ jupyter_confdir }}/{{ jupyter_keyfile }}"
