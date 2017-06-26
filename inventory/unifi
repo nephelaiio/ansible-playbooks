@@ -1,2 +1,2 @@
 [unifi]
-192.168.255.10 ansible_connection=ssh ansible_user=pi
+192.168.0.10 ansible_connection=ssh ansible_user=pi
