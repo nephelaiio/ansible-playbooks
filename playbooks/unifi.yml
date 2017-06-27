@@ -11,8 +11,22 @@
   roles:
     - { role: nephelaiio.unifi-controller }
 
-  tasks:
+  become: yes
 
+  tasks:
+    - name: install oracle java 8
+      package:
+        name: oracle-java8-jdk
+        state: latest
+      notify:
+        - restart unifi
+    - name: update java alternatives
+      alternatives:
+        name: java
+        path: /usr/lib/jvm/jdk-8-oracle-arm32-vfp-hflt/jre/bin/java
+        priority: 2000
+      notify:
+        - restart unifi
     - name: upgrade unify host
       apt:
         upgrade: dist
@@ -20,3 +34,40 @@
         - upgrade|default(false)|bool == true
         - ansible_os_family == 'Debian'
       become: yes
+      notify:
+        - restart unifi
+    - name: update mongodb configuration
+      lineinfile:
+        path: /etc/mongodb.conf
+        regexp: '^ENABLE_MONGODB='
+        line: 'ENABLE_MONGODB=no'
+      notify:
+        - restart mongodb
+    - name: install isc dhcpd
+      package:
+        name: isc-dhcp-server
+        state: latest
+      notify:
+        - restart dhcpd
+    - name: start dhcpd
+      service:
+        name: dhcp
+        enabled: yes
+        state: started
+      notify:
+        - restart dhcpd
+
+  handlers:
+    - name: restart unifi 
+      service:
+        name: unifi
+        state: restarted
+    - name: restart mongodb
+      service:
+        name: mongodb
+        state: restarted
+    - name: restart dhcpd
+      service:
+        name: dhcpd
+        state: restarted
+      
