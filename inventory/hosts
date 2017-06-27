@@ -1,0 +1,11 @@
+[raspberry_a]
+192.168.0.10 ansible_connection=ssh ansible_user=pi
+
+[local]
+localhost ansible_connection=local ansible_python_interpreter='/usr/bin/env python2'
+
+[raspberry:children]
+raspberry_a
+
+[unifi:children]
+raspberry_a
