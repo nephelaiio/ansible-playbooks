@@ -2,4 +2,4 @@ molecule>=1.20.3
 pytest>=3.0.7
 docker>=1.10.6
 awscli>=1.11.76
-ansible>=2.3.0
+ansible>=2.3.1
