@@ -1,4 +1,11 @@
 # vim: ts=2 sw=2 et :
+
+# TODO:
+#  - Install bind and add dynamic dns updates
+#  - Create home mx records
+#  - Split tasks 
+#  - Install and configure postfix
+#  - Remove dhcp from wireless router
 ---
 - include: setup.yml
 
@@ -10,6 +17,7 @@
 
   roles:
     - { role: nephelaiio.unifi-controller }
+    - { role: debops.dhcpd }
 
   become: yes
 
@@ -20,6 +28,7 @@
         state: latest
       notify:
         - restart unifi
+
     - name: update java alternatives
       alternatives:
         name: java
@@ -27,6 +36,7 @@
         priority: 2000
       notify:
         - restart unifi
+
     - name: upgrade unify host
       apt:
         upgrade: dist
@@ -36,6 +46,7 @@
       become: yes
       notify:
         - restart unifi
+
     - name: update mongodb configuration
       lineinfile:
         path: /etc/mongodb.conf
@@ -43,31 +54,16 @@
         line: 'ENABLE_MONGODB=no'
       notify:
         - restart mongodb
-    - name: install isc dhcpd
-      package:
-        name: isc-dhcp-server
-        state: latest
-      notify:
-        - restart dhcpd
-    - name: start dhcpd
-      service:
-        name: dhcp
-        enabled: yes
-        state: started
-      notify:
-        - restart dhcpd
 
   handlers:
+
     - name: restart unifi 
       service:
         name: unifi
         state: restarted
+
     - name: restart mongodb
       service:
         name: mongodb
-        state: restarted
-    - name: restart dhcpd
-      service:
-        name: dhcpd
         state: restarted
       

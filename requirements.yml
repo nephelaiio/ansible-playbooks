@@ -1,5 +1,6 @@
 ---
 - dochang.docker
+- debops.dhcpd
 - nephelaiio.vim
 - nephelaiio.tree
 - nephelaiio.devtools
