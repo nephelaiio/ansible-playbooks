@@ -13,3 +13,7 @@
 - nephelaiio.docker
 - nephelaiio.unifi-controller
 - nephelaiio.jupyter
+- ahuffman.resolv
+- geerlingguy.mysql
+- src: https://git@github.com/PowerDNS/pdns-ansible.git
+- src: https://git@github.com/PowerDNS/pdns_recursor-ansible.git

@@ -1,0 +1,60 @@
+---
+ansible_user: pi
+ansible_python_interpreter: /usr/bin/python
+
+dhcp_probe: True
+dhcpd_authoritative: True
+dhcpd_domain_name: home.nephelai.io
+dhcpd_domain_search:
+  - nephelai.io
+dhcpd_nameservers:
+  - "{{ ansible_default_ipv4.address }}"
+dhcpd_probe_legal_servers: 
+  - "{{ ansible_default_ipv4.address }}"
+dhcpd_hosts:
+  - hostname: cerberus.home.nephelai.io
+    address: 192.168.0.11
+    ethernet: ae:77:35:db:a0:17
+dhcpd_zones:
+  - zone: home.nephelai.io
+    primary: 127.0.0.1
+    key: home-key
+dhcpd_keys:
+  - key: home-key
+    algorighm: hmac-md5
+    secret: "{{ tsig_home }}"
+
+mysql_packages:
+  - mariadb-client
+  - mariadb-server
+  - python-mysqldb
+mysql_databases:
+  - name: pdns
+mysql_users:
+  - name: pdns
+    password: '{{ pdns_db_pass }}'
+    priv: 'pdns.*:ALL' 
+
+pdns_config:
+  master: yes
+  slave: no
+  local-address:
+    - '{{ ansible_default_ipv4.address }}:8053'
+
+pdns_backends:
+  gmysql:
+    user: pdns
+    host: 127.0.0.1
+    password: '{{ pdns_db_pass }}'
+    dbname: pdns
+  
+pdns_rec_config:
+  local-address:
+    - '{{ ansible_default_ipv4.address }}:53'
+  forward-zones:
+    - 'home.nephelai.io={{ ansible_default_ipv4.address }}'
+  
+resolv_nameservers:
+  - 8.8.8.8
+  - 8.8.4.4
+resolv_domain: home.nephelai.io

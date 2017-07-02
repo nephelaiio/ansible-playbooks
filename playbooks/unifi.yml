@@ -16,8 +16,13 @@
     unifi_controller_packages_state: latest
 
   roles:
-    - { role: nephelaiio.unifi-controller }
-    - { role: debops.dhcpd }
+    - role: nephelaiio.unifi-controller
+    - role: debops.dhcpd
+    - role: geerlingguy.mysql
+    - role: pdns-ansible
+    - role: pdns_recursor-ansible
+    - role: ahuffman.resolv
+
 
   become: yes
 
@@ -56,7 +61,6 @@
         - restart mongodb
 
   handlers:
-
     - name: restart unifi 
       service:
         name: unifi
