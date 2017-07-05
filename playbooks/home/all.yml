@@ -1,0 +1,16 @@
+# vim: ts=2 sw=2 et :
+
+# TODO:
+#  - Install bind and add dynamic dns updates
+#  - Create home mx records
+#  - Install and configure postfix
+---
+- include: firmware.yml
+
+- include: upgrade.yml
+  vars:
+    target_hosts: all
+
+- include: dhcp.yml
+
+- include: dns.yml

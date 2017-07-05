@@ -1,0 +1,79 @@
+# vim: ts=2 sw=2 et :
+
+# TODO:
+#  - Install bind and add dynamic dns updates
+#  - Create home mx records
+---
+- hosts: dns
+
+  vars:
+    mysql_packages:
+      - mariadb-client
+      - mariadb-server
+      - python-mysqldb
+    mysql_databases:
+      - name: pdns
+    mysql_users:
+      - name: pdns
+        password: '{{ pdns_db_pass }}'
+        priv: 'pdns.*:ALL' 
+    pdns_config:
+      master: yes
+      slave: no
+      local-address: '{{ ansible_default_ipv4.address }}:8053'
+    pdns_backends:
+      gmysql:
+        user: pdns
+        host: 127.0.0.1
+        password: '{{ pdns_db_pass }}'
+        dbname: pdns
+    pdns_rec_config:
+      local-address:
+        - '{{ ansible_default_ipv4.address }}:53'
+      forward-zones:
+        - 'home.nephelai.io={{ ansible_default_ipv4.address }}:8053'
+    pdns_domains:
+      - name: home.nephelai.io
+        type: NATIVE
+        records:
+          - name: gw
+            content: 192.168.0.1
+            type: A
+            ttl: 3600
+
+  become: yes
+
+  roles:
+    
+    - role: geerlingguy.mysql
+    - role: pdns-ansible
+    - role: pdns_recursor-ansible
+
+  tasks:
+    - name: Create domains
+      command: |
+        mysql pdns -e "
+        INSERT IGNORE INTO domains(name, type)
+        VALUES('{{ item.name }}',
+               '{{ item.type }}');" 
+      with_items: "{{ pdns_domains }}"
+      changed_when: false
+
+    - name: Create records
+      command: |
+        mysql pdns -e "
+        SET @name = '{{ item.1.name }}',
+            @content = '{{ item.1.content }}',
+            @type = '{{ item.1.type | default('A') }}',
+            @ttl = {{ item.1.ttl | default(3600) }}; 
+        SELECT @id = id from domains where name like '{{ item.0.name }}';
+        INSERT INTO domains(domain_id, name, content, type, ttl)
+        VALUES(@id, @name, @content, @type, @ttl)
+        ON DUPLICATE KEY UPDATE
+            type = @type
+            ttl = @ttl;"
+      with_subelements:
+        - "{{ pdns_domains }}"
+        - records
+      changed_when: false
+    

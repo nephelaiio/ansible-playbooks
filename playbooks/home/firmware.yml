@@ -1,0 +1,18 @@
+# vim: ts=2 sw=2 et :
+---
+- name: upgrade firmware
+
+  hosts: raspberry
+
+  become: yes
+
+  tasks:
+
+    - name: Install rpi-update
+      package:
+        name: rpi-update
+        state: latest
+
+    - name: Upgrade firmware
+      shell: rpi-update
+      changed_when: false

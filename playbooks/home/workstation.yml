@@ -1,0 +1,15 @@
+# vim: ts=2 sw=2 et :
+---
+- hosts: workstations
+
+  roles:
+
+    - role: nephelaiio.tree
+    - role: nephelaiio.vim
+    - role: nephelaiio.devtools
+    - role: nephelaiio.rbenv
+    - role: nephelaiio.pyenv
+    - role: nephelaiio.tmux
+    - role: nephelaiio.vagrant
+    - role: nephelaiio.i3
+    - role: nephelaiio.docker

@@ -1,0 +1,43 @@
+# vim: ts=2 sw=2 et :
+---
+- hosts: dhcp
+
+  vars:
+    dhcp_probe: True
+    dhcpd_authoritative: True
+    dhcpd_domain_name: home.nephelai.io
+    dhcpd_domain_search:
+      - nephelai.io
+    dhcpd_nameservers:
+      - "{{ ansible_default_ipv4.address }}"
+    dhcpd_probe_legal_servers: 
+      - "{{ ansible_default_ipv4.address }}"
+    dhcpd_hosts:
+      - hostname: cerberus.home.nephelai.io
+        address: 192.168.0.11
+        ethernet: ae:77:35:db:a0:17
+    dhcpd_zones:
+      - zone: home.nephelai.io
+        primary: 127.0.0.1
+        key: home-key
+    dhcpd_subnets:
+      - subnet: '192.168.0.0/24'
+        routers: '192.168.0.1'
+        comment: 'Default network'
+        pools:
+          - comment: 'Default pool'
+            range: '192.168.0.65 192.168.0.127'
+    dhcpd_keys:
+      - key: home-key
+        algorighm: hmac-md5
+        secret: "{{ tsig_home }}"
+    resolv_nameservers:
+      - 8.8.8.8
+      - 8.8.4.4
+    resolv_domain: home.nephelai.io
+
+  become: yes
+
+  roles:
+    - role: debops.dhcpd
+    - role: ahuffman.resolv

@@ -1,8 +1,10 @@
 # vim: ts=2 sw=2 et :
 ---
-- name: upgrade hosts
+- name: upgrade packages
 
-  hosts: "{{ target_hosts }}"
+  hosts: "{{ target_hosts | default('all') }}"
+
+  become: yes
 
   tasks:
 
@@ -11,25 +13,21 @@
         name: aptitude
         state: present
       when: ansible_os_family == 'Debian'
-      become: yes
 
     - name: Upgrade apt
       apt:
         upgrade: safe
       when: ansible_os_family == 'Debian'
-      become: yes
 
     - name: Upgrade pacman
       pacman:
         upgrade: yes
       when: ansible_os_family == 'Archlinux'
-      become: yes
 
     - name: Upgrade yum
       yum:
         name: '*'
         state: latest
       when: ansible_os_family == 'RedHat'
-      become: yes
       tags:
         - skip_ansible_lint
