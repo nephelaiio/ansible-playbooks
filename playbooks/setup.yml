@@ -1,7 +1,7 @@
 ---
 - name: install profile prerequisites
 
-  hosts: local
+  hosts: localhost
 
   tasks:
 
