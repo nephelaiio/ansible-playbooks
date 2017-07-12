@@ -11,12 +11,12 @@
     pdns_rec_config:
       local-address:
         - '{{ ansible_default_ipv4.address }}:53'
-        - '127.0.0.1:53'
+        - 127.0.0.1:53
       forward-zones:
         - 'home.nephelai.io={{ ansible_default_ipv4.address }}:8053'
 
     resolv_nameservers:
-      - '127.0.0.1'
+      - 127.0.0.1
 
     resolv_domain: home.nephelai.io
 
@@ -187,4 +187,4 @@
       with_subelements:
         - "{{ pdns_tsigkeys }}"
         - domains
-        
+      changed_when: false

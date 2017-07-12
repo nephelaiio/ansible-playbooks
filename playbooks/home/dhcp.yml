@@ -19,25 +19,20 @@
     dhcpd_zones:
       - zone: home.nephelai.io
         primary: 127.0.0.1
-        key: home-key
+        key: dhcp-key
     dhcpd_subnets:
-      - subnet: '192.168.0.0/24'
-        routers: '192.168.0.1'
-        comment: 'Default network'
+      - subnet: 192.168.0.0/24
+        routers: 192.168.0.1
+        comment: home network
         pools:
-          - comment: 'Default pool'
-            range: '192.168.0.65 192.168.0.127'
+          - comment: default pool
+            range: 192.168.0.65 192.168.0.127
     dhcpd_keys:
-      - key: home-key
-        algorighm: hmac-md5
-        secret: "{{ tsig_home }}"
-    resolv_nameservers:
-      - 8.8.8.8
-      - 8.8.4.4
-    resolv_domain: home.nephelai.io
+      - key: '{{ tsigkeys.dhcp.name }}'
+        algorighm: '{{ tsigkeys.dhcp.secret | default("hmac-md5") }}'
+        secret: '{{ tsigkeys.dhcp.secret }}'
 
   become: yes
 
   roles:
     - role: debops.dhcpd
-    - role: ahuffman.resolv
