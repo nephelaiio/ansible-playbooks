@@ -41,6 +41,12 @@
         password: '{{ pdns_db.pass }}'
         priv: '{{ pdns_db.name }}.*:ALL' 
 
+    pdns_tsigkeys:
+      - name: '{{ tsigkeys.dhcp.name }}'
+        secret: '{{ tsigkeys.dhcp.secret }}' 
+        domains:
+          - home.nephelai.io
+
     pdns_config:
       master: yes
       slave: no
@@ -71,7 +77,6 @@
   become: yes
 
   tasks:
-
     - name: Install dns utilities
       package:
         name: dnsutils
@@ -164,3 +169,22 @@
         - "{{ pdns_domains }}"
         - records
       changed_when: false
+
+    - name: Craete tsig keys
+      command: |
+        mysql "{{ pdns_db.name }}" -e "
+        SET @domain = '{{ item.1 }}',
+            @name = '{{ item.0.name }}',
+            @algorithm = '{{ item.0.algorithm | default('hmac-md5') }}',
+            @secret = '{{ item.0.secret }}',
+            @kind = 'TSIG-ALLOW-DNSUPDATE'; 
+        INSERT INTO tsigkeys(name, algorithm, secret)
+          VALUES(@name, @algorithm, @secret)
+          ON DUPLICATE KEY UPDATE secret=@secret;
+        SELECT id INTO @id FROM domains WHERE name like @domain;
+        INSERT INTO domainmetadata(domain_id, kind, content)
+          VALUES(@id, @kind, @name);"
+      with_subelements:
+        - "{{ pdns_tsigkeys }}"
+        - domains
+        
