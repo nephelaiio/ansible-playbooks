@@ -1,0 +1,11 @@
+#cloud-config
+users:
+  - name: {{ ssh_user }}
+    passwd: $6$FLtrHwDCFhzzNmDd$JZPl0qz0ksLPOf/oz3IJylAbt4JhOPC6J1zJ72ATU4rMrCLMZOQygN7y835lo6VOBRVyj5mJE9QPKypJrXNdC/
+    groups: sudo
+    lock_passwd: false
+    system: false
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASWD:ALL
+    ssh-authorized-keys:
+      - ssh-rsa {{ ssh_key }}

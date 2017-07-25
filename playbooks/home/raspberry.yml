@@ -16,3 +16,9 @@
     - name: Upgrade firmware
       shell: rpi-update
       changed_when: false
+  
+
+- include: dhcp.yml
+
+
+- include: dns.yml

@@ -1,0 +1,93 @@
+---
+- name: get user
+  local_action: command whoami
+  register: ansible_username
+  when: vm.state in ['present', 'recreate']
+
+- name: create temporary directory
+  tempfile:
+    state: directory
+    prefix: kvm_{{ vm.name}}_
+  register: tmpdir
+  changed_when: False
+
+- name: set image var path
+  set_fact:
+    disk: "{{ pool }}/{{ vm.name }}.img"
+
+- name: copy vm disk
+  copy:
+    src: "../../files/{{ img }}"
+    dest: "{{ disk }}"
+    force: no
+    mode: 0644
+    owner: "{{ ansible_username.stdout }}" 
+  when: vm.state in ['present', 'recreate']
+  register: diskcopy
+
+- name: resize vm disk
+  command: >-
+    qemu-img resize {{ disk }} {{ vm.size }}
+  when: diskcopy.changed
+
+- name: create cloud image user data
+  template:
+    src: ../../templates/user-data.yml.j2
+    dest: "{{ tmpdir.path }}/user-data"
+  vars:
+    ssh_user: "{{ ansible_username.stdout }}"
+    ssh_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+    hostname: "{{ vm.name.split('.') | first }}"
+    fqdn: "{{ vm.name}}"
+  when: diskcopy.changed
+
+- name: create cloud image meta data
+  template:
+    src: ../../templates/meta-data.yml.j2
+    dest: "{{ tmpdir.path }}/meta-data"
+  vars:
+    instance_id: "{{ vm.name.split('.') | first }}"
+    hostname: "{{ vm.name.split('.') | first }}"
+  when: diskcopy.changed
+
+- name: create cloud image iso
+  command: genisoimage -output {{ iso }} -volid cidata -joliet -r meta-data user-data
+  args:
+    chdir: "{{ tmpdir.path }}"
+  when: diskcopy.changed
+
+- name: set vm definition path 
+  set_fact:
+    domain_def: "{{ tmpdir.path }}/vm_{{ vm.name }}.xml"
+
+- name: create vm templates
+  template:
+    src: ../../templates/vm.xml.j2
+    dest: "{{ domain_def }}"
+
+- name: create vms
+  virt:
+    name: "{{ vm.name }}" 
+    command: define
+    xml: "{{ lookup('file', domain_def) }}"
+  when: diskcopy.changed
+  become: yes
+
+- name: manage vms
+  virt:
+    autostart: "{{ vm.autostart }}"
+    name: "{{ vm.name }}" 
+    state: "{{ state }}"
+    xml: "{{ tpl }}"
+  vars:
+    state: "{{ vm.state | regex_replace('recreate', 'running') | regex_replace('present', 'running') }}"
+    tpl: "{{ lookup('template', tmpdir.path + '/vm_' + vm.name + '.xml') }}"
+  when: vm.state in ['present', 'recreate', 'running']
+  become: yes
+
+- name: remove temporary directory
+  file:
+    path: "{{ tmpdir.path }}"
+    state: absent
+  changed_when: False
+  when: cleanup

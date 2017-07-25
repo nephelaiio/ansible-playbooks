@@ -1,0 +1,29 @@
+- name: destroy vms
+  virt:
+    name: "{{ vm.name }}" 
+    command: destroy
+  failed_when: false
+  when: vm.state in ['absent', 'recreate']
+
+- name: undefine vms
+  virt:
+    name: "{{ vm.name }}" 
+    command: undefine
+  failed_when: false
+  when: vm.state in ['absent', 'recreate']
+
+- name: delete vm disk
+  file:
+    path: "{{ pool }}/{{ vm.name }}.img"
+    state: absent
+  become: yes
+  failed_when: false
+  when: vm.state in ['absent', 'recreate']
+
+- name: delete cloud image disk
+  file:
+    path: "{{ iso }}"
+    state: absent
+  become: yes
+  failed_when: false
+  when: vm.state in ['absent', 'recreate']

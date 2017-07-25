@@ -1,0 +1,54 @@
+- name: copy vm disk
+  copy:
+    src: "../../files/{{ img }}"
+    dest: "{{ disk }}"
+    force: no
+    mode: 0644
+    owner: "{{ ansible_username.stdout }}" 
+    notify: "create vm disk"
+  listen: "create vm disk"
+
+- name: resize vm disk
+  command: >-
+    qemu-img resize {{ disk }} {{ vm.size }}
+  listen: "create vm disk"
+
+- name: create cloud image user data
+  template:
+    src: ../../templates/user-data.yml.j2
+    dest: "{{ tmpdir.path }}/user-data"
+  vars:
+    ssh_user: "{{ ansible_username.stdout }}"
+    ssh_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+    hostname: "{{ vm.name.split('.') | first }}"
+    fqdn: "{{ vm.name}}"
+  listen: "create vm disk"
+
+- name: create cloud image meta data
+  template:
+    src: ../../templates/meta-data.yml.j2
+    dest: "{{ tmpdir.path }}/meta-data"
+  vars:
+    instance_id: "{{ vm.name.split('.') | first }}"
+    hostname: "{{ vm.name.split('.') | first }}"
+
+- name: create cloud image iso
+  command: genisoimage -output {{ iso }} -volid cidata -joliet -r meta-data user-data
+  args:
+    chdir: "{{ tmpdir.path }}"
+
+- name: set vm definition path 
+  set_fact:
+    domain_def: "{{ tmpdir.path }}/vm_{{ vm.name }}.xml"
+
+- name: create vm templates
+  template:
+    src: ../../templates/vm.xml.j2
+    dest: "{{ domain_def }}"
+
+- name: create vms
+  virt:
+    name: "{{ vm.name }}" 
+    command: define
+    xml: "{{ lookup('file', domain_def) }}"
+

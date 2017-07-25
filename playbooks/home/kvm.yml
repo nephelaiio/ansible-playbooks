@@ -1,0 +1,113 @@
+- hosts: kvm
+
+  vars:
+
+    cleanup: False
+
+    kvm:
+      defaults:
+        vm:
+          state: present
+          memory: 2048
+          cpu: 1
+          image: xenial
+          autostart: true
+          size: 10G
+          pool: default
+        pool:
+          state: present
+          autostart: true
+      vms:
+        - name: test01
+          size: 10G
+          recreate: true
+          nic:
+            type: bridge
+            net: br0
+            mac: 52:54:00:b0:8e:aa
+      pools:
+        default:
+          path: /var/lib/libvirt/images
+      images:
+        xenial:
+          src: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
+          img: xenial.img
+          pool: default
+          format: qcow2
+          checksum: 089bbe2426bebdd860b755022a01d346
+
+  tasks:
+    
+    - name: install requirements
+      package:
+        name:
+          - qemu
+          - libvirt
+          - libvirt-python
+          - bridge-utils
+          - dnsmasq
+          - ebtables
+          - dmidecode
+          - cloud-init
+          - cdrtools
+          - python-lxml
+      when: ansible_os_family == "Archlinux"
+      become: yes
+
+    - name: configure bridging
+      copy:
+        src: "../../files/bridge.conf"
+        dest: "/etc/sysctl.d/bridge.conf"
+        force: no
+        mode: 0644
+      become: yes
+      notify: configure bridge
+
+    - name: fetch images
+      local_action: >-
+        get_url
+        url="{{ item.value.src }}"
+        dest="../../files/{{ item.value.img }}"
+        mode=0644
+      with_dict: "{{ kvm.images }}"
+      notify: uncompress images
+
+    - meta: flush_handlers
+
+    - include: kvm/tasks/pool_create.yml
+      vars:
+        pool: "{{ kvm.defaults.pool | combine({'name': item.key},  item.value) }}"
+      with_dict: "{{ kvm.pools }}"
+      static: no
+
+    - include: kvm/tasks/vm_destroy.yml
+      vars:
+        vm: "{{ kvm.defaults.vm | combine(item) }}"
+        pool: "{{ kvm.pools[vm.pool].path }}"
+        iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
+      with_items: "{{ kvm.vms }}"
+      static: no
+
+    - include: kvm/tasks/vm_create.yml
+      vars:
+        vm: "{{ kvm.defaults.vm | combine(item) }}"
+        img: "{{ kvm.images[vm.image].img }}"
+        pool: "{{ kvm.pools[vm.pool].path }}"
+        iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
+      with_items: "{{ kvm.vms }}"
+      static: no
+
+  handlers:
+
+    - name: uncompress images
+      local_action: >-
+        command qemu-img convert -O qcow2 {{ img }} {{ img }}
+        chdir="../../files"
+      vars:
+        img: "{{ item.value.img }}" 
+      with_dict: "{{ kvm.images }}"
+
+    - name: update bridge configuration
+      command: >-
+        sysctl -p /etc/sysctl.d/bridge.conf
+      become: yes

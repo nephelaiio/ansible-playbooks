@@ -3,3 +3,6 @@ pytest>=3.0.7
 docker>=1.10.6
 awscli>=1.11.76
 ansible>=2.3.1
+libvirt-python>=3.5.0
+jmespath>=0.9.3
+lxml>=3.8.0
