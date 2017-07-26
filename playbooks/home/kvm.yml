@@ -56,7 +56,7 @@
 
     - name: configure bridging
       copy:
-        src: "../../files/bridge.conf"
+        src: "../../files/kvm/bridge.conf"
         dest: "/etc/sysctl.d/bridge.conf"
         force: no
         mode: 0644
