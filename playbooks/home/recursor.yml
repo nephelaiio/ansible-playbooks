@@ -1,0 +1,64 @@
+# vim: ts=2 sw=2 et :
+---
+- hosts: dns
+
+  name: gather facts from dns servers
+
+  tasks: [ ]
+
+
+- hosts: recursor
+
+  vars_files:
+    - vars.yml
+
+  vars:
+
+    pdns_rec_config:
+      local-address:
+        - '*:53'
+      forward-zones:
+        - "home.nephelai.io={{ hostvars[groups['dns']] | first | map(attribute='ansible_default_ipv4') }}:53"
+
+    resolv_nameservers:
+      - 127.0.0.1
+
+    resolv_domain: "{{ dns.home.name }}"
+
+    resolv_search:
+      - "{{ dns.tld.name }}"
+
+  become: yes
+
+  tasks:
+
+    - debug:
+        msg: "{{ hostvars }}"
+
+    - name: Inspect nameservers
+      changed_when: False
+      command: "host www.google.com"
+      register: resolv
+
+    - name: Configure resolution
+      include_role:
+        name: ahuffman.resolv
+      vars:
+        resolv_nameservers:
+          - 8.8.8.8
+          - 8.8.4.4
+      when: resolv.rc != 0
+
+    - name: Install dns utilities
+      apt:
+        name: dnsutils
+        state: latest
+        force: yes
+
+    - name: Install dns recursor
+      include_role:
+        name: pdns_recursor-ansible
+
+    - name: Configure resolution
+      include_role:
+        name: ahuffman.resolv
