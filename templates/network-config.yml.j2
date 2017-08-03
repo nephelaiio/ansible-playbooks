@@ -1,0 +1,13 @@
+version: 2
+ethernets:
+{{ iface.name }}:
+  match:
+    mac_address: {{ iface.mac }}
+    set-name: {{ iface.name }}
+    addresses:
+      - {{ iface.address }}/{{ iface.netmask }}
+    gateway4: {{ iface.gateway }}
+
+
+
+ 
