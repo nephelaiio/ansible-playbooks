@@ -14,6 +14,7 @@
 - nephelaiio.docker
 - nephelaiio.unifi-controller
 - nephelaiio.jupyter
+- nephelaiio.rxvt-unicode
 - ahuffman.resolv
 - geerlingguy.mysql
 - src: https://git@github.com/PowerDNS/pdns-ansible.git
