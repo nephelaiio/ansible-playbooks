@@ -6,6 +6,8 @@
 
   become: yes
 
+  gather_facts: False
+
   tasks:
 
     - name: Install rpi-update
@@ -16,9 +18,15 @@
     - name: Upgrade firmware
       shell: rpi-update
       changed_when: false
-  
 
-- include: dhcp.yml
+    - name: Fix rsyslog
+      copy:
+        dest: /etc/rsyslog.conf
+        src: ../../files/raspberry/rsyslog.conf
+      notify: restart rsyslog
 
-
-- include: dns.yml
+  handlers:
+    - name: restart rsyslog
+      service:
+        name: rsyslog
+        state: restarted
