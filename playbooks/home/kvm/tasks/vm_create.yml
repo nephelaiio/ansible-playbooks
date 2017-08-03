@@ -37,7 +37,18 @@
     ssh_user: "{{ ansible_username.stdout }}"
     ssh_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
     hostname: "{{ vm.name.split('.') | first }}"
-    fqdn: "{{ vm.name}}"
+    fqdn: "{{ vm.name }}"
+  when: diskcopy.changed
+
+- debug:
+    var: vm
+
+- name: create cloud image network config
+  template:
+    src: ../../templates/network-config.yml.j2
+    dest: "{{ tmpdir.path }}/network-config"
+  vars:
+    iface: "{{ vm.nic }}"
   when: diskcopy.changed
 
 - name: create cloud image meta data
@@ -63,6 +74,7 @@
   template:
     src: ../../templates/vm.xml.j2
     dest: "{{ domain_def }}"
+  when: diskcopy.changed
 
 - name: create vms
   virt:
@@ -80,14 +92,14 @@
   vars:
     state: "{{ vm.state | regex_replace('recreate', 'running') | regex_replace('present', 'running') }}"
     tpl: "{{ lookup('template', tmpdir.path + '/vm_' + vm.name + '.xml') }}"
-  when: vm.state in ['present', 'recreate', 'running']
+  when: vm.state in ['present', 'recreate', 'running'] 
   become: yes
 
 - name: autostart vm
   command: "virsh -c qemu:///system autostart {{ vm.name }}"
   changed_when: false
   become: yes
-  when: vm.autostart
+  when: vm.state in ['present', 'recreate', 'running'] and vm.autostart
 
 - name: remove temporary directory
   file:

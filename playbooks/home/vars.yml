@@ -15,12 +15,28 @@ kvm:
       autostart: True
   vms:
     - name: dhcp02
+      state: absent
+    - name: kvma
       state: present
       nic:
+        name: eth0
         type: bridge
         net: br0
-        mac: 52:erus
-        content: 192.168.0.11
+        mac: 52:54:00:94:37:21
+        address: 192.168.0.12
+        netmask: 255.255.255.0
+        gateway: 192.168.0.1
+  pools:
+    default:
+      path: /var/lib/libvirt/images
+  images:
+    xenial:
+      src: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
+      img: xenial.img
+      pool: default
+      format: qcow2
+      checksum: 089bbe2426bebdd860b755022a01d346
+
   
 nets:
   home:
@@ -39,16 +55,16 @@ dns:
     home:
       name: home.nephelai.io
       mx:
-        - name: rba.home.nephelai.io
+        - name: rpia.home.nephelai.io
       ns:
-        - name: rba.home.nephelai.io
+        - name: rpia.home.nephelai.io
       hosts:
         - hostname: cerberus.home.nephelai.io
           address: 192.168.0.11
           ethernet: ae:77:35:db:a0:17
-        - hostname: rba.home.nephelai.io
+        - hostname: rpia.home.nephelai.io
           address: 192.168.0.10
           ethernet: b8:27:eb:10:54:87
-        - hostname: rbb.home.nephelai.io
+        - hostname: rpib.home.nephelai.io
           address: 192.168.0.116
           ethernet: b8:27:eb:40:6b:19
