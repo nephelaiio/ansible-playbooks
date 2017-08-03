@@ -61,7 +61,7 @@
   when: diskcopy.changed
 
 - name: create cloud image iso
-  command: genisoimage -output {{ iso }} -volid cidata -joliet -r meta-data user-data
+  command: genisoimage -output {{ iso }} -volid cidata -joliet -r meta-data user-data network-config
   args:
     chdir: "{{ tmpdir.path }}"
   when: diskcopy.changed
