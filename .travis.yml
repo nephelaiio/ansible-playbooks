@@ -7,6 +7,7 @@ services:
   - docker
 
 install:
+  - apt-get install -y libvirt libvirt-dev
   - pip install -r requirements.txt
 
 script:
