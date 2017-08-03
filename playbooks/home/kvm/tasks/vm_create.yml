@@ -26,8 +26,7 @@
   register: diskcopy
 
 - name: resize vm disk
-  command: >-
-    qemu-img resize {{ disk }} {{ vm.size }}
+  command: "qemu-img resize {{ disk }} {{ vm.size }}"
   when: diskcopy.changed
 
 - name: create cloud image user data
@@ -75,7 +74,6 @@
 
 - name: manage vms
   virt:
-    autostart: "{{ vm.autostart }}"
     name: "{{ vm.name }}" 
     state: "{{ state }}"
     xml: "{{ tpl }}"
@@ -84,6 +82,12 @@
     tpl: "{{ lookup('template', tmpdir.path + '/vm_' + vm.name + '.xml') }}"
   when: vm.state in ['present', 'recreate', 'running']
   become: yes
+
+- name: autostart vm
+  command: "virsh -c qemu:///system autostart {{ vm.name }}"
+  changed_when: false
+  become: yes
+  when: vm.autostart
 
 - name: remove temporary directory
   file:
