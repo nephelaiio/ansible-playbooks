@@ -1,0 +1,20 @@
+---
+- hosts: kodi
+
+  become: true
+
+  tasks:
+
+    - name: install kodi packages
+      package:
+        name: "{{ item }}"
+        state: present
+      with_items:
+        - kodi
+
+    - name: start kodi services
+      service:
+        name: kodi
+        enabled: yes
+        state: running
+
