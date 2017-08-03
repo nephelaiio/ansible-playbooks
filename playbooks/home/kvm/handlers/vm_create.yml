@@ -9,8 +9,7 @@
   listen: "create vm disk"
 
 - name: resize vm disk
-  command: >-
-    qemu-img resize {{ disk }} {{ vm.size }}
+  command: "qemu-img resize {{ disk }} {{ vm.size }}"
   listen: "create vm disk"
 
 - name: create cloud image user data
