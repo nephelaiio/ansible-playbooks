@@ -1,41 +1,13 @@
 - hosts: kvm
 
+  vars_files:
+
+    - vars.yml
+
   vars:
 
     cleanup: False
-
-    kvm:
-      defaults:
-        vm:
-          state: present
-          memory: 2048
-          cpu: 1
-          image: xenial
-          autostart: true
-          size: 10G
-          pool: default
-        pool:
-          state: present
-          autostart: true
-      vms:
-        - name: test01
-          size: 10G
-          recreate: true
-          nic:
-            type: bridge
-            net: br0
-            mac: 52:54:00:b0:8e:aa
-      pools:
-        default:
-          path: /var/lib/libvirt/images
-      images:
-        xenial:
-          src: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
-          img: xenial.img
-          pool: default
-          format: qcow2
-          checksum: 089bbe2426bebdd860b755022a01d346
-
+    
   tasks:
     
     - name: install requirements
@@ -57,7 +29,7 @@
     - name: configure bridging
       copy:
         src: "../../files/kvm/bridge.conf"
-        dest: "/etc/sysctl.d/bridge.conf"
+        dest: "{{ kvm.bridge_config }}"
         force: no
         mode: 0644
       become: yes
@@ -107,7 +79,6 @@
         img: "{{ item.value.img }}" 
       with_dict: "{{ kvm.images }}"
 
-    - name: update bridge configuration
-      command: >-
-        sysctl -p /etc/sysctl.d/bridge.conf
+    - name: configure bridge
+      command: "sysctl -p {{ kvm.bridge_config }}"
       become: yes
