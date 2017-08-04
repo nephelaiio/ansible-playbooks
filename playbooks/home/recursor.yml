@@ -32,9 +32,6 @@
 
   tasks:
 
-    - debug:
-        msg: "{{ hostvars }}"
-
     - name: Inspect nameservers
       changed_when: False
       command: "host www.google.com"
