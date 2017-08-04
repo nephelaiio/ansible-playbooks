@@ -6,15 +6,16 @@ users:
     lock_passwd: false
     system: false
     shell: /bin/bash
-    ssh-authorized-keys:
-      - {{ ssh_key }}
-  - name: ansible
-    passwd: $6$FLtrHwDCFhzzNmDd$JZPl0qz0ksLPOf/oz3IJylAbt4JhOPC6J1zJ72ATU4rMrCLMZOQygN7y835lo6VOBRVyj5mJE9QPKypJrXNdC/
-    groups: sudo
-    lock_passwd: false
-    system: false
-    shell: /bin/bash
     sudo: ALL=(ALL) NOPASSWD:ALL
     ssh-authorized-keys:
       - {{ ssh_key }}
 
+packages:
+  - python
+
+bootcmd:
+  - echo 127.0.1.1 {{ hostname }} >> /etc/hosts 
+  - echo {{ iface.address }} {{ hostname }} >> /etc/hosts 
+{% for ns in iface.nameservers %}
+  - echo nameserver {{ ns }} >> /etc/resolv.conf
+{% endfor %}

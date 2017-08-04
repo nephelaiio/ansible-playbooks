@@ -2,12 +2,13 @@ version: 2
 ethernets:
   {{ iface.name }}:
     match:
-      mac_address: {{ iface.mac }}
+      mac_address: "{{ iface.mac }}"
     set-name: {{ iface.name }}
+{% if 'address' in iface %}
     addresses:
-      - {{ iface.address }}/{{ iface.netmask }}
+      - {{ iface.address }}/{{ iface.prefix }}
+{% if 'gateway' in iface %}
     gateway4: {{ iface.gateway }}
-
-
-
+{% endfor %}
+{% endfor %}
  

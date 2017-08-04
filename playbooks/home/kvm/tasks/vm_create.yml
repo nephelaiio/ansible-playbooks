@@ -1,8 +1,8 @@
 ---
 - name: get user
   local_action: command whoami
+  changed_when: False
   register: ansible_username
-  when: vm.state in ['present', 'recreate']
 
 - name: create temporary directory
   tempfile:
@@ -37,11 +37,8 @@
     ssh_user: "{{ ansible_username.stdout }}"
     ssh_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
     hostname: "{{ vm.name.split('.') | first }}"
-    fqdn: "{{ vm.name }}"
+    iface: "{{ vm.nic }}"
   when: diskcopy.changed
-
-- debug:
-    var: vm
 
 - name: create cloud image network config
   template:

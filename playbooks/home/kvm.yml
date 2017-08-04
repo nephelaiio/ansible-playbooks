@@ -1,4 +1,6 @@
-- hosts: kvm
+- name: configure kvm hosts
+
+  hosts: kvm
 
   vars_files:
 
@@ -35,6 +37,33 @@
       become: yes
       notify: configure bridge
 
+    - name: configure sysctl bridge service
+      template:
+        src: "../../templates/systemd.service"
+        dest: "/etc/systemd/system/sysctl-bridge.service"
+        force: yes
+        mode: 0644
+      vars:
+        service:
+          Unit:
+            Description: Sysctl bridge configuration
+            After: network.target
+          Service:
+            WorkingDirectory: /root
+            User: root
+            Type: oneshot
+            ExecStart: "/usr/sbin/sysctl -p {{ kvm.bridge_config }}"
+          Install:
+            WantedBy: multi-user.target
+      become: yes
+
+    - name: enable sysctl bridge service
+      service:
+        name: sysctl-bridge
+        state: started
+        enabled: yes
+      become: yes
+
     - name: fetch images
       local_action: >-
         get_url
@@ -54,7 +83,7 @@
 
     - include: kvm/tasks/vm_destroy.yml
       vars:
-        vm: "{{ kvm.defaults.vm | combine(item) }}"
+        vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
         pool: "{{ kvm.pools[vm.pool].path }}"
         iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
       with_items: "{{ kvm.vms }}"
@@ -62,7 +91,7 @@
 
     - include: kvm/tasks/vm_create.yml
       vars:
-        vm: "{{ kvm.defaults.vm | combine(item) }}"
+        vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
         img: "{{ kvm.images[vm.image].img }}"
         pool: "{{ kvm.pools[vm.pool].path }}"
         iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
