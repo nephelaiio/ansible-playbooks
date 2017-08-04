@@ -42,9 +42,6 @@
       set_fact:
         instances: "{{ instance_query.stdout | from_json }}"
 
-    - debug:
-        var: instances
-
     - name: destroy persistent inventory
       local_action:
         module: file
