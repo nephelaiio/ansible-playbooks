@@ -1,0 +1,95 @@
+---
+kvm:
+  bridge_config: "/etc/sysctl.d/99-bridge.conf"
+  defaults:
+    vm:
+      state: present # | recreate | absent
+      memory: 2048
+      cpu: 1
+      image: xenial
+      autostart: True
+      size: 10G
+      pool: default
+      nic:
+        name: enp0s3
+        type: bridge
+        net: br0
+        prefix: 24
+        gateway: 192.168.0.1
+        nameservers:
+          - 8.8.8.8
+          - 8.8.4.4
+    pool:
+      state: present
+      autostart: True
+  vms:
+    - name: kvma
+      state: recreate
+      nic:
+        hw-address: 52:54:00:94:37:21
+        ip-address: 192.168.0.12
+  pools:
+    default:
+      path: /var/lib/libvirt/images
+  images:
+    xenial:
+      src: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
+      img: xenial.img
+      pool: default
+      format: qcow2
+      checksum: 089bbe2426bebdd860b755022a01d346
+
+dns:
+  recursors: "{{ groups['recursor'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list }}"
+  server: "{{ groups['dns'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | first }}"
+  zones:
+    home:
+      name: home.nephelai.io
+      mx:
+        - name: rpia.home.nephelai.io
+      ns:
+        - name: rpia.home.nephelai.io
+  
+nets:
+  home:
+    subnet: 192.168.0.0/24
+    zone: 168.192.in-addr.arpa
+    router: 192.168.0.1
+    comment: 'home network'
+    pools:
+      - pool: '192.168.0.65 - 192.168.0.127'
+    reservations:
+      - ip-address: "192.168.0.11"
+        hw-address: "ae:77:35:db:a0:17"
+      - ip-address: "192.168.0.10"
+        hw-address: "b8:27:eb:10:54:87"
+      - ip-address: "192.168.0.116"
+        hw-address: "b8:27:eb:40:6b:19"
+    option_data:
+      - name: "domain-name-servers"
+        data: "{{ dns.recursors }}"
+      - name: routers
+        data: [ 192.168.0.1 ]
+      - name: "domain-name"
+        data: "{{ dns.zones.home.name }}"
+
+jupyter:
+  user: root
+  group: root
+  port: 443
+  password: "{{ jupyter_password }}"
+  notebookdir: /home/ubuntu/notebooks
+  confdir: /home/ubuntu/.jupyter
+  certfile: fullchain.pem
+  keyfile: privkey.pem
+  exec_args: "--certfile {{ jupyter_confdir }}/{{ jupyter_certfile }} --keyfile {{ jupyter_confdir }}/{{ jupyter_keyfile }}"
+  region: us-west-2
+  availability_zone: b
+  state: stopped  # one of [ absent, running, stopped ]
+  route53_zone: nephelai.io.
+  instance_type: p2.xlarge
+  client_token: "{{ 'test04' | to_uuid }}"
+  ami_id: ami-e9038d89
+  ami_user: ubuntu
+  key: teodoro.cook@gmail.com
+  pause_seconds: 30
