@@ -15,7 +15,7 @@ packages:
 
 bootcmd:
   - echo 127.0.1.1 {{ hostname }} >> /etc/hosts 
-  - echo {{ iface.address }} {{ hostname }} >> /etc/hosts 
+  - echo {{ iface['ip-address'] }} {{ hostname }} >> /etc/hosts 
 {% for ns in iface.nameservers %}
   - echo nameserver {{ ns }} >> /etc/resolv.conf
 {% endfor %}
