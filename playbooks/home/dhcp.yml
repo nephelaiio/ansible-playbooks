@@ -1,38 +1,77 @@
 # vim: ts=2 sw=2 et :
 ---
+- hosts: home
+
+  name: gather facts
+
+  tasks: [ ]
+
+
 - hosts: dhcp
 
   vars:
-    dhcp_probe: True
-    dhcpd_authoritative: True
-    dhcpd_domain_name: home.nephelai.io
-    dhcpd_domain_search:
-      - nephelai.io
-    dhcpd_nameservers:
-      - "{{ ansible_default_ipv4.address }}"
-    dhcpd_probe_legal_servers: 
-      - "{{ ansible_default_ipv4.address }}"
-    dhcpd_hosts:
-      - hostname: cerberus.home.nephelai.io
-        address: 192.168.0.11
-        ethernet: ae:77:35:db:a0:17
-    dhcpd_zones:
-      - zone: home.nephelai.io
-        primary: 127.0.0.1
-        key: dhcp-key
-    dhcpd_subnets:
-      - subnet: 192.168.0.0/24
-        routers: 192.168.0.1
-        comment: home network
-        pools:
-          - comment: default pool
-            range: 192.168.0.65 192.168.0.127
-    dhcpd_keys:
-      - key: '{{ tsigkeys.dhcp.name }}'
-        algorighm: '{{ tsigkeys.dhcp.secret | default("hmac-md5") }}'
-        secret: '{{ tsigkeys.dhcp.secret }}'
+ 
+    kea_dhcp_config: true
+    kea_dhcp_dhcp4_config:
+      Dhcp4:
+        dhcp-ddns:
+          enable-updates: true
+          qualifying-suffix: "{{ dns.zones.home.name }}"
+        subnet4:
+          - "{{ nets.home }}"
+        
+    kea_dhcp_ddns_config:
+      DhcpDdns:
+        ip-address: "{{ dns.server }}"
+        port: 53
+        tsig-keys:
+          - "{{ tsigkeys.dhcp.name }}"
+        forward-ddns:
+          ddns-domains:
+            - "{{ dns.zones.home.name }}"
+
+    local_fwd_zones: "{{ dns.zones.values() | map(attribute='name') | list }}"
 
   become: yes
 
-  roles:
-    - role: debops.dhcpd
+  tasks:
+
+    - name: Inspect nameservers
+      changed_when: False
+      command: "host -W 1 www.google.com"
+      ignore_errors: true
+      register: resolv
+
+    - name: Configure resolution
+      include_role:
+        name: ahuffman.resolv
+      vars:
+        resolv_nameservers:
+          - 8.8.8.8
+          - 8.8.4.4
+      when: resolv.rc != 0
+
+    - name: Install dhcpd
+      package:
+        name: "{{ item }}"
+        state: latest
+      become: yes
+      with_items:
+        - isc-dhcp-server
+      notify: Restart dhcpd
+
+    - name: Configure resolution
+      include_role:
+        name: ahuffman.resolv
+      vars:
+        resolv_nameservers: "{{ local_fwd_zones }}"
+      when: resolv.rc != 0
+
+  handlers:
+
+    - name: Restart dhcpd
+      service:
+        name: isc-dhcp-server
+        state: restarted
+      become: yes
+    
