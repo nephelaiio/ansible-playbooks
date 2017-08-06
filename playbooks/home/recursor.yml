@@ -9,9 +9,6 @@
 
 - hosts: recursor
 
-  vars_files:
-    - vars.yml
-
   vars:
 
     pdns_rec_config:
@@ -20,13 +17,9 @@
       forward-zones:
         - "home.nephelai.io={{ hostvars[groups['dns']] | first | map(attribute='ansible_default_ipv4') }}:53"
 
-    resolv_nameservers:
-      - 127.0.0.1
+    local_fwd_zones: "{{ dns.zones.values() | map(attribute='name') | list }}"
 
-    resolv_domain: "{{ dns.home.name }}"
-
-    resolv_search:
-      - "{{ dns.tld.name }}"
+    local_rev_zones: "{{ nets.values() | map(attribute='zone') | list }}"
 
   become: yes
 
@@ -34,7 +27,8 @@
 
     - name: Inspect nameservers
       changed_when: False
-      command: "host www.google.com"
+      command: "host -W 1 www.google.com"
+      ignore_errors: true
       register: resolv
 
     - name: Configure resolution
@@ -46,16 +40,48 @@
           - 8.8.4.4
       when: resolv.rc != 0
 
-    - name: Install dns utilities
+    - name: Install bind
       apt:
-        name: dnsutils
+        name: "{{ item }}"
         state: latest
         force: yes
+      become: yes
+      with_items:
+        - dnsutils
+        - bind9
+      notify: Restart bind
 
-    - name: Install dns recursor
-      include_role:
-        name: pdns_recursor-ansible
+    - name: Configure bind rfc-1918 zones
+      lineinfile:
+        path: /etc/bind/zones.rfc1918
+        regexp: "{{ item }}"
+        state: absent
+      become: yes
+      with_items: "{{ local_rev_zones }}"
+      notify: Restart bind
 
-    - name: Configure resolution
-      include_role:
-        name: ahuffman.resolv
+    - name: Configure bind custom zones
+      template:
+        src: ../../templates/bind/recursor.conf.j2
+        dest: /etc/bind/named.conf.local
+      become: yes
+      notify: Restart bind
+
+    - name: Configure bind services
+      service:
+        name: "{{ item }}"
+        enabled: yes
+        state:  started
+      with_items:
+        - bind9
+        - bind9-resolvconf
+      become: yes
+
+  handlers:
+
+    - name: Restart bind
+      service:
+        name: bind9
+        state: restarted
+      become: yes
+
