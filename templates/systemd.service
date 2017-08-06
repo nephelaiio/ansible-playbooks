@@ -1,7 +1,0 @@
-{% for section in service %}
-[{{ section }}]
-{% for value in service[section] %}
-{{ value }}={{ service[section][value] }}
-{% endfor %}
-
-{% endfor %}

@@ -1,0 +1,14 @@
+version: 2
+ethernets:
+  {{ iface['name'] }}:
+    match:
+      mac_address: "{{ iface['hw-address'] }}"
+    set-name: {{ iface['name'] }}
+{% if 'ip-address' in iface %}
+    addresses:
+      - {{ iface['ip-address'] }}/{{ iface['prefix'] }}
+{% if 'gateway' in iface %}
+    gateway4: {{ iface['gateway'] }}
+{% endif %}
+{% endif %}
+ 

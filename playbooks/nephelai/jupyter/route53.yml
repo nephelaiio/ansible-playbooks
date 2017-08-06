@@ -27,7 +27,7 @@
       local_action:
         module: route53
         command: delete
-        zone: "{{ route53_zone }}"
+        zone: "{{ jupyter.route53_zone }}"
         record: "{{ item.0.Name }}"
         value: "{{ item.1.Value }}"
         type: "{{ item.0.Type }}"

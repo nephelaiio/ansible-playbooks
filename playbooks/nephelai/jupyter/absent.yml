@@ -4,9 +4,6 @@
 
   hosts: local
 
-  vars_files: 
-    - vars.yml
-
   tasks:
 
     - name: query instances
@@ -23,9 +20,9 @@
       - name: provision jupyter instances
         local_action:
           module: ec2
-          region: "{{ region }}"
+          region: "{{ jupyter.region }}"
           instance_ids: "instances"
-          state: "{{ state }}"
+          state: "{{ jupyter.state }}"
           groups:
             - httpd
         register: ec2
@@ -63,4 +60,4 @@
       local_action:
         module: file
         path: '../../../inventory/aws'
-        state: "{{ state }}"
+        state: "{{ jupyter.state }}"

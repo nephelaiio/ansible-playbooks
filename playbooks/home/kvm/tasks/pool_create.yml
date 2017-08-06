@@ -11,7 +11,7 @@
 
 - name: create pool templates
   template:
-    src: ../../templates/pool.xml.j2
+    src: ../../templates/kvm/pool.xml.j2
     dest: "{{ pool_def }}"
 
 - name: create pool

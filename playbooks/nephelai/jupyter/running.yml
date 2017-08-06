@@ -101,23 +101,23 @@
 
     - name: copy ssl certificate
       copy:
-        src: "{{ jupyter_certfile }}"
-        dest: "{{ jupyter_confdir }}/{{ jupyter_certfile }}"
-        owner: "{{ jupyter_user }}"
-        group: "{{ jupyter_group }}"
+        src: "{{ jupyter.certfile }}"
+        dest: "{{ jupyter.confdir }}/{{ jupyter.certfile }}"
+        owner: "{{ jupyter.user }}"
+        group: "{{ jupyter.group }}"
         mode: 0600
 
     - name: copy ssl key
       copy:
-        src: "{{ jupyter_keyfile }}"
-        dest: "{{ jupyter_confdir }}/{{ jupyter_keyfile }}"
-        owner: "{{ jupyter_user }}"
-        group: "{{ jupyter_group }}"
+        src: "{{ jupyter.keyfile }}"
+        dest: "{{ jupyter.confdir }}/{{ jupyter.keyfile }}"
+        owner: "{{ jupyter.user }}"
+        group: "{{ jupyter.group }}"
         mode: 0600
 
     - name: create jupyter notebook dir
       file:
-        path: "{{ jupyter_notebookdir }}"
+        path: "{{ jupyter.notebookdir }}"
         state: directory
 
     - name: restart jupyter

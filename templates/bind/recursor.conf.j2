@@ -1,0 +1,9 @@
+#{{ ansible_managed }}
+
+{% for zone in local_fwd_zones + local_rev_zones %}
+zone "{{ zone }}" {
+  type forward;
+  forward only;
+  forwarders { {{ dns.server }}; };
+};
+{% endfor %}

@@ -1,21 +1,18 @@
 ---
-- dochang.docker
-- debops.dhcpd
-- debops.apt_preferences
-- nephelaiio.vim
-- nephelaiio.tree
-- nephelaiio.devtools
-- nephelaiio.rbenv
-- nephelaiio.pyenv
-- nephelaiio.tmux
-- nephelaiio.vagrant
-- nephelaiio.octave
-- nephelaiio.i3
-- nephelaiio.docker
-- nephelaiio.unifi-controller
-- nephelaiio.jupyter
-- nephelaiio.rxvt-unicode
-- ahuffman.resolv
-- geerlingguy.mysql
+- src: ahuffman.resolv
+- src: geerlingguy.mysql
+- src: mrlesmithjr.kea-dhcp
+- src: nephelaiio.vim
+- src: nephelaiio.tree
+- src: nephelaiio.devtools
+- src: nephelaiio.rbenv
+- src: nephelaiio.pyenv
+- src: nephelaiio.tmux
+- src: nephelaiio.vagrant
+- src: nephelaiio.octave
+- src: nephelaiio.i3
+- src: nephelaiio.docker
+- src: nephelaiio.unifi-controller
+- src: nephelaiio.jupyter
+- src: nephelaiio.rxvt-unicode
 - src: https://git@github.com/PowerDNS/pdns-ansible.git
-- src: https://git@github.com/PowerDNS/pdns_recursor-ansible.git

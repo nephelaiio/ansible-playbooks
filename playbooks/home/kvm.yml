@@ -2,10 +2,6 @@
 
   hosts: kvm
 
-  vars_files:
-
-    - vars.yml
-
   vars:
 
     cleanup: False
@@ -28,41 +24,27 @@
       when: ansible_os_family == "Archlinux"
       become: yes
 
+    - name: clear bridging configuration
+      file:
+        path: "{{ item }}"
+        state: absent
+      become: yes
+      with_items:
+        - "{{ kvm.bridge_config }}"
+        - "/etc/systemd/system/sysctl-bridge.service"
+
     - name: configure bridging
-      copy:
-        src: "../../files/kvm/bridge.conf"
-        dest: "{{ kvm.bridge_config }}"
-        force: no
-        mode: 0644
+      sysctl:
+        name: "{{ item }}"
+        value: 0
+        state: present
+        sysctl_set: yes
+        reload: yes
       become: yes
-      notify: configure bridge
-
-    - name: configure sysctl bridge service
-      template:
-        src: "../../templates/systemd.service"
-        dest: "/etc/systemd/system/sysctl-bridge.service"
-        force: yes
-        mode: 0644
-      vars:
-        service:
-          Unit:
-            Description: Sysctl bridge configuration
-            After: network.target
-          Service:
-            WorkingDirectory: /root
-            User: root
-            Type: oneshot
-            ExecStart: "/usr/sbin/sysctl -p {{ kvm.bridge_config }}"
-          Install:
-            WantedBy: multi-user.target
-      become: yes
-
-    - name: enable sysctl bridge service
-      service:
-        name: sysctl-bridge
-        state: started
-        enabled: yes
-      become: yes
+      with_items:
+        - net.bridge.bridge-nf-call-ip6tables
+        - net.bridge.bridge-nf-call-iptables
+        - net.bridge.bridge-nf-call-arptables
 
     - name: fetch images
       local_action: >-
