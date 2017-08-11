@@ -1,0 +1,77 @@
+{% for domain in domains %}
+SET @name = '{{ domain.name }}',
+  @content = '{{ ansible_hostname }} master@{{ domain.name }} {{ ansible_date_time.year }}{{ ansible_date_time.month }}{{ ansible_date_time.day }}{{ ansible_date_time.hour}}{{ ansible_date_time.minute }}',
+  @type = 'SOA',
+  @ttl = {{ domain.ttl | default(3600) }};
+INSERT IGNORE INTO domains(name, type)
+  VALUES(@name, @type);
+  SELECT id INTO @id FROM domains WHERE name like @name;
+  DELETE FROM records
+  WHERE domain_id = @id AND type = @type AND name = @name;
+  INSERT INTO records(domain_id, name, content, type, ttl)
+  VALUES(@id, @name, @content, @type, @ttl);
+{% endfor %}
+
+{% for domain in domains %}
+{%   for ns in domain.ns %}
+SET @name = '{{ domain.name }}',
+  @content = '{{ ns.name }}',
+  @type = 'NS',
+  @ttl = {{ ns.ttl | default(3600) }}; 
+SELECT id INTO @id FROM domains
+WHERE name like '{{ domain.name }}';
+DELETE FROM records
+WHERE domain_id = @id AND type = @type AND name = @name;
+INSERT INTO records(domain_id, name, content, type, ttl)
+VALUES(@id, @name, @content, @type, @ttl);
+{%   endfor %}
+{% endfor %}
+
+{% for domain in domains %}
+{%   for mx in domain.mx %}
+SET @name = '{{ domain.name }}',
+  @content = '{{ mx.name }}',
+  @type = 'MX',
+  @ttl = {{ mx.ttl | default(3600) }},
+  @prio = {{ mx.priority | default(10) }}; 
+SELECT id INTO @id FROM domains
+WHERE name like '{{ domain.name }}';
+DELETE FROM records
+WHERE domain_id = @id AND type = @type AND name = @name;
+INSERT INTO records(domain_id, name, content, type, ttl, prio)
+VALUES(@id, @name, @content, @type, @ttl, @prio);
+{%   endfor %}
+{% endfor %}
+
+{% for domain in domains %}
+{%   for net in domain.records %}
+{%     for record in net %}
+SET @name = '{{ record.host }}',
+    @content = '{{ record['ip-address'] }}',
+    @type = '{{ record.type | default('A') }}',
+    @ttl = {{ record.ttl | default(3600) }}; 
+SELECT id INTO @id FROM domains
+  WHERE name like '{{ domain.name }}';
+DELETE FROM records
+  WHERE domain_id = @id AND type = @type AND name = @name;
+INSERT INTO records(domain_id, name, content, type, ttl)
+  VALUES(@id, @name, @content, @type, @ttl);
+{%     endfor %}
+{%   endfor %}
+{% endfor %}
+
+{% for key in keys %}
+{%   for domain in key.domains %}
+SET @domain = '{{ domain }}',
+    @name = '{{ key.name }}',
+    @algorithm = '{{ key.algorithm | default('hmac-md5') }}',
+    @secret = '{{ key.secret }}',
+    @kind = 'TSIG-ALLOW-DNSUPDATE'; 
+INSERT INTO tsigkeys(name, algorithm, secret)
+  VALUES(@name, @algorithm, @secret)
+  ON DUPLICATE KEY UPDATE secret=@secret;
+SELECT id INTO @id FROM domains WHERE name like @domain;
+INSERT INTO domainmetadata(domain_id, kind, content)
+  VALUES(@id, @kind, @name);
+{%   endfor %}
+{% endfor %}
