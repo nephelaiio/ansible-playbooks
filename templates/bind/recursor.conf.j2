@@ -4,6 +4,6 @@
 zone "{{ zone }}" {
   type forward;
   forward only;
-  forwarders { {{ dns.server }}; };
+  forwarders { {{ dns.servers | join('; ') }}; };
 };
 {% endfor %}
