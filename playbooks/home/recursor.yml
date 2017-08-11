@@ -11,12 +11,6 @@
 
   vars:
 
-    pdns_rec_config:
-      local-address:
-        - '*:53'
-      forward-zones:
-        - "home.nephelai.io={{ hostvars[groups['dns']] | first | map(attribute='ansible_default_ipv4') }}:53"
-
     local_fwd_zones: "{{ dns.zones.values() | map(attribute='name') | list }}"
 
     local_rev_zones: "{{ nets.values() | map(attribute='zone') | list }}"
@@ -76,6 +70,12 @@
         - bind9
         - bind9-resolvconf
       become: yes
+
+    - name: Configure resolution
+      include_role:
+        name: ahuffman.resolv
+      vars:
+        resolv_nameservers: "{{ dns.recursors }}"
 
   handlers:
 
