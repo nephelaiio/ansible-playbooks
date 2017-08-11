@@ -80,6 +80,11 @@
       with_items: "{{ kvm.vms }}"
       static: no
 
+    - include: kvm/tasks/vm_register.yml
+      vars:
+        vm: "{{ item }}"
+      with_items: "{{ kvm.vms }}"
+
   handlers:
 
     - name: uncompress images
