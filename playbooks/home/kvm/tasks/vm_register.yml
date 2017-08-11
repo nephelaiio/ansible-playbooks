@@ -1,0 +1,5 @@
+---
+- add_host:
+    name: "{{ vm.nic['ip-address'] }}"
+    groups: "{{ vm.name }}"
+  when: vm.state in ['present', 'recreate']
