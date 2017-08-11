@@ -1,0 +1,72 @@
+#{{ ansible_managed }}
+
+omapi-port 7911;
+omapi-key {{ omapikey.name }};
+
+# OMAPI key declaration
+key {{ omapikey.name }} {
+  algorithm {{ omapikey.algorithm }};
+  secret {{ omapikey.secret }};
+}
+
+failover peer "failover-partner" {
+{% for setting in failover %}
+  {{ setting }};
+{% endfor %}  
+}
+
+# The ddns-updates-style parameter controls whether or not the server will
+# attempt to do a DNS update when a lease is confirmed. We default to the
+# behavior of the version 2 packages ('none', since DHCP v2 didn't
+# have support for DDNS.)
+ddns-update-style interim;
+
+# Option definitions common to all supported networks...
+option domain-name-servers {{ dns.recursors | join(', ') }};
+default-lease-time {{ lease_time }};
+max-lease-time {{ 12 * lease_time }};
+
+# If this DHCP server is the official DHCP server for the local
+# network, the authoritative directive should be uncommented.
+authoritative;
+
+# Use this to send dhcp log messages to a different log file (you also
+# have to hack syslog.conf to complete the redirection).
+log-facility local7;
+
+# TSIG key declarations
+key {{ tsigkey.name }} {
+  algorithm {{ tsigkey.algorithm }};
+  secret {{ tsigkey.secret }};
+}
+
+# Subnet and host declarations
+{% for n in networks %}
+subnet {{ n.network }} netmask {{ n.netmask }} {
+{% for p in n.pools %}
+  pool {
+    failover peer "failover-partner";
+    range {{ p.range }};
+  }
+{% endfor %}
+  option routers {{ n.router }};
+  option domain-name "{{ dns.zones.home.name }}";
+}
+zone {{ n.zone }} {
+  primary {{ dns.servers | first }};
+  key {{ tsigkey.name }};
+}
+  {% for r in n.reservations %}
+host {{ r.host }} {
+  hardware ethernet {{ r['hw-address'] }};
+  fixed-address {{ r['ip-address'] }};
+}
+  {% endfor %}
+{% endfor %}
+
+{% for z in zones %}
+zone {{ z.name }} {
+  primary {{ dns.servers | first }};
+  key {{ tsigkey.name }};
+}
+{% endfor %}
