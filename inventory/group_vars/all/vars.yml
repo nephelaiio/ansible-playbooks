@@ -1,4 +1,35 @@
 ---
+nets:
+  home:
+    network: 192.168.0.0
+    netmask: 255.255.255.0
+    router: 192.168.0.1
+    zone: 0.168.192.in-addr.arpa
+    pools:
+      - range: '192.168.0.65 192.168.0.127'
+    reservations:
+      - host: cerberus.home.nephelai.io
+        ip-address: "192.168.0.11"
+        hw-address: "ae:77:35:db:a0:17"
+      - host: rpia.home.nephelai.io
+        ip-address: "192.168.0.10"
+        hw-address: "b8:27:eb:10:54:87"
+      - host: rpib.home.nephelai.io
+        ip-address: "192.168.0.116"
+        hw-address: "b8:27:eb:40:6b:19"
+
+dns:
+  recursors: "{{ groups['recursor'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list }}"
+  servers: "{{ groups['dns'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list }}"
+  zones:
+    home:
+      name: home.nephelai.io
+      mx:
+        - name: rpia.home.nephelai.io
+      ns:
+        - name: rpia.home.nephelai.io
+      records: "{{ nets.values() | map(attribute='reservations') | list }}"
+
 kvm:
   bridge_config: "/etc/sysctl.d/99-bridge.conf"
   defaults:
@@ -14,11 +45,9 @@ kvm:
         name: enp0s3
         type: bridge
         net: br0
-        prefix: 24
-        gateway: 192.168.0.1
-        nameservers:
-          - 8.8.8.8
-          - 8.8.4.4
+        prefix: "{{ nets.home.router | ipaddr('prefix') }}"
+        gateway: "{{ nets.home.router | ipaddr('address') }}"
+        nameservers: "{{ dns.recursors }}"
     pool:
       state: present
       autostart: True
@@ -28,6 +57,11 @@ kvm:
       nic:
         hw-address: 52:54:00:94:37:21
         ip-address: 192.168.0.12
+    - name: kvmb
+      state: present
+      nic:
+        hw-address: 52:54:00:94:37:22
+        ip-address: 192.168.0.13
   pools:
     default:
       path: /var/lib/libvirt/images
@@ -38,40 +72,6 @@ kvm:
       pool: default
       format: qcow2
       checksum: 089bbe2426bebdd860b755022a01d346
-
-dns:
-  recursors: "{{ groups['recursor'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list }}"
-  server: "{{ groups['dns'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | first }}"
-  zones:
-    home:
-      name: home.nephelai.io
-      mx:
-        - name: rpia.home.nephelai.io
-      ns:
-        - name: rpia.home.nephelai.io
-  
-nets:
-  home:
-    subnet: 192.168.0.0/24
-    zone: 168.192.in-addr.arpa
-    router: 192.168.0.1
-    comment: 'home network'
-    pools:
-      - pool: '192.168.0.65 - 192.168.0.127'
-    reservations:
-      - ip-address: "192.168.0.11"
-        hw-address: "ae:77:35:db:a0:17"
-      - ip-address: "192.168.0.10"
-        hw-address: "b8:27:eb:10:54:87"
-      - ip-address: "192.168.0.116"
-        hw-address: "b8:27:eb:40:6b:19"
-    option_data:
-      - name: "domain-name-servers"
-        data: "{{ dns.recursors }}"
-      - name: routers
-        data: [ 192.168.0.1 ]
-      - name: "domain-name"
-        data: "{{ dns.zones.home.name }}"
 
 jupyter:
   user: root
