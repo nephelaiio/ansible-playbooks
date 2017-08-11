@@ -1,7 +1,6 @@
 ---
 - src: ahuffman.resolv
-- src: geerlingguy.mysql
-- src: mrlesmithjr.kea-dhcp
+- src: mrlesmithjr.powerdns-authoritative
 - src: nephelaiio.vim
 - src: nephelaiio.tree
 - src: nephelaiio.devtools
@@ -15,4 +14,3 @@
 - src: nephelaiio.unifi-controller
 - src: nephelaiio.jupyter
 - src: nephelaiio.rxvt-unicode
-- src: https://git@github.com/PowerDNS/pdns-ansible.git
