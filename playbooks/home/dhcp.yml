@@ -1,8 +1,8 @@
 # vim: ts=2 sw=2 et :
 ---
-- hosts: home
+- hosts: dns,recursor
 
-  name: gather facts
+  name: gather facts from dns servers
 
   tasks: [ ]
 
@@ -10,25 +10,6 @@
 - hosts: dhcp
 
   vars:
- 
-    kea_dhcp_config: true
-    kea_dhcp_dhcp4_config:
-      Dhcp4:
-        dhcp-ddns:
-          enable-updates: true
-          qualifying-suffix: "{{ dns.zones.home.name }}"
-        subnet4:
-          - "{{ nets.home }}"
-        
-    kea_dhcp_ddns_config:
-      DhcpDdns:
-        ip-address: "{{ dns.server }}"
-        port: 53
-        tsig-keys:
-          - "{{ tsigkeys.dhcp.name }}"
-        forward-ddns:
-          ddns-domains:
-            - "{{ dns.zones.home.name }}"
 
     local_fwd_zones: "{{ dns.zones.values() | map(attribute='name') | list }}"
 
@@ -60,12 +41,25 @@
         - isc-dhcp-server
       notify: Restart dhcpd
 
+    - name: Configure dhcp
+      template:
+        src: ../../templates/dhcp/dhcpd.conf.j2
+        dest: /etc/dhcp/dhcpd.conf
+      become: yes
+      vars:
+        tsigkey: "{{ tsigkeys.dhcp }}"
+        omapikey: "{{ tsigkeys.omapi }}"
+        lease_time: 600 
+        networks: "{{ nets.values() }}"
+        zones: "{{ dns.zones.values() }}"
+        failover: "{{ dhcp.failover }}"
+      notify: Restart dhcpd
+
     - name: Configure resolution
       include_role:
         name: ahuffman.resolv
       vars:
-        resolv_nameservers: "{{ local_fwd_zones }}"
-      when: resolv.rc != 0
+        resolv_nameservers: "{{ dns.recursors }}"
 
   handlers:
 
