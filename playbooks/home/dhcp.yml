@@ -33,9 +33,10 @@
       when: resolv.rc != 0
 
     - name: Install dhcpd
-      package:
+      apt:
         name: "{{ item }}"
         state: latest
+        update_cache: yes
       become: yes
       with_items:
         - isc-dhcp-server
