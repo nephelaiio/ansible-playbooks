@@ -1,191 +1,121 @@
 # vim: ts=2 sw=2 et :
-
-# TODO:
-#  - Install bind and add dynamic dns updates
-#  - Create home mx records
 ---
+- hosts: recursor
+
+  name: gather facts from dns servers
+
+  tasks: [ ]
+
+
 - hosts: dns
 
   vars:
-
-    pdns_rec_config:
-      local-address:
-        - '{{ ansible_default_ipv4.address }}:53'
-        - 127.0.0.1:53
-      forward-zones:
-        - 'home.nephelai.io={{ ansible_default_ipv4.address }}:8053'
-
-    resolv_nameservers:
-      - 127.0.0.1
-
-    resolv_domain: home.nephelai.io
-
-    resolv_search:
-      - nephelai.io
- 
     pdns_db:
       name: pdns
       user: pdns
       pass: '{{ pdns_db_pass }}'
-
-    mysql_packages:
-      - mariadb-client
-      - mariadb-server
-      - python-mysqldb
-
-    mysql_databases:
-      - name: '{{ pdns_db.name }}'
-
-    mysql_users:
-      - name: pdns
-        password: '{{ pdns_db.pass }}'
-        priv: '{{ pdns_db.name }}.*:ALL' 
-
     pdns_tsigkeys:
       - name: '{{ tsigkeys.dhcp.name }}'
         secret: '{{ tsigkeys.dhcp.secret }}' 
         domains:
-          - home.nephelai.io
-
+          - "{{ dns.zones.home.name }}"
     pdns_config:
       master: yes
       slave: no
-      local-address: '{{ ansible_default_ipv4.address }}:8053'
-
+      local-address: "{{ ansible_default_ipv4.address }}:53"
+      security-poll-suffix: ''
     pdns_backends:
       gmysql:
         user: '{{ pdns_db.user }}'
         host: 127.0.0.1
         password: '{{ pdns_db.pass }}'
         dbname: '{{ pdns_db.name }}'
+    pdns_domains: "{{ dns.zones.values() }}"
 
-    pdns_domains:
-      - name: home.nephelai.io
-        type: NATIVE
-        mx:
-          - rba.home.nephelai.io
-        ns:
-          - ns1.home.nephelai.io
-        records:
-          - name: gw
-            content: 192.168.0.1
-          - name: rba
-            content: 192.168.0.10
-          - name: ns1
-            content: 192.168.0.10
+    mysql_packages:
+      - mariadb-client
+      - mariadb-server
+      - python-mysqldb
+    mysql_databases:
+      - name: '{{ pdns_db.name }}'
+    mysql_users:
+      - name: pdns
+        password: '{{ pdns_db.pass }}'
+        priv: '{{ pdns_db.name }}.*:ALL' 
 
   become: yes
 
   tasks:
 
-    - name: Install dns utilities
-      package:
-        name: dnsutils
-        state: latest
-
-    - name: Install dns recursor
-      include_role:
-        name: pdns_recursor-ansible
+    - name: Inspect nameservers
+      changed_when: False
+      command: "host -W 1 www.google.com"
+      ignore_errors: true
+      register: resolv
 
     - name: Configure resolution
       include_role:
         name: ahuffman.resolv
+      vars:
+        resolv_nameservers:
+          - 8.8.8.8
+          - 8.8.4.4
+      when: resolv.rc != 0
+
+    - name: Install dns utilities
+      apt:
+        update_cache: yes
+        name: dnsutils
+        state: latest
     
-    - name: Install backend
+    - name: Install MySQL
       include_role:
         name: geerlingguy.mysql
+
+    - name: Create temporary directory
+      tempfile:
+        state: directory
+        prefix: pdns
+      register: tmpdir
 
     - name: Install dns auth server
       include_role:
         name: pdns-ansible
 
-    - name: Create domains
-      command: | 
-        mysql "{{ pdns_db.name }}" -e "
-        SET @name = '{{ item.name }}',
-            @content = '{{ ansible_hostname }} master@{{ item.name }} {{ ansible_date_time.year }}{{ ansible_date_time.month }}{{ ansible_date_time.day }}00',
-            @type = 'SOA',
-            @ttl = {{ item.ttl | default(3600) }};
-        INSERT IGNORE INTO domains(name, type)
-          VALUES(@name, @type);
-        SELECT id INTO @id FROM domains WHERE name like @name;
-        DELETE FROM records
-          WHERE domain_id = @id AND type = @type AND name = @name;
-        INSERT INTO records(domain_id, name, content, type, ttl)
-          VALUES(@id, @name, @content, @type, @ttl);"
-      with_items: "{{ pdns_domains }}"
-      changed_when: false
+    - name: Build database initialization script
+      template:
+        src: ../../templates/dns/schema.sql.j2
+        dest: "{{ tmpdir.path }}/schema.sql"
 
-    - name: Create ns records
+    - name: Initialize database
       command: |
         mysql "{{ pdns_db.name }}" -e "
-        SET @name = '{{ item.0.name }}',
-            @content = '{{ item.1 }}',
-            @type = 'NS',
-            @ttl = {{ item.1.ttl | default(3600) }}; 
-        SELECT id INTO @id FROM domains
-          WHERE name like '{{ item.0.name }}';
-        DELETE FROM records
-          WHERE domain_id = @id AND type = @type AND name = @name;
-        INSERT INTO records(domain_id, name, content, type, ttl)
-          VALUES(@id, @name, @content, @type, @ttl);"
-      with_subelements:
-        - "{{ pdns_domains }}"
-        - ns
+        SOURCE {{ tmpdir.path }}/schema.sql;"
       changed_when: false
 
-    - name: Create mx records
+    - name: Build data initialization script
+      template:
+        src: ../../templates/dns/data.sql.j2
+        dest: "{{ tmpdir.path }}/data.sql"
+      vars:
+        domains: "{{ pdns_domains }}"
+        keys:
+          - "{{ tsigkeys.dhcp }}"
+
+    - name: Override records
       command: |
         mysql "{{ pdns_db.name }}" -e "
-        SET @name = '{{ item.0.name }}',
-            @content = '{{ item.1 }}',
-            @type = 'MX',
-            @ttl = {{ item.1.ttl | default(3600) }},
-            @prio = {{ item.1.priority | default(10) }}; 
-        SELECT id INTO @id FROM domains
-          WHERE name like '{{ item.0.name }}';
-        DELETE FROM records
-          WHERE domain_id = @id AND type = @type AND name = @name;
-        INSERT INTO records(domain_id, name, content, type, ttl, prio)
-          VALUES(@id, @name, @content, @type, @ttl, @prio);"
-      with_subelements:
-        - "{{ pdns_domains }}"
-        - ns
+        SOURCE {{ tmpdir.path }}/data.sql;"
       changed_when: false
 
-    - name: Create extra records
-      command: |
-        mysql "{{ pdns_db.name }}" -e "
-        SET @name = '{{ item.1.name }}.{{ item.0.name }}',
-            @content = '{{ item.1.content }}',
-            @type = '{{ item.1.type | default('A') }}',
-            @ttl = {{ item.1.ttl | default(3600) }}; 
-        SELECT id INTO @id FROM domains
-          WHERE name like '{{ item.0.name }}';
-        DELETE FROM records
-          WHERE domain_id = @id AND type = @type AND name = @name;
-        INSERT INTO records(domain_id, name, content, type, ttl)
-          VALUES(@id, @name, @content, @type, @ttl);"
-      with_subelements:
-        - "{{ pdns_domains }}"
-        - records
-      changed_when: false
+    - name: Remove temporary directory
+      file:
+        path: "{{ tmpdir.path }}"
+        state: absent
+      when: false
 
-    - name: Craete tsig keys
-      command: |
-        mysql "{{ pdns_db.name }}" -e "
-        SET @domain = '{{ item.1 }}',
-            @name = '{{ item.0.name }}',
-            @algorithm = '{{ item.0.algorithm | default('hmac-md5') }}',
-            @secret = '{{ item.0.secret }}',
-            @kind = 'TSIG-ALLOW-DNSUPDATE'; 
-        INSERT INTO tsigkeys(name, algorithm, secret)
-          VALUES(@name, @algorithm, @secret)
-          ON DUPLICATE KEY UPDATE secret=@secret;
-        SELECT id INTO @id FROM domains WHERE name like @domain;
-        INSERT INTO domainmetadata(domain_id, kind, content)
-          VALUES(@id, @kind, @name);"
-      with_subelements:
-        - "{{ pdns_tsigkeys }}"
-        - domains
-      changed_when: false
+    - name: Configure resolution
+      include_role:
+        name: ahuffman.resolv
+      vars:
+        resolv_nameservers: "{{ dns.recursors }}"
