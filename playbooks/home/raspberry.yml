@@ -6,14 +6,13 @@
 
   become: yes
 
-  gather_facts: False
-
   tasks:
 
     - name: Install rpi-update
-      package:
+      apt:
         name: rpi-update
         state: latest
+        update_cache: yes
 
     - name: Upgrade firmware
       shell: rpi-update
