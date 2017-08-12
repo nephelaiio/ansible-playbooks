@@ -1,17 +1,19 @@
 # vim: ts=2 sw=2 et :
 ---
-- include: kvm.yml
-  
-- include: recursor.yml
-  
 - include: upgrade.yml
   vars:
     target_hosts: home
 
-- include: raspberry.yml
+- include: kvm.yml
 
 - include: dhcp.yml
+
+- include: recursor.yml
 
 - include: dns.yml
 
 - include: workstation.yml
+
+- include: raspberry.yml
+
+- include: unifi.yml
