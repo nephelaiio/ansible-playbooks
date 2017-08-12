@@ -57,6 +57,19 @@ DELETE FROM records
 INSERT INTO records(domain_id, name, content, type, ttl)
   VALUES(@id, @name, @content, @type, @ttl);
 {%     endfor %}
+
+{%     for cname in domain.cnames %}
+SET @name = '{{ cname }}',
+    @content = '{{ domain.cnames[cname] }}',
+    @type = 'CNAME',
+    @ttl = 3600; 
+SELECT id INTO @id FROM domains
+  WHERE name like '{{ domain.name }}';
+DELETE FROM records
+  WHERE domain_id = @id AND type = @type AND name = @name;
+INSERT INTO records(domain_id, name, content, type, ttl)
+  VALUES(@id, @name, @content, @type, @ttl);
+{%     endfor %}
 {%   endfor %}
 {% endfor %}
 

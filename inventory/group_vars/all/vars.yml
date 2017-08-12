@@ -29,6 +29,8 @@ dns:
       ns:
         - name: rpia.home.nephelai.io
       records: "{{ nets.values() | map(attribute='reservations') | list }}"
+      cnames:
+        unifi.home.nephelai.io: rpia.home.nephelai.io
 
 kvm:
   bridge_config: "/etc/sysctl.d/99-bridge.conf"
