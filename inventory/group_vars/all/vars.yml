@@ -115,14 +115,14 @@ kvm:
     kvmd:
       cpu: 2
       name: kvmd
-      state: recreate
+      state: present
       memory: 4096
       nic:
         hw-address: 52:54:00:94:37:24
     kvme:
       cpu: 2
       name: kvme
-      state: recreate
+      state: present
       memory: 4096
       nic:
         hw-address: 52:54:00:94:37:25
