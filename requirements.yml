@@ -1,6 +1,7 @@
 ---
 - src: ahuffman.resolv
-- src: mrlesmithjr.powerdns-authoritative
+- src: alekseyp.papertrail
+- src: geerlingguy.nginx
 - src: nephelaiio.vim
 - src: nephelaiio.tree
 - src: nephelaiio.devtools

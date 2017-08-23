@@ -1,12 +1,5 @@
 # vim: ts=2 sw=2 et :
 ---
-- hosts: dns,recursor
-
-  name: gather facts from dns servers
-
-  tasks: [ ]
-
-
 - hosts: dhcp
 
   vars:
@@ -23,50 +16,51 @@
       ignore_errors: true
       register: resolv
 
-    - name: Configure resolution
-      include_role:
-        name: ahuffman.resolv
-      vars:
-        resolv_nameservers:
-          - 8.8.8.8
-          - 8.8.4.4
-      when: resolv.rc != 0
-
     - name: Install dhcpd
       apt:
         name: "{{ item }}"
         state: latest
         update_cache: yes
-      become: yes
       with_items:
         - isc-dhcp-server
+      notify: Restart dhcpd
+
+    - name: Configure dhcp interfaces
+      template: 
+        src: ../../templates/dhcp/defaults.conf.j2
+        dest: /etc/default/isc-dhcp-server
+      vars:
+        iface: "{{ ansible_default_ipv4.interface }}" 
       notify: Restart dhcpd
 
     - name: Configure dhcp
       template:
         src: ../../templates/dhcp/dhcpd.conf.j2
         dest: /etc/dhcp/dhcpd.conf
-      become: yes
       vars:
-        tsigkey: "{{ tsigkeys.dhcp }}"
         omapikey: "{{ tsigkeys.omapi }}"
-        lease_time: 600 
+        lease_time: 1800
         networks: "{{ nets.values() }}"
         zones: "{{ dns.zones.values() }}"
         failover: "{{ dhcp.failover }}"
       notify: Restart dhcpd
 
-    - name: Configure resolution
-      include_role:
-        name: ahuffman.resolv
-      vars:
-        resolv_nameservers: "{{ dns.recursors }}"
+    - meta: flush_handlers
+
+    - name: Manage
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      with_items:
+        - isc-dhcp-server
 
   handlers:
 
     - name: Restart dhcpd
       service:
-        name: isc-dhcp-server
+        name: "{{ item }}"
         state: restarted
-      become: yes
+      with_items:
+        - isc-dhcp-server
     

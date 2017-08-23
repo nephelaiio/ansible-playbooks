@@ -6,7 +6,7 @@ omapi-key {{ omapikey.name }};
 # OMAPI key declaration
 key {{ omapikey.name }} {
   algorithm {{ omapikey.algorithm }};
-  secret {{ omapikey.secret }};
+  secret "{{ omapikey.secret }}";
 }
 
 failover peer "failover-partner" {
@@ -34,12 +34,6 @@ authoritative;
 # have to hack syslog.conf to complete the redirection).
 log-facility local7;
 
-# TSIG key declarations
-key {{ tsigkey.name }} {
-  algorithm {{ tsigkey.algorithm }};
-  secret {{ tsigkey.secret }};
-}
-
 # Subnet and host declarations
 {% for n in networks %}
 subnet {{ n.network }} netmask {{ n.netmask }} {
@@ -54,7 +48,6 @@ subnet {{ n.network }} netmask {{ n.netmask }} {
 }
 zone {{ n.zone }} {
   primary {{ dns.servers | first }};
-  key {{ tsigkey.name }};
 }
   {% for r in n.reservations %}
 host {{ r.host }} {
@@ -67,6 +60,5 @@ host {{ r.host }} {
 {% for z in zones %}
 zone {{ z.name }} {
   primary {{ dns.servers | first }};
-  key {{ tsigkey.name }};
 }
 {% endfor %}

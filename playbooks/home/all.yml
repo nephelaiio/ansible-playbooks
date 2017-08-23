@@ -4,16 +4,20 @@
   vars:
     target_hosts: home
 
-- include: kvm.yml
-
-- include: dhcp.yml
-
-- include: recursor.yml
-
-- include: dns.yml
+- include: upgrade.yml
+  vars:
+    target_hosts: vms
 
 - include: workstation.yml
 
+- include: kvm.yml
+
 - include: raspberry.yml
+
+- include: recursor.yml
+
+- include: dhcp.yml
+
+- include: dns.yml
 
 - include: unifi.yml

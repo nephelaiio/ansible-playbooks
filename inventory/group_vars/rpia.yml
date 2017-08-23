@@ -2,10 +2,10 @@
 dhcp:
   failover:
     - primary
-    - address rpia.home.nephelai.io
-    - port 519
-    - peer address rpib.home.nephelai.io
-    - peer port 520
+    - "address {{ ansible_default_ipv4.address }}"
+    - port 647
+    - peer address 192.168.0.9
+    - peer port 847
     - max-response-delay 60
     - max-unacked-updates 10
     - load balance max seconds 3

@@ -1,8 +1,8 @@
 {% for domain in domains %}
 SET @name = '{{ domain.name }}',
-  @content = '{{ ansible_hostname }} master@{{ domain.name }} {{ ansible_date_time.year }}{{ ansible_date_time.month }}{{ ansible_date_time.day }}{{ ansible_date_time.hour}}{{ ansible_date_time.minute }}',
+  @content = '{{ ansible_hostname }} {{ domain.hostmaster }} {{ domain.serial | default(0) }} {{ domain.refresh | default(3600) }} {{ domain.retry | default(600) }} {{ domain.expire | default(10800) }} {{ domain.ttl | default(600) }}',
   @type = 'SOA',
-  @ttl = {{ domain.ttl | default(3600) }};
+  @ttl = {{ domain.ttl | default(600) }};
 INSERT IGNORE INTO domains(name, type)
   VALUES(@name, @type);
   SELECT id INTO @id FROM domains WHERE name like @name;
@@ -70,21 +70,5 @@ DELETE FROM records
 INSERT INTO records(domain_id, name, content, type, ttl)
   VALUES(@id, @name, @content, @type, @ttl);
 {%     endfor %}
-{%   endfor %}
-{% endfor %}
-
-{% for key in keys %}
-{%   for domain in key.domains %}
-SET @domain = '{{ domain }}',
-    @name = '{{ key.name }}',
-    @algorithm = '{{ key.algorithm | default('hmac-md5') }}',
-    @secret = '{{ key.secret }}',
-    @kind = 'TSIG-ALLOW-DNSUPDATE'; 
-INSERT INTO tsigkeys(name, algorithm, secret)
-  VALUES(@name, @algorithm, @secret)
-  ON DUPLICATE KEY UPDATE secret=@secret;
-SELECT id INTO @id FROM domains WHERE name like @domain;
-INSERT INTO domainmetadata(domain_id, kind, content)
-  VALUES(@id, @kind, @name);
 {%   endfor %}
 {% endfor %}

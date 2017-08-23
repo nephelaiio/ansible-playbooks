@@ -69,7 +69,7 @@
         vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
         pool: "{{ kvm.pools[vm.pool].path }}"
         iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
-      with_items: "{{ kvm.vms }}"
+      with_items: "{{ kvm.vms.values() }}"
       static: no
 
     - include: kvm/tasks/vm_create.yml
@@ -78,13 +78,13 @@
         img: "{{ kvm.images[vm.image].img }}"
         pool: "{{ kvm.pools[vm.pool].path }}"
         iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
-      with_items: "{{ kvm.vms }}"
+      with_items: "{{ kvm.vms.values() }}"
       static: no
 
     - include: kvm/tasks/vm_register.yml
       vars:
         vm: "{{ item }}"
-      with_items: "{{ kvm.vms }}"
+      with_items: "{{ kvm.vms.values() }}"
 
   handlers:
 

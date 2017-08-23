@@ -10,5 +10,7 @@ ethernets:
 {% if 'gateway' in iface %}
     gateway4: {{ iface['gateway'] }}
 {% endif %}
+{% else %}
+    dhcp4: true
 {% endif %}
  

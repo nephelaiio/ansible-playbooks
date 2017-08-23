@@ -1,19 +1,12 @@
 # vim: ts=2 sw=2 et :
 ---
-- hosts: dns
-
-  name: gather facts from dns servers
-
-  tasks: [ ]
-
-
 - hosts: recursor
 
   vars:
 
-    local_fwd_zones: "{{ dns.zones.values() | map(attribute='name') | list }}"
-
-    local_rev_zones: "{{ nets.values() | map(attribute='zone') | list }}"
+    zones:
+      fwd: "{{ dns.zones.values() | map(attribute='name') | list }}" 
+      rev: "{{ nets.values() | map(attribute='zone') | list }}"
 
   become: yes
 
@@ -39,10 +32,16 @@
         name: "{{ item }}"
         state: latest
         force: yes
-      become: yes
       with_items:
         - dnsutils
         - bind9
+      notify: Restart bind
+
+    - name: Disable ipv6 resolution
+      lineinfile:
+        regexp: '^OPTIONS='
+        line: 'OPTIONS="-u bind -4"'
+        dest: /etc/default/bind9
       notify: Restart bind
 
     - name: Configure bind rfc-1918 zones
@@ -50,15 +49,15 @@
         path: /etc/bind/zones.rfc1918
         regexp: "{{ item }}"
         state: absent
-      become: yes
-      with_items: "{{ local_rev_zones }}"
+      with_items: "{{ zones.rev }}"
       notify: Restart bind
 
     - name: Configure bind custom zones
       template:
         src: ../../templates/bind/recursor.conf.j2
         dest: /etc/bind/named.conf.local
-      become: yes
+      vars:
+        fwd_zones: "{{ zones.fwd }}"
       notify: Restart bind
 
     - name: Configure bind services
@@ -68,19 +67,19 @@
         state:  started
       with_items:
         - bind9
-        - bind9-resolvconf
-      become: yes
 
     - name: Configure resolution
       include_role:
         name: ahuffman.resolv
       vars:
-        resolv_nameservers: "{{ dns.recursors }}"
+        resolv_nameservers:
+          - 127.0.0.1
 
   handlers:
 
     - name: Restart bind
       service:
-        name: bind9
+        name: "{{ item }}"
         state: restarted
-      become: yes
+      with_items:
+        - bind9
