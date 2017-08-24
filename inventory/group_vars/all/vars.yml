@@ -63,7 +63,7 @@ pdns:
     setgid: pdns
     slave: no
     local-address: "{{ ansible_default_ipv4.address }}:53"
-    security-poll-suffix: 'etgid=pdns'
+    security-poll-suffix: ''
   backends:
     gmysql:
       user: pdns
@@ -136,6 +136,9 @@ kvm:
       pool: default
       format: qcow2
       checksum: 089bbe2426bebdd860b755022a01d346
+
+zookeeper:
+  port: '2181'
 
 jupyter:
   user: root

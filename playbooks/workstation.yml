@@ -1,5 +1,10 @@
 # vim: ts=2 sw=2 et :
 ---
+- include: upgrade.yml
+  vars:
+    target_hosts: workstations
+
+
 - hosts: workstations
 
   roles:

@@ -99,3 +99,8 @@
     - name: configure bridge
       command: "sysctl -p {{ kvm.bridge_config }}"
       become: yes
+
+
+- include: upgrade.yml
+  vars:
+    target_hosts: vms

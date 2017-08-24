@@ -4,14 +4,6 @@
   vars:
     target_hosts: home
 
-- include: upgrade.yml
-  vars:
-    target_hosts: vms
-
-- include: workstation.yml
-
-- include: kvm.yml
-
 - include: raspberry.yml
 
 - include: recursor.yml

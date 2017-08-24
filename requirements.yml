@@ -2,6 +2,7 @@
 - src: ahuffman.resolv
 - src: alekseyp.papertrail
 - src: geerlingguy.nginx
+- src: geerlingguy.java
 - src: nephelaiio.vim
 - src: nephelaiio.tree
 - src: nephelaiio.devtools
