@@ -1,6 +1,6 @@
 - name: configure kvm hosts
 
-  hosts: kvm
+  hosts: "{{ target_hosts | default('all') }}"
 
   vars:
 
@@ -51,7 +51,7 @@
       local_action: >-
         get_url
         url="{{ item.value.src }}"
-        dest="../../files/{{ item.value.img }}"
+        dest="../files/{{ item.value.img }}"
         mode=0644
       with_dict: "{{ kvm.images }}"
       notify: uncompress images
@@ -91,7 +91,7 @@
     - name: uncompress images
       local_action: >-
         command qemu-img convert -O qcow2 {{ img }} {{ img }}
-        chdir="../../files"
+        chdir="../files"
       vars:
         img: "{{ item.value.img }}" 
       with_dict: "{{ kvm.images }}"

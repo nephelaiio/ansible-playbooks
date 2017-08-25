@@ -17,7 +17,7 @@
 
 - name: copy vm disk
   copy:
-    src: "../../files/{{ img }}"
+    src: "../files/{{ img }}"
     dest: "{{ disk }}"
     force: no
     mode: 0644
@@ -31,7 +31,7 @@
 
 - name: create cloud image user data
   template:
-    src: ../../templates/kvm/user-data.yml.j2
+    src: ../templates/kvm/user-data.yml.j2
     dest: "{{ tmpdir.path }}/user-data"
   vars:
     ssh_user: "{{ ansible_username.stdout }}"
@@ -42,7 +42,7 @@
 
 - name: create cloud image network config
   template:
-    src: ../../templates/kvm/network-config.yml.j2
+    src: ../templates/kvm/network-config.yml.j2
     dest: "{{ tmpdir.path }}/network-config"
   vars:
     iface: "{{ vm.nic }}"
@@ -50,7 +50,7 @@
 
 - name: create cloud image meta data
   template:
-    src: ../../templates/kvm/meta-data.yml.j2
+    src: ../templates/kvm/meta-data.yml.j2
     dest: "{{ tmpdir.path }}/meta-data"
   vars:
     instance_id: "{{ vm.name.split('.') | first }}"
@@ -69,7 +69,7 @@
 
 - name: create vm templates
   template:
-    src: ../../templates/kvm/vm.xml.j2
+    src: ../templates/kvm/vm.xml.j2
     dest: "{{ domain_def }}"
 
 - name: create vms
