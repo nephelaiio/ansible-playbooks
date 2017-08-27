@@ -137,6 +137,11 @@ kvm:
       format: qcow2
       checksum: 089bbe2426bebdd860b755022a01d346
 
+rabbitmq:
+  sensu:
+    user: sensu
+    password: "{{ passwords.rabbitmq.sensu }}"
+
 zookeeper:
   port: '2181'
 
