@@ -24,6 +24,34 @@
         upgrade: yes
       when: ansible_os_family == 'Archlinux'
 
+    - name: Check pacaur
+      changed_when: false
+      become: no
+      stat:
+        path: /usr/bin/pacaur
+      register: pacaur
+
+    - name: Upgrade pacaur
+      become: no
+      command: pacaur -Syu --noconfirm --noedit
+      when:
+        - ansible_os_family == 'Archlinux'
+        - pacaur.stat.executable
+
+    - name: Find pacman orphans
+      changed_when: false
+      failed_when: false
+      command: pacman -Qtdq
+      when:
+        - ansible_os_family == 'Archlinux'
+      register: orphans
+
+    - name: Remove pacman orphans
+      command: pacman -Rns --noconfirm {{ orphans.stdout }}
+      when:
+        - ansible_os_family == 'Archlinux'
+        - orphans.stdout != ''
+
     - name: Upgrade yum
       yum:
         name: '*'
