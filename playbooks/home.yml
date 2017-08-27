@@ -1,6 +1,19 @@
 # vim: ts=2 sw=2 et :
-#
-# TODO:
-#  - Install and configure postfix
 ---
-- include: "home/all.yml"
+- include: upgrade.yml
+  vars:
+    target_hosts: home
+
+- include: sensu/server.yml
+  vars:
+    target_hosts: rpic
+
+- include: home/raspberry.yml
+
+- include: home/recursor.yml
+
+- include: home/dhcp.yml
+
+- include: home/dns.yml
+
+- include: home/unifi.yml
