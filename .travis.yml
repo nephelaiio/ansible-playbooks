@@ -12,5 +12,5 @@ install:
   - pip install -r requirements.txt
 
 script:
-  - yamllint ./ -c ./.flake8
+  - yamllint ./ -c ./.yamllint
   - flake8 ./
