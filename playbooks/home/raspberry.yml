@@ -1,4 +1,3 @@
-# vim: ts=2 sw=2 et :
 ---
 - name: upgrade firmware
 
@@ -46,7 +45,7 @@
         regexp: '^ignoreip ='
         line: "ignoreip = 127.0.0.1/8, {{ network | ipaddr('net') }}"
         dest: /etc/fail2ban/jail.conf
-        insertafter: '[DEFAULT]' 
+        insertafter: '[DEFAULT]'
       vars:
         network: "{{ nets.home.network }}/{{ nets.home.netmask }}"
       notify: restart fail2ban

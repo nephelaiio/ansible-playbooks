@@ -76,7 +76,7 @@ kvm:
   bridge_config: "/etc/sysctl.d/99-bridge.conf"
   defaults:
     vm:
-      state: present # | recreate | absent
+      state: present  # | recreate | absent
       memory: 2048
       cpu: 1
       image: xenial
@@ -138,9 +138,15 @@ kvm:
       checksum: 089bbe2426bebdd860b755022a01d346
 
 rabbitmq:
+  management: false
   sensu:
+    vhost: /sensu
     user: sensu
     password: "{{ passwords.rabbitmq.sensu }}"
+
+sensu:
+  user: sensu
+  env: /opt/sensu
 
 zookeeper:
   port: '2181'

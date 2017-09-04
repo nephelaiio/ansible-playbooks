@@ -31,10 +31,10 @@
         record: "{{ item.0.Name }}"
         value: "{{ item.1.Value }}"
         type: "{{ item.0.Type }}"
-      with_subelements: 
+      with_subelements:
         - "{{ route53_rrs }}"
         - ResourceRecords
-      when: 
+      when:
         - route53_rrs | list | length > 0
 
     - name: query instances

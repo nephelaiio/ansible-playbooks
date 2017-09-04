@@ -1,4 +1,3 @@
-# vim: ts=2 sw=2 et :
 ---
 - hosts: dhcp
 
@@ -26,11 +25,11 @@
       notify: Restart dhcpd
 
     - name: Configure dhcp interfaces
-      template: 
+      template:
         src: ../../templates/dhcp/defaults.conf.j2
         dest: /etc/default/isc-dhcp-server
       vars:
-        iface: "{{ ansible_default_ipv4.interface }}" 
+        iface: "{{ ansible_default_ipv4.interface }}"
       notify: Restart dhcpd
 
     - name: Configure dhcp
@@ -63,4 +62,3 @@
         state: restarted
       with_items:
         - isc-dhcp-server
-    

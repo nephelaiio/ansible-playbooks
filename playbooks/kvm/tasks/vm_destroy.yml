@@ -1,13 +1,14 @@
+---
 - name: destroy vms
   virt:
-    name: "{{ vm.name }}" 
+    name: "{{ vm.name }}"
     command: destroy
   failed_when: false
   when: vm.state in ['absent', 'recreate']
 
 - name: undefine vms
   virt:
-    name: "{{ vm.name }}" 
+    name: "{{ vm.name }}"
     command: undefine
   failed_when: false
   when: vm.state in ['absent', 'recreate']

@@ -1,0 +1,57 @@
+---
+- name: Prepare mesos hosts
+
+  hosts: mesos
+
+  become: yes
+
+  tasks:
+
+    - name: Install mesos repository key
+      apt_key:
+        keyserver: keyserver.ubuntu.com
+        state: present
+        id: E56151BF
+
+    - name: Install mesos repository
+      apt_repository:
+        filename: mesos
+        repo: "deb http://repos.mesosphere.com/{{ ansible_distribution | lower }} {{ ansible_distribution_release | lower }} main"
+        state: present
+
+
+- name: Install mesos masters
+
+  hosts: mesos_masters
+
+  become: yes
+
+  tasks:
+
+    - name: Install mesosphere
+      apt:
+        update_cache: yes
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - zookeeper
+        - mesos
+        - marathon
+        - chronos
+
+    - name: Configure zookeeper connection
+      lineinfile:
+        regexp: '^zk://'
+        line: "zk://{{ hosts | join(',') }}/mesos"
+        path: /etc/mesos/zk
+      vars:
+        hosts: "{{ groups['mesos_masters'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | map('map_format', '%s:' + zookeeper.port ) }}"
+
+#    - name: Configure zookeeper services
+#      service:
+#        name: "{{ item }}"
+#        state: started
+#        enabled: yes
+#      with_items:
+#        - zookeeper
+#        - mesos

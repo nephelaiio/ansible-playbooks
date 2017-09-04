@@ -1,3 +1,4 @@
+---
 - name: install aws tools
 
   hosts: local

@@ -1,4 +1,3 @@
-# vim: ts=2 sw=2 et :
 ---
 - include: provision.yml
 
@@ -6,7 +5,7 @@
 
   hosts: local
 
-  vars_files: 
+  vars_files:
     - vars.yml
 
   tasks:
@@ -17,7 +16,7 @@
       register: instance_query
 
     - name: define instances
-      set_fact: 
+      set_fact:
         instances: "{{ instance_query.stdout | from_json | list }}"
 
     - name: manage jupyter instances
@@ -27,7 +26,7 @@
         id: "{{ client_token }}"
         instance_ids: "{{ instances | map(attribute='InstanceId') | list }}"
         state: "{{ state }}"
-      when: 
+      when:
         - instances | length > 0
 
     - name: destroy persistent inventory

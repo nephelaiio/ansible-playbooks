@@ -6,7 +6,7 @@
 
   hosts: local
 
-  vars_files: 
+  vars_files:
     - vars.yml
 
   tasks:
@@ -31,7 +31,7 @@
 
     - name: pause until instance values are updated
       pause:
-          seconds: "{{ pause_seconds }}"
+        seconds: "{{ pause_seconds }}"
 
     - name: query instances
       changed_when: false
@@ -96,7 +96,7 @@
   tasks:
 
     - name: configure jupyter service
-      include_role: 
+      include_role:
         name: nephelaiio.jupyter
 
     - name: copy ssl certificate

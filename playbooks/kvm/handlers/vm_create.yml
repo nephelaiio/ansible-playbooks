@@ -1,10 +1,11 @@
+---
 - name: copy vm disk
   copy:
     src: "../files/{{ img }}"
     dest: "{{ disk }}"
     force: no
     mode: 0644
-    owner: "{{ ansible_username.stdout }}" 
+    owner: "{{ ansible_username.stdout }}"
     notify: "create vm disk"
   listen: "create vm disk"
 
@@ -36,7 +37,7 @@
   args:
     chdir: "{{ tmpdir.path }}"
 
-- name: set vm definition path 
+- name: set vm definition path
   set_fact:
     domain_def: "{{ tmpdir.path }}/vm_{{ vm.name }}.xml"
 
@@ -47,7 +48,6 @@
 
 - name: create vms
   virt:
-    name: "{{ vm.name }}" 
+    name: "{{ vm.name }}"
     command: define
     xml: "{{ lookup('file', domain_def) }}"
-

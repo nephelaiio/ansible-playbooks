@@ -1,4 +1,3 @@
-# vim: ts=2 sw=2 et :
 ---
 - name: provision jupyter.nephelai.io artifacts
 
@@ -17,15 +16,15 @@
 
     - block:
 
-      - name: provision jupyter instances
-        local_action:
-          module: ec2
-          region: "{{ jupyter.region }}"
-          instance_ids: "instances"
-          state: "{{ jupyter.state }}"
-          groups:
-            - httpd
-        register: ec2
+        - name: provision jupyter instances
+          local_action:
+            module: ec2
+            region: "{{ jupyter.region }}"
+            instance_ids: "instances"
+            state: "{{ jupyter.state }}"
+            groups:
+              - httpd
+          register: ec2
 
       when: instances | length > 0
 
@@ -50,10 +49,10 @@
         record: "{{ item.0.Name }}"
         value: "{{ item.1.Value }}"
         type: "{{ item.0.Type }}"
-      with_subelements: 
+      with_subelements:
         - "{{ route53_rrs }}"
         - ResourceRecords
-      when: 
+      when:
         - route53_rrs | list | length > 0
 
     - name: delete persistent inventory

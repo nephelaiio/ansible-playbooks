@@ -10,9 +10,9 @@
 - src: nephelaiio.pyenv
 - src: nephelaiio.tmux
 - src: nephelaiio.vagrant
-- src: nephelaiio.octave
 - src: nephelaiio.i3
 - src: nephelaiio.docker
 - src: nephelaiio.unifi-controller
 - src: nephelaiio.jupyter
 - src: nephelaiio.rxvt-unicode
+- src: zzet.rbenv

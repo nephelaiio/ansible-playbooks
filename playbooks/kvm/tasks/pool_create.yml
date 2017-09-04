@@ -1,3 +1,4 @@
+---
 - name: create temporary directory
   tempfile:
     state: directory
@@ -5,7 +6,7 @@
   register: tmpdir
   changed_when: False
 
-- name: set pool definition path 
+- name: set pool definition path
   set_fact:
     pool_def: "{{ tmpdir.path }}/pool_{{ pool.name }}.xml"
 

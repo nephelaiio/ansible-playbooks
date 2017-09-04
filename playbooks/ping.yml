@@ -2,6 +2,6 @@
 - hosts: raspberry
 
   tasks:
-  
+
   - name: ping
     ping:

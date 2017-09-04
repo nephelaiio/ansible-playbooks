@@ -1,3 +1,4 @@
+---
 - hosts: unifi
 
   become: yes
@@ -105,7 +106,7 @@
         user: root
         cron_file: certbot
         job: "{{ certbot.bin }} -q renew"
-    
+
     - name: Install nginx
       include_role:
         name: geerlingguy.nginx

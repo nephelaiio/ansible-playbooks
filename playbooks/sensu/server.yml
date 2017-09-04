@@ -1,7 +1,8 @@
+---
 - hosts: "{{ target_hosts }}"
 
   become: yes
-  
+
   tasks:
 
     - name: Install RabbitMQ packages
@@ -22,8 +23,8 @@
       when: "'/' in rabbitmq_vhosts.stdout_lines"
 
     - name: Create Sensu RabbitMQ virtual host
-      command: rabbitmqctl add_vhost /sensu
-      when: "'/sensu' not in rabbitmq_vhosts.stdout_lines"
+      command: "rabbitmqctl add_vhost {{ rabbitmq.sensu.vhost }}"
+      when: rabbitmq.sensu.vhost not in rabbitmq_vhosts.stdout_lines
 
     - name: Retrieve RabbitMQ users
       changed_when: false
@@ -37,30 +38,55 @@
     - name: Create RabbitMQ Sensu user
       command: "rabbitmqctl add_user {{ rabbitmq.sensu.user }} {{ rabbitmq.sensu.password }}"
       when: rabbitmq.sensu.user not in rabbitmq_users.stdout
+      notify: Assign RabbitMQ sensu permissions
 
-#    - name: Ensure redis binds to accessible IP
-#      lineinfile:
-#        dest: /etc/redis/redis.conf
-#        regexp: '^bind'
-#        line: 'bind 0.0.0.0'
-#      notify: Restart Redis service 
-  
+    - name: Install Redis packages
+      apt:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - redis-server
+      notify: Enable RabbitMQ management
 
-#    - name: Manage Sensu services
-#      service:
-#        name: "{{ item }}"
-#        state: started
-#        enabled: yes
-#      with_items:
-#        - rabbitmq-server
-#        - sensu
-#        - redis
+    - name: Ensure redis binds to accessible IP
+      lineinfile:
+        dest: /etc/redis/redis.conf
+        regexp: '^bind'
+        line: 'bind 0.0.0.0'
+      notify: Restart Redis service
+
+    - name: Create sensu user
+      user:
+        name: "{{ sensu.user }}"
+        state: present
+        home: "{{ sensu.env }}"
+        system: yes
+
+    - name: Install rbenv
+      include_role:
+        name: nephelaiio.rbenv
+      vars:
+        rbenv:
+          user: sensu
+          version: 2.4.1
+          gems:
+            - sensu
+
+    - name: Manage services
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      with_items:
+        - rabbitmq-server
+        - redis-server
 
   handlers:
 
     - name: Enable RabbitMQ management
-      command: rabbitmq-plugins enable
+      command: rabbitmq-plugins enable rabbitmq_management
       notify: Restart RabbitMQ
+      when: rabbitmq.management
 
     - name: Restart RammitMQ
       service:
@@ -70,10 +96,13 @@
       with_items:
         - rabbitmq-server
 
-#    - name: Restart Redis service
-#      service:
-#        name: "{{ item }}"
-#        state: started
-#        enabled: yes
-#      with_items:
-#        - redis
+    - name: Assign RabbitMQ sensu permissions
+      command: "rabbitmqctl set_permissions -p {{ rabbitmq.sensu.vhost }} {{ rabbitmq.sensu.user }} '.*' '.*' '.*'"
+
+    - name: Restart Redis service
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      with_items:
+        - redis-server

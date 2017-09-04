@@ -1,3 +1,4 @@
+---
 - name: configure kvm hosts
 
   hosts: "{{ target_hosts | default('all') }}"
@@ -5,9 +6,9 @@
   vars:
 
     cleanup: False
-    
+
   tasks:
-    
+
     - name: install requirements
       package:
         name:
@@ -24,15 +25,6 @@
         update_cache: yes
       when: ansible_os_family == "Archlinux"
       become: yes
-
-    - name: clear bridging configuration
-      file:
-        path: "{{ item }}"
-        state: absent
-      become: yes
-      with_items:
-        - "{{ kvm.bridge_config }}"
-        - "/etc/systemd/system/sysctl-bridge.service"
 
     - name: configure bridging
       sysctl:
@@ -93,7 +85,7 @@
         command qemu-img convert -O qcow2 {{ img }} {{ img }}
         chdir="../files"
       vars:
-        img: "{{ item.value.img }}" 
+        img: "{{ item.value.img }}"
       with_dict: "{{ kvm.images }}"
 
     - name: configure bridge
