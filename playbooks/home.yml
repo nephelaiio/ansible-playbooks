@@ -1,19 +1,28 @@
-# vim: ts=2 sw=2 et :
 ---
 - include: upgrade.yml
   vars:
-    target_hosts: home
+    target_hosts: raspberry
+
+- include: home/raspberry.yml
+  vars:
+    target_hosts: raspberry
 
 - include: sensu/server.yml
   vars:
     target_hosts: rpic
 
-- include: home/raspberry.yml
-
 - include: home/recursor.yml
+  vars:
+    target_hosts: recursor
 
 - include: home/dhcp.yml
+  vars:
+    target_hosts: dhcp
 
 - include: home/dns.yml
+  vars:
+    target_hosts: rpic
 
 - include: home/unifi.yml
+  vars:
+    target_hosts: rpib
