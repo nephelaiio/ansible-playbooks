@@ -1,0 +1,7 @@
+---
+
+- include: ping.yml 
+
+- include: upgrade.yml
+
+- hosts: "{{ target_hosts | default('openstack') }}"

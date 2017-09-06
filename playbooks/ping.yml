@@ -1,5 +1,5 @@
 ---
-- hosts: raspberry
+- hosts: "{{ target_hosts }}"
 
   tasks:
 

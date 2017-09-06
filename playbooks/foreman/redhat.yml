@@ -1,0 +1,30 @@
+---
+- name: install yum helper packages
+  when: ansible_os_family == 'RedHat'
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - redhat-lsb-core
+  notify: load lsb facts
+
+- name: load lsb facts
+  setup: filter=ansible_lsb*
+
+- name: set up foreman yum repositories
+  when: ansible_os_family == 'RedHat'
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "https://yum.puppetlabs.com/puppetlabs-release-pc1-el-7.noarch.rpm"
+    - "https://yum.theforeman.org/releases/{{ foreman.release }}/el{{ ansible_lsb.major_release | int }}/x86_64/foreman-release.rpm"
+
+- name: query foreman package
+  changed_when: false
+  failed_when: false
+  become: yes
+  command: rpm -q foreman
+  args:
+    warn: no
+  register: foreman_package_query

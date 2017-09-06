@@ -171,3 +171,11 @@ jupyter:
   ami_user: ubuntu
   key: teodoro.cook@gmail.com
   pause_seconds: 30
+
+openstack:
+  release: 16.0.0rc1
+  dest: /opt/openstack
+
+foreman:
+  release: 1.15
+
