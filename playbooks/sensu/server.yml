@@ -66,11 +66,17 @@
       include_role:
         name: nephelaiio.rbenv
       vars:
-        rbenv:
-          user: sensu
-          version: 2.4.1
-          gems:
-            - sensu
+        rbenv_user: sensu
+        rbenv_ruby: 2.4.1
+        rbenv_gems:
+          - sensu
+        rbenv_plugins:
+          - name: "ruby-build"
+            repo: "https://github.com/rbenv/ruby-build.git"
+          - name: "rbenv-default-gems"
+            repo: "https://github.com/rbenv/rbenv-default-gems.git"
+          - name: "rbenv-update"
+            repo: "https://github.com/rkh/rbenv-update.git"
 
     - name: Manage services
       service:
