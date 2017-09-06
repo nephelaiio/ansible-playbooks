@@ -1,0 +1,136 @@
+# vim: ts=2 sw=2 et :
+---
+- name: provision jupyter.nephelai.io ec2 artifacts
+
+  hosts: local
+
+  tasks:
+
+    - name: create inventory groups
+      local_action:
+        module: lineinfile
+        line: '[jupyter]'
+        dest: '../../../inventory/aws'
+        insertafter: EOF
+        create: yes
+
+    - name: query available vpcs
+      changed_when: false
+      local_action: command aws ec2 describe-vpcs --region {{ region }} --query "Vpcs[*].VpcId"
+      register: vpc_query
+
+    - name: define vpc_id
+      set_fact:
+        vpc_id: "{{ vpc_query.stdout | from_json | list | first }}"
+
+    - name: query subnet id
+      changed_when: false
+      local_action: command aws ec2 describe-subnets --region {{ region }} --filter Name=vpc-id,Values={{ vpc_id }},Name=availability-zone,Values={{ region }}{{availability_zone}} --query "Subnets[*].SubnetId" --output text
+      register: subnet_query
+
+    - name: define subnet id
+      set_fact:
+        subnet_id: "{{ subnet_query.stdout }}"
+
+    - name: create http security group
+      local_action:
+        module: ec2_group
+        name: httpd
+        region: "{{ region }}"
+        description: HTTP access group
+        state: present
+        vpc_id: "{{ vpc_id }}"
+        rules:
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 443
+            to_port: 443
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: 0.0.0.0/0
+          - proto: icmp
+            from_port: 8
+            to_port: -1
+            cidr_ip: 0.0.0.0/0
+        rules_egress:
+          - proto: tcp
+            from_port: 0
+            to_port: 65535
+            cidr_ip: 0.0.0.0/0
+          - proto: udp
+            from_port: 0
+            to_port: 65535
+            cidr_ip: 0.0.0.0/0
+          - proto: icmp
+            from_port: 8
+            to_port: -1
+            cidr_ip: 0.0.0.0/0
+
+    - name: query instance ids
+      changed_when: false
+      local_action: command aws ec2 describe-instances --region {{ region }} --filter "Name=client-token,Values={{ client_token }}" "Name=instance-state-name,Values=running,stopped" --query "Reservations[].Instances[].InstanceId"
+      register: instance_query
+
+    - name: define instance_id
+      set_fact:
+        instance_id: "{{ instance_query.stdout | from_json | list }}"
+
+    - block:
+
+        - name: provision jupyter instances
+          local_action:
+            module: ec2
+            region: "{{ region }}"
+            vpc_subnet_id: "{{ subnet_id }}"
+            instance_type: "{{ instance_type }}"
+            id: "{{ client_token }}"
+            instance_ids: "{{ instance_id }}"
+            image: "{{ ami_id }}"
+            state: present
+            key_name: "{{ key }}"
+            groups:
+              - httpd
+          register: ec2
+
+        - name: create persistent inventory
+          local_action:
+            module: lineinfile
+            dest: '../../../inventory/aws'
+            line: '[jupyter]'
+            insertbefore: BOF
+            create: true
+            state: present
+
+        - name: configure persistent inventory
+          local_action:
+            module: lineinfile
+            dest: '../../../inventory/aws'
+            insertafter: '[jupyter]'
+            regexp: ".*client_token={{ client_token }}"
+            line: "{{ item.public_dns_name }} ansible_user={{ ami_user }} client_token={{ client_token }}"
+            state: present
+          with_items: "{{ ec2.instances }}"
+
+        - name: provision in-memory inventory
+          local_action:
+            module: add_host
+            groups: jupyter
+            name: "{{ item.public_dns_name }}"
+          with_items: "{{ ec2.instances }}"
+
+        - name: tag instances
+          local_action:
+            module: ec2_tag
+            resource: "{{ item.id }}"
+            region: "{{ region }}"
+            state: present
+            tags:
+              stack: jupyter
+          with_items: "{{ ec2.instances }}"
+
+      when: instance_id | length == 0

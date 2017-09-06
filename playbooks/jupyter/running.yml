@@ -1,0 +1,130 @@
+# vim: ts=2 sw=2 et :
+---
+- include: provision.yml
+
+- name: start jupyter.nephelai.io
+
+  hosts: local
+
+  vars_files:
+    - vars.yml
+
+  tasks:
+
+    - name: query instances
+      changed_when: false
+      local_action: command aws ec2 describe-instances --region {{ region }} --filter "Name=client-token,Values={{ client_token }}" "Name=instance-state-name,Values=running,stopped" --query "Reservations[].Instances[]"
+      register: instance_query
+
+    - name: register instances
+      set_fact:
+        instances: "{{ instance_query.stdout | from_json }}"
+
+    - name: manage jupyter instances
+      local_action:
+        module: ec2
+        region: "{{ region }}"
+        id: "{{ client_token }}"
+        instance_ids: "{{ instances | map(attribute='InstanceId') | list }}"
+        state: "{{ state }}"
+      register: ec2
+
+    - name: pause until instance values are updated
+      pause:
+        seconds: "{{ pause_seconds }}"
+
+    - name: query instances
+      changed_when: false
+      local_action: command aws ec2 describe-instances --region {{ region }} --filter "Name=client-token,Values={{ client_token }}" "Name=instance-state-name,Values=running" --query "Reservations[].Instances[]"
+      register: instance_query
+
+    - name: register instances
+      set_fact:
+        instances: "{{ instance_query.stdout | from_json }}"
+
+    - name: destroy persistent inventory
+      local_action:
+        module: file
+        path: '../../../inventory/aws'
+        state: absent
+
+    - name: create persistent inventory
+      local_action:
+        module: lineinfile
+        dest: '../../../inventory/aws'
+        line: '[jupyter]'
+        insertbefore: BOF
+        create: true
+        state: present
+
+    - name: configure persistent inventory
+      local_action:
+        module: lineinfile
+        dest: '../../../inventory/aws'
+        insertafter: '[jupyter]'
+        regexp: ".*client_token={{ client_token }}"
+        line: "{{ item.PublicDnsName }} ansible_user={{ ami_user }} client_token={{ client_token }}"
+        state: present
+      with_items: "{{ instances }}"
+
+    - name: provision in-memory inventory
+      local_action:
+        module: add_host
+        groups: jupyter
+        name: "{{ item.PublicDnsName }}"
+      with_items: "{{ instances }}"
+
+    - name: wait for ssh
+      changed_when: false
+      local_action:
+        module: wait_for
+        host: "{{ item.PublicDnsName }}"
+        port: 22
+        state: started
+      with_items: "{{ instances }}"
+
+
+- include: route53.yml
+
+
+- name: manage services
+
+  hosts: jupyter
+
+  become: yes
+
+  tasks:
+
+    - name: configure jupyter service
+      include_role:
+        name: nephelaiio.jupyter
+
+    - name: copy ssl certificate
+      copy:
+        src: "{{ jupyter.certfile }}"
+        dest: "{{ jupyter.confdir }}/{{ jupyter.certfile }}"
+        owner: "{{ jupyter.user }}"
+        group: "{{ jupyter.group }}"
+        mode: 0600
+
+    - name: copy ssl key
+      copy:
+        src: "{{ jupyter.keyfile }}"
+        dest: "{{ jupyter.confdir }}/{{ jupyter.keyfile }}"
+        owner: "{{ jupyter.user }}"
+        group: "{{ jupyter.group }}"
+        mode: 0600
+
+    - name: create jupyter notebook dir
+      file:
+        path: "{{ jupyter.notebookdir }}"
+        state: directory
+
+    - name: restart jupyter
+      changed_when: false
+      command: service jupyter restart
+      become: yes
+      args:
+        warn: false
+      tags:
+        - skip_ansible_lint
