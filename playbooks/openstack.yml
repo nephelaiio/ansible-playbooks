@@ -1,6 +1,6 @@
 ---
 
-- include: ping.yml 
+- include: ping.yml
 
 - include: upgrade.yml
 
