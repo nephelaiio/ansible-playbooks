@@ -3,9 +3,6 @@ language: python
 
 sudo: required
 
-services:
-  - docker
-
 install:
   - sudo apt-get update
   - sudo apt-get install -y libvirt-dev
