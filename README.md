@@ -1,7 +1,7 @@
-#Personal Ansible Playbooks
+# Personal Ansible Playbooks
 [![Build Status](https://travis-ci.org/nephelaiio/ansible-playbooks.svg?branch=master)](https://travis-ci.org/nephelaiio/ansible-playbooks)
 
-##Description
+## Description
 Ansible playbooks for fun and profit
 
 ## Requirements
@@ -12,23 +12,19 @@ pip install -r requirements.txt
 ```
 
 ## Testing
-[Docker](https://docker.io) must be available to your account on your system. Issue the following commands to trigger a test run:
 
 ```
-pip install -r requirements.txt
-pytest -s
+yamllint ./ -c ./.yamllint
+flake8 ./
 ```
 
 You can check the [Travis configuration file](/.travis.yml) for an example/more details.
 
-##Usage
+## Usage
 To apply playbook workstation.yml, do
 
 ```
-ansible-playbook playbooks/workstation.yml -u $(whoami)
+ansible-playbook playbooks/workstation.yml
 ```
 
-Remember to add the --ask-become-pass swtich to all 'ansible-playbook' commands if you do not have passwordless sudo configured in the target host.
-
-## OS Support
-Playbooks are tested under Ubuntu, support for Arch, Debian Jessie and Centos 7 (and higher) is available in most playbooks
+Please review the [playbooks](/playbooks) directory for a list of available playbooks
