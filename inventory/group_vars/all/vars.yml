@@ -172,9 +172,17 @@ jupyter:
   key: teodoro.cook@gmail.com
   pause_seconds: 30
 
-openstack:
-  release: 16.0.0rc1
-  dest: /opt/openstack
+kolla:
+  release: 5.0.0.0rc1
+
+awx:
+  release: 1.0.0
+
+openshift:
+  relase: release-3.6
+
+kubespray:
+  release: v2.2.0
 
 foreman:
   release: 1.15

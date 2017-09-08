@@ -1,7 +1,46 @@
 ---
 
-- include: ping.yml
-
 - include: upgrade.yml
 
 - hosts: "{{ target_hosts | default('openstack') }}"
+
+  vars:
+
+    ntp_timezone: "{{ timezone }}"
+    ntp_manage_config: true
+
+  roles:
+
+    - nephelaiio.pip
+    - nephelaiio.devtools
+    - geerlingguy.ntp
+
+  tasks:
+
+    - name: disable libvirtd
+      become: yes
+      when: ansible_os_family == 'RedHat'
+      service:
+        name: libvirtd
+        state: stopped
+        enabled: false
+
+    - name: disable libvirtd
+      become: yes
+      when: ansible_os_family == 'Debian'
+      service:
+        name: libvirt-bin
+        state: stopped
+        enabled: false
+
+    - name: uninstall incompatible packages
+      become: yes
+      when: ansible_os_family == 'Debian'
+      package:
+        name: "{{ item }}"
+        state: absent
+      with_items:
+        - lxc
+        - lxd
+        
+

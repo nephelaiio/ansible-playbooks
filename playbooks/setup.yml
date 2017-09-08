@@ -8,3 +8,31 @@
     - name: run ansible galaxy
       local_action: command ansible-galaxy install -r ../requirements.yml -p ../galaxy/ --force
       changed_when: false
+
+    - name: pull kolla repository
+      local_action:
+        module: git
+        repo: https://github.com/openstack/kolla.git
+        dest: ../kolla
+        version: "{{ kolla.release | default('HEAD') }}"
+
+    - name: pull awx playbook repository
+      local_action:
+        module: git
+        repo: https://github.com/ansible/awx.git
+        dest: ../awx
+        version: "{{ awx.releae | default('HEAD') }}"
+
+    - name: pull openshift playbook repository
+      local_action:
+        module: git
+        repo: https://github.com/openshift/openshift-ansible.git
+        dest: ../openshift
+        version: "{{ openshift.release | default('HEAD') }}"
+
+    - name: pull kubespray playbook repository
+      local_action:
+        module: git
+        repo: https://github.com/kubernetes-incubator/kubespray.git
+        dest: ../kubespray
+        version: "{{ kubespray.release | default('HEAD') }}"
