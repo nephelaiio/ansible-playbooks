@@ -3,6 +3,7 @@
 - src: alekseyp.papertrail
 - src: geerlingguy.nginx
 - src: geerlingguy.java
+- src: geerlingguy.ntp
 - src: nephelaiio.vim
 - src: nephelaiio.tree
 - src: nephelaiio.devtools
@@ -15,4 +16,3 @@
 - src: nephelaiio.unifi-controller
 - src: nephelaiio.jupyter
 - src: nephelaiio.rxvt-unicode
-- src: zzet.rbenv

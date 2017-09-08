@@ -5,12 +5,16 @@
 
   become: yes
 
-  tasks:
+  vars:
 
-    - name: Configure timezone
-      timezone:
-        name: "{{ timezone }}"
-      notify: restart cron
+    ntp_timezone: "{{ timezone }}"
+    ntp_manage_config: true
+
+  roles:
+
+    - geernlingguy.ntp
+
+  tasks:
 
     - name: Install rpi-update
       apt:
