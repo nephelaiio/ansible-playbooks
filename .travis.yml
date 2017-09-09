@@ -11,3 +11,4 @@ install:
 script:
   - yamllint ./ -c ./.yamllint
   - flake8 ./
+  - pytest

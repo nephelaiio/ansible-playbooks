@@ -11,7 +11,4 @@
 galaxy/
 **/.ropeproject
 files/*.img
-awx/**
-kolla/**
-kubespray/**
-openshift/**
+resources/**
