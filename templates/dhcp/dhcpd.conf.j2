@@ -22,7 +22,7 @@ failover peer "failover-partner" {
 ddns-update-style interim;
 
 # Option definitions common to all supported networks...
-option domain-name-servers {{ dns.recursors | join(', ') }};
+option domain-name-servers {{ servers.recursors | join(', ') }};
 default-lease-time {{ lease_time }};
 max-lease-time {{ 12 * lease_time }};
 
@@ -47,7 +47,7 @@ subnet {{ n.network }} netmask {{ n.netmask }} {
   option domain-name "{{ dns.zones.home.name }}";
 }
 zone {{ n.zone }} {
-  primary {{ dns.servers | first }};
+  primary {{ servers.dns | first }};
 }
   {% for r in n.reservations %}
 host {{ r.host }} {
@@ -59,6 +59,6 @@ host {{ r.host }} {
 
 {% for z in zones %}
 zone {{ z.name }} {
-  primary {{ dns.servers | first }};
+  primary {{ servers.dns | first }};
 }
 {% endfor %}

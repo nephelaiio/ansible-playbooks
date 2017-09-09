@@ -44,8 +44,7 @@ VALUES(@id, @name, @content, @type, @ttl, @prio);
 {% endfor %}
 
 {% for domain in domains %}
-{%   for net in domain.records %}
-{%     for record in net %}
+{%   for record in domain.records %}
 SET @name = '{{ record.host }}',
     @content = '{{ record['ip-address'] }}',
     @type = '{{ record.type | default('A') }}',
@@ -56,9 +55,9 @@ DELETE FROM records
   WHERE domain_id = @id AND type = @type AND name = @name;
 INSERT INTO records(domain_id, name, content, type, ttl)
   VALUES(@id, @name, @content, @type, @ttl);
-{%     endfor %}
+{%   endfor %}
 
-{%     for cname in domain.cnames %}
+{%   for cname in domain.cnames %}
 SET @name = '{{ cname }}',
     @content = '{{ domain.cnames[cname] }}',
     @type = 'CNAME',
@@ -69,6 +68,5 @@ DELETE FROM records
   WHERE domain_id = @id AND type = @type AND name = @name;
 INSERT INTO records(domain_id, name, content, type, ttl)
   VALUES(@id, @name, @content, @type, @ttl);
-{%     endfor %}
 {%   endfor %}
 {% endfor %}
