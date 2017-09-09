@@ -70,6 +70,7 @@
       changed_when: false
 
     - name: Build data initialization script
+      changed_when: false
       template:
         src: ../../templates/dns/data.sql.j2
         dest: "{{ tmpdir.path }}/data.sql"
