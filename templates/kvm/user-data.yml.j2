@@ -20,5 +20,4 @@ bootcmd:
 {% for ns in iface.nameservers %}
   - echo nameserver {{ ns }} >> /etc/resolv.conf
 {% endfor %}
-  - reboot
 {% endif %}
