@@ -12,7 +12,7 @@
 
   roles:
 
-    - geernlingguy.ntp
+    - geerlingguy.ntp
 
   tasks:
 
