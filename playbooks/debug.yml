@@ -1,0 +1,11 @@
+- hosts: localhost
+
+  tasks:
+
+    - name: Debug records 
+      debug:
+        var: dns.zones.home.records
+
+    - name: Debug records 
+      debug:
+        var: dns.zones.emoh.records
