@@ -23,54 +23,15 @@ nets:
         ip-address: 192.168.0.8
         hw-address: b8:27:eb:68:b9:3a
 
-dhcp:
-  servers:
+servers:
+  dhcp:
     - 192.168.0.10
     - 192.168.0.9
-dns:
   recursors:
     - 192.168.0.10
     - 192.168.0.9
-  servers:
+  dns:
     - 192.168.0.8
-  zones:
-    home:
-      name: home.nephelai.io
-      hostmaster: master@home.nephelai.io
-      mx:
-        - name: rpia.home.nephelai.io
-      ns:
-        - name: rpic.home.nephelai.io
-      records: "{{ nets.values() | map(attribute='reservations') | list }}"
-      cnames:
-        unifi.home.nephelai.io: rpib.home.nephelai.io
-        home.nephelai.io: rpia.home.nephelai.io
-    emoh:
-      name: "{{ nets.home.zone }}"
-      hostmaster: master@home.nephelai.io
-      ns:
-        - name: rpic.home.nephelai.io
-      mx: []
-      records: []
-      cnames: []
-
-pdns:
-  config:
-    dnsupdate: yes
-    allow-dnsupdate-from: "{{ dhcp.servers | ipaddr('host') | join(' ') + ' 127.0.0.1/32' }}"
-    master: yes
-    setuid: pdns
-    setgid: pdns
-    slave: no
-    local-address: "{{ ansible_default_ipv4.address }}:53"
-    security-poll-suffix: ''
-  backends:
-    gmysql:
-      user: pdns
-      host: 127.0.0.1
-      password: "{{ passwords.mysql.pdns }}"
-      dbname: pdns
-  domains: "{{ dns.zones.values() }}"
 
 kvm:
   bridge_config: "/etc/sysctl.d/99-bridge.conf"
@@ -89,43 +50,64 @@ kvm:
         net: br0
         prefix: "{{ nets.home.router | ipaddr('prefix') }}"
         gateway: "{{ nets.home.router | ipaddr('address') }}"
-        nameservers: "{{ dns.recursors }}"
+        nameservers: "{{ servers.recursors }}"
     pool:
       state: present
       autostart: True
   vms:
     kvma:
       cpu: 2
+      memory: 4096
       name: kvma
-      state: present
+      state: recreate
       nic:
         hw-address: 52:54:00:94:37:21
+        ip-address: 192.168.0.20
+        prefix: 255.255.255.0
+        gateway: 192.168.0.1
+        host: kvma.home.nephelai.io
     kvmb:
       cpu: 2
       name: kvmb
-      state: present
+      state: recreate
       nic:
         hw-address: 52:54:00:94:37:22
+        ip-address: 192.168.0.21
+        prefix: 255.255.255.0
+        gateway: 192.168.0.1
+        host: kvmb.home.nephelai.io
     kvmc:
       cpu: 2
       name: kvmc
-      state: present
+      state: recreate
       nic:
         hw-address: 52:54:00:94:37:23
+        ip-address: 192.168.0.22
+        prefix: 255.255.255.0
+        gateway: 192.168.0.1
+        host: kvmc.home.nephelai.io
     kvmd:
       cpu: 2
       name: kvmd
-      state: present
+      state: recreate
       memory: 4096
       nic:
         hw-address: 52:54:00:94:37:24
+        ip-address: 192.168.0.23
+        prefix: 255.255.255.0
+        gateway: 192.168.0.1
+        host: kvmd.home.nephelai.io
     kvme:
       cpu: 2
       name: kvme
-      state: present
+      state: recreate
       memory: 4096
       nic:
         hw-address: 52:54:00:94:37:25
+        ip-address: 192.168.0.24
+        prefix: 255.255.255.0
+        gateway: 192.168.0.1
+        host: kvme.home.nephelai.io
   pools:
     default:
       path: /var/lib/libvirt/images
@@ -136,6 +118,46 @@ kvm:
       pool: default
       format: qcow2
       checksum: 089bbe2426bebdd860b755022a01d346
+
+dns:
+  zones:
+    home:
+      name: home.nephelai.io
+      hostmaster: master@home.nephelai.io
+      mx:
+        - name: rpia.home.nephelai.io
+      ns:
+        - name: rpic.home.nephelai.io
+      records: "{{ nets.home.reservations | list + (kvm.vms | map('extract', kvm.vms) | map (attribute='nic') | list ) }}"
+      cnames:
+        unifi.home.nephelai.io: rpib.home.nephelai.io
+        home.nephelai.io: rpia.home.nephelai.io
+    emoh:
+      name: "{{ nets.home.zone }}"
+      hostmaster: master@home.nephelai.io
+      ns:
+        - name: rpic.home.nephelai.io
+      mx: []
+      records: "{{ (nets.home.reservations | list + (kvm.vms | map('extract', kvm.vms) | map (attribute='nic') | list )) | map('reverse_record') | list }}"
+      cnames: []
+
+pdns:
+  config:
+    dnsupdate: yes
+    allow-dnsupdate-from: "{{ servers.dhcp | ipaddr('host') | join(' ') + ' 127.0.0.1/32' }}"
+    master: yes
+    setuid: pdns
+    setgid: pdns
+    slave: no
+    local-address: "{{ ansible_default_ipv4.address }}:53"
+    security-poll-suffix: ''
+  backends:
+    gmysql:
+      user: pdns
+      host: 127.0.0.1
+      password: "{{ passwords.mysql.pdns }}"
+      dbname: pdns
+  domains: "{{ dns.zones.values() }}"
 
 rabbitmq:
   management: false
