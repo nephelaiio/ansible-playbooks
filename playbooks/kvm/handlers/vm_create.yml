@@ -1,7 +1,7 @@
 ---
 - name: copy vm disk
   copy:
-    src: "../files/{{ img }}"
+    src: "../files/kvm/{{ img }}"
     dest: "{{ disk }}"
     force: no
     mode: 0644

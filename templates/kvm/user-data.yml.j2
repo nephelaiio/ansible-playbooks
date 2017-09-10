@@ -14,9 +14,9 @@ packages:
   - python
 
 bootcmd:
-  - echo 127.0.1.1 {{ hostname }} >> /etc/hosts 
+  - echo 127.0.1.1 {{ fqdn }} {{ hostname }} >> /etc/hosts 
 {% if 'ip-address' in iface %}
-  - echo {{ iface['ip-address'] }} {{ hostname }} >> /etc/hosts 
+  - echo {{ iface['ip-address'] }} {{ fqdn }} {{ hostname }} >> /etc/hosts 
 {% for ns in iface.nameservers %}
   - echo nameserver {{ ns }} >> /etc/resolv.conf
 {% endfor %}

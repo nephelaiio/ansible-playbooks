@@ -10,5 +10,5 @@
 **/__pycache__/
 galaxy/
 **/.ropeproject
-files/*.img
+files/kvm/**
 resources/**

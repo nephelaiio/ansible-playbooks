@@ -40,13 +40,25 @@
         - net.bridge.bridge-nf-call-arptables
 
     - name: fetch images
-      local_action: >-
-        get_url
-        url="{{ item.value.src }}"
-        dest="../files/{{ item.value.img }}"
-        mode=0644
+      local_action:
+        module: get_url
+        url: "{{ item.value.src }}"
+        dest: "../files/kvm/{{ item.value.src | basename }}"
+        mode: 0644
+        checksum: "{{ item.value.checksum }}"
       with_dict: "{{ kvm.images }}"
       notify: uncompress images
+
+    - name: uncompress images
+      local_action: >-
+        command qemu-img convert -O {{ format }} {{ img }} {{ target }}
+        chdir="../files/kvm"
+        creates="{{ target }}"
+      vars:
+        format: "{{ item.value.format }}"
+        img: "{{ item.value.src | basename }}"
+        target: "{{ item.value.src | basename | with_ext(item.value.format) }}"
+      with_dict: "{{ kvm.images }}"
 
     - meta: flush_handlers
 
@@ -67,7 +79,7 @@
     - include: kvm/tasks/vm_create.yml
       vars:
         vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
-        img: "{{ kvm.images[vm.image].img }}"
+        img: "{{ kvm.images[vm.image].src | basename | with_ext(kvm.images[vm.image].format) }}"
         pool: "{{ kvm.pools[vm.pool].path }}"
         iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
       with_items: "{{ kvm.vms.values() }}"
@@ -79,14 +91,6 @@
       with_items: "{{ kvm.vms.values() }}"
 
   handlers:
-
-    - name: uncompress images
-      local_action: >-
-        command qemu-img convert -O qcow2 {{ img }} {{ img }}
-        chdir="../files"
-      vars:
-        img: "{{ item.value.img }}"
-      with_dict: "{{ kvm.images }}"
 
     - name: configure bridge
       command: "sysctl -p {{ kvm.bridge_config }}"

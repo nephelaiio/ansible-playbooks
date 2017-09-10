@@ -17,7 +17,7 @@
 
 - name: copy vm disk
   copy:
-    src: "../files/{{ img }}"
+    src: "../files/kvm/{{ img }}"
     dest: "{{ disk }}"
     force: no
     mode: 0644
@@ -37,6 +37,7 @@
     ssh_user: "{{ ansible_username.stdout }}"
     ssh_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
     hostname: "{{ vm.name.split('.') | first }}"
+    fqdn: "{{ vm.nic.host }}"
     iface: "{{ vm.nic }}"
   when: diskcopy.changed
 
@@ -55,6 +56,7 @@
   vars:
     instance_id: "{{ vm.name.split('.') | first }}"
     hostname: "{{ vm.name.split('.') | first }}"
+    fqdn: "{{ vm.nic.host }}"
   when: diskcopy.changed
 
 - name: create cloud image iso
