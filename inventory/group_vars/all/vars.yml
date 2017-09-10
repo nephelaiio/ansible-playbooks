@@ -68,6 +68,7 @@ kvm:
         host: kvma.home.nephelai.io
     kvmb:
       cpu: 2
+      memory: 4096
       name: kvmb
       state: recreate
       nic:
@@ -78,6 +79,7 @@ kvm:
         host: kvmb.home.nephelai.io
     kvmc:
       cpu: 2
+      memory: 4096
       name: kvmc
       state: recreate
       nic:
@@ -88,9 +90,9 @@ kvm:
         host: kvmc.home.nephelai.io
     kvmd:
       cpu: 2
-      name: kvmd
-      state: recreate
       memory: 4096
+      name: kvmd
+      state: absent
       nic:
         hw-address: 52:54:00:94:37:24
         ip-address: 192.168.0.23
@@ -99,9 +101,9 @@ kvm:
         host: kvmd.home.nephelai.io
     kvme:
       cpu: 2
-      name: kvme
-      state: recreate
       memory: 4096
+      name: kvme
+      state: absent
       nic:
         hw-address: 52:54:00:94:37:25
         ip-address: 192.168.0.24
@@ -114,10 +116,14 @@ kvm:
   images:
     xenial:
       src: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
-      img: xenial.img
       pool: default
       format: qcow2
-      checksum: 089bbe2426bebdd860b755022a01d346
+      checksum: sha256:6d3dd685ac6eeca8a0b75cc47add6e4e6a433c13a80712b4bc4b22480542fdf4
+    centos:
+      src: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2.xz
+      pool: default
+      format: qcow2
+      checksum: sha256:e139c5b7a799f3f1d48aa897f1b8165c18ef6eeb212cadf138d32537600c6005
 
 dns:
   zones:
