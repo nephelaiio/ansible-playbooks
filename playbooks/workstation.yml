@@ -3,6 +3,9 @@
   vars:
     target_hosts: workstations
 
+- include: kvm.yml
+  vars:
+    target_hosts: workstations
 
 - hosts: workstations
 
@@ -17,8 +20,3 @@
     - role: nephelaiio.vagrant
     - role: nephelaiio.i3
     - role: nephelaiio.docker
-
-
-- include: kvm.yml
-  vars:
-    target_hosts: workstations
