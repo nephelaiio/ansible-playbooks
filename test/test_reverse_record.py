@@ -7,7 +7,7 @@ sys.path.append(os.path.join(os.path.dirname(sys.path[0]),
 
 print(sys.path)
 
-from reverse_record import reverse_record  # noqa: E402
+from custom import reverse_record, filename, with_ext  # noqa: E402
 
 
 def record(host, address):
@@ -24,3 +24,15 @@ def test_reverse_record():
     assert rr['ip-address'] == host
     assert rr['host'] == '1.0.0.10.in-addr.arpa'
     assert rr['type'] == 'PTR'
+
+
+def test_filename():
+    assert filename('basename.ext') == 'basename'
+    assert filename('basename.ext1.ext2') == 'basename'
+    assert filename('basename') == 'basename'
+
+
+def test_with_ext():
+    assert with_ext('basename.ext', 'newext') == 'basename.newext'
+    assert with_ext('basename.ext1.ext2', 'newext') == 'basename.newext'
+    assert with_ext('basename', 'newext') == 'basename.newext'
