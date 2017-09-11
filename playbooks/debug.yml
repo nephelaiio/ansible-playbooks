@@ -7,6 +7,6 @@
       debug:
         var: dns.zones.home.records
 
-    - name: Debug records 
+    - name: Debug records
       debug:
         var: dns.zones.emoh.records
