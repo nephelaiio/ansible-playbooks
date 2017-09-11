@@ -16,3 +16,4 @@
 - src: nephelaiio.unifi-controller
 - src: nephelaiio.jupyter
 - src: nephelaiio.rxvt-unicode
+- src: nephelaiio.nfs

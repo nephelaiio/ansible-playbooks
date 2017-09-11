@@ -1,8 +1,9 @@
+---
 - hosts: localhost
 
   tasks:
 
-    - name: Debug records 
+    - name: Debug records
       debug:
         var: dns.zones.home.records
 

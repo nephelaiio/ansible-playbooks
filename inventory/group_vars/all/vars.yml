@@ -138,6 +138,7 @@ dns:
       cnames:
         unifi.home.nephelai.io: rpib.home.nephelai.io
         home.nephelai.io: rpia.home.nephelai.io
+        nfs.home.nephelai.io: rpia.home.nephelai.io
     emoh:
       name: "{{ nets.home.zone }}"
       hostmaster: master@home.nephelai.io

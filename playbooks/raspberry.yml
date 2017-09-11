@@ -29,7 +29,7 @@
     - name: Fix rsyslog
       copy:
         dest: /etc/rsyslog.conf
-        src: ../../files/raspberry/rsyslog.conf
+        src: ../files/raspberry/rsyslog.conf
       notify: restart rsyslog
 
     - name: Configure remote logging
