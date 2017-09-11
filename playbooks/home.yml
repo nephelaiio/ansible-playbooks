@@ -41,5 +41,6 @@
         path: /exports
         src: UUID=96F4F672F4F653C9
         fstype: ntfs
+        opts: umask=000
         state: mounted
       become: yes
