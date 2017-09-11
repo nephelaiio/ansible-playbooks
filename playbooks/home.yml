@@ -3,7 +3,7 @@
   vars:
     target_hosts: raspberry
 
-- include: raspberry.yml
+- include: home/raspberry.yml
   vars:
     target_hosts: raspberry
 
@@ -15,32 +15,18 @@
   vars:
     target_hosts: recursor
 
-- include: home/dhcp.yml
-  vars:
-    target_hosts: dhcp
-
 - include: pdns/server.yml
   vars:
     target_hosts: rpic
 
-- include: unifi.yml
+- include: home/dhcp.yml
+  vars:
+    target_hosts: dhcp
+
+- include: home/unifi.yml
   vars:
     target_hosts: rpib
 
-- hosts: rpia
-  tasks:
-    - name: install and configure nfs
-      include_role:
-        name: nephelaiio.nfs
-      vars:
-        nfs_exports:
-          - / *(ro,fsid=0)
-          - /exports *(rw,no_root_squash)
-    - name: mount storage device
-      mount:
-        path: /exports
-        src: UUID=96F4F672F4F653C9
-        fstype: ntfs
-        opts: umask=000
-        state: mounted
-      become: yes
+- include: home/nfs.yml
+  vars:
+    target_hosts: rpia
