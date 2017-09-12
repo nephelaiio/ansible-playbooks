@@ -1,11 +1,9 @@
 ---
-- include: upgrade.yml
-  vars:
-    target_hosts: raspberry
-
-- include: home/raspberry.yml
-  vars:
-    target_hosts: raspberry
+- name: Upgrade hosts
+  hosts: raspberry
+  tasks:
+    - include: home/raspberry.yml
+    - include: upgrade.yml
 
 - include: sensu/server.yml
   vars:

@@ -1,94 +1,86 @@
 ---
-- name: upgrade firmware
-
-  hosts: raspberry
-
-  become: yes
-
+- name: Configure ntp
+  include_role:
+    name: geerlingguy.ntp
   vars:
-
     ntp_timezone: "{{ timezone }}"
     ntp_manage_config: true
 
-  roles:
+- name: Install rpi-update
+  become: yes
+  apt:
+    name: rpi-update
+    state: latest
+    update_cache: yes
 
-    - geerlingguy.ntp
+- name: Upgrade firmware
+  become: yes
+  shell: rpi-update
+  changed_when: false
 
-  tasks:
+- name: Fix rsyslog
+  become: yes
+  copy:
+    dest: /etc/rsyslog.conf
+    src: ../../files/raspberry/rsyslog.conf
+  register: configure_rsyslog
 
-    - name: Install rpi-update
-      apt:
-        name: rpi-update
-        state: latest
-        update_cache: yes
+- name: restart rsyslog
+  become: yes
+  when: configure_rsyslog.changed
+  service:
+    name: rsyslog
+    state: restarted
 
-    - name: Upgrade firmware
-      shell: rpi-update
-      changed_when: false
+- name: Configure remote logging
+  include_role:
+    name: alekseyp.papertrail
+  vars:
+    papertrail_destination: "{{ papertrail.destination }}"
 
-    - name: Fix rsyslog
-      copy:
-        dest: /etc/rsyslog.conf
-        src: ../../files/raspberry/rsyslog.conf
-      notify: restart rsyslog
+- name: Install fail2ban
+  become: yes
+  apt:
+    name: fail2ban
+    state: latest
+    update_cache: yes
 
-    - name: Configure remote logging
-      include_role:
-        name: alekseyp.papertrail
-      vars:
-        papertrail_destination: "{{ papertrail.destination }}"
+- name: Configure fail2ban networks
+  become: yes
+  lineinfile:
+    regexp: '^ignoreip ='
+    line: "ignoreip = 127.0.0.1/8, {{ network | ipaddr('net') }}"
+    dest: /etc/fail2ban/jail.conf
+    insertafter: '[DEFAULT]'
+  vars:
+    network: "{{ nets.home.network }}/{{ nets.home.netmask }}"
+  register: configure_fail2ban
 
-    - name: Install fail2ban
-      apt:
-        name: fail2ban
-        state: latest
-        update_cache: yes
+- name: restart fail2ban
+  become: yes
+  when: configure_fail2ban.changed
+  service:
+    name: fail2ban
+    state: restarted
 
-    - name: Configure fail2ban networks
-      lineinfile:
-        regexp: '^ignoreip ='
-        line: "ignoreip = 127.0.0.1/8, {{ network | ipaddr('net') }}"
-        dest: /etc/fail2ban/jail.conf
-        insertafter: '[DEFAULT]'
-      vars:
-        network: "{{ nets.home.network }}/{{ nets.home.netmask }}"
-      notify: restart fail2ban
+- name: Manage fail2ban services
+  become: yes
+  service:
+    name: fail2ban
+    state: started
+    enabled: yes
 
-    - name: Manage fail2ban services
-      service:
-        name: fail2ban
-        state: started
-        enabled: yes
+- name: Disable ssh password logins
+  become: yes
+  lineinfile:
+    regexp: '^#?PasswordAuthentication'
+    line: "PasswordAuthentication no"
+    dest: /etc/ssh/sshd_config
+  register: configure_ssh
 
-    - name: Disable ssh password logins
-      lineinfile:
-        regexp: '^#?PasswordAuthentication'
-        line: "PasswordAuthentication no"
-        dest: /etc/ssh/sshd_config
-      notify: restart ssh
-
-  handlers:
-    - name: restart rsyslog
-      service:
-        name: rsyslog
-        state: restarted
-
-    - name: restart rsyslogd
-      service:
-        name: rsyslog
-        state: restarted
-
-    - name: restart cron
-      service:
-        name: cron
-        state: restarted
-
-    - name: restart fail2ban
-      service:
-        name: fail2ban
-        state: restarted
-
-    - name: restart ssh
-      service:
-        name: ssh
-        state: restarted
+- name: restart ssh
+  become: yes
+  when: configure_ssh.changed
+  service:
+    name: ssh
+    state: restarted
