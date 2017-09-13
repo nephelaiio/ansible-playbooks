@@ -2,6 +2,7 @@ extends: default
 
 ignore: |
   galaxy/
+  resources/
   **/vault.yml
 
 rules:
