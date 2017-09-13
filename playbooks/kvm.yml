@@ -1,102 +1,81 @@
 ---
-- name: configure kvm hosts
+- name: install requirements
+  package:
+    name:
+      - qemu
+      - libvirt
+      - libvirt-python
+      - bridge-utils
+      - dnsmasq
+      - ebtables
+      - dmidecode
+      - cloud-init
+      - cdrtools
+      - python-lxml
+    update_cache: yes
+  when: ansible_os_family == "Archlinux"
+  become: yes
 
-  hosts: "{{ target_hosts | default('all') }}"
+- name: configure bridging
+  sysctl:
+    name: "{{ item }}"
+    value: 0
+    state: present
+    sysctl_set: yes
+    reload: yes
+  become: yes
+  with_items:
+    - net.bridge.bridge-nf-call-ip6tables
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-arptables
 
+- name: fetch images
+  local_action:
+    module: get_url
+    url: "{{ item.value.src }}"
+    dest: "../files/kvm/{{ item.value.src | basename }}"
+    mode: 0644
+    checksum: "{{ item.value.checksum }}"
+  with_dict: "{{ kvm.images }}"
+  notify: uncompress images
+
+- name: uncompress images
+  local_action: >-
+    command qemu-img convert -O {{ format }} {{ img }} {{ target }}
+    chdir="../files/kvm"
+    creates="{{ target }}"
   vars:
+    format: "{{ item.value.format }}"
+    img: "{{ item.value.src | basename }}"
+    target: "{{ item.value.src | basename | with_ext(item.value.format) }}"
+  with_dict: "{{ kvm.images }}"
 
-    cleanup: False
+- meta: flush_handlers
 
-  tasks:
-
-    - name: install requirements
-      package:
-        name:
-          - qemu
-          - libvirt
-          - libvirt-python
-          - bridge-utils
-          - dnsmasq
-          - ebtables
-          - dmidecode
-          - cloud-init
-          - cdrtools
-          - python-lxml
-        update_cache: yes
-      when: ansible_os_family == "Archlinux"
-      become: yes
-
-    - name: configure bridging
-      sysctl:
-        name: "{{ item }}"
-        value: 0
-        state: present
-        sysctl_set: yes
-        reload: yes
-      become: yes
-      with_items:
-        - net.bridge.bridge-nf-call-ip6tables
-        - net.bridge.bridge-nf-call-iptables
-        - net.bridge.bridge-nf-call-arptables
-
-    - name: fetch images
-      local_action:
-        module: get_url
-        url: "{{ item.value.src }}"
-        dest: "../files/kvm/{{ item.value.src | basename }}"
-        mode: 0644
-        checksum: "{{ item.value.checksum }}"
-      with_dict: "{{ kvm.images }}"
-      notify: uncompress images
-
-    - name: uncompress images
-      local_action: >-
-        command qemu-img convert -O {{ format }} {{ img }} {{ target }}
-        chdir="../files/kvm"
-        creates="{{ target }}"
-      vars:
-        format: "{{ item.value.format }}"
-        img: "{{ item.value.src | basename }}"
-        target: "{{ item.value.src | basename | with_ext(item.value.format) }}"
-      with_dict: "{{ kvm.images }}"
-
-    - meta: flush_handlers
-
-    - include: kvm/tasks/pool_create.yml
-      vars:
-        pool: "{{ kvm.defaults.pool | combine({'name': item.key},  item.value) }}"
-      with_dict: "{{ kvm.pools }}"
-      static: no
-
-    - include: kvm/tasks/vm_destroy.yml
-      vars:
-        vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
-        pool: "{{ kvm.pools[vm.pool].path }}"
-        iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
-      with_items: "{{ kvm.vms.values() }}"
-      static: no
-
-    - include: kvm/tasks/vm_create.yml
-      vars:
-        vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
-        img: "{{ kvm.images[vm.image].src | basename | with_ext(kvm.images[vm.image].format) }}"
-        pool: "{{ kvm.pools[vm.pool].path }}"
-        iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
-      with_items: "{{ kvm.vms.values() }}"
-      static: no
-
-    - include: kvm/tasks/vm_register.yml
-      vars:
-        vm: "{{ item }}"
-      with_items: "{{ kvm.vms.values() }}"
-
-  handlers:
-
-    - name: configure bridge
-      command: "sysctl -p {{ kvm.bridge_config }}"
-      become: yes
-
-
-- include: upgrade.yml
+- include: kvm/tasks/pool_create.yml
   vars:
-    target_hosts: vms
+    pool: "{{ kvm.defaults.pool | combine({'name': item.key},  item.value) }}"
+  with_dict: "{{ kvm.pools }}"
+  static: no
+
+- include: kvm/tasks/vm_destroy.yml
+  vars:
+    vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
+    pool: "{{ kvm.pools[vm.pool].path }}"
+    iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
+  with_items: "{{ kvm.vms.values() }}"
+  static: no
+
+- include: kvm/tasks/vm_create.yml
+  vars:
+    vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
+    img: "{{ kvm.images[vm.image].src | basename | with_ext(kvm.images[vm.image].format) }}"
+    pool: "{{ kvm.pools[vm.pool].path }}"
+    iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
+  with_items: "{{ kvm.vms.values() }}"
+  static: no
+
+- include: kvm/tasks/vm_register.yml
+  vars:
+    vm: "{{ item }}"
+  with_items: "{{ kvm.vms.values() }}"

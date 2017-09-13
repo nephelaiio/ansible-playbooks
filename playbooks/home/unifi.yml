@@ -1,145 +1,77 @@
 ---
-- hosts: unifi
-
+- name: Disable ipv6
   become: yes
+  sysctl:
+    name: "{{ item }}"
+    state: present
+    value: 1
+  with_items:
+    - net.ipv6.conf.all.disable_ipv6
+    - net.ipv6.conf.default.disable_ipv6
+    - net.ipv6.conf.lo.disable_ipv6
+  register: disable_ipv6
 
+- name: restart unifi
+  become: yes
+  service:
+    name: unifi
+    state: restarted
+  when: disable_ipv6.changed
+
+- name: Install unifi
+  become: yes
+  include_role:
+    name: nephelaiio.unifi-controller
+
+- name: Create vhost roots
+  become: yes
+  file:
+    state: directory
+    path: "{{ item }}"
+  with_items: "{{ nginx.vhosts.values() | map(attribute='root') | list }}"
+
+- name: Install nginx
+  become: yes
+  include_role:
+    name: geerlingguy.nginx
   vars:
+    nginx_remove_default_vhost: true
+    nginx_vhosts:
+      - "{{ nginx.vhosts.home_http }}"
 
-    certbot:
-      bin: /usr/bin/certbot
-      url: https://dl.eff.org/certbot-auto
-      checksum: "sha256:5bcd76b4b4741346a9ea94b15ddd574b9568e424a7315f0d5a840f10f0153dbe"
-      email: teodoro.cook@gmail.com
-      certdir: /etc/letsencrypt/live
+- name: Install certbot
+  become: yes
+  get_url:
+    url: "{{ certbot.url }}"
+    checksum: "{{ certbot.checksum }}"
+    dest: "{{ certbot.bin }}"
 
-    nginx:
-      vhosts:
-        home_https:
-          listen: "443 ssl"
-          server_name: home.nephelai.io
-          filename: home.nephelai.io.https.conf
-          root: /var/www/html/unifi
-          access_log: /var/log/nginx/home.nephelai.io.access.log
-          error_log: /var/log/nginx/home.nephelai.io.error.log
-          ssl_ciphers: "ECDH+AESGCM:ECDH+AES256:ECDH+AES128:DH+3DES:!ADH:!AECDH:!MD5"
-          extra_parameters: |
-            keepalive_timeout   300;
-            ssl_certificate {{ certbot.certdir }}/home.nephelai.io/fullchain.pem;
-            ssl_certificate_key {{ certbot.certdir }}/home.nephelai.io/privkey.pem;
-            ssl_session_cache   shared:SSL:10m;
-            ssl_session_timeout 10m;
-            ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
-            ssl_prefer_server_ciphers on;
-            ssl_stapling on;
-            ssl_ciphers ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:DHE-RSA-AES256-SHA;
-            add_header Strict-Transport-Security max-age=31536000;
-            add_header X-Frame-Options DENY;
-            error_log /var/log/unifi/nginx.log;
-            proxy_cache off;
-            proxy_store off;
-            location / {
-                proxy_pass https://unifi.home.nephelai.io:8443/;
-                }
-        home_http:
-          listen: "80"
-          server_name: home.nephelai.io
-          filename: home.nephelai.io.http.conf
-          root: /var/www/html/unifi
-          access_log: /var/log/nginx/home.nephelai.io.http.access.log
-          error_log: /var/log/nginx/home.nephelai.io.http.error.log
-          extra_parameters: |
-            rewrite ^/unifi(.*) https://home.nephelai.io/unifi$1 permanent;
+- name: Set certbot permissions
+  become: yes
+  file:
+    path: "{{ certbot.bin }}"
+    state: file
+    mode: 0755
 
-  tasks:
+- name: Run certbot
+  become: yes
+  command: "{{ certbot.bin }} --nginx certonly -q -d {{ item }} --email {{ certbot.email }} --agree-tos"
+  args:
+    creates: "/etc/letsencrypt/live/{{ item }}"
+  with_items: "{{ nginx.vhosts.values() | map(attribute='server_name') | list }}"
 
-    - name: Disable ipv6
-      sysctl:
-        name: "{{ item }}"
-        state: present
-        value: 1
-      notify: restart unifi
-      with_items:
-        - net.ipv6.conf.all.disable_ipv6
-        - net.ipv6.conf.default.disable_ipv6
-        - net.ipv6.conf.lo.disable_ipv6
+- name: Install certbot cronjob
+  become: yes
+  cron:
+    name: renew letsencrypt certificates
+    special_time: daily
+    user: root
+    cron_file: certbot
+    job: "{{ certbot.bin }} -q renew"
 
-    - name: Install unifi
-      include_role:
-        name: nephelaiio.unifi-controller
-
-    - name: Create vhost roots
-      file:
-        state: directory
-        path: "{{ item }}"
-      with_items: "{{ nginx.vhosts.values() | map(attribute='root') | list }}"
-
-    - name: Install nginx
-      include_role:
-        name: geerlingguy.nginx
-      vars:
-        nginx_remove_default_vhost: true
-        nginx_vhosts:
-          - "{{ nginx.vhosts.home_http }}"
-
-    - name: Install certbot
-      get_url:
-        url: "{{ certbot.url }}"
-        checksum: "{{ certbot.checksum }}"
-        dest: "{{ certbot.bin }}"
-
-    - name: Set certbot permissions
-      file:
-        path: "{{ certbot.bin }}"
-        state: file
-        mode: 0755
-
-    - name: Run certbot
-      command: "{{ certbot.bin }} --nginx certonly -q -d {{ item }} --email {{ certbot.email }} --agree-tos"
-      args:
-        creates: "/etc/letsencrypt/live/{{ item }}"
-      with_items: "{{ nginx.vhosts.values() | map(attribute='server_name') | list }}"
-
-    - name: Install certbot cronjob
-      cron:
-        name: renew letsencrypt certificates
-        special_time: daily
-        user: root
-        cron_file: certbot
-        job: "{{ certbot.bin }} -q renew"
-
-    - name: Install nginx
-      include_role:
-        name: geerlingguy.nginx
-      vars:
-        nginx_vhosts: "{{ nginx.vhosts.values() }}"
-
-  handlers:
-
-    - name: restart unifi
-      service:
-        name: unifi
-        state: restarted
-      listen: restart
-      become: yes
-
-    - name: restart mongodb
-      service:
-        name: mongodb
-        state: restarted
-      listen: restart
-      become: yes
-
-    - name: restart nginx
-      service:
-        name: nginx
-        state: restarted
-
-    - name: restart nginx
-      service: name=nginx state=restarted
-
-    - name: validate nginx configuration
-      command: nginx -t -c /etc/nginx/nginx.conf
-      changed_when: False
-
-    - name: reload nginx
-      service: name=nginx state=reloaded
+- name: Install nginx
+  become: yes
+  include_role:
+    name: geerlingguy.nginx
+  vars:
+    nginx_vhosts: "{{ nginx.vhosts.values() }}"

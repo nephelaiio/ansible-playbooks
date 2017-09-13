@@ -1,41 +1,39 @@
 ---
-- hosts: "{{ target_hosts }}"
+- name: install ntfs utils
+  become: yes
+  package:
+    name: ntfs-3g
+    state: present
 
-  tasks:
+- name: create storage target
+  become: yes
+  file:
+    path: /exports
+    mode: 0o666
+    state: directory
 
-    - name: install ntfs utils
-      package:
-        name: ntfs-3g
-        state: present
-      become: yes
+- name: mount storage device
+  become: yes
+  mount:
+    path: /exports
+    src: UUID=96F4F672F4F653C9
+    fstype: ntfs-3g
+    opts: umask=000,auto,rw,nofail
+    state: mounted
+  register: export_task
 
-    - name: create storage target
-      file:
-        path: /exports
-        mode: 0o666
-        state: directory
-      become: yes
+- name: install and configure nfs
+  become: yes
+  include_role:
+    name: nephelaiio.nfs
+  vars:
+    nfs_exports:
+      - "/ *(ro,fsid=0)"
+      - "/exports *(rw,no_subtree_check,no_root_squash)"
 
-    - name: mount storage device
-      mount:
-        path: /exports
-        src: UUID=96F4F672F4F653C9
-        fstype: ntfs-3g
-        opts: umask=000,auto,rw,nofail
-        state: mounted
-      register: export_task
-      become: yes
-
-    - name: install and configure nfs
-      include_role:
-        name: nephelaiio.nfs
-      vars:
-        nfs_exports:
-          - "/ *(ro,fsid=0)"
-          - "/exports *(rw,no_subtree_check,no_root_squash)"
-
-    - name: restart nfs
-      service:
-        name: nfs-server
-        state: restarted
-      when: export_task.changed
+- name: restart nfs
+  become: yes
+  service:
+    name: nfs-server
+    state: restarted
+  when: export_task.changed
