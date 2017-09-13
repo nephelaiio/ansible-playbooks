@@ -1,0 +1,21 @@
+---
+jupyter:
+  user: root
+  group: root
+  port: 443
+  password: "{{ jupyter_password }}"
+  notebookdir: /home/ubuntu/notebooks
+  confdir: /home/ubuntu/.jupyter
+  certfile: fullchain.pem
+  keyfile: privkey.pem
+  exec_args: "--certfile {{ jupyter_confdir }}/{{ jupyter_certfile }} --keyfile {{ jupyter_confdir }}/{{ jupyter_keyfile }}"
+  region: us-west-2
+  availability_zone: b
+  state: stopped  # one of [ absent, running, stopped ]
+  route53_zone: nephelai.io.
+  instance_type: p2.xlarge
+  client_token: "{{ 'test04' | to_uuid }}"
+  ami_id: ami-e9038d89
+  ami_user: ubuntu
+  key: teodoro.cook@gmail.com
+  pause_seconds: 30
