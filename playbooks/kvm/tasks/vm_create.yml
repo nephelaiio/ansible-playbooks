@@ -104,4 +104,3 @@
     path: "{{ tmpdir.path }}"
     state: absent
   changed_when: False
-  when: cleanup

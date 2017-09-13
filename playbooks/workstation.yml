@@ -31,4 +31,3 @@
 - include: kvm.yml
   vars:
     target_hosts: cerberus
-

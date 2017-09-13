@@ -27,7 +27,7 @@
     certbot:
       bin: /usr/bin/certbot
       url: https://dl.eff.org/certbot-auto
-      checksum: "sha256:5bcd76b4b4741346a9ea94b15ddd574b9568e424a7315f0d5a840f10f0153dbe"
+      checksum: "sha256:e807fdb7e2ef09b906da132e978be8e2c6dfcdce3d6d42a143748b5f4d8ee308"
       email: teodoro.cook@gmail.com
       certdir: /etc/letsencrypt/live
     nginx:
@@ -68,7 +68,7 @@
           extra_parameters: |
             rewrite ^/unifi(.*) https://home.nephelai.io/unifi$1 permanent;
   tasks:
-    - include: home/unifi.yml 
+    - include: home/unifi.yml
 
 - name: Configure nfs
   hosts: rpia
