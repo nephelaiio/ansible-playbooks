@@ -20,7 +20,7 @@
 - src: nephelaiio.pyenv
   version: 1.0.1
 - src: nephelaiio.tmux
-  version: 1.0.3
+  version: 1.0.4
 - src: nephelaiio.vagrant
   version: 1.0.0
 - src: nephelaiio.i3
