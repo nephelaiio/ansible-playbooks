@@ -9,9 +9,13 @@
   vars:
     target_hosts: rpic
 
-- include: bind/recursor.yml
+- name: Configure dns recursors
+  hosts: recursors
   vars:
-    target_hosts: recursor
+    bind_fwd_zones: "{{ dns.zones.values() | map(attribute='name') | list }}"
+    bind_local_config: "{{ bind_fwd_zones | map('zone_fwd', servers.dns) | list }}" 
+  roles:
+    - nephelaiio.bind
 
 - include: pdns/server.yml
   vars:
@@ -27,7 +31,7 @@
     certbot:
       bin: /usr/bin/certbot
       url: https://dl.eff.org/certbot-auto
-      checksum: "sha256:e807fdb7e2ef09b906da132e978be8e2c6dfcdce3d6d42a143748b5f4d8ee308"
+      checksum: "sha256:8bb1feb763ffd735001559a0f8ed1fc92d3bc6544aa224f9b3d63a9c3726d590"
       email: teodoro.cook@gmail.com
       certdir: /etc/letsencrypt/live
     nginx:

@@ -1,6 +1,6 @@
 ---
-
 rabbitmq:
+
   management: false
   sensu:
     vhost: /sensu

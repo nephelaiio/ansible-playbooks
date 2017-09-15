@@ -30,6 +30,16 @@ def with_ext(basename, ext):
     return ("{0}.{1}".format(filename(basename), ext))
 
 
+def zone_fwd(zone, servers):
+    return({
+        'zone "{0}" IN'.format(zone): {
+            'type': 'forward',
+            'forward': 'only',
+            'forwarders': servers
+        }
+    })
+
+
 class FilterModule(object):
     ''' jinja2 filters '''
 
@@ -38,5 +48,6 @@ class FilterModule(object):
             'with_ext': with_ext,
             'filename': filename,
             'map_format': map_format,
-            'reverse_record': reverse_record
+            'reverse_record': reverse_record,
+            'zone_fwd': zone_fwd
         }

@@ -1,9 +1,0 @@
-#{{ ansible_managed }}
-
-{% for zone in fwd_zones %}
-zone "{{ zone }}" {
-  type forward;
-  forward only;
-  forwarders { {{ servers.dns | join('; ') }}; };
-};
-{% endfor %}
