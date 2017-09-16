@@ -13,7 +13,7 @@
   hosts: recursors
   vars:
     bind_fwd_zones: "{{ dns.zones.values() | map(attribute='name') | list }}"
-    bind_local_config: "{{ bind_fwd_zones | map('zone_fwd', servers.dns) | list }}" 
+    bind_local_config: "{{ bind_fwd_zones | map('zone_fwd', servers.dns) | list }}"
   roles:
     - nephelaiio.bind
 
