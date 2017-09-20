@@ -10,28 +10,28 @@
 - src: geerlingguy.ntp
   version: 1.5.2
 - src: nephelaiio.vim
-  version: 1.0.2
-- src: nephelaiio.tree
-  version: 1.0.0
-- src: nephelaiio.devtools
-  version: 1.0.2
-- src: nephelaiio.rbenv
-  version: 1.0.2
-- src: nephelaiio.pyenv
-  version: 1.0.1
-- src: nephelaiio.tmux
-  version: 1.0.4
-- src: nephelaiio.vagrant
-  version: 1.0.0
-- src: nephelaiio.i3
   version: 1.0.3
+- src: nephelaiio.tree
+  version: 1.0.1
+- src: nephelaiio.devtools
+  version: 1.0.3
+- src: nephelaiio.rbenv
+  version: 1.0.3
+- src: nephelaiio.pyenv
+  version: 1.0.2
+- src: nephelaiio.tmux
+  version: 1.0.5
+- src: nephelaiio.vagrant
+  version: 1.0.1
+- src: nephelaiio.i3
+  version: 1.0.4
 - src: nephelaiio.docker
   version: 1.0.2
 - src: nephelaiio.bind
-  version: 1.0.2
+  version: 1.0.3
 - src: nephelaiio.rabbitmq
-  version: 1.0.0
+  version: 1.0.1
 - src: nephelaiio.unifi-controller
-  version: 1.0.0
+  version: 1.0.1
 - src: nephelaiio.nfs
   version: 1.0.0

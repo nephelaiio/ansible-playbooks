@@ -2,6 +2,11 @@
 - include: upgrade.yml
 
 - include_role:
+    name: nephelaiio.git
+  vars:
+    git_configure: true
+
+- include_role:
     name: nephelaiio.tree
 
 - include_role:
