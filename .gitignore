@@ -13,3 +13,4 @@ galaxy/
 files/kvm/**
 resources/**
 **/*.pyc
+.python-version
