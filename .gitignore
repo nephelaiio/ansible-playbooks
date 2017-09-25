@@ -12,3 +12,4 @@ galaxy/
 **/.ropeproject
 files/kvm/**
 resources/**
+**/*.pyc
