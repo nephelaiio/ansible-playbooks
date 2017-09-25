@@ -9,17 +9,7 @@
   vars:
     target_hosts: rpic
 
-- name: Configure dns recursors
-  hosts: recursors
-  vars:
-    bind_fwd_zones: "{{ dns.zones.values() | map(attribute='name') | list }}"
-    bind_local_config: "{{ bind_fwd_zones | map('zone_fwd', servers.dns) | list }}"
-  roles:
-    - nephelaiio.bind
-
-- include: pdns/server.yml
-  vars:
-    target_hosts: rpic
+- include: home/dns.yml
 
 - include: home/dhcp.yml
   vars:
