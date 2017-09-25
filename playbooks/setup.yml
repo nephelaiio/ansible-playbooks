@@ -1,36 +1,36 @@
 ---
-- name: install profile prerequisites
+- name: Install profile prerequisites
 
   hosts: localhost
 
   tasks:
 
-    - name: run ansible galaxy
+    - name: Run ansible galaxy
       local_action: command ansible-galaxy install -r ../requirements.yml -p ../galaxy/ --force
       changed_when: false
 
-    - name: pull kolla repository
+    - name: Pull kolla repository
       local_action:
         module: git
         repo: https://github.com/openstack/kolla.git
         dest: ../resources/kolla
         version: "{{ kolla.release | default('HEAD') }}"
 
-    - name: pull awx playbook repository
+    - name: Pull awx playbook repository
       local_action:
         module: git
         repo: https://github.com/ansible/awx.git
         dest: ../resources/awx
         version: "{{ awx.releae | default('HEAD') }}"
 
-    - name: pull openshift playbook repository
+    - name: Pull openshift playbook repository
       local_action:
         module: git
         repo: https://github.com/openshift/openshift-ansible.git
         dest: ../resources/openshift
         version: "{{ openshift.release | default('HEAD') }}"
 
-    - name: pull kubespray playbook repository
+    - name: Pull kubespray playbook repository
       local_action:
         module: git
         repo: https://github.com/kubernetes-incubator/kubespray.git
