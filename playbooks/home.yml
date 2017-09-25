@@ -1,24 +1,10 @@
 ---
-- name: Upgrade hosts
-  hosts: raspberry
-  tasks:
-    - include: home/raspberry.yml
-    - include: upgrade.yml
+- include: home/raspberry.yml
 
-- include: sensu/server.yml
-  vars:
-    target_hosts: rpic
+- include: home/sensu.yml
 
 - include: home/dns.yml
 
 - include: home/unifi.yml
 
-- name: Configure nfs
-  hosts: rpia
-  tasks:
-    - include: home/nfs.yml
-
-- name: Configure workstation
-  hosts: cerberus
-  tasks:
-    - include: workstation.yml
+- include: home/nfs.yml
