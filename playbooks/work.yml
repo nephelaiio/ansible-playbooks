@@ -1,5 +1,2 @@
 ---
-- name: Configure workstation
-  hosts: crdt0628
-  tasks:
-    - include: workstation.yml
+- include: work/workstation.yml
