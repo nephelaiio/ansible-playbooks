@@ -1,0 +1,10 @@
+---
+- name: Configure sensu server
+
+  hosts: rpic
+
+  vars:
+    sensu_server: true
+
+  roles: 
+    - nephelaiio.sensu
