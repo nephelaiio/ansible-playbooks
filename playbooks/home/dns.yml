@@ -1,23 +1,37 @@
 ---
-- hosts: rpic
+- name: Configure dns recursors
+
+  hosts: recursors
+
+  vars:
+    bind_fwd_zones: "{{ dns.zones.values() | map(attribute='name') | list }}"
+    bind_local_config: "{{ bind_fwd_zones | map('zone_fwd', servers.dns) | list }}"
+
+  roles:
+    - nephelaiio.bind
+
+
+- name: Configure pdns authoritative server
+
+  hosts: rpic
 
   become: yes
 
   tasks:
 
-    - name: inspect nameservers
+    - name: Inspect nameservers
       changed_when: False
       command: "host -W 1 www.google.com"
       ignore_errors: true
       register: resolv
 
-    - name: install dns utilities
+    - name: Install dns utilities
       apt:
         update_cache: yes
         name: dnsutils
         state: latest
 
-    - name: install MySQL
+    - name: Install MySQL
       include_role:
         name: geerlingguy.mysql
       vars:
@@ -32,14 +46,14 @@
             password: '{{ pdns.backends.gmysql.password }}'
             priv: '{{ pdns.backends.gmysql.dbname }}.*:ALL'
 
-    - name: create temporary directory
+    - name: Create temporary directory
       tempfile:
         state: directory
         prefix: pdns
       register: tmpdir
       changed_when: false
 
-    - name: install powerdns
+    - name: Install powerdns
       apt:
         update_cache: yes
         name: "{{ item }}"
@@ -48,28 +62,28 @@
         - pdns-server
         - pdns-backend-mysql
 
-    - name: configure powerdns
+    - name: Configure powerdns
       template:
         src: ../../templates/dns/pdns.conf.j2
         dest: /etc/powerdns/pdns.conf
       vars:
         config: "{{ pdns.config }}"
         backends: "{{ pdns.backends }}"
-      notify: restart pdns
+      notify: Restart pdns
 
-    - name: build database initialization script
+    - name: Build database initialization script
       template:
         src: ../../templates/dns/schema.sql.j2
         dest: "{{ tmpdir.path }}/schema.sql"
       changed_when: false
 
-    - name: initialize database
+    - name: Initialize database
       command: |
         mysql "{{ pdns.backends.gmysql.dbname }}" -e "
         SOURCE {{ tmpdir.path }}/schema.sql;"
       changed_when: false
 
-    - name: build data initialization script
+    - name: Build data initialization script
       changed_when: false
       template:
         src: ../../templates/dns/data.sql.j2
@@ -79,13 +93,13 @@
         keys:
           - "{{ tsigkeys.dhcp }}"
 
-    - name: override records
+    - name: Override records
       command: |
         mysql "{{ pdns.backends.gmysql.dbname }}" -e "
         SOURCE {{ tmpdir.path }}/data.sql;"
       changed_when: false
 
-    - name: remove temporary directory
+    - name: Remove temporary directory
       file:
         path: "{{ tmpdir.path }}"
         state: absent
@@ -93,7 +107,7 @@
 
   handlers:
 
-    - name: restart pdns
+    - name: Restart pdns
       service:
         name: pdns
         state: restarted
