@@ -11,10 +11,6 @@
 
 - include: home/dns.yml
 
-- include: home/dhcp.yml
-  vars:
-    target_hosts: dhcp
-
 - name: Configure Unifi Controller
   hosts: rpib
   vars:

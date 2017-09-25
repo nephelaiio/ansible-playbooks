@@ -1,5 +1,7 @@
 ---
-- hosts: "{{ target_hosts | default('dhcp') }}"
+- name: configure dhcp servers
+
+  hosts: dhcp
 
   vars:
 
@@ -9,30 +11,30 @@
 
   tasks:
 
-    - name: Inspect nameservers
+    - name: inspect nameservers
       changed_when: False
       command: "host -W 1 www.google.com"
       ignore_errors: true
       register: resolv
 
-    - name: Install dhcpd
+    - name: install dhcpd
       apt:
         name: "{{ item }}"
         state: latest
         update_cache: yes
       with_items:
         - isc-dhcp-server
-      notify: Restart dhcpd
+      notify: restart dhcpd
 
-    - name: Configure dhcp interfaces
+    - name: configure dhcp interfaces
       template:
         src: ../../templates/dhcp/defaults.conf.j2
         dest: /etc/default/isc-dhcp-server
       vars:
         iface: "{{ ansible_default_ipv4.interface }}"
-      notify: Restart dhcpd
+      notify: restart dhcpd
 
-    - name: Configure dhcp
+    - name: configure dhcp
       template:
         src: ../../templates/dhcp/dhcpd.conf.j2
         dest: /etc/dhcp/dhcpd.conf
@@ -42,11 +44,11 @@
         networks: "{{ nets.values() }}"
         zones: "{{ dns.zones.values() }}"
         failover: "{{ dhcp.failover }}"
-      notify: Restart dhcpd
+      notify: restart dhcpd
 
     - meta: flush_handlers
 
-    - name: Manage
+    - name: manage services
       service:
         name: "{{ item }}"
         state: started
@@ -56,7 +58,7 @@
 
   handlers:
 
-    - name: Restart dhcpd
+    - name: restart dhcpd
       service:
         name: "{{ item }}"
         state: restarted
