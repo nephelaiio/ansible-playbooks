@@ -72,13 +72,7 @@
 
 - meta: flush_handlers
 
-- include: kvm/tasks/pool_create.yml
-  vars:
-    pool: "{{ kvm.defaults.pool | combine({'name': item.key},  item.value) }}"
-  with_dict: "{{ kvm.pools }}"
-  static: no
-
-- include: kvm/tasks/vm_destroy.yml
+- include: kvm/vm_destroy.yml
   vars:
     vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
     pool: "{{ kvm.pools[vm.pool].path }}"
@@ -86,7 +80,7 @@
   with_items: "{{ kvm.vms.values() }}"
   static: no
 
-- include: kvm/tasks/vm_create.yml
+- include: kvm/vm_create.yml
   vars:
     vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
     img: "{{ kvm_images[vm.image].src | basename | with_ext(kvm_images[vm.image].format) }}"
@@ -95,7 +89,7 @@
   with_items: "{{ kvm.vms.values() }}"
   static: no
 
-- include: kvm/tasks/vm_register.yml
+- include: kvm/vm_register.yml
   vars:
     vm: "{{ item }}"
   with_items: "{{ kvm.vms.values() }}"

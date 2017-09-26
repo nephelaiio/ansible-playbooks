@@ -42,7 +42,7 @@ kvm:
       cpu: 1
       memory: 512 
       name: kvma
-      state: present
+      state: recreate
       nic:
         hw-address: 52:54:00:94:37:21
         ip-address: 192.168.254.9
