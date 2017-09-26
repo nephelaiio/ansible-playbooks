@@ -6,5 +6,5 @@
   vars:
     sensu_server: true
 
-  roles: 
+  roles:
     - nephelaiio.sensu
