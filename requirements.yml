@@ -12,7 +12,7 @@
 - src: geerlingguy.mysql
   version: 2.8.0
 - src: nephelaiio.vim
-  version: 1.0.3
+  version: 1.0.4
 - src: nephelaiio.tree
   version: 1.0.1
 - src: nephelaiio.devtools
@@ -20,9 +20,9 @@
 - src: nephelaiio.rbenv
   version: 1.0.11
 - src: nephelaiio.pyenv
-  version: 1.0.2
+  version: 1.0.3
 - src: nephelaiio.tmux
-  version: 1.0.5
+  version: 1.0.6
 - src: nephelaiio.vagrant
   version: 1.0.1
 - src: nephelaiio.i3
@@ -36,4 +36,4 @@
 - src: nephelaiio.nfs
   version: 1.0.1
 - src: nephelaiio.sensu
-  version: 1.0.2
+  version: 1.0.5
