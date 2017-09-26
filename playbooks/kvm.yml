@@ -12,7 +12,7 @@
     - net.bridge.bridge-nf-call-iptables
     - net.bridge.bridge-nf-call-arptables
 
-- name: Install requirements
+- name: Install pacman requirements
   package:
     name:
       - qemu
@@ -29,10 +29,25 @@
   when: ansible_os_family == "Archlinux"
   become: yes
 
+- name: Install apt requirements
+  package:
+    name:
+      - qemu-kvm
+      - qemu-utils
+      - libvirt0
+      - python-libvirt
+      - bridge-utils
+      - ebtables
+      - dmidecode
+      - python-lxml
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+  become: yes
+
 - name: Create image target directory
   local_action:
     module: file
-    path: ../files/kvm
+    path: ../../files/kvm
     state: directory
 
 - name: Fetch images
@@ -43,7 +58,6 @@
     mode: 0644
     checksum: "{{ item.value.checksum }}"
   with_dict: "{{ kvm_images }}"
-  notify: uncompress images
 
 - name: Uncompress images
   local_action: >-
