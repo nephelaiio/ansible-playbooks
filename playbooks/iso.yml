@@ -1,0 +1,58 @@
+---
+- hosts: localhost
+
+  tasks:
+
+    - name: create temporary directory
+      tempfile:
+        state: directory
+        prefix: iso
+      register: tmpdir
+      changed_when: False
+
+    - name: create target directory
+      file:
+        state: directory
+        path: ../files/iso
+
+    - name: register source ubuntu iso file
+      set_fact:
+        src_iso: "../files/ubuntu.{{ iso_ubuntu_release }}.iso"
+
+    - name: register dest ubuntu iso file
+      set_fact:
+        dest_iso: "../files/ubuntu.iso"
+
+    - name: fetch ubuntu source iso
+      get_url:
+        url: "http://releases.ubuntu.com/{{ iso_ubuntu_release }}/ubuntu-{{ iso_ubuntu_release }}-server-amd64.iso"
+        dest: "{{ src_iso }}"
+
+    - name: create ubuntu dest iso
+      copy:
+        src: "{{ src_iso }}"
+        dest: "{{ dest_iso }}"
+        force: yes
+      changed_when: false
+
+    - name: mount iso
+      mount: 
+        src: "{{ dst_iso }}"
+        path: "{{ tmpdir.path }}"
+        fstype: loop
+        state: mounted
+      become: yes
+      changed_when: False
+
+    - name: unmount iso
+      mount:
+        path: "{{ tmpdir.path }}"
+        state: unmountekd
+      become: yes
+      changed_when: False
+
+    - name: remove temporary directory
+      file:
+        path: "{{ tmpdir.path }}"
+        state: absent
+      changed_when: False
