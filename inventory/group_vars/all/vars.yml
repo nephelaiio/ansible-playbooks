@@ -1,12 +1,4 @@
 ---
-rabbitmq:
-
-  management: false
-  sensu:
-    vhost: /sensu
-    user: sensu
-    password: "{{ passwords.rabbitmq.sensu }}"
-
 kolla:
   release: 5.0.0.0rc1
 
