@@ -1,0 +1,109 @@
+---
+timezone: America/Costa_Rica
+
+nets:
+  local:
+    network: 192.168.254.0
+    netmask: 255.255.255.0
+    router: 192.168.254.1
+    zone: 254.168.192.in-addr.arpa
+    pools:
+      - range: '192.168.254.65 192.168.254.127'
+    reservations:
+
+servers:
+  recursors:
+    - 192.168.254.10
+  dns:
+    - 192.168.254.9
+
+kvm:
+  defaults:
+    vm:
+      state: present  # present | recreate | absent
+      memory: 2048
+      cpu: 1
+      image: xenial
+      autostart: True
+      size: 10G
+      pool: default
+      nic:
+        name: enp0s3
+        type: bridge
+        net: br1
+        prefix: "{{ nets.local.router | ipaddr('prefix') }}"
+        gateway: "{{ nets.local.router | ipaddr('address') }}"
+        nameservers: "{{ servers.recursors }}"
+    pool:
+      state: present
+      autostart: True
+  vms:
+    kvma:
+      cpu: 1
+      memory: 512 
+      name: kvma
+      state: present
+      nic:
+        hw-address: 52:54:00:94:37:21
+        ip-address: 192.168.254.9
+        prefix: 255.255.255.0
+        gateway: 192.168.254.1
+        host: kvma.local.nephelai.io
+    kvmb:
+      cpu: 1
+      memory: 512
+      name: kvmb
+      state: recreate
+      nic:
+        hw-address: 52:54:00:94:37:22
+        ip-address: 192.168.254.10
+        prefix: 255.255.255.0
+        gateway: 192.168.254.1
+        host: kvmb.local.nephelai.io
+    kvmc:
+      cpu: 2
+      memory: 4096
+      name: kvmc
+      state: absent
+      nic:
+        hw-address: 52:54:00:94:37:23
+        ip-address: 192.168.254.22
+        prefix: 255.255.255.0
+        gateway: 192.168.254.1
+        host: kvmc.local.nephelai.io
+    kvmd:
+      cpu: 2
+      memory: 4096
+      name: kvmd
+      state: absent
+      nic:
+        hw-address: 52:54:00:94:37:24
+        ip-address: 192.168.254.23
+        prefix: 255.255.255.0
+        gateway: 192.168.254.1
+        host: kvmd.local.nephelai.io
+    kvme:
+      cpu: 2
+      memory: 4096
+      name: kvme
+      state: absent
+      nic:
+        hw-address: 52:54:00:94:37:25
+        ip-address: 192.168.254.24
+        prefix: 255.255.255.0
+        gateway: 192.168.254.1
+        host: kvme.local.nephelai.io
+  pools:
+    default:
+      path: /var/lib/libvirt/images
+  images:
+    xenial:
+      src: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
+      pool: default
+      format: qcow2
+      checksum: sha256:6d3dd685ac6eeca8a0b75cc47add6e4e6a433c13a80712b4bc4b22480542fdf4
+    centos:
+      src: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2.xz
+      pool: default
+      format: qcow2
+      checksum: sha256:e139c5b7a799f3f1d48aa897f1b8165c18ef6eeb212cadf138d32537600c6005
