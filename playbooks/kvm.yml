@@ -39,7 +39,7 @@
   local_action:
     module: get_url
     url: "{{ item.value.src }}"
-    dest: "../files/kvm/{{ item.value.src | basename }}"
+    dest: "../../files/kvm/{{ item.value.src | basename }}"
     mode: 0644
     checksum: "{{ item.value.checksum }}"
   with_dict: "{{ kvm_images }}"
@@ -48,7 +48,7 @@
 - name: Uncompress images
   local_action: >-
     command qemu-img convert -O {{ format }} {{ img }} {{ target }}
-    chdir="../files/kvm"
+    chdir="../../files/kvm"
     creates="{{ target }}"
   vars:
     format: "{{ item.value.format }}"
