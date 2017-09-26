@@ -13,7 +13,7 @@
   <devices>
     <emulator>/usr/bin/qemu-system-x86_64</emulator>
     <disk type='file' device='disk'>
-      <driver name='qemu' type='{{ kvm.images[vm.image].format }}'/>
+      <driver name='qemu' type='{{ kvm_images[vm.image].format }}'/>
       <source file='{{ disk }}'/>
       <target dev='hda' bus='ide'/>
       <address type='drive' controller='0' bus='0' unit='0'/>

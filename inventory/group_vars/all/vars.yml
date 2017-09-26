@@ -1,4 +1,16 @@
 ---
+kvm_images:
+  xenial:
+    src: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
+    pool: default
+    format: qcow2
+    checksum: sha256:dcb00f92f46b12c7d65127a3a29aec1a7b1c5b3020e22d405adf8cce6706485a
+  centos:
+    src: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2.xz
+    pool: default
+    format: qcow2
+    checksum: sha256:0df197d7d41e83afd676867ca97ac7f9d96d42d338eff67ec18d75f932850f3b
+
 kolla:
   release: 5.0.0.0rc1
 
