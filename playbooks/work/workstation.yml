@@ -7,6 +7,8 @@
 
     - include: ../upgrade.yml
 
+    - include: ../kvm.yml
+
     - include_role:
         name: nephelaiio.tree
 
