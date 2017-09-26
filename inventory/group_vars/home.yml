@@ -34,7 +34,6 @@ servers:
     - 192.168.0.8
 
 kvm:
-  bridge_config: "/etc/sysctl.d/99-bridge.conf"
   defaults:
     vm:
       state: present  # | recreate | absent
