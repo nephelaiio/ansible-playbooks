@@ -1,5 +1,5 @@
 ---
-- name: Configure raspbian 
+- name: Configure raspbian
 
   hosts: raspberry
 

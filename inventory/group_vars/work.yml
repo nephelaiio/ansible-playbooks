@@ -40,7 +40,7 @@ kvm:
   vms:
     kvma:
       cpu: 1
-      memory: 512 
+      memory: 512
       name: kvma
       state: recreate
       nic:

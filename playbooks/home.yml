@@ -1,10 +1,10 @@
 ---
 - include: home/raspberry.yml
 
-- include: home/sensu.yml
-
 - include: home/dns.yml
 
 - include: home/unifi.yml
 
 - include: home/nfs.yml
+
+- include: home/sensu.yml
