@@ -1,58 +1,37 @@
 ---
-- hosts: localhost
+- name: Create raspbian images
+
+  hosts: localhost
+
+  vars:
+    raspbian_release: https://downloads.raspberrypi.org/raspbian_lite_latest
+    rasbian_timezone: America/Costa_Rica
+    raspbian_hosts:
+      - rpid.home.nephelai.io
 
   tasks:
 
-    - name: create temporary directory
-      tempfile:
-        state: directory
-        prefix: iso
-      register: tmpdir
-      changed_when: False
+    - include: iso/raspbian.yml
+      static: no
+      vars:
+        raspbian_host: "{{ item }}"
+      with_items: "{{ raspbian_hosts }}"
 
-    - name: create target directory
-      file:
-        state: directory
-        path: ../files/iso
 
-    - name: register source ubuntu iso file
-      set_fact:
-        src_iso: "../files/ubuntu.{{ iso_ubuntu_release }}.iso"
+- name: Create nuc images
 
-    - name: register dest ubuntu iso file
-      set_fact:
-        dest_iso: "../files/ubuntu.iso"
+  hosts: localhost
 
-    - name: fetch ubuntu source iso
-      get_url:
-        url: "http://releases.ubuntu.com/{{ iso_ubuntu_release }}/ubuntu-{{ iso_ubuntu_release }}-server-amd64.iso"
-        dest: "{{ src_iso }}"
+  vars:
+    ubuntu_release: 16.04.3
+    ubuntu_timezone: America/Costa_Rica
+    ubuntu_hosts:
+      - nuca.home.nephelai.io
 
-    - name: create ubuntu dest iso
-      copy:
-        src: "{{ src_iso }}"
-        dest: "{{ dest_iso }}"
-        force: yes
-      changed_when: false
+  tasks:
 
-    - name: mount iso
-      mount: 
-        src: "{{ dst_iso }}"
-        path: "{{ tmpdir.path }}"
-        fstype: loop
-        state: mounted
-      become: yes
-      changed_when: False
-
-    - name: unmount iso
-      mount:
-        path: "{{ tmpdir.path }}"
-        state: unmountekd
-      become: yes
-      changed_when: False
-
-    - name: remove temporary directory
-      file:
-        path: "{{ tmpdir.path }}"
-        state: absent
-      changed_when: False
+    - include: iso/ubuntu.yml
+      static: no
+      vars:
+        ubuntu_host: "{{ item }}"
+      with_items: "{{ ubuntu_hosts }}"

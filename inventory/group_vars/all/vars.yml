@@ -1,6 +1,4 @@
 ---
-iso_ubuntu_release: 16.04.3
-
 kvm_images:
   xenial:
     src: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
