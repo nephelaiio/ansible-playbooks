@@ -40,11 +40,26 @@ def zone_fwd(zone, servers):
     })
 
 
+def head(x):
+    return(x[0])
+
+
+def tail(x):
+    return(x[1::])
+
+
+def split_with(x, d):
+    return(x.split(d))
+
+
 class FilterModule(object):
     ''' jinja2 filters '''
 
     def filters(self):
         return {
+            'split_with': split_with,
+            'head': head,
+            'tail': tail,
             'with_ext': with_ext,
             'filename': filename,
             'map_format': map_format,
