@@ -11,6 +11,7 @@
 galaxy/
 **/.ropeproject
 files/kvm/**
+files/iso/**
 resources/**
 **/*.pyc
 .python-version
