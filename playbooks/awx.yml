@@ -1,13 +1,13 @@
 ---
 - name: install awx
-  
+
   hosts: localhost
 
   vars:
     awx_hosts:
       kvma.home.nephelai.io:
         ansible_connection: kvma.home.nephelai.io
-        
+
     awx_vars:
       postgres_data_dir: /opt/awx/pgdata
       host_port: 80
@@ -36,9 +36,9 @@
       register: tmpdir
       changed_when: false
 
-    - name: copy awx installer 
+    - name: copy awx installer
       synchronize:
-        src:  "{{ awx_installer }}/"
+        src: "{{ awx_installer }}/"
         dest: "{{tmpdir.path }}/"
       changed_when: false
 
