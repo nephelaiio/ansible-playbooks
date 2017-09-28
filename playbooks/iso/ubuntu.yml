@@ -57,7 +57,7 @@
     dest: "{{ src_iso }}"
 
 - name: mount ubuntu source iso
-  mount: 
+  mount:
     src: "{{ src_iso }}"
     path: "{{ tmpdir_src.path }}"
     fstype: iso9660
