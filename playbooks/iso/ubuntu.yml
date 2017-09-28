@@ -64,7 +64,7 @@
     opts: loop
     state: mounted
   become: yes
-  changed_when: False
+  changed_when: false
 
 - name: create output tree structure
   command: "cp -aT {{ tmpdir_src.path }} {{ tmpdir_dest.path }}"
@@ -77,7 +77,7 @@
   mount:
     path: "{{ tmpdir_src.path }}"
     state: unmounted
-  changed_when: False
+  changed_when: false
   become: yes
 
 - name: define installation menu language
@@ -136,4 +136,4 @@
   loop_control:
     loop_var: tmpitem
   become: yes
-  changed_when: False
+  changed_when: false
