@@ -7,7 +7,7 @@
     certbot:
       bin: /usr/bin/certbot
       url: https://dl.eff.org/certbot-auto
-      checksum: "sha256:8bb1feb763ffd735001559a0f8ed1fc92d3bc6544aa224f9b3d63a9c3726d590"
+      checksum: "sha256:cb81c3c340179182d54c2aac8fcd4ae571011ba1bc0a096564569cfffc1009ac"
       email: teodoro.cook@gmail.com
       certdir: /etc/letsencrypt/live
     nginx:
