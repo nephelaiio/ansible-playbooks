@@ -13,26 +13,12 @@
       local_action:
         module: git
         repo: https://github.com/openstack/kolla.git
-        dest: ../resources/kolla
-        version: "{{ kolla.release | default('HEAD') }}"
+        dest: "{{ kolla_installer }}"
+        version: "{{ kolla_release | default('HEAD') }}"
 
     - name: Pull awx playbook repository
       local_action:
         module: git
         repo: https://github.com/ansible/awx.git
-        dest: ../resources/awx
-        version: "{{ awx.releae | default('HEAD') }}"
-
-    - name: Pull openshift playbook repository
-      local_action:
-        module: git
-        repo: https://github.com/openshift/openshift-ansible.git
-        dest: ../resources/openshift
-        version: "{{ openshift.release | default('HEAD') }}"
-
-    - name: Pull kubespray playbook repository
-      local_action:
-        module: git
-        repo: https://github.com/kubernetes-incubator/kubespray.git
-        dest: ../resources/kubespray
-        version: "{{ kubespray.release | default('HEAD') }}"
+        dest: "{{ awx_installer }}"
+        version: "{{ awx_releae | default('HEAD') }}"

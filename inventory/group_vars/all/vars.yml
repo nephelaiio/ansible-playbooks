@@ -11,17 +11,10 @@ kvm_images:
     format: qcow2
     checksum: sha256:0df197d7d41e83afd676867ca97ac7f9d96d42d338eff67ec18d75f932850f3b
 
-kolla:
-  release: 5.0.0.0rc1
+kolla_release: 5.0.0.0rc1
 
-awx:
-  release: 1.0.0
+kolla_installer: ../resources/kolla
 
-openshift:
-  relase: release-3.6
+awx_release: 1.0.0
 
-kubespray:
-  release: v2.2.0
-
-foreman:
-  release: 1.15
+awx_installer: ../resources/awx

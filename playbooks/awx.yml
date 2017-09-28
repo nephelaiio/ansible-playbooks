@@ -1,0 +1,79 @@
+---
+- name: install awx
+  
+  hosts: localhost
+
+  vars:
+    awx_hosts:
+      kvma.home.nephelai.io:
+        ansible_connection: kvma.home.nephelai.io
+        
+    awx_vars:
+      postgres_data_dir: /opt/awx/pgdata
+      host_port: 80
+      awx_secret_key: awxsecret
+
+  tasks:
+
+    - name: install pacman dependencies
+      pacman:
+        name:
+          - rsync
+        state: present
+      when: ansible_os_family == 'Archlinux'
+      become: yes
+
+    - name: install pip dependencies
+      pip:
+        name: ansible
+        state: present
+      become: yes
+
+    - name: create temporary directory
+      tempfile:
+        state: directory
+        prefix: awx
+      register: tmpdir
+      changed_when: false
+
+    - name: copy awx installer 
+      synchronize:
+        src:  "{{ awx_installer }}/"
+        dest: "{{tmpdir.path }}/"
+      changed_when: false
+
+    - name: create inventory directory
+      file:
+        state: directory
+        path: "{{ tmpdir.path }}/inventory"
+      changed_when: false
+
+    - name: create inventory hosts file
+      copy:
+        dest: "{{ tmpdir.path }}/inventory/hosts.yml"
+        content: "---\n{{ awx_hosts | to_nice_yaml(indent=2) }}"
+      changed_when: false
+
+    - name: create inventory group_vars directory
+      file:
+        state: directory
+        path: "{{ tmpdir.path }}/inventory/group_vars"
+      changed_when: false
+
+    - name: create inventory group file
+      copy:
+        dest: "{{ tmpdir.path }}/inventory/group_vars/all.yml"
+        content: "---\n{{ awx_vars | to_nice_yaml(indent=2) }}"
+      changed_when: false
+
+    - name: run awx installer
+      command: ansible-playbook -i inventory/ installer/install.yml
+      args:
+        chdir: "{{ tmpdir.path }}"
+
+    - name: remove temporary directory
+      file:
+        path: "{{ tmpdir.path }}"
+        state: absent
+      become: yes
+      changed_when: false
