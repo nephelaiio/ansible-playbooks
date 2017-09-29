@@ -1,0 +1,134 @@
+---
+- name: inspect current user
+  command: whoami
+  register: inspect_username
+
+- name: define ssh key location
+  set_fact:
+    sshkey: "~{{ inspect_username.stdout }}/.ssh/id_rsa.pub"
+
+- name: create temporary target directory
+  tempfile:
+    state: directory
+    prefix: img
+  register: tmpdir_dest
+
+- name: create image target directory
+  file:
+    state: directory
+    path: ../files/iso
+
+- name: register source raspbian iso file
+  set_fact:
+    src_img: "../files/iso/raspbian.img"
+
+- name: register target raspbian iso file
+  set_fact:
+    dest_img: "../files/iso/{{ raspbian_host }}.img"
+
+- name: fetch raspbian source image
+  unarchive:
+    src: "{{ raspbian_release }}"
+    dest: "{{ src_img | dirname }}"
+    creates: "{{ src_img }}"
+    list_files: yes
+  register: raspbian_img
+
+- name: rename raspbian source image
+  shell: "mv {{ rasbpian_img[0] }} {{ src_img }}"
+  args:
+    creates: "{{ src_img }}"
+  when: raspbian_img.changed
+  tags:
+    - skip_ansible_lint
+
+- name: create raspbian target image
+  copy:
+    src: "{{ src_img }}"
+    dest: "{{ dest_img }}"
+    force: yes
+
+- name: inspect raspbian root partition offset
+  shell: "fdisk -l {{ dest_img }} | awk '/Linux/{print $2}'"
+  register: root_offset
+
+- name: calculate root partition offset
+  set_fact:
+    raspbian_root_offset: "{{ (root_offset.stdout | int) * (raspbian_block_size | default(512)) }}"
+
+- name: mount raspbian root partition
+  mount:
+    src: "{{ dest_img }}"
+    path: "{{ tmpdir_dest.path }}"
+    fstype: ext4
+    opts: "offset={{ raspbian_root_offset }}"
+    state: mounted
+  become: yes
+
+- name: inspect raspbian boot partition offset
+  shell: "fdisk -l {{ dest_img }} | awk '/FAT32/{print $2}'"
+  register: boot_offset
+
+- name: calculate boot partition offset
+  set_fact:
+    raspbian_boot_offset: "{{ (boot_offset.stdout | int) * (raspbian_block_size | default(512)) }}"
+
+- name: mount raspbian boot partition
+  mount:
+    src: "{{ dest_img }}"
+    path: "{{ tmpdir_dest.path }}/boot"
+    fstype: vfat
+    opts: "offset={{ raspbian_boot_offset }}"
+    state: mounted
+  become: yes
+
+- name: define hostname
+  lineinfile:
+    path: "{{ tmpdir_dest.path }}/etc/hosts"
+    regexp: "^127.0.1.1"
+    line: "127.0.1.1       {{ raspbian_host }}"
+    insertafter: EOF
+  become: yes
+
+- name: configure ssh autostart
+  file:
+    path: "{{ tmpdir_dest.path }}/boot/ssh"
+    state: touch
+  become: yes
+
+- name: create ssh user directory
+  file:
+    state: directory
+    path: "{{ tmpdir_dest.path }}/home/pi/.ssh"
+    mode: 0700
+  become: yes
+
+- name: copy ssh user key
+  copy:
+    src: "{{ sshkey }}"
+    dest: "{{ tmpdir_dest.path }}/home/pi/.ssh/authorized_keys"
+    owner: "{{ raspbian_user_id | default(1000) }}"
+    group: "{{ raspbian_group_id | default(1000) }}"
+    mode: 0600
+  become: yes
+    
+- name: unmount raspbian target image
+  mount:
+    path: "{{ mntitem }}"
+    state: unmounted
+  with_items:
+    - "{{ tmpdir_dest.path }}/boot"
+    - "{{ tmpdir_dest.path }}"
+  loop_control:
+    loop_var: mntitem
+  become: yes
+
+- name: remove temporary directories
+  file:
+    path: "{{ tmpitem }}"
+    state: absent
+  with_items:
+    - "{{ tmpdir_dest.path }}"
+  loop_control:
+    loop_var: tmpitem
+  become: yes
