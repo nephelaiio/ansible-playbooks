@@ -16,15 +16,15 @@
 - name: create image target directory
   file:
     state: directory
-    path: ../files/iso
+    path: ../files/images
 
 - name: register source raspbian iso file
   set_fact:
-    src_img: "../files/iso/raspbian.img"
+    src_img: "../files/images/raspbian.img"
 
 - name: register target raspbian iso file
   set_fact:
-    dest_img: "../files/iso/{{ raspbian_host }}.img"
+    dest_img: "../files/images/{{ raspbian_host }}.img"
 
 - name: fetch raspbian source image
   unarchive:
@@ -32,6 +32,7 @@
     dest: "{{ src_img | dirname }}"
     creates: "{{ src_img }}"
     list_files: yes
+    remote_src: yes
   register: raspbian_img
 
 - name: rename raspbian source image
@@ -82,11 +83,19 @@
     state: mounted
   become: yes
 
-- name: define hostname
+- name: set hostname
+  copy:
+    path: "{{ tmpdir_dest.path }}/etc/hostname"
+    content: "{{ raspbian_host | split_with('.') | head }}"
+    force: yes
+    mode: 0644
+  become: yes
+
+- name: update hosts file
   lineinfile:
     path: "{{ tmpdir_dest.path }}/etc/hosts"
-    regexp: "^127.0.1.1"
-    line: "127.0.1.1       {{ raspbian_host }}"
+    regexp: "^127.0.0.1"
+    line: "127.0.0.1       localhost {{ raspbian_host }}"
     insertafter: EOF
   become: yes
 

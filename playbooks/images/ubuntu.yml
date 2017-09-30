@@ -45,11 +45,11 @@
 - name: create image target directory
   file:
     state: directory
-    path: ../files/iso
+    path: ../files/images
 
 - name: register source ubuntu iso file
   set_fact:
-    src_iso: "../files/iso/ubuntu.{{ ubuntu_release }}.iso"
+    src_iso: "../files/images/ubuntu.{{ ubuntu_release }}.iso"
 
 - name: fetch ubuntu source iso
   get_url:
@@ -96,7 +96,7 @@
   changed_when: false
 
 - template:
-    src: ../templates/iso/ubuntu.seed
+    src: ../templates/images/ubuntu.seed
     dest: "{{ tmpdir_dest.path }}/preseed/ubuntu-server.seed"
   vars:
     hostname: "{{ ubuntu_host | split_with('.') | head }}"
@@ -118,9 +118,9 @@
   register: refresh_iso
 
 - name: archive ubuntu autoinstall iso
-  command: "cp /tmp/{{ ubuntu_host }}.iso ../files/iso/{{ ubuntu_host }}.iso"
+  command: "cp /tmp/{{ ubuntu_host }}.iso ../files/images/{{ ubuntu_host }}.iso"
   args:
-    creates: "../files/iso/{{ ubuntu_host }}.iso"
+    creates: "../files/images/{{ ubuntu_host }}.iso"
   when: refresh_iso.changed
   tags:
     - skip_ansible_lint

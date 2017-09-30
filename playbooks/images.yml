@@ -7,11 +7,15 @@
     raspbian_release: https://downloads.raspberrypi.org/raspbian_lite_latest
     rasbian_timezone: America/Costa_Rica
     raspbian_hosts:
+      - rpia.home.nephelai.io
+      - rpib.home.nephelai.io
+      - rpic.home.nephelai.io
       - rpid.home.nephelai.io
+      - rpie.home.nephelai.io
 
   tasks:
 
-    - include: iso/raspbian.yml
+    - include: images/raspbian.yml
       static: no
       vars:
         raspbian_host: "{{ item }}"
@@ -30,7 +34,7 @@
 
   tasks:
 
-    - include: iso/ubuntu.yml
+    - include: images/ubuntu.yml
       static: no
       vars:
         ubuntu_host: "{{ item }}"
