@@ -18,36 +18,27 @@
     state: directory
     path: ../files/images
 
-- name: register source raspbian iso file
-  set_fact:
-    src_img: "../files/images/raspbian.img"
-
 - name: register target raspbian iso file
   set_fact:
     dest_img: "../files/images/{{ raspbian_host }}.img"
 
 - name: fetch raspbian source image
+  get_url:
+    url: "{{ raspbian_release }}"
+    dest: "{{ dest_img | dirname }}/raspbian.archive"
+
+- name: unarchive raspbian image
   unarchive:
-    src: "{{ raspbian_release }}"
-    dest: "{{ src_img | dirname }}"
-    creates: "{{ src_img }}"
-    list_files: yes
+    src: "{{ dest_img | dirname }}/raspbian.archive"
+    dest: "{{ dest_img | dirname }}" 
     remote_src: yes
+    list_files: yes
   register: raspbian_img
 
-- name: rename raspbian source image
-  shell: "mv {{ rasbpian_img[0] }} {{ src_img }}"
-  args:
-    creates: "{{ src_img }}"
-  when: raspbian_img.changed
-  tags:
-    - skip_ansible_lint
-
-- name: create raspbian target image
+- name: copy raspbian source image
   copy:
-    src: "{{ src_img }}"
+    src: "../files/images/{{ raspbian_img.files[0] }}"
     dest: "{{ dest_img }}"
-    force: yes
 
 - name: inspect raspbian root partition offset
   shell: "fdisk -l {{ dest_img }} | awk '/Linux/{print $2}'"
@@ -74,18 +65,26 @@
   set_fact:
     raspbian_boot_offset: "{{ (boot_offset.stdout | int) * (raspbian_block_size | default(512)) }}"
 
+- name: inspect raspbian boot partition sectors
+  shell: "fdisk -l {{ dest_img }} | awk '/FAT32/{print $4}'"
+  register: boot_size
+
+- name: calculate boot partition size
+  set_fact:
+    raspbian_boot_size: "{{ (boot_size.stdout | int) * (raspbian_block_size | default(512)) }}"
+
 - name: mount raspbian boot partition
   mount:
     src: "{{ dest_img }}"
     path: "{{ tmpdir_dest.path }}/boot"
     fstype: vfat
-    opts: "offset={{ raspbian_boot_offset }}"
+    opts: "offset={{ raspbian_boot_offset }},sizelimit={{ raspbian_boot_size }}"
     state: mounted
   become: yes
 
 - name: set hostname
   copy:
-    path: "{{ tmpdir_dest.path }}/etc/hostname"
+    dest: "{{ tmpdir_dest.path }}/etc/hostname"
     content: "{{ raspbian_host | split_with('.') | head }}"
     force: yes
     mode: 0644
@@ -97,6 +96,22 @@
     regexp: "^127.0.0.1"
     line: "127.0.0.1       localhost {{ raspbian_host }}"
     insertafter: EOF
+  become: yes
+
+- name: disable mac based interface naming
+  lineinfile:
+    path: "{{ tmpdir_dest.path }}/boot/cmdline.txt"
+    line: "net.ifnames=0"
+    insertafter: EOF
+  become: yes
+
+- name: configure interfaces
+  template:
+    src: ../templates/images/interface
+    dest: "{{ tmpdir_dest.path }}/etc/network/interfaces.d/{{ iface.name }}"
+  loop_control:
+    loop_var: iface
+  with_items: "{{ raspbian_ifaces }}"
   become: yes
 
 - name: configure ssh autostart
