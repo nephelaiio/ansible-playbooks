@@ -57,14 +57,10 @@
     dest: "{{ src_iso }}"
 
 - name: mount ubuntu source iso
-  mount:
-    src: "{{ src_iso }}"
-    path: "{{ tmpdir_src.path }}"
-    fstype: iso9660
-    opts: loop
-    state: mounted
+  command: "mount -t iso9660 -o loop {{ src_iso }} {{ tmpdir_src.path }}"
+  args:
+    warn: no
   become: yes
-  changed_when: false
 
 - name: create output tree structure
   command: "cp -aT {{ tmpdir_src.path }} {{ tmpdir_dest.path }}"
@@ -74,10 +70,9 @@
   changed_when: false
 
 - name: unmount ubuntu source iso
-  mount:
-    path: "{{ tmpdir_src.path }}"
-    state: unmounted
-  changed_when: false
+  command: "umount {{ tmpdir_src.path }}"
+  args:
+    warn: no
   become: yes
 
 - name: define installation menu language
@@ -115,13 +110,11 @@
     chdir: "{{ tmpdir_dest.path }}"
   become: yes
   changed_when: false
-  register: refresh_iso
 
 - name: archive ubuntu autoinstall iso
   command: "cp /tmp/{{ ubuntu_host }}.iso ../files/images/{{ ubuntu_host }}.iso"
   args:
     creates: "../files/images/{{ ubuntu_host }}.iso"
-  when: refresh_iso.changed
   tags:
     - skip_ansible_lint
 

@@ -49,12 +49,9 @@
     raspbian_root_offset: "{{ (root_offset.stdout | int) * (raspbian_block_size | default(512)) }}"
 
 - name: mount raspbian root partition
-  mount:
-    src: "{{ dest_img }}"
-    path: "{{ tmpdir_dest.path }}"
-    fstype: ext4
-    opts: "offset={{ raspbian_root_offset }}"
-    state: mounted
+  command: "mount -t ext4 -o offset={{ raspbian_root_offset }} {{ dest_img }} {{ tmpdir_dest.path }}"
+  args:
+    warn: no
   become: yes
 
 - name: inspect raspbian boot partition offset
@@ -74,12 +71,9 @@
     raspbian_boot_size: "{{ (boot_size.stdout | int) * (raspbian_block_size | default(512)) }}"
 
 - name: mount raspbian boot partition
-  mount:
-    src: "{{ dest_img }}"
-    path: "{{ tmpdir_dest.path }}/boot"
-    fstype: vfat
-    opts: "offset={{ raspbian_boot_offset }},sizelimit={{ raspbian_boot_size }}"
-    state: mounted
+  command: "mount -t vfat -o offset={{ raspbian_boot_offset }},sizelimit={{ raspbian_boot_size }} {{ dest_img }} {{ tmpdir_dest.path }}/boot"
+  args:
+    warn: no
   become: yes
 
 - name: set hostname
@@ -137,9 +131,9 @@
   become: yes
     
 - name: unmount raspbian target image
-  mount:
-    path: "{{ mntitem }}"
-    state: unmounted
+  command: "umount {{ mntitem }}"
+  args:
+    warn: no
   with_items:
     - "{{ tmpdir_dest.path }}/boot"
     - "{{ tmpdir_dest.path }}"
