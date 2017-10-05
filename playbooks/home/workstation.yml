@@ -3,35 +3,20 @@
 
   hosts: cerberus
 
+  roles:
+
+    - nephelaiio.tree
+    - nephelaiio.vim
+    - nephelaiio.devtools
+    - nephelaiio.rbenv
+    - nephelaiio.pyenv
+    - nephelaiio.tmux
+    - nephelaiio.vagrant
+    - nephelaiio.i3
+    - nephelaiio.docker
+
   tasks:
 
     - include: ../upgrade.yml
-
-    - include_role:
-        name: nephelaiio.tree
-
-    - include_role:
-        name: nephelaiio.vim
-
-    - include_role:
-        name: nephelaiio.devtools
-
-    - include_role:
-        name: nephelaiio.rbenv
-
-    - include_role:
-        name: nephelaiio.pyenv
-
-    - include_role:
-        name: nephelaiio.tmux
-
-    - include_role:
-        name: nephelaiio.vagrant
-
-    - include_role:
-        name: nephelaiio.i3
-
-    - include_role:
-        name: nephelaiio.docker
 
     - include: ../kvm.yml
