@@ -1,0 +1,5 @@
+default preseed
+label preseed
+  menu label ^Auto Install Ubuntu Server
+  kernel /install/vmlinuz
+  append file=/cdrom/preseed/ubuntu-server.seed preseed/file=/cdrom/{{ preseed_file}} preseed/file/checksum={{ preseed_checksum }} auto=true priority=high vga=788 initrd=/install/initrd.gz quiet ---

@@ -90,9 +90,14 @@
   become: yes
   changed_when: false
 
-- template:
+- name: register seed file
+  set_fact:
+    seed_file: "ubuntu.seed"
+
+- name: create seed file
+  template:
     src: ../templates/images/ubuntu.seed
-    dest: "{{ tmpdir_dest.path }}/preseed/ubuntu-server.seed"
+    dest: "{{ tmpdir_dest.path }}/{{ seed_file }}"
   vars:
     hostname: "{{ ubuntu_host | split_with('.') | head }}"
     domain: "{{ ubuntu_host | split_with('.') | tail | join('.') }}"
@@ -104,17 +109,28 @@
   become: yes
   changed_when: false
 
+- name: retrieve seed file checksum
+  command: "md5sum {{ tmpdir_dest.path }}/{{ seed_file }}"
+  become: yes
+  register: seed_md5sum
+
+- name: set bootloader preseed configuration
+  template:
+    src: ../templates/images/isolinux.txt
+    dest: "{{ tmpdir_dest.path }}/isolinux/txt.cfg"
+  vars:
+    preseed_file: "{{ seed_file }}"
+    preseed_checksum: "{{ seed_md5sum.stdout }}"
+  become: yes
+
 - name: create ubuntu autoinstall iso
   command: "mkisofs -D -r -V '{{ ubuntu_host }}' -cache-inodes -J -cache-inodes -J -l -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -o /tmp/{{ ubuntu_host }}.iso ."
   args:
     chdir: "{{ tmpdir_dest.path }}"
   become: yes
-  changed_when: false
 
 - name: archive ubuntu autoinstall iso
   command: "cp /tmp/{{ ubuntu_host }}.iso ../files/images/{{ ubuntu_host }}.iso"
-  args:
-    creates: "../files/images/{{ ubuntu_host }}.iso"
   tags:
     - skip_ansible_lint
 

@@ -1,4 +1,23 @@
 ---
+- name: Create nuc images
+
+  hosts: localhost
+
+  vars:
+    ubuntu_release: 16.04.3
+    ubuntu_timezone: America/Costa_Rica
+    ubuntu_hosts:
+      - nuca.home.nephelai.io
+
+  tasks:
+
+    - include: images/ubuntu.yml
+      static: no
+      vars:
+        ubuntu_host: "{{ item }}"
+      with_items: "{{ ubuntu_hosts }}"
+
+
 - name: Create raspbian images
 
   hosts: localhost
@@ -42,22 +61,3 @@
         raspbian_host: "{{ item.hostname }}"
         raspbian_ifaces: "{{ item.ifaces }}"
       with_items: "{{ raspbian_hosts }}"
-
-
-- name: Create nuc images
-
-  hosts: localhost
-
-  vars:
-    ubuntu_release: 16.04.3
-    ubuntu_timezone: America/Costa_Rica
-    ubuntu_hosts:
-      - nuca.home.nephelai.io
-
-  tasks:
-
-    - include: images/ubuntu.yml
-      static: no
-      vars:
-        ubuntu_host: "{{ item }}"
-      with_items: "{{ ubuntu_hosts }}"
