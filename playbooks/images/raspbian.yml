@@ -30,7 +30,7 @@
 - name: unarchive raspbian image
   unarchive:
     src: "{{ dest_img | dirname }}/raspbian.archive"
-    dest: "{{ dest_img | dirname }}" 
+    dest: "{{ dest_img | dirname }}"
     remote_src: yes
     list_files: yes
   register: raspbian_img
@@ -129,7 +129,7 @@
     group: "{{ raspbian_group_id | default(1000) }}"
     mode: 0600
   become: yes
-    
+
 - name: unmount raspbian target image
   command: "umount {{ mntitem }}"
   args:
