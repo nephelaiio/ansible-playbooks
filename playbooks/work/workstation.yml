@@ -1,37 +1,31 @@
 ---
 - name: Configure workstation
 
-  hosts: crdt0628
+  hosts: icarus
+
+  environment:
+    http_proxy: http://10.50.2.254:8080
+    https_proxy: http://10.50.2.254:8080
+
+  roles:
+
+    - nephelaiio.tree
+    - nephelaiio.vim
+    - nephelaiio.devtools
+    - nephelaiio.pyenv
+    - nephelaiio.tmux
+    - nephelaiio.i3
+    - nephelaiio.docker
+    - nephelaiio.rbenv
 
   tasks:
 
+    - name: Install work specific packages
+      package:
+        name:
+          - openvpn
+          - ntfs-3g
+          - bridge-utils
+      become: yes
+
     - include: ../upgrade.yml
-
-    - include: ../kvm.yml
-
-    - include_role:
-        name: nephelaiio.tree
-
-    - include_role:
-        name: nephelaiio.vim
-
-    - include_role:
-        name: nephelaiio.devtools
-
-    - include_role:
-        name: nephelaiio.rbenv
-
-    - include_role:
-        name: nephelaiio.pyenv
-
-    - include_role:
-        name: nephelaiio.tmux
-
-    - include_role:
-        name: nephelaiio.vagrant
-
-    - include_role:
-        name: nephelaiio.i3
-
-    - include_role:
-        name: nephelaiio.docker
