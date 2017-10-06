@@ -1,0 +1,13 @@
+---
+- name: Configure kvm
+
+  hosts: icarus
+
+  environment:
+
+    http_proxy: http://10.50.2.254:8080
+    https_proxy: http://10.50.2.254:8080
+
+  tasks:
+
+    - include: ../kvm.yml

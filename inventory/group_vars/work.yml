@@ -9,24 +9,22 @@ nets:
   local:
     network: 192.168.254.0
     netmask: 255.255.255.0
-    router: 192.168.254.1
+    router: 192.168.254.2
     zone: 254.168.192.in-addr.arpa
     pools:
       - range: '192.168.254.65 192.168.254.127'
-    reservations:
+    reservations: []
 
 servers:
   recursors:
-    - 192.168.254.10
-  dns:
-    - 192.168.254.9
+    - 192.168.254.3
 
 kvm:
   defaults:
     vm:
       state: present  # present | recreate | absent
       memory: 2048
-      cpu: 1
+      cpu: 2
       image: xenial
       autostart: True
       size: 10G
@@ -42,10 +40,19 @@ kvm:
       state: present
       autostart: True
   vms:
-    kvma:
+    dnsa:
       cpu: 1
-      memory: 512
-      name: kvma
+      memory: 1024
+      name: dnsa
+      state: recreate
+      nic:
+        hw-address: 52:54:00:94:37:20
+        ip-address: 192.168.254.3
+        prefix: 255.255.255.0
+        gateway: 192.168.254.1
+        host: kvma.local.nephelai.io
+    kubea:
+      name: kubea
       state: recreate
       nic:
         hw-address: 52:54:00:94:37:21
@@ -53,10 +60,8 @@ kvm:
         prefix: 255.255.255.0
         gateway: 192.168.254.1
         host: kvma.local.nephelai.io
-    kvmb:
-      cpu: 1
-      memory: 512
-      name: kvmb
+    kubeb:
+      name: kubeb
       state: recreate
       nic:
         hw-address: 52:54:00:94:37:22
@@ -64,39 +69,6 @@ kvm:
         prefix: 255.255.255.0
         gateway: 192.168.254.1
         host: kvmb.local.nephelai.io
-    kvmc:
-      cpu: 2
-      memory: 4096
-      name: kvmc
-      state: absent
-      nic:
-        hw-address: 52:54:00:94:37:23
-        ip-address: 192.168.254.22
-        prefix: 255.255.255.0
-        gateway: 192.168.254.1
-        host: kvmc.local.nephelai.io
-    kvmd:
-      cpu: 2
-      memory: 4096
-      name: kvmd
-      state: absent
-      nic:
-        hw-address: 52:54:00:94:37:24
-        ip-address: 192.168.254.23
-        prefix: 255.255.255.0
-        gateway: 192.168.254.1
-        host: kvmd.local.nephelai.io
-    kvme:
-      cpu: 2
-      memory: 4096
-      name: kvme
-      state: absent
-      nic:
-        hw-address: 52:54:00:94:37:25
-        ip-address: 192.168.254.24
-        prefix: 255.255.255.0
-        gateway: 192.168.254.1
-        host: kvme.local.nephelai.io
   pools:
     default:
       path: /var/lib/libvirt/images

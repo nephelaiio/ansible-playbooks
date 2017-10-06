@@ -1,2 +1,4 @@
 ---
 - include: work/workstation.yml
+
+- include: work/kvm.yml

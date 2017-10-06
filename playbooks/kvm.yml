@@ -40,6 +40,7 @@
       - ebtables
       - dmidecode
       - python-lxml
+      - genisoimage
     update_cache: yes
   when: ansible_os_family == "Debian"
   become: yes
@@ -56,7 +57,6 @@
     url: "{{ item.value.src }}"
     dest: "../../files/kvm/{{ item.value.src | basename }}"
     mode: 0644
-    checksum: "{{ item.value.checksum }}"
   with_dict: "{{ kvm_images }}"
 
 - name: Uncompress images
@@ -72,7 +72,8 @@
 
 - meta: flush_handlers
 
-- include: kvm/vm_destroy.yml
+- name: Destroy VMs
+  include: kvm/vm_destroy.yml
   vars:
     vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
     pool: "{{ kvm.pools[vm.pool].path }}"
@@ -80,7 +81,8 @@
   with_items: "{{ kvm.vms.values() }}"
   static: no
 
-- include: kvm/vm_create.yml
+- name: Create VMs
+  include: kvm/vm_create.yml
   vars:
     vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
     img: "{{ kvm_images[vm.image].src | basename | with_ext(kvm_images[vm.image].format) }}"
@@ -89,7 +91,8 @@
   with_items: "{{ kvm.vms.values() }}"
   static: no
 
-- include: kvm/vm_register.yml
+- name: Register VMs
+  include: kvm/vm_register.yml
   vars:
     vm: "{{ item }}"
   with_items: "{{ kvm.vms.values() }}"

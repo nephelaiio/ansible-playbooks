@@ -4,6 +4,7 @@
   hosts: icarus
 
   environment:
+
     http_proxy: http://10.50.2.254:8080
     https_proxy: http://10.50.2.254:8080
 
@@ -26,6 +27,10 @@
           - openvpn
           - ntfs-3g
           - bridge-utils
+          - remmina
+          - pkg-config
+          - libvirt-bin
+          - libvirt-dev
       become: yes
 
     - include: ../upgrade.yml
