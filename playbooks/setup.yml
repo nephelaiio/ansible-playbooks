@@ -7,7 +7,6 @@
 
     - name: Run ansible galaxy
       local_action: command ansible-galaxy install -r ../requirements.yml -p ../galaxy/ --force
-      changed_when: false
 
     - name: Pull kolla repository
       local_action:
