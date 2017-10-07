@@ -7,7 +7,6 @@
     certbot:
       bin: /usr/bin/certbot
       url: https://dl.eff.org/certbot-auto
-      checksum: "sha256:cb81c3c340179182d54c2aac8fcd4ae571011ba1bc0a096564569cfffc1009ac"
       email: teodoro.cook@gmail.com
       certdir: /etc/letsencrypt/live
     nginx:
@@ -75,7 +74,6 @@
       become: yes
       get_url:
         url: "{{ certbot.url }}"
-        checksum: "{{ certbot.checksum }}"
         dest: "{{ certbot.bin }}"
 
     - name: Set certbot permissions
