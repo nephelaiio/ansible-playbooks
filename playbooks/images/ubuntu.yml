@@ -120,7 +120,7 @@
     dest: "{{ tmpdir_dest.path }}/isolinux/txt.cfg"
   vars:
     preseed_file: "{{ seed_file }}"
-    preseed_checksum: "{{ seed_md5sum.stdout }}"
+    preseed_checksum: "{{ seed_md5sum.stdout | split_with(' ') | first }}"
   become: yes
 
 - name: create ubuntu autoinstall iso
