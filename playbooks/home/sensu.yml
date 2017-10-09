@@ -8,3 +8,14 @@
 
   roles:
     - nephelaiio.sensu
+
+
+- name: Configure sensu clients
+
+  hosts: home
+
+  vars:
+    sensu_server: false
+
+  roles:
+    - nephelaiio.sensu
