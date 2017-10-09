@@ -118,6 +118,8 @@
   file:
     state: directory
     path: "{{ tmpdir_dest.path }}/home/pi/.ssh"
+    owner: "{{ raspbian_user_id | default(1000) }}"
+    group: "{{ raspbian_group_id | default(1000) }}"
     mode: 0700
   become: yes
 
