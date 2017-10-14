@@ -45,11 +45,11 @@
 - name: create image target directory
   file:
     state: directory
-    path: ../files/images
+    path: ../../files/images
 
 - name: register source ubuntu iso file
   set_fact:
-    src_iso: "../files/images/ubuntu.{{ ubuntu_release }}.iso"
+    src_iso: "../../files/images/ubuntu.{{ ubuntu_release }}.iso"
 
 - name: fetch ubuntu source iso
   get_url:
@@ -96,7 +96,7 @@
 
 - name: create seed file
   template:
-    src: ../templates/images/ubuntu.seed
+    src: ../../templates/images/ubuntu.seed
     dest: "{{ tmpdir_dest.path }}/{{ seed_file }}"
   vars:
     hostname: "{{ ubuntu_host | split_with('.') | head }}"
@@ -116,7 +116,7 @@
 
 - name: set bootloader preseed configuration
   template:
-    src: ../templates/images/isolinux.txt
+    src: ../../templates/images/isolinux.txt
     dest: "{{ tmpdir_dest.path }}/isolinux/txt.cfg"
   vars:
     preseed_file: "{{ seed_file }}"
@@ -130,7 +130,7 @@
   become: yes
 
 - name: archive ubuntu autoinstall iso
-  command: "cp /tmp/{{ ubuntu_host }}.iso ../files/images/{{ ubuntu_host }}.iso"
+  command: "cp /tmp/{{ ubuntu_host }}.iso ../../files/images/{{ ubuntu_host }}.iso"
   tags:
     - skip_ansible_lint
 

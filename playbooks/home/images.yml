@@ -11,7 +11,7 @@
 
   tasks:
 
-    - include: images/ubuntu.yml
+    - include: ../images/ubuntu.yml
       static: no
       vars:
         ubuntu_host: "{{ item }}"
@@ -55,7 +55,7 @@
 
   tasks:
 
-    - include: images/raspbian.yml
+    - include: ../images/raspbian.yml
       static: no
       vars:
         raspbian_host: "{{ item.hostname }}"
