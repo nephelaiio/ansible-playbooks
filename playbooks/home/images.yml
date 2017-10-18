@@ -7,7 +7,9 @@
     ubuntu_release: 16.04.3
     ubuntu_timezone: America/Costa_Rica
     ubuntu_hosts:
-      - nuca.home.nephelai.io
+      - host: nuca.home.nephelai.io
+        interface:
+          static: false # true | false
 
   tasks:
 
@@ -15,6 +17,7 @@
       static: no
       vars:
         ubuntu_host: "{{ item }}"
+        ubuntu_interface: "{{ item.interface }}"
       with_items: "{{ ubuntu_hosts }}"
 
 

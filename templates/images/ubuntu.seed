@@ -16,6 +16,14 @@ d-i debconf/language                                        string      en_US:en
 
 # network settings
 d-i netcfg/choose_interface                                 select      auto
+{% if interface.static %}
+d-i netcfg/disable_autoconfig                               boolean     true
+d-i netcfg/get_ipaddress                                   string      {{ interface.ipaddress }}
+d-i netcfg/get_netmask                                     string      {{ interface.netmask }}
+d-i netcfg/get_gateway                                     string      {{ interface.gateway }}
+d-i netcfg/get_nameservers                                 string      {{ interface.nameservers }}
+d-i netcfg/confirm_static                                  boolean     true
+{% endif %}
 d-i netcfg/dhcp_timeout                                     string      5
 d-i netcfg/get_hostname                                     string      {{ hostname }}
 d-i netcfg/get_domain                                       string      {{ domain }}
@@ -87,5 +95,6 @@ d-i preseed/late_command                                    string      {{ late_
 {% else %}
 d-i preseed/late_command                                    string      in-target mkdir -p /{{ username }}/.ssh; \
 in-target /bin/sh -c "echo '{{ sshkey }}' >> /{{ username }}/.ssh/authorized_keys"; \
-in-target chown -R {{ username }}:{{ username }} /{{ username }}/.ssh/
+in-target chown -R {{ username }}:{{ username }} /{{ username }}/.ssh/; \
+in-target echo "blacklist ipv6" >> /etc/modprobe.d/blacklist.conf;
 {% endif %}

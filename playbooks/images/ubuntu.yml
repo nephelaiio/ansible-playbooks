@@ -106,6 +106,7 @@
     password: "{{ ubuntu_password | default(default_password) }}"
     sshkey: "{{ ubuntu_sshkey | default(default_sshkey) }}"
     late_command: "{{ ubuntu_late_command | default('') }}"
+    interface: "{{ ubuntu_interface }}"
   become: yes
   changed_when: false
 
