@@ -63,6 +63,9 @@ d-i pkgsel/update-policy                                    select      none
 d-i pkgsel/updatedb                                         boolean     true
 
 # disk partitioning
+{% if disk != '' %}
+d-i partman-auto/disk                                       string      {{ disk }}
+{% endif %}
 d-i partman/confirm_write_new_label                         boolean     true
 d-i partman/choose_partition                                select      finish
 d-i partman/confirm_nooverwrite                             boolean     true
@@ -98,5 +101,6 @@ in-target /bin/sh -c "echo '{{ sshkey }}' >> /{{ username }}/.ssh/authorized_key
 in-target chown -R {{ username }}:{{ username }} /{{ username }}/.ssh/; \
 in-target echo "blacklist ipv6" >> /etc/modprobe.d/blacklist.conf; \
 in-target apt-get install -y openssh-server; \
-in-target systemctl enable ssh;
+in-target systemctl enable ssh; \
+in-target sed -i -e 's/^GRUB_CMDLINE_LINUX_DEFAULT.*/GRUB_CMDLINE_LINUX_DEFAULT="nosplash"/' /etc/default/grub;
 {% endif %}

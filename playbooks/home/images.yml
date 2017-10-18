@@ -10,14 +10,16 @@
       - host: nuca.home.nephelai.io
         interface:
           static: false # true | false
+        disk: nvme0n1
 
   tasks:
 
     - include: ../images/ubuntu.yml
       static: no
-      vars:
+      vahttp://www.puromotor.com/industria/lexus-introduce-al-pais-coupe-lc-500/rs:
         ubuntu_host: "{{ item }}"
         ubuntu_interface: "{{ item.interface }}"
+        ubuntu_disk: "{{ item.disk }}"
       with_items: "{{ ubuntu_hosts }}"
 
 

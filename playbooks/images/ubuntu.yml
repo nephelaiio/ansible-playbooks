@@ -107,6 +107,7 @@
     sshkey: "{{ ubuntu_sshkey | default(default_sshkey) }}"
     late_command: "{{ ubuntu_late_command | default('') }}"
     interface: "{{ ubuntu_interface }}"
+    disk: "{{ ubuntu_disk | default('') }}"
   become: yes
   changed_when: false
 
