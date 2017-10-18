@@ -96,5 +96,7 @@ d-i preseed/late_command                                    string      {{ late_
 d-i preseed/late_command                                    string      in-target mkdir -p /{{ username }}/.ssh; \
 in-target /bin/sh -c "echo '{{ sshkey }}' >> /{{ username }}/.ssh/authorized_keys"; \
 in-target chown -R {{ username }}:{{ username }} /{{ username }}/.ssh/; \
-in-target echo "blacklist ipv6" >> /etc/modprobe.d/blacklist.conf;
+in-target echo "blacklist ipv6" >> /etc/modprobe.d/blacklist.conf; \
+in-target apt-get install -y openssh-server; \
+in-target systemctl enable ssh;
 {% endif %}
