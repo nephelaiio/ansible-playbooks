@@ -21,8 +21,23 @@
 
   tasks:
 
+    - name: Configure name resolution
+      include_role:
+        name: ahuffman.resolv
+      become: yes
+      vars:
+        resolv_nameservers:
+          - 10.50.2.3
+          - 10.50.2.2
+        resolv_search:
+          - true.local
+          - local
+        resolv_options:
+          - timeout:2
+          - rotate
+
     - name: Install work specific packages
-      package:
+      apt:
         name:
           - openvpn
           - ntfs-3g
@@ -31,6 +46,11 @@
           - pkg-config
           - libvirt-bin
           - libvirt-dev
+          - keepass2
+          - xdotool
+        state: latest
+        autoclean: yes
+        autoremove: yes
       become: yes
 
     - include: ../upgrade.yml
