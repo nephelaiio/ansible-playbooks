@@ -44,7 +44,7 @@ kvm:
       cpu: 1
       memory: 1024
       name: dnsa
-      state: recreate
+      state: absent
       nic:
         hw-address: 52:54:00:94:37:20
         ip-address: 192.168.254.3
