@@ -1,0 +1,25 @@
+---
+- name: Create ubuntu images
+
+  hosts: localhost
+
+  vars:
+    ubuntu_release: 16.04.3
+    ubuntu_timezone: America/Costa_Rica
+    ubuntu_hosts:
+      - host: iml-700-103.true.local
+        interface:
+          static: true # true | false
+          ipaddress: 10.40.0.22
+          netmask: 255.255.255.0
+          gateway: 10.40.0.254
+          nameservers: 8.8.8.8 8.8.4.8.8.8.8 8.8.4.4
+
+  tasks:
+
+    - include: ../images/ubuntu.yml
+      static: no
+      vars:
+        ubuntu_host: "{{ item.host }}"
+        ubuntu_interface: "{{ item.interface }}"
+      with_items: "{{ ubuntu_hosts }}"
