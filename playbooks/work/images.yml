@@ -14,6 +14,7 @@
           netmask: 255.255.255.0
           gateway: 10.40.0.254
           nameservers: 8.8.8.8 8.8.4.8.8.8.8 8.8.4.4
+        disk: /dev/sda1
 
   tasks:
 

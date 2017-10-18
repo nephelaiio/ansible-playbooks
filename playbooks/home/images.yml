@@ -10,7 +10,7 @@
       - host: nuca.home.nephelai.io
         interface:
           static: false # true | false
-        disk: nvme0n1
+        disk: /dev/nvme0n1
 
   tasks:
 
