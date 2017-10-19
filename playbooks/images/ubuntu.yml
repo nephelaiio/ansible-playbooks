@@ -1,4 +1,27 @@
 ---
+- name: install pacman packages
+  pacman:
+    name: "{{ pkgitem }}"
+    state: present
+  with_items:
+    - syslinux
+  loop_control:
+    loop_var: pkgitem
+  become: yes
+  when: ansible_os_family == 'Archlinux'
+
+- name: install apt packages
+  apt:
+    name: "{{ pkgitem }}"
+    state: present
+  with_items:
+    - syslinux
+    - syslinux-utils
+  loop_control:
+    loop_var: pkgitem
+  become: yes
+  when: ansible_os_family == 'Debian'
+
 - name: inspect current user
   command: whoami
   changed_when: false
@@ -135,6 +158,10 @@
   command: "cp /tmp/{{ ubuntu_host }}.iso ../../files/images/{{ ubuntu_host }}.iso"
   tags:
     - skip_ansible_lint
+
+- name: make iso bootable
+  command: "isohybrid ../../files/images/{{ ubuntu_host }}.iso"
+  become: yes
 
 - name: remove temporary directories
   file:
