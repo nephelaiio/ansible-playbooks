@@ -98,16 +98,16 @@ d-i debian-installer/exit/poweroff                          boolean     false
 d-i preseed/late_command                                    string      {{ late_command }}
 {% else %}
 d-i preseed/late_command                                    string      in-target mkdir -p /{{ username }}/.ssh; \
-in-target /bin/sh -c "echo '{{ sshkey }}' >> /{{ username }}/.ssh/authorized_keys"; \
+in-target /bin/sh -c "echo '{{ sshkey }}' >> /target/{{ username }}/.ssh/authorized_keys"; \
 in-target chown -R {{ username }}:{{ username }} /{{ username }}/.ssh/; \
-in-target echo "blacklist ipv6" >> /etc/modprobe.d/blacklist.conf; \
-in-target echo "{{ username }} ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/{{ username }}; \
+in-target echo "blacklist ipv6" >> /target/etc/modprobe.d/blacklist.conf; \
+in-target echo "{{ username }} ALL=(ALL) NOPASSWD: ALL" >> /target/etc/sudoers.d/{{ username }}; \
 in-target chmod 440 /etc/sudoers.d/{{ username }}; \
 in-target apt-get install -y openssh-server; \
 in-target systemctl enable ssh; \
 in-target sed -i -e 's/^GRUB_CMDLINE_LINUX_DEFAULT.*/GRUB_CMDLINE_LINUX_DEFAULT="nosplash"/' /etc/default/grub; \
 {% if disk != '' %}
-in-target echo "ARRAY <ignore> devices={{ disk }}" >> /etc/mdadm/mdadm.conf; \
+in-target echo "ARRAY <ignore> devices={{ disk }}" >> /target/etc/mdadm/mdadm.conf; \
 {% endif %}
 in-target update-grub;
 {% endif %}
