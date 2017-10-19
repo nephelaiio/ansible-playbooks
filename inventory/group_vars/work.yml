@@ -37,7 +37,7 @@ kvm:
         gateway: "{{ nets.local.router | ipaddr('address') }}"
         nameservers: "{{ servers.recursors }}"
     pool:
-      state: present
+      state: absent
       autostart: True
   vms:
     dnsa:
@@ -53,7 +53,7 @@ kvm:
         host: kvma.local.nephelai.io
     kubea:
       name: kubea
-      state: recreate
+      state: absent
       nic:
         hw-address: 52:54:00:94:37:21
         ip-address: 192.168.254.9
@@ -62,7 +62,7 @@ kvm:
         host: kvma.local.nephelai.io
     kubeb:
       name: kubeb
-      state: recreate
+      state: absent
       nic:
         hw-address: 52:54:00:94:37:22
         ip-address: 192.168.254.10
