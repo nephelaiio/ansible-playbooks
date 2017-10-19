@@ -17,7 +17,7 @@
     - include: ../images/ubuntu.yml
       static: no
       vars:
-        ubuntu_host: "{{ item }}"
+        ubuntu_host: "{{ item.host }}"
         ubuntu_interface: "{{ item.interface }}"
         ubuntu_disk: "{{ item.disk }}"
       with_items: "{{ ubuntu_hosts }}"
