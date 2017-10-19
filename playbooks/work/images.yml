@@ -4,7 +4,8 @@
   hosts: localhost
 
   vars:
-    ubuntu_release: 16.04.3
+    ubuntu_release_xenial: "16.04.3"
+    ubuntu_release_aartful: "17.10"
     ubuntu_timezone: America/Costa_Rica
     ubuntu_hosts:
       - host: iml-700-102.true.local
@@ -15,6 +16,7 @@
           gateway: 10.40.0.254
           nameservers: 8.8.8.8 8.8.4.8.8.8.8 8.8.4.4
         disk: /dev/sda
+        release: "{{ ubuntu_release_aartful }}"
 
   tasks:
 
@@ -24,4 +26,5 @@
         ubuntu_host: "{{ item.host }}"
         ubuntu_interface: "{{ item.interface }}"
         ubuntu_disk: "{{ item.disk }}"
+        ubuntu_release: "{{ item.release }}"
       with_items: "{{ ubuntu_hosts }}"
