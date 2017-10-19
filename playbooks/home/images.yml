@@ -16,7 +16,7 @@
 
     - include: ../images/ubuntu.yml
       static: no
-      vahttp://www.puromotor.com/industria/lexus-introduce-al-pais-coupe-lc-500/rs:
+      vars:
         ubuntu_host: "{{ item }}"
         ubuntu_interface: "{{ item.interface }}"
         ubuntu_disk: "{{ item.disk }}"
