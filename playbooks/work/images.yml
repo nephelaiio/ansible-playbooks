@@ -7,7 +7,7 @@
     ubuntu_release: 16.04.3
     ubuntu_timezone: America/Costa_Rica
     ubuntu_hosts:
-      - host: iml-700-103.true.local
+      - host: iml-700-102.true.local
         interface:
           static: true # true | false
           ipaddress: 10.40.0.22
