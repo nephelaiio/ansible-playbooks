@@ -1,7 +1,7 @@
 ---
 - name: Configure workstation
 
-  hosts: icarus
+  hosts: iml-700-101
 
   environment:
 
@@ -48,9 +48,33 @@
           - libvirt-dev
           - keepass2
           - xdotool
+          - wireless-tools
+          - wpasupplicant
+          - ebtables
+          - apt-mirror
         state: latest
         autoclean: yes
         autoremove: yes
       become: yes
+
+    - include: ../upgrade.yml
+
+
+- name: Configure satellite host
+
+  hosts: iml-700-102
+
+  roles:
+
+    - nephelaiio.tree
+    - nephelaiio.vim
+    - nephelaiio.devtools
+    - nephelaiio.pyenv
+    - nephelaiio.tmux
+    - nephelaiio.i3
+    - nephelaiio.docker
+    - nephelaiio.rbenv
+
+  tasks:
 
     - include: ../upgrade.yml
