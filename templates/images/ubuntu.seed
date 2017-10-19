@@ -107,7 +107,7 @@ sed -i -e 's/^GRUB_CMDLINE_LINUX_DEFAULT.*/GRUB_CMDLINE_LINUX_DEFAULT="nosplash"
 echo "ARRAY <ignore> devices={{ disk }}" >> /target/etc/mdadm/mdadm.conf; \
 {% endif %}
 in-target chown -R {{ username }}:{{ username }} /home/{{ username }}/.ssh; \
-in-target apt-get install -y openssh-server; \
+in-target apt-get install -y openssh-server python; \
 in-target systemctl enable ssh; \
 in-target update-grub;
 {% endif %}
