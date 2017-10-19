@@ -14,7 +14,7 @@
           netmask: 255.255.255.0
           gateway: 10.40.0.254
           nameservers: 8.8.8.8 8.8.4.8.8.8.8 8.8.4.4
-        disk: /dev/sda1
+        disk: /dev/sda
 
   tasks:
 
@@ -23,4 +23,5 @@
       vars:
         ubuntu_host: "{{ item.host }}"
         ubuntu_interface: "{{ item.interface }}"
+        ubuntu_disk: "{{ item.disk }}"
       with_items: "{{ ubuntu_hosts }}"
