@@ -58,7 +58,7 @@ kvm:
       cpu: 2
       memory: 4096
       name: kvma
-      state: recreate
+      state: present
       nic:
         hw-address: 52:54:00:94:37:21
         ip-address: 192.168.0.20
@@ -69,7 +69,7 @@ kvm:
       cpu: 2
       memory: 4096
       name: kvmb
-      state: recreate
+      state: present
       nic:
         hw-address: 52:54:00:94:37:22
         ip-address: 192.168.0.21
@@ -80,7 +80,7 @@ kvm:
       cpu: 2
       memory: 4096
       name: kvmc
-      state: recreate
+      state: present
       nic:
         hw-address: 52:54:00:94:37:23
         ip-address: 192.168.0.22
