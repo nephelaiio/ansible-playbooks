@@ -1,0 +1,8 @@
+---
+- name: Configure nucs
+
+  hosts: nuc
+
+  tasks:
+
+    - include: ../upgrade.yml

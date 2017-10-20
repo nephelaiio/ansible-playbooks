@@ -10,3 +10,5 @@
 - include: home/sensu.yml
 
 - include: home/images.yml
+
+- include: home/nuc.yml
