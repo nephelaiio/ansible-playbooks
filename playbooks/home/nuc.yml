@@ -1,8 +1,39 @@
 ---
-- name: Configure nucs
+- name: Upgrade nucs
 
   hosts: nuc
 
   tasks:
 
     - include: ../upgrade.yml
+
+
+- name: Install satellite host
+
+  hosts: nuca
+
+  tasks:
+
+    - name: Install required ppa repos
+      apt_repository:
+        repo: "{{ item }}"
+      with_items:
+        - 'ppa:kelleyk/emacs'
+      become: yes
+
+    - name: Install required packages
+      apt:
+        name:
+          - emacs25-nox
+          - nfs-common
+        state: present
+      become: yes
+
+    - name: Configure mounts
+      mount:
+        fstype: nfs
+        path: /home
+        src: "cerberus.home.nephelai.io:/home"
+
+  
+    
