@@ -36,6 +36,6 @@
 - src: nephelaiio.nfs
   version: 1.0.1
 - src: nephelaiio.sensu
-  version: 1.0.7
+  version: 1.0.8
 - src: nephelaiio.golang
   version: 1.0.1
