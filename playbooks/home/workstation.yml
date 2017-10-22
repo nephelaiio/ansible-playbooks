@@ -44,7 +44,7 @@
     - name: Configure services
       service:
         name: nfs-server
-        state: running
+        state: started
         enabled: yes
       become: yes
 
@@ -56,3 +56,47 @@
         name: nfs-server
         state: restarted
       become: yes
+
+
+- name: Configure satellite host
+
+  hosts: nuca
+
+  vars:
+
+    vim_packages:
+      - vim-nox
+      - silversearcher-ag
+
+  roles:
+
+    - nephelaiio.tree
+    - nephelaiio.vim
+    - nephelaiio.devtools
+    - nephelaiio.rbenv
+    - nephelaiio.pyenv
+    - nephelaiio.tmux
+    - nephelaiio.docker
+
+  tasks:
+
+    - name: Manage PPAs
+      apt_repository:
+        repo: "{{ item.repo }}"
+        state: "{{ item.state | default('present') }}"
+      with_items:
+        - repo: ppa:kelleyk/emacs
+      become: yes
+
+    - name: Install required packages
+      package:
+        name: emacs25-nox
+      become: yes
+
+    - name: Install spacemacs
+      git:
+        repo: https://github.com/syl20bnr/spacemacs
+        dest: ~/.emacs.d
+
+    - name: Upgrade system
+      include: ../upgrade.yml
