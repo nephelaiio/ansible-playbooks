@@ -1,7 +1,7 @@
 ---
 - name: Configure sensu server
 
-  hosts: rpic
+  hosts: sensu
 
   vars:
     sensu_server: true

@@ -1,7 +1,7 @@
 ---
 - name: Configure Unifi Controller
 
-  hosts: rpib
+  hosts: unifi
 
   vars:
     certbot:

@@ -1,7 +1,11 @@
 ---
-- name: Configure nfs
+- name: Configure backup destination
 
-  hosts: rpia
+  hosts: backup
+
+  vars:
+
+    export_path: /exports
 
   tasks:
 
@@ -21,7 +25,7 @@
     - name: Mount storage device
       become: yes
       mount:
-        path: /exports
+        path: "{{ export_path }}"
         src: UUID=96F4F672F4F653C9
         fstype: ntfs-3g
         opts: umask=000,auto,rw,nofail
@@ -35,7 +39,7 @@
       vars:
         nfs_exports:
           - "/ *(ro,fsid=0)"
-          - "/exports *(rw,no_subtree_check,no_root_squash)"
+          - "{{ export_path }} *(rw,no_subtree_check,no_root_squash)"
 
     - name: Restart nfs
       become: yes

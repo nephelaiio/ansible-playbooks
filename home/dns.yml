@@ -13,7 +13,7 @@
 
 - name: configure dns authoritative servers
 
-  hosts: rpic
+  hosts: authoritative
 
   become: yes
 
