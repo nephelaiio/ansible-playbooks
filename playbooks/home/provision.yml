@@ -1,0 +1,8 @@
+---
+- name: Provision vms
+
+  hosts: kvm
+
+  tasks:
+
+    - include: ../kvm.yml

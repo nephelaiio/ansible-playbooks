@@ -1,14 +1,16 @@
 ---
+- include: home/provision.yml
+
+- include: home/images.yml
+
 - include: home/raspberry.yml
 
-- include: home/dns.yml
+- include: home/nuc.yml
 
-- include: home/unifi.yml
+- include: home/dns.yml
 
 - include: home/nfs.yml
 
 - include: home/sensu.yml
 
-- include: home/images.yml
-
-- include: home/nuc.yml
+- include: home/unifi.yml
