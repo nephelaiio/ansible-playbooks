@@ -10,7 +10,7 @@
     ubuntu_hosts:
       - host: iml-700-102.true.local
         interface:
-          static: true # true | false
+          static: true  # true | false
           ipaddress: 10.40.0.22
           netmask: 255.255.255.0
           gateway: 10.40.0.254
