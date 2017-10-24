@@ -5,20 +5,31 @@
 
   vars:
 
-    ubuntu_installer_release: "16.04.3"
-    ubuntu_installer_timezone: America/Costa_Rica
-    ubuntu_installer_release: "{{ ubuntu_release_xenial }}"
-    ubuntu_installer_target_dir: "../../files/images"
+    ubuntu_release_xenial: "16.04.3"
+    ubuntu_release_aartful: "17.10"
+    ubuntu_timezone: America/Costa_Rica
+    ubuntu_image_dir: "{{ playbook_dir }}/../../files/images"
+    ubuntu_hosts:
+      - host: nuca.home.nephelai.io
+        interface:
+          static: false  # true | false
+        disk: /dev/nvme0n1
+        release: "{{ ubuntu_release_xenial }}"
+        timezone: "{{ ubuntu_timezone }}"
 
   tasks:
 
     - include_role:
         name: nephelaiio.ubuntu-installer
       vars:
-        ubuntu_installer_hostname: nuca.home.nephelai.io
-        ubuntu_installer_interface:
-          static: false
-        ubuntu_installer_disk: /dev/nvme0n1
+        ubuntu_installer_hostname: "{{ hostitem.host }}"
+        ubuntu_installer_interface: "{{ hostitem.interface }}"
+        ubuntu_installer_disk: "{{ hostitem.disk }}"
+        ubuntu_installer_release: "{{ hostitem.release }}"
+        ubuntu_installer_target_dir: "{{ ubuntu_image_dir }}"
+      loop_control:
+        loop_var: hostitem
+      with_items: "{{ ubuntu_hosts }}"
 
 
 
