@@ -1,4 +1,0 @@
----
-- include: work/provision.yml
-
-- include: work/workstation.yml

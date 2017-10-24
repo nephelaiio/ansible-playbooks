@@ -12,7 +12,7 @@
 
 - name: Configure sensu clients
 
-  hosts: home
+  hosts: all
 
   vars:
     sensu_server: false
