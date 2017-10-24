@@ -1,8 +1,6 @@
 ---
 - include: home/provision.yml
 
-- include: home/images.yml
-
 - include: home/raspberry.yml
 
 - include: home/nuc.yml

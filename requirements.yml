@@ -39,3 +39,5 @@
   version: 1.0.8
 - src: nephelaiio.golang
   version: 1.0.1
+- src: nephelaiio.ubuntu-installer
+  version: 1.0.1

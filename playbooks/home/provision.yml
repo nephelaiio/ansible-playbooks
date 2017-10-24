@@ -1,4 +1,72 @@
 ---
+- name: Create nuc images
+
+  hosts: localhost
+
+  vars:
+
+    ubuntu_installer_release: "16.04.3"
+    ubuntu_installer_timezone: America/Costa_Rica
+    ubuntu_installer_release: "{{ ubuntu_release_xenial }}"
+    ubuntu_installer_target_dir: "../../files/images"
+
+  tasks:
+
+    - include_role:
+        name: nephelaiio.ubuntu-installer
+      vars:
+        ubuntu_installer_hostname: nuca.home.nephelai.io
+        ubuntu_installer_interface:
+          static: false
+        ubuntu_installer_disk: /dev/nvme0n1
+
+
+
+- name: Create raspbian images
+
+  hosts: localhost
+
+  vars:
+    raspbian_release: https://downloads.raspberrypi.org/raspbian_lite_latest
+    rasbian_timezone: America/Costa_Rica
+    raspbian_hosts:
+      - hostname: rpia.home.nephelai.io
+        ifaces:
+          - name: eth0
+            method: static
+            address: 192.168.0.10
+            netmask: 255.255.255.0
+            gateway: 192.168.0.1
+      - hostname: rpib.home.nephelai.io
+        ifaces:
+          - name: eth0
+            method: static
+            address: 192.168.0.9
+            netmask: 255.255.255.0
+            gateway: 192.168.0.1
+      - hostname: rpic.home.nephelai.io
+        ifaces:
+          - name: eth0
+            method: dhcp
+      - hostname: rpid.home.nephelai.io
+        ifaces:
+          - name: eth0
+            method: dhcp
+      - hostname: rpie.home.nephelai.io
+        ifaces:
+          - name: eth0
+            method: dhcp
+
+  tasks:
+
+    - include: ../images/raspbian.yml
+      static: no
+      vars:
+        raspbian_host: "{{ item.hostname }}"
+        raspbian_ifaces: "{{ item.ifaces }}"
+      with_items: "{{ raspbian_hosts }}"
+
+
 - name: Provision vms
 
   hosts: kvm
