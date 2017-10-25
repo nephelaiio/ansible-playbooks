@@ -1,12 +1,12 @@
 ---
 - include: home/provision.yml
 
-- include: home/raspberry.yml
+- include: raspberry.yml
 
 - include: home/dns.yml
 
 - include: home/nfs.yml
 
-- include: home/sensu.yml
+- include: sensu.yml
 
-- include: home/unifi.yml
+- include: unifi.yml

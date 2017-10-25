@@ -40,7 +40,7 @@
       become: yes
       copy:
         dest: /etc/rsyslog.conf
-        src: ../../files/raspberry/rsyslog.conf
+        src: ../files/raspberry/rsyslog.conf
       register: configure_rsyslog
 
     - name: Restart rsyslog
