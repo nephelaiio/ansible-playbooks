@@ -3,8 +3,6 @@
 
 - include: home/raspberry.yml
 
-- include: home/nuc.yml
-
 - include: home/dns.yml
 
 - include: home/nfs.yml

@@ -1,8 +1,0 @@
----
-- name: Upgrade nucs
-
-  hosts: nuc
-
-  tasks:
-
-    - include: ../upgrade.yml
