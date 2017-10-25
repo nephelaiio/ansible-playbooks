@@ -17,8 +17,6 @@
 
   tasks:
 
-    - include: ../upgrade.yml
-
     - name: Install Archlinux packages
       package:
         name: nfs-utils

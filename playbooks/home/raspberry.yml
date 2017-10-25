@@ -5,8 +5,6 @@
 
   tasks:
 
-    - include: ../upgrade.yml
-
     - name: Disable ipv6
       become: yes
       sysctl:

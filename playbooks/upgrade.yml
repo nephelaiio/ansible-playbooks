@@ -1,59 +1,65 @@
 ---
-- name: Install apt prerequisites
-  become: yes
-  apt:
-    name: aptitude
-    state: present
-  when: ansible_os_family == 'Debian'
+- name: Upgrade hosts
 
-- name: Upgrade apt
-  become: yes
-  apt:
-    upgrade: safe
-  when: ansible_os_family == 'Debian'
+  hosts: all
 
-- name: Upgrade pacman
-  become: yes
-  pacman:
-    upgrade: yes
-  when: ansible_os_family == 'Archlinux'
+  tasks:
 
-- name: Check pacaur
-  changed_when: false
-  become: no
-  stat:
-    path: /usr/bin/pacaur
-  register: pacaur
+    - name: Install apt prerequisites
+      become: yes
+      apt:
+        name: aptitude
+        state: present
+      when: ansible_os_family == 'Debian'
 
-- name: Upgrade pacaur
-  become: no
-  command: pacaur -Syu --noconfirm --noedit
-  when:
-    - ansible_os_family == 'Archlinux'
-    - pacaur.stat.executable
-    - false
+    - name: Upgrade apt
+      become: yes
+      apt:
+        upgrade: safe
+      when: ansible_os_family == 'Debian'
 
-- name: Find pacman orphans
-  changed_when: false
-  failed_when: false
-  become: yes
-  command: pacman -Qtdq
-  when:
-    - ansible_os_family == 'Archlinux'
-  register: orphans
+    - name: Upgrade pacman
+      become: yes
+      pacman:
+        upgrade: yes
+      when: ansible_os_family == 'Archlinux'
 
-- name: Remove pacman orphans
-  become: yes
-  command: pacman -Rns --noconfirm {{ orphans.stdout }}
-  when:
-    - ansible_os_family == 'Archlinux'
-    - orphans.stdout != ''
+    - name: Check pacaur
+      changed_when: false
+      become: no
+      stat:
+        path: /usr/bin/pacaur
+      register: pacaur
 
-- name: Upgrade yum
-  become: yes
-  yum:
-    name: '*'
-    state: latest
-  when: ansible_os_family == 'RedHat'
-  tags:
-    - skip_ansible_lint
+    - name: Upgrade pacaur
+      become: no
+      command: pacaur -Syu --noconfirm --noedit
+      when:
+        - ansible_os_family == 'Archlinux'
+        - pacaur.stat.executable
+        - false
+
+    - name: Find pacman orphans
+      changed_when: false
+      failed_when: false
+      become: yes
+      command: pacman -Qtdq
+      when:
+        - ansible_os_family == 'Archlinux'
+      register: orphans
+
+    - name: Remove pacman orphans
+      become: yes
+      command: pacman -Rns --noconfirm {{ orphans.stdout }}
+      when:
+        - ansible_os_family == 'Archlinux'
+        - orphans.stdout != ''
+
+    - name: Upgrade yum
+      become: yes
+      yum:
+        name: '*'
+        state: latest
+      when: ansible_os_family == 'RedHat'
+      tags:
+        - skip_ansible_lint
