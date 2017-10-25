@@ -108,6 +108,39 @@ kvm:
     default:
       path: /var/lib/libvirt/images
 
+raspbian_release: https://downloads.raspberrypi.org/raspbian_lite_latest
+rasbian_timezone: America/Costa_Rica
+raspbian_hosts:
+  - hostname: rpia.home.nephelai.io
+    ifaces:
+      - name: eth0
+        method: static
+        ip-address: "{{ hostvars['rpia']['ansible_ssh_host'] }}"
+        prefix: "{{ nets.home.netmask }}"
+        gateway: "{{ nets.home.router }}"
+  - hostname: rpib.home.nephelai.io
+    ifaces:
+      - name: eth0
+        method: static
+        ip-address: "{{ hostvars['rpib']['ansible_ssh_host'] }}"
+        prefix: "{{ nets.home.netmask }}"
+        gateway: "{{ nets.home.router }}"
+  - hostname: rpic.home.nephelai.io
+    ifaces:
+      - name: eth0
+        method: static
+        ip-address: "{{ hostvars['rpic']['ansible_ssh_host'] }}"
+        prefix: "{{ nets.home.netmask }}"
+        gateway: "{{ nets.home.router }}"
+  - hostname: rpid.home.nephelai.io
+    ifaces:
+      - name: eth0
+        method: dhcp
+  - hostname: rpie.home.nephelai.io
+    ifaces:
+      - name: eth0
+        method: dhcp
+
 dns:
   zones:
     home:

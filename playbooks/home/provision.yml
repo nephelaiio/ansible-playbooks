@@ -36,37 +36,6 @@
 
   hosts: localhost
 
-  vars:
-    raspbian_release: https://downloads.raspberrypi.org/raspbian_lite_latest
-    rasbian_timezone: America/Costa_Rica
-    raspbian_hosts:
-      - hostname: rpia.home.nephelai.io
-        ifaces:
-          - name: eth0
-            method: static
-            address: 192.168.0.10
-            netmask: 255.255.255.0
-            gateway: 192.168.0.1
-      - hostname: rpib.home.nephelai.io
-        ifaces:
-          - name: eth0
-            method: static
-            address: 192.168.0.9
-            netmask: 255.255.255.0
-            gateway: 192.168.0.1
-      - hostname: rpic.home.nephelai.io
-        ifaces:
-          - name: eth0
-            method: dhcp
-      - hostname: rpid.home.nephelai.io
-        ifaces:
-          - name: eth0
-            method: dhcp
-      - hostname: rpie.home.nephelai.io
-        ifaces:
-          - name: eth0
-            method: dhcp
-
   tasks:
 
     - include: ../images/raspbian.yml
