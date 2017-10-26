@@ -1,6 +1,6 @@
 ---
 - include: nuc.yml
-  
+
 
 - name: Create raspbian images
 
