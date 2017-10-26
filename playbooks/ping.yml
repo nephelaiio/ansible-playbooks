@@ -1,7 +1,0 @@
----
-- hosts: "{{ target_hosts }}"
-
-  tasks:
-
-  - name: ping
-    ping:

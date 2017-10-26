@@ -1,0 +1,23 @@
+---
+- import_play: nuc.yml
+  
+
+- name: Create raspbian images
+
+  hosts: localhost
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - include: raspbian.yml
+      static: no
+      vars:
+        raspbian_host: "{{ item.hostname }}"
+        raspbian_ifaces: "{{ item.ifaces }}"
+      with_items: "{{ raspbian_hosts }}"
+
+
+- import_play: kvm.yml

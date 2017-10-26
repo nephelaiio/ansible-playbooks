@@ -16,11 +16,11 @@
 - name: create image target directory
   file:
     state: directory
-    path: ../../files/images
+    path: files/images
 
 - name: register target raspbian iso file
   set_fact:
-    dest_img: "../../files/images/{{ raspbian_host }}.img"
+    dest_img: "files/images/{{ raspbian_host }}.img"
 
 - name: fetch raspbian source image
   get_url:
@@ -37,7 +37,7 @@
 
 - name: copy raspbian source image
   copy:
-    src: "../../files/images/{{ raspbian_img.files[0] }}"
+    src: "files/images/{{ raspbian_img.files[0] }}"
     dest: "{{ dest_img }}"
 
 - name: inspect raspbian root partition offset
@@ -101,7 +101,7 @@
 
 - name: configure interfaces
   template:
-    src: ../../templates/images/interface.j2
+    src: templates/images/interface.j2
     dest: "{{ tmpdir_dest.path }}/etc/network/interfaces.d/{{ iface.name }}"
   loop_control:
     loop_var: iface

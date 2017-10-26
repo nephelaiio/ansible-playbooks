@@ -8,7 +8,7 @@
     ubuntu_release_xenial: "16.04.3"
     ubuntu_release_aartful: "17.10"
     ubuntu_timezone: America/Costa_Rica
-    ubuntu_image_dir: "{{ playbook_dir }}/../../files/images"
+    ubuntu_image_dir: "files/images"
     ubuntu_hosts:
       - host: nuca.home.nephelai.io
         interface:
@@ -31,26 +31,3 @@
       loop_control:
         loop_var: hostitem
       with_items: "{{ ubuntu_hosts }}"
-
-
-- name: Create raspbian images
-
-  hosts: localhost
-
-  tasks:
-
-    - include: ../images/raspbian.yml
-      static: no
-      vars:
-        raspbian_host: "{{ item.hostname }}"
-        raspbian_ifaces: "{{ item.ifaces }}"
-      with_items: "{{ raspbian_hosts }}"
-
-
-- name: Provision vms
-
-  hosts: kvm
-
-  tasks:
-
-    - include: ../kvm.yml
