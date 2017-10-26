@@ -12,10 +12,10 @@ kvm_images:
     format: qcow2
 
 kolla_release: 5.0.0.0rc1
-kolla_installer: ../resources/kolla
+kolla_installer: resources/kolla
 
 awx_release: 1.0.0
-awx_installer: ../resources/awx
+awx_installer: resources/awx
 
 nets:
   home:
