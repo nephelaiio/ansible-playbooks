@@ -27,6 +27,7 @@
         ubuntu_installer_disk: "{{ hostitem.disk }}"
         ubuntu_installer_release: "{{ hostitem.release }}"
         ubuntu_installer_target_dir: "{{ ubuntu_image_dir }}"
+        ubuntu_installer_halt: 'true'
       loop_control:
         loop_var: hostitem
       with_items: "{{ ubuntu_hosts }}"
