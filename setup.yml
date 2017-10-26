@@ -6,7 +6,7 @@
   tasks:
 
     - name: Run ansible galaxy
-      local_action: command ansible-galaxy install -r ../requirements.yml -p ../galaxy/ --force
+      local_action: command ansible-galaxy install -r requirements.yml -p galaxy/ --force
 
     - name: Pull kolla repository
       local_action:
