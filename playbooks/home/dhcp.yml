@@ -28,7 +28,7 @@
 
     - name: Configure dhcp interfaces
       template:
-        src: ../../templates/dhcp/defaults.conf.j2
+        src: templates/dhcp/defaults.conf.j2
         dest: /etc/default/isc-dhcp-server
       vars:
         iface: "{{ ansible_default_ipv4.interface }}"
@@ -36,7 +36,7 @@
 
     - name: Configure dhcp
       template:
-        src: ../../templates/dhcp/dhcpd.conf.j2
+        src: templates/dhcp/dhcpd.conf.j2
         dest: /etc/dhcp/dhcpd.conf
       vars:
         omapikey: "{{ tsigkeys.omapi }}"
