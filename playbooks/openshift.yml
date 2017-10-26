@@ -1,6 +1,0 @@
----
-- hosts: openshift
-
-  roles:
-
-    - nephelaiio.docker
