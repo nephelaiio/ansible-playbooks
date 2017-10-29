@@ -30,7 +30,7 @@
 - src: nephelaiio.docker
   version: 1.0.2
 - src: nephelaiio.bind
-  version: 1.0.3
+  version: 1.0.5
 - src: nephelaiio.unifi-controller
   version: 1.0.2
 - src: nephelaiio.nfs
@@ -40,4 +40,4 @@
 - src: nephelaiio.golang
   version: 1.0.1
 - src: nephelaiio.ubuntu-installer
-  version: 1.0.3
+  version: 1.0.6
