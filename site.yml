@@ -1,0 +1,12 @@
+---
+- include: provision.yml
+
+- include: raspberry.yml
+
+- include: dns.yml
+
+- include: nfs.yml
+
+- include: sensu.yml
+
+- include: unifi.yml

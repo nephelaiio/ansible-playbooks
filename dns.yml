@@ -4,11 +4,14 @@
   hosts: recursors
 
   vars:
+
     bind_fwd_zones: "{{ dns.zones.values() | map(attribute='name') | list }}"
     bind_local_config: "{{ bind_fwd_zones | map('zone_fwd', servers.dns) | list }}"
 
   roles:
+
     - nephelaiio.bind
+    - nephelaiio.plugins
 
 
 - name: Configure pdns authoritative server
@@ -64,7 +67,7 @@
 
     - name: Configure powerdns
       template:
-        src: ../../templates/dns/pdns.conf.j2
+        src: dns/pdns.conf.j2
         dest: /etc/powerdns/pdns.conf
       vars:
         config: "{{ pdns.config }}"
@@ -73,7 +76,7 @@
 
     - name: Build database initialization script
       template:
-        src: ../../templates/dns/schema.sql.j2
+        src: dns/schema.sql.j2
         dest: "{{ tmpdir.path }}/schema.sql"
       changed_when: false
 
@@ -86,7 +89,7 @@
     - name: Build data initialization script
       changed_when: false
       template:
-        src: ../../templates/dns/data.sql.j2
+        src: dns/data.sql.j2
         dest: "{{ tmpdir.path }}/data.sql"
       vars:
         domains: "{{ pdns.domains }}"
