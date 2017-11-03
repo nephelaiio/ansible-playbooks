@@ -1,11 +1,11 @@
 auto {{ iface.name }}
 iface {{ iface.name }} inet {{ iface.method }}
-{% if iface.address is defined %}
-    address {{ iface.address }}
+{% if 'ip-address' in iface %}
+    address {{ iface['ip-address'] }}
 {% endif %}
-{% if iface.netmask is defined %}
-    netmask {{ iface.netmask }}
+{% if 'prefix' in iface %}
+    netmask {{ iface['prefix'] }}
 {% endif %}
-{% if iface.gateway is defined %}
-    gateway {{ iface.gateway }}
+{% if 'gateway' in iface %}
+    gateway {{ iface['gateway'] }}
 {% endif %}

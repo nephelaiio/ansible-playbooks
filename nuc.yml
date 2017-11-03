@@ -1,75 +1,15 @@
 ---
-- name: Create nuc images
+- name: Configure nucs
 
-  hosts: localhost
+  hosts: nuc
 
-  roles:
-
-    - nephelaiio.plugins
-
-  vars:
-
-    ubuntu_release_xenial: "16.04.3"
-    ubuntu_release_aartful: "17.10"
-    ubuntu_timezone: America/Costa_Rica
-    ubuntu_image_dir: "{{ playbook_dir }}/files/images"
-    ubuntu_hosts:
-      - host: nuca.home.nephelai.io
-        interface:
-          static: false  # true | false
-        disk: /dev/nvme0n1
-        release: "{{ ubuntu_release_xenial }}"
-        timezone: "{{ ubuntu_timezone }}"
+  become: yes
 
   tasks:
 
-    - name: inspect current user
-      command: whoami
-      changed_when: false
-      register: inspect_username
-
-    - name: define target user
-      set_fact:
-        target_username: "{{ inspect_username.stdout }}"
-
-    - name: inspect current user pass
-      command: "getent shadow {{ inspect_username.stdout }}"
-      become: yes
-      changed_when: false
-      register: inspect_password
-
-    - name: define target password
-      set_fact:
-        target_password: "{{ inspect_password.stdout | split_with(':') | tail | head }}"
-
-    - name: inspect current user ssh key
-      command: "cat ~{{ target_username }}/.ssh/id_rsa.pub"
-      register: inspect_sshkey
-      changed_when: false
-
-    - name: create ssh key for current user
-      command: "ssh-keygen -b 2048 -t rsa -f ~{{ target_username }}/.ssh/id_rsa.pub -q -N ''"
-      args:
-        creates: "~{{ target_username }}/.ssh/id_rsa.pub"
-      when:
-        - (inspect_sshkey | trim == '')
-
-    - name: define default ssh key
-      set_fact:
-        target_sshkey: "{{ inspect_sshkey.stdout }}"
-
-    - include_role:
-        name: nephelaiio.ubuntu-installer
+    - name: Configure remote logging
+      include_role:
+        name: alekseyp.papertrail
       vars:
-        ubuntu_installer_hostname: "{{ hostitem.host }}"
-        ubuntu_installer_interface: "{{ hostitem.interface }}"
-        ubuntu_installer_disk: "{{ hostitem.disk }}"
-        ubuntu_installer_release: "{{ hostitem.release }}"
-        ubuntu_installer_target_dir: "{{ ubuntu_image_dir }}"
-        ubuntu_installer_halt: 'true'
-        ubuntu_installer_username: "{{ target_username }}"
-        ubuntu_installer_password: "{{ target_password }}"
-        ubuntu_installer_sshkey: "{{ target_sshkey }}"
-      loop_control:
-        loop_var: hostitem
-      with_items: "{{ ubuntu_hosts }}"
+        papertrail_destination: "{{ papertrail.destination }}"
+

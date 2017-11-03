@@ -3,10 +3,11 @@
 
   hosts: raspberry
 
+  become: yes
+
   tasks:
 
     - name: Disable ipv6
-      become: yes
       sysctl:
         name: "{{ item }}"
         state: present
@@ -25,26 +26,22 @@
         ntp_manage_config: true
 
     - name: Install rpi-update
-      become: yes
       apt:
         name: rpi-update
         state: latest
         update_cache: yes
 
     - name: Upgrade firmware
-      become: yes
       shell: rpi-update
       changed_when: false
 
     - name: Fix rsyslog
-      become: yes
       copy:
         dest: /etc/rsyslog.conf
         src: raspberry/rsyslog.conf
       register: configure_rsyslog
 
     - name: Restart rsyslog
-      become: yes
       when: configure_rsyslog.changed
       service:
         name: rsyslog
@@ -57,14 +54,12 @@
         papertrail_destination: "{{ papertrail.destination }}"
 
     - name: Install fail2ban
-      become: yes
       apt:
         name: fail2ban
         state: latest
         update_cache: yes
 
     - name: Configure fail2ban networks
-      become: yes
       lineinfile:
         regexp: '^ignoreip ='
         line: "ignoreip = 127.0.0.1/8, {{ network | ipaddr('net') }}"
@@ -75,21 +70,18 @@
       register: configure_fail2ban
 
     - name: Restart fail2ban
-      become: yes
       when: configure_fail2ban.changed
       service:
         name: fail2ban
         state: restarted
 
     - name: Manage fail2ban services
-      become: yes
       service:
         name: fail2ban
         state: started
         enabled: yes
 
     - name: Disable ssh password logins
-      become: yes
       lineinfile:
         regexp: '^#?PasswordAuthentication'
         line: "PasswordAuthentication no"
@@ -97,7 +89,6 @@
       register: configure_ssh
 
     - name: Restart ssh
-      become: yes
       when: configure_ssh.changed
       service:
         name: ssh
