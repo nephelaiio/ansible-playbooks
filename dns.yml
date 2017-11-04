@@ -16,7 +16,7 @@
 
 - name: Configure pdns authoritative server
 
-  hosts: rpic
+  hosts: pdns
 
   become: yes
 

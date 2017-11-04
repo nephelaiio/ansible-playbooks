@@ -1,0 +1,171 @@
+---
+nets:
+  home:
+    network: 192.168.0.0
+    netmask: 255.255.255.0
+    router: 192.168.0.1
+    zone: 0.168.192.in-addr.arpa
+    pools:
+      - range: '192.168.0.65 192.168.0.127'
+    reservations:
+      - host: "{{ hostvars['cerberus']['ansible_hostname'] }}"
+        ip-address: 192.168.0.11
+        hw-address: ae:77:35:db:a0:17
+      - host: "{{ hostvars['rpia']['ansible_hostname'] }}"
+        ip-address: "{{ hostvars['rpia']['ansible_host'] }}"
+        hw-address: b8:27:eb:10:54:87
+      - host: "{{ hostvars['rpib']['ansible_hostname'] }}"
+        ip-address: "{{ hostvars['rpib']['ansible_host'] }}"
+        hw-address: b8:27:eb:40:6b:19
+      - host: "{{ hostvars['rpic']['ansible_hostname'] }}"
+        ip-address: "{{ hostvars['rpic']['ansible_host'] }}"
+        hw-address: b8:27:eb:68:b9:3a
+      - host: "{{ hostvars['rpid']['ansible_hostname'] }}"
+        ip-address: "{{ hostvars['rpid']['ansible_host'] }}"
+        hw-address: b8:27:eb:09:a3:cf
+      - host: "{{ hostvars['rpie']['ansible_hostname'] }}"
+        ip-address: "{{ hostvars['rpie']['ansible_host'] }}"
+        hw-address: b8:27:eb:ea:4e:6d
+      - host: "{{ hostvars['nuca']['ansible_hostname'] }}"
+        ip-address: "{{ hostvars['nuca']['ansible_host'] }}"
+        hw-address: 94:c6:91:15:54:19
+
+kvm_images:
+  xenial:
+    src: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
+    pool: default
+    format: qcow2
+  centos:
+    src: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2.xz
+    pool: default
+    format: qcow2
+
+kvm:
+  defaults:
+    vm:
+      state: present  # | recreate | absent
+      memory: 2048
+      cpu: 1
+      image: xenial
+      autostart: True
+      size: 10G
+      pool: default
+      nic:
+        name: enp0s3
+        type: bridge
+        net: br0
+        prefix: "{{ nets.home.netmask }}"
+        gateway: "{{ nets.home.router | ipaddr('address') }}"
+        nameservers: "{{ servers.recursors }}"
+    pool:
+      state: present
+      autostart: True
+  vms:
+    kvma:
+      cpu: 2
+      memory: 4096
+      name: kvma
+      nic:
+        hw-address: 52:54:00:94:37:21
+        ip-address: "{{ hostvars['kvma']['ansible_host'] }}"
+        host: "{{ hostvars['kvma']['ansible_hostname'] }}"
+    kvmb:
+      cpu: 2
+      memory: 4096
+      name: kvmb
+      nic:
+        hw-address: 52:54:00:94:37:22
+        ip-address: "{{ hostvars['kvmb']['ansible_host'] }}"
+        host: "{{ hostvars['kvmb']['ansible_hostname'] }}"
+    kvmc:
+      cpu: 2
+      memory: 4096
+      name: kvmc
+      state: present
+      nic:
+        hw-address: 52:54:00:94:37:23
+        ip-address: "{{ hostvars['kvmc']['ansible_host'] }}"
+        host: "{{ hostvars['kvmc']['ansible_hostname'] }}"
+  pools:
+    default:
+      path: /var/lib/libvirt/images
+
+dns:
+  zones:
+    home:
+      name: home.nephelai.io
+      hostmaster: master@home.nephelai.io
+      mx:
+        - name: rpia.home.nephelai.io
+      ns:
+        - name: rpic.home.nephelai.io
+      records: "{{ nets.home.reservations | list + (kvm.vms | map('extract', kvm.vms) | map (attribute='nic') | list ) }}"
+      cnames:
+        unifi.home.nephelai.io: rpib.home.nephelai.io
+        home.nephelai.io: rpia.home.nephelai.io
+        nfs.home.nephelai.io: rpia.home.nephelai.io
+    emoh:
+      name: "{{ nets.home.zone }}"
+      hostmaster: master@home.nephelai.io
+      ns:
+        - name: rpic.home.nephelai.io
+      mx: []
+      records: "{{ (nets.home.reservations | list + (kvm.vms | map('extract', kvm.vms) | map (attribute='nic') | list )) | map('reverse_record') | list }}"
+      cnames: []
+
+pdns:
+  config:
+    dnsupdate: yes
+    allow-dnsupdate-from: "{{ servers.dhcp | ipaddr('host') | join(' ') + ' 127.0.0.1/32' }}"
+    master: yes
+    setuid: pdns
+    setgid: pdns
+    slave: no
+    local-address: "{{ ansible_default_ipv4.address }}:53"
+    security-poll-suffix: ''
+  backends:
+    gmysql:
+      user: pdns
+      host: 127.0.0.1
+      password: "{{ passwords.mysql.pdns }}"
+      dbname: pdns
+  domains: "{{ dns.zones.values() }}"
+
+raspbian_release: https://downloads.raspberrypi.org/raspbian_lite_latest
+rasbian_timezone: America/Costa_Rica
+raspbian_hosts:
+  - hostname: "{{ hostvars['rpia']['ansible_hostname'] }}"
+    ifaces:
+      - name: eth0
+        method: static
+        ip-address: "{{ hostvars['rpia']['ansible_host'] }}"
+        prefix: "{{ nets.home.netmask }}"
+        gateway: "{{ nets.home.router }}"
+  - hostname: "{{ hostvars['rpib']['ansible_hostname'] }}"
+    ifaces:
+      - name: eth0
+        method: static
+        ip-address: "{{ hostvars['rpib']['ansible_host'] }}"
+        prefix: "{{ nets.home.netmask }}"
+        gateway: "{{ nets.home.router }}"
+  - hostname: "{{ hostvars['rpic']['ansible_hostname'] }}"
+    ifaces:
+      - name: eth0
+        method: static
+        ip-address: "{{ hostvars['rpic']['ansible_host'] }}"
+        prefix: "{{ nets.home.netmask }}"
+        gateway: "{{ nets.home.router }}"
+  - hostname: "{{ hostvars['rpid']['ansible_hostname'] }}"
+    ifaces:
+      - name: eth0
+        method: static
+        ip-address: "{{ hostvars['rpid']['ansible_host'] }}"
+        prefix: "{{ nets.home.netmask }}"
+        gateway: "{{ nets.home.router }}"
+  - hostname: "{{ hostvars['rpie']['ansible_hostname'] }}"
+    ifaces:
+      - name: eth0
+        method: static
+        ip-address: "{{ hostvars['rpie']['ansible_host'] }}"
+        prefix: "{{ nets.home.netmask }}"
+        gateway: "{{ nets.home.router }}"

@@ -9,18 +9,55 @@
 
   tasks:
 
-    - name: Configure bridging
+    - name: configure bridging
       sysctl:
-        name: "{{ item }}"
-        value: 0
+        name: "{{ item.name }}"
+        value: "{{ item.value }}"
         state: present
         sysctl_set: yes
         reload: yes
       become: yes
       with_items:
-        - net.bridge.bridge-nf-call-ip6tables
-        - net.bridge.bridge-nf-call-iptables
-        - net.bridge.bridge-nf-call-arptables
+        - name: net.bridge.bridge-nf-call-ip6tables
+          value: 0
+        - name: net.bridge.bridge-nf-call-iptables
+          value: 0
+        - name: net.bridge.bridge-nf-call-arptables
+          value: 0
+        - name: net.ipv4.ip_forward
+          value: 1
+
+    - name: initialize iptables configuration
+      file:
+        path: /etc/iptables/iptables.rules
+        state: touch
+      become: yes
+
+    - name: start iptables
+      service:
+        name: iptables
+        state: started
+        enable: yes
+      become: yes
+
+    - name: configure nat
+      command: "{{ item }}"
+      become: yes
+      with_items:
+        - "/sbin/iptables -t nat -A POSTROUTING -o br0 -j MASQUERADE"
+        - "/sbin/iptables -A FORWARD -i br0 -o br1 -m state --state RELATED,ESTABLISHED -j ACCEPT"
+        - "/sbin/iptables -A FORWARD -i br1 -o br0 -j ACCEPT"
+
+    - name: save iptables configuration
+      shell: "iptables-save > {{ iptables_savefile }}"
+      become: yes
+
+    - name: configure iptables nat persistence
+      lineinfile:
+        path: /etc/network/interfaces
+        insertafter: '^iface br0 inet'
+        line: '    pre-up iptables-restore < /etc/network/iptables.rules'
+      become: yes
 
     - name: Install pacman requirements
       package:
