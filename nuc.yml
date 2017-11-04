@@ -12,4 +12,3 @@
         name: alekseyp.papertrail
       vars:
         papertrail_destination: "{{ papertrail.destination }}"
-
