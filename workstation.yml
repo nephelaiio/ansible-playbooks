@@ -52,3 +52,58 @@
         name: nfs-server
         state: restarted
       become: yes
+
+
+- name: Configure molecule test vm
+
+  hosts: molecule
+
+  roles:
+
+    - nephelaiio.tree
+    - nephelaiio.vim
+    - nephelaiio.devtools
+    - nephelaiio.rbenv
+    - nephelaiio.pyenv
+    - nephelaiio.tmux
+    - nephelaiio.vagrant
+    - nephelaiio.i3
+    - nephelaiio.docker
+
+  tasks:
+
+    - name: Install Archlinux packages
+      package:
+        name: nfs-utils
+      become: yes
+      when: ansible_os_family == 'Archlinux'
+      notify: restart_nfs
+
+    - name: Configure exports
+      lineinfile:
+        path: /etc/exports.d/ansible
+        insertafter: EOF
+        line: "{{ item.export }}"
+        state: "{{ item.state }}"
+        create: yes
+      with_items:
+        - export: "/home {{ nets.home.network }}/{{ nets.home.netmask }}(rw,sync,no_root_squash)"
+          state: present
+      become: yes
+      notify: restart_nfs
+
+    - name: Configure services
+      service:
+        name: nfs-server
+        state: started
+        enabled: yes
+      become: yes
+
+  handlers:
+
+    - name: Restart NFS
+      listen: restart_nfs
+      service:
+        name: nfs-server
+        state: restarted
+      become: yes

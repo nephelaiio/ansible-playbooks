@@ -3,6 +3,10 @@
 
   hosts: kvm
 
+  vars:
+
+    iptables_savefile: /etc/iptables/iptables.rules
+
   roles:
 
     - nephelaiio.plugins
@@ -37,7 +41,7 @@
       service:
         name: iptables
         state: started
-        enable: yes
+        enabled: yes
       become: yes
 
     - name: configure nat
@@ -50,13 +54,6 @@
 
     - name: save iptables configuration
       shell: "iptables-save > {{ iptables_savefile }}"
-      become: yes
-
-    - name: configure iptables nat persistence
-      lineinfile:
-        path: /etc/network/interfaces
-        insertafter: '^iface br0 inet'
-        line: '    pre-up iptables-restore < /etc/network/iptables.rules'
       become: yes
 
     - name: Install pacman requirements
@@ -137,9 +134,3 @@
         iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
       with_items: "{{ kvm.vms.values() }}"
       static: no
-
-    - name: Register VMs
-      include: kvm/vm_register.yml
-      vars:
-        vm: "{{ item }}"
-      with_items: "{{ kvm.vms.values() }}"

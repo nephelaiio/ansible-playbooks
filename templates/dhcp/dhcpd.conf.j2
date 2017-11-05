@@ -49,7 +49,7 @@ subnet {{ n.network }} netmask {{ n.netmask }} {
 zone {{ n.zone }} {
   primary {{ servers.dns | first }};
 }
-  {% for r in n.reservations %}
+  {% for r in n.reservations.values() %}
 host {{ r.host }} {
   hardware ethernet {{ r['hw-address'] }};
   fixed-address {{ r['ip-address'] }};
