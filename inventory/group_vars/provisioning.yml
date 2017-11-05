@@ -32,7 +32,7 @@ nets:
         host: "{{ hostvars['rpie']['ansible_hostname'] }}"
         ip-address: "{{ hostvars['rpie']['ansible_host'] }}"
         hw-address: b8:27:eb:ea:4e:6d
-      rpid:
+      nuca:
         host: "{{ hostvars['nuca']['ansible_hostname'] }}"
         ip-address: "{{ hostvars['nuca']['ansible_host'] }}"
         hw-address: 94:c6:91:15:54:19
