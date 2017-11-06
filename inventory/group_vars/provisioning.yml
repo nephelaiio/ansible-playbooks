@@ -48,7 +48,7 @@ nets:
         host: "{{ hostvars['nuca']['ansible_hostname'] }}"
         ip-address: "{{ hostvars['nuca']['ansible_host'] }}"
         hw-address: 52:54:00:94:37:21
-      
+
 kvm_images:
   xenial:
     src: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
