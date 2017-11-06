@@ -93,6 +93,7 @@ kvm:
         ip-address: "{{ hostvars['kvma']['ansible_host'] }}"
         host: "{{ hostvars['kvma']['ansible_hostname'] }}"
     kvmb:
+      state: recreate
       cpu: 2
       memory: 4096
       name: kvmb
@@ -101,6 +102,7 @@ kvm:
         ip-address: "{{ hostvars['kvmb']['ansible_host'] }}"
         host: "{{ hostvars['kvmb']['ansible_hostname'] }}"
     kvmc:
+      state: recreate
       cpu: 2
       memory: 4096
       name: kvmc
@@ -121,7 +123,7 @@ dns:
         - name: rpia.home.nephelai.io
       ns:
         - name: rpic.home.nephelai.io
-      records: "{{ nets.home.reservations.values() + (kvm.vms | map('extract', kvm.vms) | map (attribute='nic') | list ) }}"
+      records: "{{ nets.home.reservations.values() + (kvm.vms | map('extract', kvm.vms) | map(attribute='nic') | list ) }}"
       cnames:
         unifi.home.nephelai.io: rpib.home.nephelai.io
         home.nephelai.io: rpia.home.nephelai.io
@@ -132,7 +134,7 @@ dns:
       ns:
         - name: rpic.home.nephelai.io
       mx: []
-      records: "{{ (nets.home.reservations.values() + (kvm.vms | map('extract', kvm.vms) | map (attribute='nic') | list )) | map('reverse_record') | list }}"
+      records: "{{ (nets.home.reservations.values() + (kvm.vms | map('extract', kvm.vms) | map(attribute='nic') | list )) | map('reverse_record') | list }}"
       cnames: []
 
 pdns:

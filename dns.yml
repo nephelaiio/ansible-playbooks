@@ -13,6 +13,12 @@
     - nephelaiio.bind
     - nephelaiio.plugins
 
+  tasks:
+
+    - name: flush cache
+      command: rndc flush
+      become: yes
+
 
 - name: Configure pdns authoritative server
 
