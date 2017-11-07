@@ -44,13 +44,27 @@
         enabled: yes
       become: yes
 
-    - name: configure nat
-      command: "{{ item }}"
+    - name: configure nat forwarding
+      iptables:
+        table: nat
+        chain: POSTROUTING
+        out_interface: br0
+        jump: MASQUERADE
       become: yes
-      with_items:
-        - "/sbin/iptables -t nat -A POSTROUTING -o br0 -j MASQUERADE"
-        - "/sbin/iptables -A FORWARD -i br0 -o br1 -m state --state RELATED,ESTABLISHED -j ACCEPT"
-        - "/sbin/iptables -A FORWARD -i br1 -o br0 -j ACCEPT"
+
+    - name: configure nat forwarding
+      iptables:
+        chain: FORWARD
+        in_interface: br1
+        jump: ACCEPT
+      become: yes
+
+    - name: configure nat forwarding
+      iptables:
+        chain: FORWARD
+        out_interface: br1
+        jump: ACCEPT
+      become: yes
 
     - name: save iptables configuration
       shell: "iptables-save > {{ iptables_savefile }}"
