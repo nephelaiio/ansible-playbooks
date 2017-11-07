@@ -131,20 +131,18 @@
     - meta: flush_handlers
 
     - name: Destroy VMs
-      include: kvm/vm_destroy.yml
+      include_tasks: kvm/vm_destroy.yml
       vars:
         vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
         pool: "{{ kvm.pools[vm.pool].path }}"
         iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
       with_items: "{{ kvm.vms.values() }}"
-      static: no
 
     - name: Create VMs
-      include: kvm/vm_create.yml
+      include_tasks: kvm/vm_create.yml
       vars:
         vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
         img: "{{ kvm_images[vm.image].src | basename | with_ext(kvm_images[vm.image].format) }}"
         pool: "{{ kvm.pools[vm.pool].path }}"
         iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
       with_items: "{{ kvm.vms.values() }}"
-      static: no

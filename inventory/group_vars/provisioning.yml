@@ -10,7 +10,7 @@ nets:
     reservations:
       cerberus:
         host: "{{ hostvars['cerberus']['ansible_hostname'] }}"
-        ip-address: 192.168.0.11
+        ip-address: "{{ hostvars['cerberus']['ansible_host'] }}"
         hw-address: ae:77:35:db:a0:17
       rpia:
         host: "{{ hostvars['rpia']['ansible_hostname'] }}"
@@ -39,14 +39,14 @@ nets:
   private:
     network: 192.168.254.0
     netmask: 255.255.255.0
-    router: 192.168.0.1
+    router: 192.168.254.1
     zone: 0.168.192.in-addr.arpa
     pools:
       - range: '192.168.254.65 192.168.254.127'
     reservations:
       kvma:
-        host: "{{ hostvars['nuca']['ansible_hostname'] }}"
-        ip-address: "{{ hostvars['nuca']['ansible_host'] }}"
+        host: "{{ hostvars['kvma']['ansible_hostname'] }}"
+        ip-address: "{{ hostvars['kvma']['ansible_host'] }}"
         hw-address: 52:54:00:94:37:21
 
 kvm_images:
@@ -93,7 +93,7 @@ kvm:
         ip-address: "{{ hostvars['kvma']['ansible_host'] }}"
         host: "{{ hostvars['kvma']['ansible_hostname'] }}"
     kvmb:
-      state: recreate
+      state: absent
       cpu: 2
       memory: 4096
       name: kvmb
@@ -102,7 +102,7 @@ kvm:
         ip-address: "{{ hostvars['kvmb']['ansible_host'] }}"
         host: "{{ hostvars['kvmb']['ansible_hostname'] }}"
     kvmc:
-      state: recreate
+      state: absent
       cpu: 2
       memory: 4096
       name: kvmc

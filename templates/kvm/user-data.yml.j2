@@ -17,8 +17,6 @@ packages:
 apt:
   disable_suites:
     - backports
-  http_proxy: "{{ apt_proxy_uri }}"
-  https_proxy: "{{ apt_proxy_uri }}"
 runcmd:
   - [ sh, -c, "echo 127.0.1.1 {{ fqdn }} {{ hostname }} >> /etc/hosts" ] 
 {% if 'ip-address' in iface %}
