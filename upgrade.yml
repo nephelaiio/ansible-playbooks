@@ -1,7 +1,7 @@
 ---
 - name: Upgrade hosts
 
-  hosts: all
+  hosts: 'all:!noupgrade'
 
   tasks:
 
