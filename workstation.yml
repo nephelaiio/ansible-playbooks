@@ -39,13 +39,9 @@
   roles:
 
     - nephelaiio.plugins
+    - nephelaiio.docker
 
   tasks:
-
-    - name: configure nameservers
-      include_role:
-        name: ahuffman.resolv
-      become: yes
 
     - name: install development tools
       include_role:

@@ -12,8 +12,6 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     ssh-authorized-keys:
       - {{ ssh_key }}
-packages:
-  - python-minimal
 apt:
   disable_suites:
     - backports
@@ -27,3 +25,4 @@ runcmd:
 {% endif %}
   - [ sh, -c, "sed -i -e '/deb-src/d' /etc/apt/sources.list" ]
   - [ sh, -c, "echo 'ARRAY <ignore> devices=/dev/sda' >> /etc/mdadm/mdadm.conf" ]
+  - [ sh, -c, "apt install -y python-minimal" ]

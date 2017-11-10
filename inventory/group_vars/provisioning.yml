@@ -41,9 +41,10 @@ kvm:
         prefix: "{{ nets.private.netmask }}"
         gateway: "{{ nets.private.router }}"
         ip-address: "{{ hostvars['kvma']['ansible_host'] }}"
+        nameservers: "{{ servers.recursors }}"
         host: "{{ hostvars['kvma']['ansible_hostname'] }}"
     kvmb:
-      state: absent
+      state: recreate
       cpu: 2
       memory: 4096
       name: kvmb
@@ -52,7 +53,7 @@ kvm:
         ip-address: "{{ hostvars['kvmb']['ansible_host'] }}"
         host: "{{ hostvars['kvmb']['ansible_hostname'] }}"
     kvmc:
-      state: absent
+      state: recreate
       cpu: 2
       memory: 4096
       name: kvmc
