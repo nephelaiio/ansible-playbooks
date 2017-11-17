@@ -1,79 +1,78 @@
 ---
-- name: install awx
+- name: Install reverse proxy
 
-  hosts: localhost
+  hosts: revproxy
+
+  become: yes
+
+  roles:
+
+    - geerlingguy.apache
 
   vars:
-    awx_hosts:
-      kvma.home.nephelai.io:
-        ansible_connection: kvma.home.nephelai.io
 
-    awx_vars:
-      postgres_data_dir: /opt/awx/pgdata
-      host_port: 80
-      awx_secret_key: awxsecret
+    apache_create_vhosts: true
+    apache_remove_default_vhost: true
+    apache_vhosts_filename: 004-awx.conf
+    apache_vhosts_template: apache/revproxy.conf.j2
+    apache_mods_enabled:
+      - proxy.load
+      - proxy_http.load
+      - proxy_balancer.load
+      - lbmethod_bytraffic.load
+    proxy_port: 80
+    proxy_virtualhost: "*:{{ proxy_port }}"
+    proxy_servername: "{{ awx_url | urlsplit('hostname') }}"
+    proxy_admin: tedc@imail.ag
+    proxy_backend_proto: "http"
+    proxy_backend_members: "{{ groups['docker_swarm'] | map('extract', hostvars, ['ansible_host']) | list }}"
+    proxy_backend_port: "80"
+
+     
+- name: Install awx
+
+  hosts: docker_swarm_manager
+
+  become: yes
+
+  vars:
+
+    awx_task_image: 'ansible/awx_task:latest'
+    awx_web_image: 'ansible/awx_web:latest'
+    awx_postgres_image: 'postgres:9.6'
+    awx_rabbitmq_image: 'rabbitmq:3'
+    awx_memcached_image: 'memcached:alpine'
 
   tasks:
-
-    - name: install pacman dependencies
-      pacman:
-        name:
-          - rsync
-        state: present
-      when: ansible_os_family == 'Archlinux'
-      become: yes
-
-    - name: install pip dependencies
-      pip:
-        name: ansible
-        state: present
-      become: yes
 
     - name: create temporary directory
       tempfile:
         state: directory
-        prefix: awx
+        suffix: awx
       register: tmpdir
-      changed_when: false
 
-    - name: copy awx installer
-      synchronize:
-        src: "{{ awx_installer }}/"
-        dest: "{{tmpdir.path }}/"
-      changed_when: false
+    - name: pull docker images
+      docker_image:
+        name: "{{ item }}"
+      with_items:
+        - "{{ awx_task_image }}"
+        - "{{ awx_web_image }}"
+        - "{{ awx_postgres_image }}"
+        - "{{ awx_rabbitmq_image }}"
+        - "{{ awx_memcached_image }}"
 
-    - name: create inventory directory
-      file:
-        state: directory
-        path: "{{ tmpdir.path }}/inventory"
-      changed_when: false
+    - name: register docker stack destination
+      set_fact:
+        awx_stack_file: "{{ tmpdir.path }}/awx.yml"
+        awx_stack_name: "awx"
 
-    - name: create inventory hosts file
-      copy:
-        dest: "{{ tmpdir.path }}/inventory/hosts.yml"
-        content: "---\n{{ awx_hosts | to_nice_yaml(indent=2) }}"
-      changed_when: false
+    - name: create awx stack template
+      template:
+        src: docker/awx.yml.j2
+        dest: "{{ awx_stack_file }}"
+      vars:
+        awx_secret_key: "ohsosecret"
+        awx_postgres_pass: "ohsosecret"
 
-    - name: create inventory group_vars directory
-      file:
-        state: directory
-        path: "{{ tmpdir.path }}/inventory/group_vars"
-      changed_when: false
-
-    - name: create inventory group file
-      copy:
-        dest: "{{ tmpdir.path }}/inventory/group_vars/all.yml"
-        content: "---\n{{ awx_vars | to_nice_yaml(indent=2) }}"
-      changed_when: false
-
-    - name: run awx installer
-      command: ansible-playbook -i inventory/ installer/install.yml
-      args:
-        chdir: "{{ tmpdir.path }}"
-
-    - name: remove temporary directory
-      file:
-        path: "{{ tmpdir.path }}"
-        state: absent
-      become: yes
-      changed_when: false
+    - name: create awx swarm stack
+      command: "docker stack deploy -c {{ awx_stack_file }} {{ awx_stack_name }}"
