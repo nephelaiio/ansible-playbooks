@@ -1,0 +1,107 @@
+version: '3'
+
+services:
+  postgres:
+    image: "{{ awx_postgres_image | default('postgres:9.6') }}"
+    deploy:
+      replicas: {{ awx_postgres_replicas | default('1') }}
+      resources:
+        limits:
+          cpus: "{{ awx_postgres_cpus | default('1') }}"
+          memory: {{ awx_postgres_mem | default('1G') }}
+      restart_policy:
+        condition: on-failure
+    environment:
+      SECRET_KEY: {{ awx_secret_key }}
+      POSTGRES_DB: {{ awx_postgres_db | default('awx') }}
+      POSTGRES_USER: {{ awx_postgres_user | default('awx') }}
+      POSTGRES_PASSWORD: {{ awx_postgres_pass }}
+
+  rabbitmq:
+    image: "{{ awx_rabbitmq_image | default('rabbitmq:3') }}"
+    deploy:
+      replicas: {{ awx_rabbitmq_replicas | default('1') }}
+      resources:
+        limits:
+          cpus: "{{ awx_rabbitmq_cpus | default('1') }}"
+          memory: {{ awx_rabbitmq_memory | default('1G') }}
+      restart_policy:
+        condition: on-failure
+    environment:
+      RABBITMQ_DEFAULT_VHOST: {{ awx_rabbitmq_vhost | default('awx') }}
+
+  memcached:
+    image: "{{ awx_memcached_image | default('memcached:alpine') }}"
+    deploy:
+      replicas: {{ awx_memcached_replicas | default('1') }}
+      resources:
+        limits:
+          cpus: "{{ awx_memcached_cpus | default('0.1') }}"
+          memory: {{ awx_memcached_mem | default('1G') }}
+      restart_policy:
+        condition: on-failure
+
+  awx_web:
+    image: "{{ awx_web_image | default('ansible/awx_web:latest') }}"
+    deploy:
+      replicas: {{ awx_web_replicas | default('1') }}
+      resources:
+        limits:
+          cpus: "{{ awx_web_cpus | default('1') }}"
+          memory: {{ awx_web_mem | default('2G') }}
+      restart_policy:
+        condition: on-failure
+    links:
+      - rabbitmq
+      - memcached
+      - postgres
+    hostname: awxweb
+    user: root
+    environment:
+      SECRET_KEY: {{ awx_secret_key }}
+      DATABASE_NAME: {{ awx_postgres_db | default('awx') }}
+      DATABASE_USER: {{ awx_postgres_user | default('awx') }}
+      DATABASE_PASSWORD: {{ awx_postgres_pass }}
+      DATABASE_PORT: {{ awx_postgres_pass | default('5432') }}
+      DATABASE_HOST: {{ awx_postgres_host | default('postgres') }}
+      RABBITMQ_USER: {{ awx_rabbitmq_user | default('guest') }}
+      RABBITMQ_PASSWORD: {{ awx_rabbitmq_pass | default('guest') }}
+      RABBITMQ_HOST: {{ awx_rabbitmq_host | default('rabbitmq') }}
+      RABBITMQ_PORT: {{ awx_rabbitmq_port | default('5672') }}
+      RABBITMQ_VHOST: {{ awx_rabbitmq_vhost | default('awx') }}
+      MEMCACHED_HOST: {{ awx_memcached_host | default('memcached') }}
+      MEMCACHED_PORT: {{ awx_memcached_port | default('11211') }}
+
+  awx_task:
+    image: "{{ awx_task_image | default('ansible/awx_task:latest') }}"
+    deploy:
+      replicas: {{ awx_task_replicas | default('1') }}
+      resources:
+        limits:
+          cpus: "{{ awx_task_cpus | default('1') }}"
+          memory: {{ awx_task_mem | default('2G') }}
+      restart_policy:
+        condition: on-failure
+    links:
+      - rabbitmq
+      - memcached
+      - awx_web:awxweb
+      - postgres
+    hostname: awx
+    user: root
+    ports:
+      - "80:8052"
+    environment:
+      SECRET_KEY: {{ awx_secret_key }}
+      DATABASE_NAME: {{ awx_postgres_db | default('awx') }}
+      DATABASE_USER: {{ awx_postgres_user | default('awx') }}
+      DATABASE_PASSWORD: {{ awx_postgres_pass }}
+      DATABASE_PORT: {{ awx_postgres_port | default('5432') }}
+      DATABASE_HOST: {{ awx_postgres_host | default('postgres') }}
+      RABBITMQ_USER: {{ awx_rabbitmq_user | default('guest') }}
+      RABBITMQ_PASSWORD: {{ awx_rabbitmq_pass | default('guest') }}
+      RABBITMQ_HOST: {{ awx_rabbitmq_host | default('rabbitmq') }}
+      RABBITMQ_PORT: {{ awx_rabbitmq_port | default('5672') }}
+      RABBITMQ_VHOST: {{ awx_rabbitmq_vhost | default('awx') }}
+      MEMCACHED_HOST: {{ awx_memcached_host | default('memcached') }}
+      MEMCACHED_PORT: {{ awx_memcached_port | default('11211') }}

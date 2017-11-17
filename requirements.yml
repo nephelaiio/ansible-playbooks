@@ -3,6 +3,10 @@
   version: v1.2
 - src: alekseyp.papertrail
   version: v0.3
+- src: atosatto.docker-swarm
+  version: v1.3.2
+- src: geerlingguy.apache
+  version: 2.1.1
 - src: geerlingguy.nginx
   version: 2.5.0
 - src: geerlingguy.java

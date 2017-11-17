@@ -6,6 +6,7 @@ kolla_installer: resources/kolla
 
 awx_release: 1.0.0
 awx_installer: resources/awx
+awx_url: http://awx.home.nephelai.io
 
 servers:
   dhcp: "{{ groups['dhcp'] | map('extract', hostvars, ['ansible_host']) | list }}"
