@@ -35,8 +35,24 @@
             proxy_cache off;
             proxy_store off;
             location / {
-                proxy_pass https://unifi.home.nephelai.io:8443/;
-                }
+              proxy_redirect          off;
+              proxy_pass_header       Server;
+              proxy_set_header        X-Real-IP $remote_addr;
+              proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header        X-Scheme $scheme;
+              proxy_set_header        Host $http_host;
+              proxy_set_header        X-NginX-Proxy true;
+              proxy_connect_timeout   5;
+              proxy_read_timeout      240;
+              proxy_intercept_errors  on;
+              proxy_pass https://unifi.home.nephelai.io:8443/;
+              proxy_http_version 1.1;
+              proxy_set_header Upgrade $http_upgrade;
+              proxy_set_header Connection "upgrade";
+              if ($scheme = http) {
+                return 301 https://$server_name$request_uri; #CHANGE THIS (uncomment) after cert installation
+              }
+            }
         home_http:
           listen: "80"
           server_name: home.nephelai.io
@@ -49,19 +65,19 @@
 
   tasks:
 
-    - name: Install unifi
+    - name: install unifi
       become: yes
       include_role:
         name: nephelaiio.unifi-controller
 
-    - name: Create vhost roots
+    - name: create vhost roots
       become: yes
       file:
         state: directory
         path: "{{ item }}"
       with_items: "{{ nginx.vhosts.values() | map(attribute='root') | list }}"
 
-    - name: Install nginx
+    - name: install nginx
       become: yes
       include_role:
         name: geerlingguy.nginx
@@ -70,27 +86,27 @@
         nginx_vhosts:
           - "{{ nginx.vhosts.home_http }}"
 
-    - name: Install certbot
+    - name: install certbot
       become: yes
       get_url:
         url: "{{ certbot.url }}"
         dest: "{{ certbot.bin }}"
 
-    - name: Set certbot permissions
+    - name: set certbot permissions
       become: yes
       file:
         path: "{{ certbot.bin }}"
         state: file
         mode: 0755
 
-    - name: Run certbot
+    - name: run certbot
       become: yes
       command: "{{ certbot.bin }} --nginx certonly -q -d {{ item }} --email {{ certbot.email }} --agree-tos"
       args:
         creates: "/etc/letsencrypt/live/{{ item }}"
       with_items: "{{ nginx.vhosts.values() | map(attribute='server_name') | list }}"
 
-    - name: Install certbot cronjob
+    - name: install certbot cronjob
       become: yes
       cron:
         name: renew letsencrypt certificates
@@ -99,7 +115,7 @@
         cron_file: certbot
         job: "{{ certbot.bin }} -q renew"
 
-    - name: Install nginx
+    - name: configure nginx
       become: yes
       include_role:
         name: geerlingguy.nginx
