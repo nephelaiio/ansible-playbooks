@@ -57,11 +57,7 @@ nets:
     zone: 0.168.192.in-addr.arpa
     pools:
       - range: '192.168.254.65 192.168.254.127'
-    reservations:
-      kvma:
-        host: "{{ hostvars['kvma']['ansible_hostname'] }}"
-        ip-address: "{{ hostvars['kvma']['ansible_host'] }}"
-        hw-address: 52:54:00:94:37:21
+    reservations: []
 
 dns:
   zones:
