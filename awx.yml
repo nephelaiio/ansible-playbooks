@@ -28,7 +28,7 @@
     proxy_backend_members: "{{ groups['docker_swarm'] | map('extract', hostvars, ['ansible_host']) | list }}"
     proxy_backend_port: "80"
 
-     
+
 - name: Install awx
 
   hosts: docker_swarm_manager
