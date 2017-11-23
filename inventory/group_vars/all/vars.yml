@@ -13,6 +13,8 @@ servers:
   recursors: "{{ groups['recursors'] | map('extract', hostvars, ['ansible_host']) | list }}"
   dns: "{{ groups['pdns'] | map('extract', hostvars, ['ansible_host']) | list }}"
 
+apt_url: http://apt.home.nephelai.io
+
 nets:
   home:
     network: 192.168.0.0
@@ -70,9 +72,10 @@ dns:
         - name: rpic.home.nephelai.io
       records: "{{ nets.home.reservations.values() }}"
       cnames:
-        unifi.home.nephelai.io: rpib.home.nephelai.io
         home.nephelai.io: rpia.home.nephelai.io
-        nfs.home.nephelai.io: rpia.home.nephelai.io
+        unifi.home.nephelai.io: "{{ groups['unifi'] | map('extract', hostvars, ['ansible_hostname']) | list | first }}"
+        nfs.home.nephelai.io: "{{ groups['backup'] | map('extract', hostvars, ['ansible_hostname']) | list | first }}"
+        apt.home.nephelai.io: "{{ groups['mirror'] | map('extract', hostvars, ['ansible_hostname']) | list | first }}"
     emoh:
       name: "{{ nets.home.zone }}"
       hostmaster: master@home.nephelai.io
