@@ -9,13 +9,21 @@
 
   vars:
 
+    apache_packages:
+      - apache2
+    apache_services:
+      - apache2
     apache_root: /var/www/html/mirror
     apache_conf_root: /etc/apache2
+    apache_vhost_filename: 003-mirror.conf
+    apache_vhost_template: apache/mirror.conf.j2
     ubuntu_mirror: archive.ubuntu.com
     ubuntu_mirror_list: /etc/apt/mirror.list
     ubuntu_mirror_path: "/var/spool/apt-mirror/mirror/{{ ubuntu_mirror }}/ubuntu"
-    apache_vhost_filename: 003-mirror.conf
-    apache_vhost_template: apache/mirror.conf.j2
+    mirror_packages:
+      - apt-mirror
+      - apt-transport-https
+      - util-linux
     mirror_root: "{{ apache_root }}"
     mirror_vhost: "*:80"
     mirror_servername: "{{ apt_url | urlsplit('hostname') }}"
@@ -24,11 +32,8 @@
 
     - name: install apt mirror packages
       package:
-        name:
-          - apt-mirror
-          - apache2
-          - apt-transport-https
-          - util-linux
+        name: "{{ mirror_packages }}"
+        state: present
 
     - name: remove deb-src mirrors
       lineinfile:
@@ -72,15 +77,31 @@
 
     - name: install apache
       package:
-        name: apache2
+        name: "{{ apache_packages }}"
         state: present
 
     - name: manage apache virtualhost
       template:
         src: "{{ apache_vhost_template }}"
         dest: "{{ apache_conf_root }}/sites-available/{{ apache_vhost_filename }}"
+      notify: restart apache
+
+    - name: enable apache virtualhost
+      file:
+        src: "{{ apache_conf_root }}/sites-available/{{ apache_vhost_filename }}"
+        dest: "{{ apache_conf_root }}/sites-enabled/{{ apache_vhost_filename }}"
+        state: link
+      notify: restart apache
 
     - name: drop default apache vhost
       file:
         path: "{{ apache_conf_root }}/sites-enabled/000-default.conf"
         state: absent
+      notify: restart apache
+
+  handlers:
+
+    - name: restart apache
+      service:
+        name: "{{ item }}"
+      with_items: "{{ apache_services }}"
