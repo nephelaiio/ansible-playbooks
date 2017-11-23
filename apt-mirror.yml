@@ -1,0 +1,86 @@
+---
+- name: Configure local package mirror
+
+  hosts: mirror
+
+  environment: "{{ proxy_env | default({}) }}"
+
+  become: yes
+
+  vars:
+
+    apache_root: /var/www/html/mirror
+    apache_conf_root: /etc/apache2
+    ubuntu_mirror: archive.ubuntu.com
+    ubuntu_mirror_list: /etc/apt/mirror.list
+    ubuntu_mirror_path: "/var/spool/apt-mirror/mirror/{{ ubuntu_mirror }}/ubuntu"
+    apache_vhost_filename: 003-mirror.conf
+    apache_vhost_template: apache/mirror.conf.j2
+    mirror_root: "{{ apache_root }}"
+    mirror_vhost: "*:80"
+    mirror_servername: "{{ apt_url | urlsplit('hostname') }}"
+
+  tasks:
+
+    - name: install apt mirror packages
+      package:
+        name:
+          - apt-mirror
+          - apache2
+          - apt-transport-https
+          - util-linux
+
+    - name: remove deb-src mirrors
+      lineinfile:
+        path: "{{ ubuntu_mirror_list }}"
+        regexp: '^deb-src(.*)$'
+        line: '#deb-src\1'
+        backrefs: yes
+
+    - name: remove deb-src mirrors
+      lineinfile:
+        path: "{{ ubuntu_mirror_list }}"
+        regexp: '^deb-src(.*)$'
+        line: '#deb-src\1'
+        backrefs: yes
+
+    - name: add mirror update cronjob
+      cron:
+        name: 'update apt-mirror cache'
+        job: 'flock -n /tmp/apt-mirror apt-mirror'
+        state: present
+        special_time: daily
+
+    - name: add mirror clean cronjob
+      cron:
+        name: 'clean apt-mirror cache'
+        job: 'flock -n /tmp/apt-mirror /var/spool/apt-mirror/var/clean.sh'
+        state: present
+        special_time: daily
+
+    - name: create mirror root
+      file:
+        path: "{{ apache_root }}"
+        state: directory
+
+    - name: create ubuntu link
+      file:
+        path: "{{ apache_root }}/ubuntu"
+        src: "{{ ubuntu_mirror_path }}"
+        state: link
+        force: yes
+
+    - name: install apache
+      package:
+        name: apache2
+        state: present
+
+    - name: manage apache virtualhost
+      template:
+        src: "{{ apache_vhost_template }}"
+        dest: "{{ apache_conf_root }}/sites-available/{{ apache_vhost_filename }}"
+
+    - name: drop default apache vhost
+      file:
+        path: "{{ apache_conf_root }}/sites-enabled/000-default.conf"
+        state: absent

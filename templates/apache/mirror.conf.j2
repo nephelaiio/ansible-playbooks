@@ -1,0 +1,9 @@
+Listen {{ mirror_port | default('80') }}
+
+<VirtualHost {{ mirror_vhost }}>
+  DocumentRoot {{ mirror_root | default('/var/www/html') }}
+  {{ 'ServerName ' + mirror_servername if mirror_servername else '' }}
+
+  ErrorLog ${APACHE_LOG_DIR}/mirror-error.log
+  CustomLog ${APACHE_LOG_DIR}/mirror-access.log combined
+</VirtualHost>
