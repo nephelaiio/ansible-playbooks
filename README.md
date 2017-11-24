@@ -24,7 +24,7 @@ You can check the [Travis configuration file](/.travis.yml) for an example/more 
 To apply playbook workstation.yml, do
 
 ```
-ansible-playbook playbooks/workstation.yml
+ansible-playbook workstation.yml
 ```
 
-Please review the [playbooks](/playbooks) directory for a list of available playbooks
+Please browse the [root](/) directory for a list of available playbooks
