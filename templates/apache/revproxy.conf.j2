@@ -5,6 +5,7 @@ Listen {{ proxy_port | default('80') }}
   ServerName {{ proxy_servername }}
 
   ProxyRequests On
+  ProxyPreserveHost On
 
   ProxyPass "/" "balancer://revproxy/" 
   ProxyPassReverse "/" "balancer:://revproxy/"
