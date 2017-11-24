@@ -33,7 +33,7 @@
       package:
         name: "{{ item }}"
         state: present
-      with_items: "{{ apache_packages }}" 
+      with_items: "{{ apache_packages }}"
 
     - name: enable modules
       command: "a2enmod {{ item }}"
@@ -88,7 +88,7 @@
       - option: listen_addresses
         value: "*"
     postgresql_databases:
-      - name: "{{ pg_database }}" 
+      - name: "{{ pg_database }}"
     postgresql_users:
       - name: "{{ pg_username }}"
         password: "{{ pg_password }}"
