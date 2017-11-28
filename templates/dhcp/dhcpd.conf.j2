@@ -13,9 +13,9 @@ key {{ omapikey.name }} {
 
 {% if failover is defined %}
 failover peer "failover-partner" {
-{% for setting in failover %}
+{%   for setting in failover %}
   {{ setting }};
-{% endfor %}  
+{%   endfor %}  
 }
 {% endif %}
 
@@ -41,30 +41,33 @@ log-facility local7;
 # Subnet and host declarations
 {% for n in networks %}
 subnet {{ n.network }} netmask {{ n.netmask }} {
-  {% for p in n.pools %}
+{%   for p in n.pools %}
   pool {
-  {% if failover is defined %}
+{%     if failover is defined %}
     failover peer "failover-partner";
-  {% endif %}
+{%     endif %}
     range {{ p.range }};
   }
-  {% endfor %}
+{%   endfor %}
   option routers {{ n.router }};
-  {% if domain_name is defined %}
-  option domain-name "{{ dns.zones.home.name }}";
-  {% endif %}
+{%   if 'domain_name' in n %}
+  option domain-name "{{ n.domain_name }}";
+{%   endif %}
+{%   if 'ns' in n %}
+  option domain-name-servers {{ n.ns | join (',') }};
+{%   endif %}
 }
-  {% if 'zone' in n %}
+{%   if 'zone' in n %}
 zone {{ n.zone }} {
   primary {{ servers.dns | first }};
 }
-  {% endif %}
-  {% for r in n.reservations.values() %}
+{%   endif %}
+{%   for r in n.reservations.values() %}
 host {{ r.host }} {
   hardware ethernet {{ r['hw-address'] }};
   fixed-address {{ r['ip-address'] }};
 }
-  {% endfor %}
+{%   endfor %}
 {% endfor %}
 
 {% for z in zones %}

@@ -14,7 +14,7 @@ kvm:
     vm:
       state: present  # | recreate | absent
       memory: 2048
-      cpu: 1
+      cpu: 2
       image: xenial
       autostart: True
       size: 10G
@@ -32,7 +32,6 @@ kvm:
   vms:
     kvma:
       state: recreate
-      cpu: 2
       memory: 4096
       name: kvma
       nic:
@@ -41,7 +40,6 @@ kvm:
         host: "{{ hostvars['kvma']['ansible_hostname'] }}"
     kvmb:
       state: recreate
-      cpu: 2
       memory: 4096
       name: kvmb
       nic:
@@ -50,7 +48,6 @@ kvm:
         host: "{{ hostvars['kvmb']['ansible_hostname'] }}"
     kvmc:
       state: recreate
-      cpu: 2
       memory: 4096
       name: kvmc
       nic:

@@ -40,9 +40,6 @@
     hostname: "{{ vm.name.split('.') | first }}"
     fqdn: "{{ vm.nic.host }}"
     iface: "{{ vm.nic }}"
-    # apt_proxy_http_uri: ''
-    # apt_proxy_https_uri: ''
-    apt_mirror: "{{ ansible_default_ipv4.address }}"
   when: diskcopy.changed
 
 - name: create cloud image network config
