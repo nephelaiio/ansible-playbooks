@@ -12,17 +12,37 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     ssh-authorized-keys:
       - {{ ssh_key }}
+packages:
+  - python-minimal
 apt:
+  primary:
+    - arches: [default]
+      search:
+{% if apt_mirror is defined %}
+        - http://{{ apt_mirror }}/ubuntu/
+{% endif %}
+        - http://archive.ubuntu.com/ubuntu/
   disable_suites:
     - backports
+{% if apt_proxy_http_uri is defined %}
+  http_proxy: "{{ apt_proxy_http_uri }}"
+{% endif %}
+{% if apt_proxy_https_uri is defined %}
+  https_proxy: "{{ apt_proxy_https_uri }}"
+{% endif %}
 runcmd:
   - [ sh, -c, "echo 127.0.1.1 {{ fqdn }} {{ hostname }} >> /etc/hosts" ] 
 {% if 'ip-address' in iface %}
   - [ sh, -c, "echo {{ iface['ip-address'] }} {{ fqdn }} {{ hostname }} >> /etc/hosts" ]
+{% if 'nameservers' in iface %}
 {% for ns in iface.nameservers %}
-  - [ sh, -c, "echo nameserver {{ ns }} >> /etc/resolv.conf" ]
+  - [ sh, -c, "echo '    dns-nameserver {{ ns }}' >> /etc/network/interfaces.d/50-cloud-init.cfg" ]
 {% endfor %}
 {% endif %}
+{% if 'namesearch' in iface %}
+  - [ sh, -c, "echo '    dns-search {{ iface.namesearch | join(' ') }}' >> /etc/network/interfaces.d/50-cloud-init.cfg" ]
+{% endif %}
+{% endif %}
   - [ sh, -c, "sed -i -e '/deb-src/d' /etc/apt/sources.list" ]
+  - [ sh, -c, "for arch in $(dpkg --print-foreign-architectures); do dpkg --remove-architecture $arch ; done" ]
   - [ sh, -c, "echo 'ARRAY <ignore> devices=/dev/sda' >> /etc/mdadm/mdadm.conf" ]
-  - [ sh, -c, "apt install -y python-minimal" ]

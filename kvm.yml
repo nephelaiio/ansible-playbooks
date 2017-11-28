@@ -9,6 +9,7 @@
     nat_in: br1
     nat_out:
       - br0
+    apt_mirror: apt.home.nephelai.io
 
   roles:
 
@@ -34,7 +35,7 @@
           value: 1
       become: yes
 
-    - name: Install pacman requirements
+    - name: install pacman requirements
       package:
         name:
           - qemu
@@ -143,6 +144,21 @@
           - python-lxml
           - genisoimage
       become: yes
+      when: ansible_os_family == 'Debian'
+
+    - name: install pacman requirements
+      package:
+        name:
+          - qemu
+          - libvirt
+          - libvirt-python
+          - bridge-utils
+          - ebtables
+          - dmidecode
+          - python-lxml
+          - cdrtools
+      become: yes
+      when: ansible_os_family == 'Archlinux'
 
     - name: create image target directory
       file:
