@@ -24,7 +24,7 @@
 - src: nephelaiio.rbenv
   version: 1.0.11
 - src: nephelaiio.pyenv
-  version: 1.0.3
+  version: 1.0.5
 - src: nephelaiio.tmux
   version: 1.0.7
 - src: nephelaiio.vagrant
@@ -32,7 +32,7 @@
 - src: nephelaiio.i3
   version: 1.0.4
 - src: nephelaiio.docker
-  version: 1.0.2
+  version: 1.0.3
 - src: nephelaiio.bind
   version: 1.0.5
 - src: nephelaiio.unifi-controller
@@ -45,3 +45,5 @@
   version: 1.0.1
 - src: nephelaiio.ubuntu-installer
   version: 1.0.6
+- src: nephelaiio.gitlab
+  version: 1.0.4
