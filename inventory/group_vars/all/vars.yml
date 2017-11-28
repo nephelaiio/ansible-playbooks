@@ -27,39 +27,50 @@ nets:
       cerberus:
         host: "{{ hostvars['cerberus']['ansible_hostname'] }}"
         ip-address: "{{ hostvars['cerberus']['ansible_host'] }}"
-        hw-address: ae:77:35:db:a0:17
+        hw-address: "{{ hostvars['cerberus']['hw_address'] }}"
       rpia:
         host: "{{ hostvars['rpia']['ansible_hostname'] }}"
         ip-address: "{{ hostvars['rpia']['ansible_host'] }}"
-        hw-address: b8:27:eb:10:54:87
+        hw-address: "{{ hostvars['rpia']['hw_address'] }}"
       rpib:
         host: "{{ hostvars['rpib']['ansible_hostname'] }}"
         ip-address: "{{ hostvars['rpib']['ansible_host'] }}"
-        hw-address: b8:27:eb:40:6b:19
+        hw-address: "{{ hostvars['rpib']['hw_address'] }}"
       rpic:
         host: "{{ hostvars['rpic']['ansible_hostname'] }}"
         ip-address: "{{ hostvars['rpic']['ansible_host'] }}"
-        hw-address: b8:27:eb:68:b9:3a
+        hw-address: "{{ hostvars['rpic']['hw_address'] }}"
       rpid:
         host: "{{ hostvars['rpid']['ansible_hostname'] }}"
         ip-address: "{{ hostvars['rpid']['ansible_host'] }}"
-        hw-address: b8:27:eb:09:a3:cf
+        hw-address: "{{ hostvars['rpid']['hw_address'] }}"
       rpie:
         host: "{{ hostvars['rpie']['ansible_hostname'] }}"
         ip-address: "{{ hostvars['rpie']['ansible_host'] }}"
-        hw-address: b8:27:eb:ea:4e:6d
+        hw-address: "{{ hostvars['rpie']['hw_address'] }}"
       nuca:
         host: "{{ hostvars['nuca']['ansible_hostname'] }}"
         ip-address: "{{ hostvars['nuca']['ansible_host'] }}"
-        hw-address: 94:c6:91:15:54:19
+        hw-address: "{{ hostvars['nuca']['hw_address'] }}"
   private:
     network: 192.168.254.0
     netmask: 255.255.255.0
     router: 192.168.254.1
-    zone: 0.168.192.in-addr.arpa
     pools:
       - range: '192.168.254.65 192.168.254.127'
-    reservations: []
+    reservations:
+      kvma:
+        host: "{{ hostvars['kvma']['ansible_hostname'] }}"
+        ip-address: "{{ hostvars['kvma']['ansible_host'] }}"
+        hw-address: "{{ hostvars['kvma']['hw_address'] }}"
+      kvmb:
+        host: "{{ hostvars['kvmb']['ansible_hostname'] }}"
+        ip-address: "{{ hostvars['kvmb']['ansible_host'] }}"
+        hw-address: "{{ hostvars['kvmb']['hw_address'] }}"
+      kvmc:
+        host: "{{ hostvars['kvmc']['ansible_hostname'] }}"
+        ip-address: "{{ hostvars['kvmc']['ansible_host'] }}"
+        hw-address: "{{ hostvars['kvmc']['hw_address'] }}"
 
 dns:
   zones:

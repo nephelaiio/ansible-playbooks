@@ -22,9 +22,9 @@ kvm:
       nic:
         name: enp0s3
         type: bridge
-        net: br0
-        prefix: "{{ nets.home.netmask }}"
-        gateway: "{{ nets.home.router | ipaddr('address') }}"
+        net: br1
+        prefix: "{{ nets.private.netmask }}"
+        gateway: "{{ nets.private.router | ipaddr('address') }}"
         nameservers: "{{ servers.recursors }}"
     pool:
       state: present
@@ -36,12 +36,8 @@ kvm:
       memory: 4096
       name: kvma
       nic:
-        net: br1
-        hw-address: "{{ nets.private.reservations.kvma['hw-address'] }}"
-        prefix: "{{ nets.private.netmask }}"
-        gateway: "{{ nets.private.router }}"
+        hw-address: "{{ hostvars['kvma']['hw_address'] }}"
         ip-address: "{{ hostvars['kvma']['ansible_host'] }}"
-        nameservers: "{{ servers.recursors }}"
         host: "{{ hostvars['kvma']['ansible_hostname'] }}"
     kvmb:
       state: recreate
@@ -49,7 +45,7 @@ kvm:
       memory: 4096
       name: kvmb
       nic:
-        hw-address: 52:54:00:94:37:22
+        hw-address: "{{ hostvars['kvmb']['hw_address'] }}"
         ip-address: "{{ hostvars['kvmb']['ansible_host'] }}"
         host: "{{ hostvars['kvmb']['ansible_hostname'] }}"
     kvmc:
@@ -58,7 +54,7 @@ kvm:
       memory: 4096
       name: kvmc
       nic:
-        hw-address: 52:54:00:94:37:23
+        hw-address: "{{ hostvars['kvmc']['hw_address'] }}"
         ip-address: "{{ hostvars['kvmc']['ansible_host'] }}"
         host: "{{ hostvars['kvmc']['ansible_hostname'] }}"
   pools:
