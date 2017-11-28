@@ -9,15 +9,14 @@
 
   tasks:
 
-    - include: raspbian.yml
-      static: no
+    - include_tasks: raspbian.yml
       vars:
         raspbian_host: "{{ item.hostname }}"
         raspbian_ifaces: "{{ item.ifaces }}"
       with_items: "{{ raspbian_hosts }}"
 
 
-- include: kvm.yml
+- import_static: kvm.yml
 
 
 - name: Create nuc images
