@@ -6,6 +6,9 @@
   vars:
 
     iptables_savefile: /etc/iptables/iptables.rules
+    nat_in: br1
+    nat_out:
+      - br0
 
   roles:
 
@@ -20,7 +23,6 @@
         state: present
         sysctl_set: yes
         reload: yes
-      become: yes
       with_items:
         - name: net.bridge.bridge-nf-call-ip6tables
           value: 0
@@ -30,44 +32,6 @@
           value: 0
         - name: net.ipv4.ip_forward
           value: 1
-
-    - name: initialize iptables configuration
-      file:
-        path: /etc/iptables/iptables.rules
-        state: touch
-      become: yes
-
-    - name: start iptables
-      service:
-        name: iptables
-        state: started
-        enabled: yes
-      become: yes
-
-    - name: configure nat forwarding
-      iptables:
-        table: nat
-        chain: POSTROUTING
-        out_interface: br0
-        jump: MASQUERADE
-      become: yes
-
-    - name: configure nat forwarding
-      iptables:
-        chain: FORWARD
-        in_interface: br1
-        jump: ACCEPT
-      become: yes
-
-    - name: configure nat forwarding
-      iptables:
-        chain: FORWARD
-        out_interface: br1
-        jump: ACCEPT
-      become: yes
-
-    - name: save iptables configuration
-      shell: "iptables-save > {{ iptables_savefile }}"
       become: yes
 
     - name: Install pacman requirements
@@ -83,11 +47,12 @@
           - cloud-init
           - cdrtools
           - python-lxml
+          - dhcp
         update_cache: yes
-      when: ansible_os_family == "Archlinux"
       become: yes
+      when: ansible_os_family == 'Archlinux'
 
-    - name: Install apt requirements
+    - name: install apt requirements
       package:
         name:
           - qemu-kvm
@@ -99,29 +64,103 @@
           - dmidecode
           - python-lxml
           - genisoimage
-        update_cache: yes
-      when: ansible_os_family == "Debian"
+          - isc-dhcp-server
+      become: yes
+      when: ansible_os_family == 'Debian'
+
+    - name: configure dhcp
+      template:
+        src: dhcp/dhcpd.conf.j2
+        dest: /etc/dhcpd.conf
+      vars:
+        lease_time: 1800
+        networks:
+          - "{{ nets.private }}"
+        zones: "{{ dns.zones.values() }}"
+      notify: restart dhcpd
       become: yes
 
-    - name: Create image target directory
-      local_action:
-        module: file
+    - meta: flush_handlers
+
+    - name: manage services
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      become: yes
+      with_items:
+        - dhcpd4  # dhcpd4 (arch) | isc-dhcp-server (debian)
+
+    - name: initialize iptables configuration
+      file:
+        path: "{{ iptables_savefile }}"
+        state: touch
+      become: yes
+
+    - name: configure nat
+      iptables:
+        table: nat
+        chain: POSTROUTING
+        out_interface: "{{ item }}"
+        jump: MASQUERADE
+      become: yes
+      with_items: "{{ nat_out }}"
+
+    - name: configure nat
+      iptables:
+        chain: FORWARD
+        in_interface: "{{ item }}"
+        out_interface: "{{ nat_in }}"
+        match: state
+        ctstate: RELATED,ESTABLISHED
+        jump: ACCEPT
+      become: yes
+      with_items: "{{ nat_out }}"
+
+    - name: configure nat
+      iptables:
+        chain: FORWARD
+        in_interface: "{{ nat_in }}"
+        out_interface: "{{ item }}"
+        jump: ACCEPT
+      become: yes
+      with_items: "{{ nat_out }}"
+
+    - name: save iptables configuration
+      shell: "iptables-save > {{ iptables_savefile }}"
+      become: yes
+
+    - name: install apt requirements
+      package:
+        name:
+          - qemu-kvm
+          - qemu-utils
+          - libvirt0
+          - python-libvirt
+          - bridge-utils
+          - ebtables
+          - dmidecode
+          - python-lxml
+          - genisoimage
+      become: yes
+
+    - name: create image target directory
+      file:
         path: files/kvm
         state: directory
 
-    - name: Fetch images
-      local_action:
-        module: get_url
+    - name: fetch images
+      get_url:
         url: "{{ item.value.src }}"
         dest: "files/kvm/{{ item.value.src | basename }}"
         mode: 0644
       with_dict: "{{ kvm_images }}"
 
-    - name: Uncompress images
-      local_action: >-
-        command qemu-img convert -O {{ format }} {{ img }} {{ target }}
-        chdir="files/kvm"
-        creates="{{ target }}"
+    - name: uncompress images
+      command: "qemu-img convert -O {{ format }} {{ img }} {{ target }}"
+      args:
+        chdir: "files/kvm"
+        creates: "{{ target }}"
       vars:
         format: "{{ item.value.format }}"
         img: "{{ item.value.src | basename }}"
@@ -130,7 +169,7 @@
 
     - meta: flush_handlers
 
-    - name: Destroy VMs
+    - name: destroy VMs
       include_tasks: kvm/vm_destroy.yml
       vars:
         vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
@@ -138,7 +177,7 @@
         iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
       with_items: "{{ kvm.vms.values() }}"
 
-    - name: Create VMs
+    - name: create VMs
       include_tasks: kvm/vm_create.yml
       vars:
         vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
@@ -146,3 +185,13 @@
         pool: "{{ kvm.pools[vm.pool].path }}"
         iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
       with_items: "{{ kvm.vms.values() }}"
+
+  handlers:
+
+    - name: restart dhcpd
+      service:
+        name: "{{ item }}"
+        state: restarted
+      become: yes
+      with_items:
+        - dhcpd4  # dhcpd4 (arch) | isc-dhcp-server (debian)

@@ -1,5 +1,6 @@
 #{{ ansible_managed }}
 
+{% if omapikey is defined %}
 omapi-port 7911;
 omapi-key {{ omapikey.name }};
 
@@ -8,12 +9,15 @@ key {{ omapikey.name }} {
   algorithm {{ omapikey.algorithm }};
   secret "{{ omapikey.secret }}";
 }
+{% endif %}
 
+{% if failover is defined %}
 failover peer "failover-partner" {
 {% for setting in failover %}
   {{ setting }};
 {% endfor %}  
 }
+{% endif %}
 
 # The ddns-updates-style parameter controls whether or not the server will
 # attempt to do a DNS update when a lease is confirmed. We default to the
@@ -37,18 +41,24 @@ log-facility local7;
 # Subnet and host declarations
 {% for n in networks %}
 subnet {{ n.network }} netmask {{ n.netmask }} {
-{% for p in n.pools %}
+  {% for p in n.pools %}
   pool {
+  {% if failover is defined %}
     failover peer "failover-partner";
+  {% endif %}
     range {{ p.range }};
   }
-{% endfor %}
+  {% endfor %}
   option routers {{ n.router }};
+  {% if domain_name is defined %}
   option domain-name "{{ dns.zones.home.name }}";
+  {% endif %}
 }
+  {% if 'zone' in n %}
 zone {{ n.zone }} {
   primary {{ servers.dns | first }};
 }
+  {% endif %}
   {% for r in n.reservations.values() %}
 host {{ r.host }} {
   hardware ethernet {{ r['hw-address'] }};
