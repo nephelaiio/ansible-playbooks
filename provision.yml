@@ -16,7 +16,7 @@
       with_items: "{{ raspbian_hosts }}"
 
 
-- import_static: kvm.yml
+- import_playbook: kvm.yml
 
 
 - name: Create nuc images
