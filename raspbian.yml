@@ -13,6 +13,23 @@
     prefix: img
   register: tmpdir_dest
 
+- name: register target root directory
+  set_fact:
+    root_dir: "{{ tmpdir_dest.path }}/root"
+
+- name: register target boot directory
+  set_fact:
+    boot_dir: "{{ tmpdir_dest.path }}/boot"
+
+- name: create target directories
+  file:
+    path: "{{ dir }}"
+  loop_control:
+    loop_var: dir
+  with_items:
+    - "{{ root_dir }}"
+    - "{{ boot_dir }}"
+
 - name: create image target directory
   file:
     state: directory
