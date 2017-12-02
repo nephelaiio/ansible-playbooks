@@ -44,6 +44,7 @@
         networks: "{{ nets.values() }}"
         zones: "{{ dns.zones.values() }}"
         failover: "{{ dhcp.failover }}"
+        domain_name: "{{ dns.zones.home.name }}"
       notify: Restart dhcpd
 
     - meta: flush_handlers
