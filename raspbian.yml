@@ -24,6 +24,7 @@
 - name: create target directories
   file:
     path: "{{ dir }}"
+    state: directory
   loop_control:
     loop_var: dir
   with_items:
