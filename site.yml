@@ -3,6 +3,12 @@
 
 - include: raspberry.yml
 
+- include: nuc.yml
+
+- include: papertrail.yml
+
+- include: fail2ban.yml
+
 - include: dns.yml
 
 - include: nfs.yml
