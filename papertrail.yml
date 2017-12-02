@@ -1,0 +1,16 @@
+---
+- name: Configure papertrail
+
+  hosts:
+    - nuc
+    - raspberry
+
+  become: yes
+
+  tasks:
+
+    - name: Configure remote logging
+      include_role:
+        name: alekseyp.papertrail
+      vars:
+        papertrail_destination: "{{ papertrail.destination }}"

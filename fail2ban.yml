@@ -1,0 +1,37 @@
+---
+- name: Configure fail2ban
+
+  hosts: all
+
+  become: yes
+
+  tasks:
+
+    - name: install fail2ban
+      apt:
+        name: fail2ban
+        state: latest
+        update_cache: yes
+
+    - name: configure fail2ban networks
+      lineinfile:
+        regexp: '^ignoreip ='
+        line: "ignoreip = 127.0.0.1/8, {{ network | ipaddr('net') }}"
+        dest: /etc/fail2ban/jail.conf
+        insertafter: '[DEFAULT]'
+      vars:
+        network: "{{ nets.home.network }}/{{ nets.home.netmask }}"
+      notify: restart fail2ban
+
+    - name: manage fail2ban services
+      service:
+        name: fail2ban
+        state: started
+        enabled: yes
+
+  handlers:
+
+    - name: restart fail2ban
+      service:
+        name: fail2ban
+        state: restarted
