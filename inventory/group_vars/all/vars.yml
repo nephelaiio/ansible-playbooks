@@ -25,34 +25,34 @@ nets:
     pools:
       - range: '192.168.0.65 192.168.0.127'
     reservations:
-      cerberus:
-        host: "{{ hostvars['cerberus']['ansible_hostname'] }}"
-        ip-address: "{{ hostvars['cerberus']['ansible_host'] }}"
-        hw-address: "{{ hostvars['cerberus']['hw_address'] }}"
-      rpia:
-        host: "{{ hostvars['rpia']['ansible_hostname'] }}"
-        ip-address: "{{ hostvars['rpia']['ansible_host'] }}"
-        hw-address: "{{ hostvars['rpia']['hw_address'] }}"
-      rpib:
-        host: "{{ hostvars['rpib']['ansible_hostname'] }}"
-        ip-address: "{{ hostvars['rpib']['ansible_host'] }}"
-        hw-address: "{{ hostvars['rpib']['hw_address'] }}"
-      rpic:
-        host: "{{ hostvars['rpic']['ansible_hostname'] }}"
-        ip-address: "{{ hostvars['rpic']['ansible_host'] }}"
-        hw-address: "{{ hostvars['rpic']['hw_address'] }}"
-      rpid:
-        host: "{{ hostvars['rpid']['ansible_hostname'] }}"
-        ip-address: "{{ hostvars['rpid']['ansible_host'] }}"
-        hw-address: "{{ hostvars['rpid']['hw_address'] }}"
-      rpie:
-        host: "{{ hostvars['rpie']['ansible_hostname'] }}"
-        ip-address: "{{ hostvars['rpie']['ansible_host'] }}"
-        hw-address: "{{ hostvars['rpie']['hw_address'] }}"
-      nuca:
-        host: "{{ hostvars['nuca']['ansible_hostname'] }}"
-        ip-address: "{{ hostvars['nuca']['ansible_host'] }}"
-        hw-address: "{{ hostvars['nuca']['hw_address'] }}"
+      cerberus.home.nephelai.io:
+        host: "{{ hostvars['cerberus.home.nephelai.io']['inventory_hostname'] }}"
+        ip-address: "{{ hostvars['cerberus.home.nephelai.io']['ansible_host'] }}"
+        hw-address: "{{ hostvars['cerberus.home.nephelai.io']['hw_address'] }}"
+      rpia.home.nephelai.io:
+        host: "{{ hostvars['rpia.home.nephelai.io']['inventory_hostname'] }}"
+        ip-address: "{{ hostvars['rpia.home.nephelai.io']['ansible_host'] }}"
+        hw-address: "{{ hostvars['rpia.home.nephelai.io']['hw_address'] }}"
+      rpib.home.nephelai.io:
+        host: "{{ hostvars['rpib.home.nephelai.io']['inventory_hostname'] }}"
+        ip-address: "{{ hostvars['rpib.home.nephelai.io']['ansible_host'] }}"
+        hw-address: "{{ hostvars['rpib.home.nephelai.io']['hw_address'] }}"
+      rpic.home.nephelai.io:
+        host: "{{ hostvars['rpic.home.nephelai.io']['inventory_hostname'] }}"
+        ip-address: "{{ hostvars['rpic.home.nephelai.io']['ansible_host'] }}"
+        hw-address: "{{ hostvars['rpic.home.nephelai.io']['hw_address'] }}"
+      rpid.home.nephelai.io:
+        host: "{{ hostvars['rpid.home.nephelai.io']['inventory_hostname'] }}"
+        ip-address: "{{ hostvars['rpid.home.nephelai.io']['ansible_host'] }}"
+        hw-address: "{{ hostvars['rpid.home.nephelai.io']['hw_address'] }}"
+      rpie.home.nephelai.io:
+        host: "{{ hostvars['rpie.home.nephelai.io']['inventory_hostname'] }}"
+        ip-address: "{{ hostvars['rpie.home.nephelai.io']['ansible_host'] }}"
+        hw-address: "{{ hostvars['rpie.home.nephelai.io']['hw_address'] }}"
+      nuca.home.nephelai.io:
+        host: "{{ hostvars['nuca.home.nephelai.io']['inventory_hostname'] }}"
+        ip-address: "{{ hostvars['nuca.home.nephelai.io']['ansible_host'] }}"
+        hw-address: "{{ hostvars['nuca.home.nephelai.io']['hw_address'] }}"
   private:
     network: 192.168.254.0
     netmask: 255.255.255.0
@@ -61,18 +61,18 @@ nets:
     pools:
       - range: '192.168.254.65 192.168.254.127'
     reservations:
-      kvma:
-        host: "{{ hostvars['kvma']['ansible_hostname'] }}"
-        ip-address: "{{ hostvars['kvma']['ansible_host'] }}"
-        hw-address: "{{ hostvars['kvma']['hw_address'] }}"
-      kvmb:
-        host: "{{ hostvars['kvmb']['ansible_hostname'] }}"
-        ip-address: "{{ hostvars['kvmb']['ansible_host'] }}"
-        hw-address: "{{ hostvars['kvmb']['hw_address'] }}"
-      kvmc:
-        host: "{{ hostvars['kvmc']['ansible_hostname'] }}"
-        ip-address: "{{ hostvars['kvmc']['ansible_host'] }}"
-        hw-address: "{{ hostvars['kvmc']['hw_address'] }}"
+      kvma.home.nephelai.io:
+        host: "{{ hostvars['kvma.home.nephelai.io']['inventory_hostname'] }}"
+        ip-address: "{{ hostvars['kvma.home.nephelai.io']['ansible_host'] }}"
+        hw-address: "{{ hostvars['kvma.home.nephelai.io']['hw_address'] }}"
+      kvmb.home.nephelai.io:
+        host: "{{ hostvars['kvmb.home.nephelai.io']['inventory_hostname'] }}"
+        ip-address: "{{ hostvars['kvmb.home.nephelai.io']['ansible_host'] }}"
+        hw-address: "{{ hostvars['kvmb.home.nephelai.io']['hw_address'] }}"
+      kvmc.home.nephelai.io:
+        host: "{{ hostvars['kvmc.home.nephelai.io']['inventory_hostname'] }}"
+        ip-address: "{{ hostvars['kvmc.home.nephelai.io']['ansible_host'] }}"
+        hw-address: "{{ hostvars['kvmc.home.nephelai.io']['hw_address'] }}"
 
 dns:
   zones:
@@ -86,9 +86,9 @@ dns:
       records: "{{ nets.home.reservations.values() }}"
       cnames:
         home.nephelai.io: rpia.home.nephelai.io
-        unifi.home.nephelai.io: "{{ groups['unifi'] | map('extract', hostvars, ['ansible_hostname']) | list | first }}"
-        nfs.home.nephelai.io: "{{ groups['backup'] | map('extract', hostvars, ['ansible_hostname']) | list | first }}"
-        apt.home.nephelai.io: "{{ groups['mirror'] | map('extract', hostvars, ['ansible_hostname']) | list | first }}"
+        unifi.home.nephelai.io: "{{ groups['unifi'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
+        nfs.home.nephelai.io: "{{ groups['backup'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
+        apt.home.nephelai.io: "{{ groups['mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
     emoh:
       name: "{{ nets.home.zone }}"
       hostmaster: master@home.nephelai.io

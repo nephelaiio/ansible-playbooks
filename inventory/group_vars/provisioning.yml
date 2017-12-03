@@ -35,25 +35,25 @@ kvm:
       memory: 4096
       name: kvma
       nic:
-        hw-address: "{{ hostvars['kvma']['hw_address'] }}"
-        ip-address: "{{ hostvars['kvma']['ansible_host'] }}"
-        host: "{{ hostvars['kvma']['ansible_hostname'] }}"
+        hw-address: "{{ hostvars['kvma.home.nephelai.io']['hw_address'] }}"
+        ip-address: "{{ hostvars['kvma.home.nephelai.io']['ansible_host'] }}"
+        host: "{{ hostvars['kvma.home.nephelai.io']['inventory_hostname'] }}"
     kvmb:
       state: recreate
       memory: 4096
       name: kvmb
       nic:
-        hw-address: "{{ hostvars['kvmb']['hw_address'] }}"
-        ip-address: "{{ hostvars['kvmb']['ansible_host'] }}"
-        host: "{{ hostvars['kvmb']['ansible_hostname'] }}"
+        hw-address: "{{ hostvars['kvmb.home.nephelai.io']['hw_address'] }}"
+        ip-address: "{{ hostvars['kvmb.home.nephelai.io']['ansible_host'] }}"
+        host: "{{ hostvars['kvmb.home.nephelai.io']['inventory_hostname'] }}"
     kvmc:
       state: recreate
       memory: 4096
       name: kvmc
       nic:
-        hw-address: "{{ hostvars['kvmc']['hw_address'] }}"
-        ip-address: "{{ hostvars['kvmc']['ansible_host'] }}"
-        host: "{{ hostvars['kvmc']['ansible_hostname'] }}"
+        hw-address: "{{ hostvars['kvmc.home.nephelai.io']['hw_address'] }}"
+        ip-address: "{{ hostvars['kvmc.home.nephelai.io']['ansible_host'] }}"
+        host: "{{ hostvars['kvmc.home.nephelai.io']['inventory_hostname'] }}"
   pools:
     default:
       path: /var/lib/libvirt/images
@@ -79,38 +79,38 @@ pdns:
 raspbian_release: https://downloads.raspberrypi.org/raspbian_lite_latest
 rasbian_timezone: America/Costa_Rica
 raspbian_hosts:
-  - hostname: "{{ hostvars['rpia']['ansible_hostname'] }}"
+  - hostname: "{{ hostvars['rpia.home.nephelai.io']['inventory_hostname'] }}"
     ifaces:
       - name: eth0
         method: static
-        ip-address: "{{ hostvars['rpia']['ansible_host'] }}"
+        ip-address: "{{ hostvars['rpia.home.nephelai.io']['ansible_host'] }}"
         prefix: "{{ nets.home.netmask }}"
         gateway: "{{ nets.home.router }}"
-  - hostname: "{{ hostvars['rpib']['ansible_hostname'] }}"
+  - hostname: "{{ hostvars['rpib.home.nephelai.io']['inventory_hostname'] }}"
     ifaces:
       - name: eth0
         method: static
-        ip-address: "{{ hostvars['rpib']['ansible_host'] }}"
+        ip-address: "{{ hostvars['rpib.home.nephelai.io']['ansible_host'] }}"
         prefix: "{{ nets.home.netmask }}"
         gateway: "{{ nets.home.router }}"
-  - hostname: "{{ hostvars['rpic']['ansible_hostname'] }}"
+  - hostname: "{{ hostvars['rpic.home.nephelai.io']['inventory_hostname'] }}"
     ifaces:
       - name: eth0
         method: static
-        ip-address: "{{ hostvars['rpic']['ansible_host'] }}"
+        ip-address: "{{ hostvars['rpic.home.nephelai.io']['ansible_host'] }}"
         prefix: "{{ nets.home.netmask }}"
         gateway: "{{ nets.home.router }}"
-  - hostname: "{{ hostvars['rpid']['ansible_hostname'] }}"
+  - hostname: "{{ hostvars['rpid.home.nephelai.io']['inventory_hostname'] }}"
     ifaces:
       - name: eth0
         method: static
-        ip-address: "{{ hostvars['rpid']['ansible_host'] }}"
+        ip-address: "{{ hostvars['rpid.home.nephelai.io']['ansible_host'] }}"
         prefix: "{{ nets.home.netmask }}"
         gateway: "{{ nets.home.router }}"
-  - hostname: "{{ hostvars['rpie']['ansible_hostname'] }}"
+  - hostname: "{{ hostvars['rpie.home.nephelai.io']['inventory_hostname'] }}"
     ifaces:
       - name: eth0
         method: static
-        ip-address: "{{ hostvars['rpie']['ansible_host'] }}"
+        ip-address: "{{ hostvars['rpie.home.nephelai.io']['ansible_host'] }}"
         prefix: "{{ nets.home.netmask }}"
         gateway: "{{ nets.home.router }}"

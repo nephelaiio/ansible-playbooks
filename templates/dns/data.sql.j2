@@ -1,6 +1,6 @@
 {% for domain in domains %}
 SET @name = '{{ domain.name }}',
-  @content = '{{ ansible_hostname }} {{ domain.hostmaster }} {{ domain.serial | default(0) }} {{ domain.refresh | default(3600) }} {{ domain.retry | default(600) }} {{ domain.expire | default(10800) }} {{ domain.ttl | default(600) }}',
+  @content = '{{ inventory_hostname }} {{ domain.hostmaster }} {{ domain.serial | default(0) }} {{ domain.refresh | default(3600) }} {{ domain.retry | default(600) }} {{ domain.expire | default(10800) }} {{ domain.ttl | default(600) }}',
   @type = 'SOA',
   @ttl = {{ domain.ttl | default(600) }};
 INSERT IGNORE INTO domains(name, type)
