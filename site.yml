@@ -1,18 +1,18 @@
 ---
-- include_playbook: provision.yml
+- import_playbook: provision.yml
 
-- includ_playbooke: raspberry.yml
+- import_playbook: raspberry.yml
 
-- include_playbook: nuc.yml
+- import_playbook: nuc.yml
 
-- include_playbook: papertrail.yml
+- import_playbook: papertrail.yml
 
-- include_playbook: fail2ban.yml
+- import_playbook: fail2ban.yml
 
-- include_playbook: dns.yml
+- import_playbook: dns.yml
 
-- include_playbook: nfs.yml
+- import_playbook: nfs.yml
 
-- include_playbook: sensu.yml
+- import_playbook: sensu.yml
 
-- include_playbook: unifi.yml
+- import_playbook: unifi.yml
