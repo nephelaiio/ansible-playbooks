@@ -5,33 +5,33 @@
 
   tasks:
 
-    - name: Install apt prerequisites
+    - name: install apt prerequisites
       become: yes
       apt:
         name: aptitude
         state: present
       when: ansible_os_family == 'Debian'
 
-    - name: Upgrade apt
+    - name: upgrade apt
       become: yes
       apt:
         upgrade: safe
       when: ansible_os_family == 'Debian'
 
-    - name: Upgrade pacman
+    - name: upgrade pacman
       become: yes
       pacman:
         upgrade: yes
       when: ansible_os_family == 'Archlinux'
 
-    - name: Check pacaur
+    - name: check pacaur
       changed_when: false
       become: no
       stat:
         path: /usr/bin/pacaur
       register: pacaur
 
-    - name: Upgrade pacaur
+    - name: upgrade pacaur
       become: no
       command: pacaur -Syu --noconfirm --noedit
       when:
@@ -39,7 +39,7 @@
         - pacaur.stat.executable
         - false
 
-    - name: Find pacman orphans
+    - name: find pacman orphans
       changed_when: false
       failed_when: false
       become: yes
@@ -48,14 +48,14 @@
         - ansible_os_family == 'Archlinux'
       register: orphans
 
-    - name: Remove pacman orphans
+    - name: remove pacman orphans
       become: yes
       command: pacman -Rns --noconfirm {{ orphans.stdout }}
       when:
         - ansible_os_family == 'Archlinux'
         - orphans.stdout != ''
 
-    - name: Upgrade yum
+    - name: upgrade yum
       become: yes
       yum:
         name: '*'
