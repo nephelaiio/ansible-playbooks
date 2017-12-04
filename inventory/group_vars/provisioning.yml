@@ -36,7 +36,6 @@ kvm:
       name: kvma
       nic:
         hw-address: "{{ hostvars['kvma.home.nephelai.io']['hw_address'] }}"
-        ip-address: "{{ hostvars['kvma.home.nephelai.io']['ansible_host'] }}"
         host: "{{ hostvars['kvma.home.nephelai.io']['inventory_hostname'] }}"
     kvmb:
       state: recreate
@@ -44,7 +43,6 @@ kvm:
       name: kvmb
       nic:
         hw-address: "{{ hostvars['kvmb.home.nephelai.io']['hw_address'] }}"
-        ip-address: "{{ hostvars['kvmb.home.nephelai.io']['ansible_host'] }}"
         host: "{{ hostvars['kvmb.home.nephelai.io']['inventory_hostname'] }}"
     kvmc:
       state: recreate
@@ -52,7 +50,6 @@ kvm:
       name: kvmc
       nic:
         hw-address: "{{ hostvars['kvmc.home.nephelai.io']['hw_address'] }}"
-        ip-address: "{{ hostvars['kvmc.home.nephelai.io']['ansible_host'] }}"
         host: "{{ hostvars['kvmc.home.nephelai.io']['inventory_hostname'] }}"
   pools:
     default:

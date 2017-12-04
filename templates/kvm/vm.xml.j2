@@ -47,6 +47,7 @@
     <interface type='{{ vm.nic.type }}'>
       <source bridge='{{ vm.nic.net }}'/>
       <address type='pci' domain='0x000' bus='0x00' slot='0x03' function='0x0'/>
+      <mac address='{{ vm.nic['hw-address'] }}'/>
     </interface>
   </devices>
 </domain>
