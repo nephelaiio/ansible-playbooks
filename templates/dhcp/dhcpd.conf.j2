@@ -66,6 +66,8 @@ zone {{ n.zone }} {
 host {{ r.host }} {
   hardware ethernet {{ r['hw-address'] }};
   fixed-address {{ r['ip-address'] }};
+  option domain-name "{{ r.host | split_with('.') | tail | join('.') }}";
+  option host-name "{{ r.host | split_with('.') | head }}";
 }
 {%   endfor %}
 {% endfor %}
