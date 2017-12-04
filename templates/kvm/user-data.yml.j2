@@ -12,8 +12,6 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     ssh-authorized-keys:
       - {{ ssh_key }}
-packages:
-  - python-minimal
 apt:
   primary:
     - arches: [default]
@@ -46,3 +44,5 @@ runcmd:
   - [ sh, -c, "sed -i -e '/deb-src/d' /etc/apt/sources.list" ]
   - [ sh, -c, "for arch in $(dpkg --print-foreign-architectures); do dpkg --remove-architecture $arch ; done" ]
   - [ sh, -c, "echo 'ARRAY <ignore> devices=/dev/sda' >> /etc/mdadm/mdadm.conf" ]
+  - [ sh, -c, "apt-get update" ]
+  - [ sh, -c, "apt-get install -y python-minimal" ]
