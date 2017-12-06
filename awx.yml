@@ -22,7 +22,6 @@
     proxy_port: 80
     proxy_virtualhost: "*:{{ proxy_port }}"
     proxy_servername: "{{ awx_url | urlsplit('hostname') }}"
-    proxy_admin: tedc@imail.ag
     proxy_backend_proto: "http"
     proxy_backend_members: "{{ groups['awx'] | map('extract', hostvars, ['ansible_host']) | list }}"
     proxy_backend_port: "80"

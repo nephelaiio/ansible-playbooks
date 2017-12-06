@@ -1,11 +1,11 @@
 Listen {{ proxy_port | default('80') }}
 
 <VirtualHost {{ proxy_virtualhost }}>
-  ServerAdmin {{ proxy_admin }}
   ServerName {{ proxy_servername }}
 
   ProxyRequests On
   ProxyPreserveHost On
+  SSLProxyEngine On
 
   ProxyPass "/" "balancer://revproxy/" 
   ProxyPassReverse "/" "balancer:://revproxy/"
