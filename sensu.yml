@@ -6,6 +6,8 @@
   vars:
 
     sensu_server: false
+    sensu_api_host: sensu.home.nephelai.io
+    sensu_rabbitmq_host: sensu.home.nephelai.io
 
   roles:
 

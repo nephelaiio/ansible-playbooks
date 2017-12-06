@@ -89,7 +89,7 @@ dns:
         unifi.home.nephelai.io: "{{ groups['unifi'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
         nfs.home.nephelai.io: "{{ groups['backup'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
         apt.home.nephelai.io: "{{ groups['mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
-        uchiwa.home.nephelai.io: "{{ groups['sensu'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
+        sensu.home.nephelai.io: "{{ groups['sensu'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
     emoh:
       name: "{{ nets.home.zone }}"
       hostmaster: master@home.nephelai.io
