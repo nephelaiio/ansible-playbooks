@@ -6,18 +6,16 @@
   tasks:
 
     - name: Run ansible galaxy
-      local_action: command ansible-galaxy install -r requirements.yml -p galaxy/ --force
+      command: ansible-galaxy install -r requirements.yml -p galaxy/ --force
 
     - name: Pull kolla repository
-      local_action:
-        module: git
+      git:
         repo: https://github.com/openstack/kolla.git
         dest: "{{ kolla_installer }}"
         version: "{{ kolla_release | default('HEAD') }}"
 
     - name: Pull awx playbook repository
-      local_action:
-        module: git
+      git:
         repo: https://github.com/ansible/awx.git
         dest: "{{ awx_installer }}"
         version: "{{ awx_releae | default('HEAD') }}"
