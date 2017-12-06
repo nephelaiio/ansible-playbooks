@@ -1,21 +1,171 @@
 ---
-- name: Configure sensu server
+#- name: Configure sensu clients
+#
+#  hosts: all:!localhost
+#
+#  vars:
+#
+#    sensu_server: false
+#
+#  roles:
+#
+#    - nephelaiio.sensu
+
+
+- name: Build uchiwa locally
+
+  hosts: localhost
+
+  tasks:
+
+    - name: install packages
+      package:
+        name: go
+      when: ansible_os_family == 'Archlinux'
+      become: yes
+
+    - name: fetch sources
+      command: "go get -d github.com/sensu/uchiwa"
+      args:
+        creates: ~/go/src/github.com/sensu/uchiwa
+          
+
+    - name: build package
+      shell: "GOOS=linux GOARCH=arm go build -o /tmp/build/uchiwa"
+      args:
+        chdir: ~/go/src/github.com/sensu/uchiwa
+        creates: /tmp/build/uchiwa
+
+
+- name: Configure uchiwa
 
   hosts: sensu
 
   vars:
+
     sensu_server: true
+    sensu_rabbitmq_port: 5672
+    uchiwa_version: 1.0.0
+    uchiwa_port: 3000
+    uchiwa_conf: /etc/sensu/uchiwa.json
+    uchiwa_home: /opt/uchiwa
+    uchiwa_service_home: "{{ uchiwa_home }}/web"
+    uchiwa_gopath: "{{ uchiwa_home }}/src"
+    uchiwa_src: "{{ uchiwa_gopath }}/github.com/sensu/uchiwa"
+    uchiwa_user: uchiwa
+    uchiwa_binary: "{{ uchiwa_home }}/bin/uchiwa"
+    uchiwa_settings:
+      sensu:
+        - "{{ sensu_conf_common.api | combine({'name': 'home', 'pass': sensu_conf_common.api.password }) }}"
+      uchiwa:
+        host: "{{ ansible_default_ipv4.address }}"
+        port: 3000
+
+  become: yes
 
   roles:
+
     - nephelaiio.sensu
 
+  tasks:
 
-- name: Configure sensu clients
+    - name: install packages
+      package:
+        name:
+          - golang
+          - git
+          - npm
+          - nodejs
+          - nodejs-legacy
 
-  hosts: all
+    - name: create uchiwa user
+      include_role:
+        name: franklinkim.users
+      vars:
+        users:
+          - username: "{{ uchiwa_user }}"
+            home: "{{ uchiwa_home }}"
 
-  vars:
-    sensu_server: false
+    - name: create go path source
+      file:
+        path: "{{ uchiwa_gopath }}"
+        state: directory
+        owner: "{{ uchiwa_user }}"
 
-  roles:
-    - nephelaiio.sensu
+    - name: retrieve uchiwa sources
+      shell: "go get -d github.com/sensu/uchiwa"
+      environment:
+        GOPATH: "{{ uchiwa_home }}"
+      become_user: "{{ uchiwa_user }}"
+
+    - name: create source symlink
+      file:
+        src: "{{ uchiwa_src }}"
+        dest: "{{ uchiwa_service_home }}"
+        state: link
+
+    - name: create uchiwa binary directory
+      file:
+        path: "{{ uchiwa_binary  | dirname }}"
+        state: directory
+        owner: "{{ uchiwa_user }}"
+
+    - name: copy uchiwa binary
+      copy:
+        src: /tmp/build/uchiwa
+        dest: "{{ uchiwa_binary }}"
+        mode: 0755
+
+    - name: create uchiwa configuration directory
+      file:
+        dest: "{{ uchiwa_conf | dirname }}"
+        state: directory
+
+    - name: configure uchiwa
+      copy:
+        dest: "{{ uchiwa_conf }}"
+        content: "{{ uchiwa_settings | to_nice_json }}"
+      notify:
+        - restart uchiwa
+
+    - name: install bower
+      npm:
+        name: bower
+        global: yes
+
+    - name: install front end assets
+      command: npm install --production
+      args:
+        chdir: "{{ uchiwa_src }}"
+      become: yes
+      become_user: "{{ uchiwa_user }}"
+
+    - name: set uchiwa permissions
+      file:
+        path: "{{ uchiwa_home }}"
+        owner: "{{ uchiwa_user }}"
+        recurse: yes
+
+    - name: create systemd service units
+      template:
+        src: systemd/uchiwa.service.j2
+        dest: "/etc/systemd/system/uchiwa.service"
+      vars:
+        home: "{{ uchiwa_service_home }}"
+        user: "{{ uchiwa_user }}"
+        group: "{{ uchiwa_user }}"
+        bin: "{{ uchiwa_binary }}"
+        conf: "{{ uchiwa_conf }}"
+      notify: reload systemd
+
+  handlers:
+
+    - name: reload systemd
+      command: systemctl daemon-reload
+      tags:
+        - skip_ansible_lint
+
+    - name: restart uchiwa
+      service:
+        name: uchiwa
+        state: restarted
