@@ -1,15 +1,15 @@
 ---
-#- name: Configure sensu clients
-#
-#  hosts: all:!localhost
-#
-#  vars:
-#
-#    sensu_server: false
-#
-#  roles:
-#
-#    - nephelaiio.sensu
+- name: Configure sensu clients
+
+  hosts: all:!localhost
+
+  vars:
+
+    sensu_server: false
+
+  roles:
+
+    - nephelaiio.sensu
 
 
 - name: Build uchiwa locally
@@ -28,7 +28,6 @@
       command: "go get -d github.com/sensu/uchiwa"
       args:
         creates: ~/go/src/github.com/sensu/uchiwa
-          
 
     - name: build package
       shell: "GOOS=linux GOARCH=arm go build -o /tmp/build/uchiwa"
