@@ -8,12 +8,13 @@ awx_release: 1.0.0
 awx_installer: resources/awx
 awx_url: http://awx.home.nephelai.io
 
+sensu_url: http://sensu.home.nephelai.io
+apt_url: http://apt.home.nephelai.io
+
 servers:
   dhcp: "{{ groups['dhcp'] | map('extract', hostvars, ['ansible_host']) | list }}"
   recursors: "{{ groups['recursors'] | map('extract', hostvars, ['ansible_host']) | list }}"
   dns: "{{ groups['pdns'] | map('extract', hostvars, ['ansible_host']) | list }}"
-
-apt_url: http://apt.home.nephelai.io
 
 nets:
   home:
@@ -88,8 +89,8 @@ dns:
         home.nephelai.io: rpia.home.nephelai.io
         unifi.home.nephelai.io: "{{ groups['unifi'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
         nfs.home.nephelai.io: "{{ groups['backup'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
-        apt.home.nephelai.io: "{{ groups['mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
-        sensu.home.nephelai.io: "{{ groups['sensu'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
+        "{{ apt_url }}": "{{ groups['mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
+        "{{ sensu_url }}": "{{ groups['sensu'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
     emoh:
       name: "{{ nets.home.zone }}"
       hostmaster: master@home.nephelai.io
