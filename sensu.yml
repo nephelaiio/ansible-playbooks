@@ -1,22 +1,12 @@
 ---
-- name: Configure sensu clients
-
-  hosts: all:!localhost
-
-  vars:
-
-    sensu_server: false
-    sensu_api_host: sensu.home.nephelai.io
-    sensu_rabbitmq_host: sensu.home.nephelai.io
-
-  roles:
-
-    - nephelaiio.sensu
-
-
 - name: Build uchiwa locally
 
   hosts: localhost
+
+  vars:
+
+    uchiwa_arch: arm
+    uchiwa_os: linux
 
   tasks:
 
@@ -26,13 +16,19 @@
       when: ansible_os_family == 'Archlinux'
       become: yes
 
+    - name: install packages
+      package:
+        name: golang
+      when: ansible_os_family == 'Debian'
+      become: yes
+
     - name: fetch sources
       command: "go get -d github.com/sensu/uchiwa"
       args:
         creates: ~/go/src/github.com/sensu/uchiwa
 
     - name: build package
-      shell: "GOOS=linux GOARCH=arm go build -o /tmp/build/uchiwa"
+      shell: "GOOS={{ uchiwa_os }} GOARCH={{ uchiwa_arch }} go build -o /tmp/build/uchiwa"
       args:
         chdir: ~/go/src/github.com/sensu/uchiwa
         creates: /tmp/build/uchiwa
@@ -69,6 +65,28 @@
     - nephelaiio.sensu
 
   tasks:
+
+    - name: install gitlab reverse proxy
+      include_role:
+        name: geerlingguy.apache
+      vars:
+        apache_create_vhosts: true
+        apache_remove_default_vhost: true
+        apache_vhosts_filename: 001-sensu.conf
+        apache_vhosts_template: apache/revproxy.conf.j2
+        apache_mods_enabled:
+          - proxy.load
+          - proxy_http.load
+          - ssl.load
+          - slotmem_shm.load
+          - proxy_balancer.load
+          - lbmethod_bytraffic.load
+        proxy_port: 80
+        proxy_virtualhost: "*:{{ proxy_port }}"
+        proxy_servername: "{{ sensu_url | urlsplit('hostname') }}"
+        proxy_backend_proto: "http"
+        proxy_backend_members: "{{ groups['sensu'] | map('extract', hostvars, ['ansible_host']) | list }}"
+        proxy_backend_port: "3000"
 
     - name: install packages
       package:
@@ -176,3 +194,18 @@
       service:
         name: uchiwa
         state: restarted
+
+
+- name: Configure sensu clients
+
+  hosts: all:!localhost
+
+  vars:
+
+    sensu_server: false
+    sensu_api_host: sensu.home.nephelai.io
+    sensu_rabbitmq_host: sensu.home.nephelai.io
+
+  roles:
+
+    - nephelaiio.sensu
