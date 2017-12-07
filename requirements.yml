@@ -18,17 +18,17 @@
 - src: geerlingguy.mysql
   version: 2.8.0
 - src: nephelaiio.vim
-  version: 1.0.8
+  version: 1.0.9
 - src: nephelaiio.tree
   version: 1.0.1
 - src: nephelaiio.devtools
-  version: 1.0.5
-- src: nephelaiio.rbenv
-  version: 1.0.11
-- src: nephelaiio.pyenv
   version: 1.0.6
+- src: nephelaiio.rbenv
+  version: 1.1.1
+- src: nephelaiio.pyenv
+  version: 1.0.8
 - src: nephelaiio.tmux
-  version: 1.0.7
+  version: 1.0.8
 - src: nephelaiio.vagrant
   version: 1.0.1
 - src: nephelaiio.i3
@@ -42,10 +42,10 @@
 - src: nephelaiio.nfs
   version: 1.0.1
 - src: nephelaiio.sensu
-  version: 1.1.0
+  version: 1.1.1
 - src: nephelaiio.golang
   version: 1.0.1
 - src: nephelaiio.ubuntu-installer
   version: 1.0.6
 - src: nephelaiio.gitlab
-  version: 1.0.4
+  version: 1.0.5
