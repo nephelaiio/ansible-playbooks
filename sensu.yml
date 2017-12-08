@@ -203,9 +203,41 @@
   vars:
 
     sensu_server: false
-    sensu_api_host: sensu.home.nephelai.io
-    sensu_rabbitmq_host: sensu.home.nephelai.io
+    sensu_api_host: "{{ sensu_url | urlsplit('hostname') }}"
+    sensu_rabbitmq_host: "{{ sensu_url | urlsplit('hostname') }}"
 
   roles:
 
     - nephelaiio.sensu
+
+  tasks:
+
+    - name: install sensu plugins
+      gem:
+        executable: "{{ sensu_ruby_path }}/bin/gem"
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - sensu-plugins-disk-checks
+        - sensu-plugins-memory-checks
+        - sensu-plugins-load-checks
+        - sensu-plugins-network-checks
+        - sensu-plugins-http
+        - sensu-plugins-ntp
+        - sensu-plugins-apache
+      become: yes
+
+    - name: configure path
+      lineinfile:
+        path: "~{{ sensu_user }}/.bash_profile"
+        line: "PATH=$PATH:{{ sensu_ruby_path }}/bin"
+        insertafter: EOF
+      notify: restart sensu
+
+  handlers:
+
+    - name: restart sensu
+      service:
+        name: sensu
+        state: restarted
+      become: yes
