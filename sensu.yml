@@ -34,7 +34,7 @@
         creates: /tmp/build/uchiwa
 
 
-- name: Configure uchiwa
+- name: Configure sensu server
 
   hosts: sensu
 
@@ -57,6 +57,12 @@
       uchiwa:
         host: "{{ ansible_default_ipv4.address }}"
         port: 3000
+    sensu_conf_checks:
+      uchiwa:
+        command: "check-http.rb -u http://sensu.home.nephelai.io"
+        subscribers:
+          - home
+        inverval: 60
 
   become: yes
 
@@ -198,19 +204,29 @@
 
 - name: Configure sensu clients
 
-  hosts: all:!localhost
+  hosts: all:!nomonitor
 
   vars:
 
     sensu_server: false
+    sensu_user: sensu
+    sensu_user_home: /opt/sensu
+    sensu_ruby_path: "{{ sensu_user_home }}/embedded"
     sensu_api_host: "{{ sensu_url | urlsplit('hostname') }}"
     sensu_rabbitmq_host: "{{ sensu_url | urlsplit('hostname') }}"
+
+  become: yes
 
   roles:
 
     - nephelaiio.sensu
 
   tasks:
+
+    - name: install plugin sensu requirements
+      package:
+        name:
+          - ntpdate
 
     - name: install sensu plugins
       gem:
@@ -225,7 +241,6 @@
         - sensu-plugins-http
         - sensu-plugins-ntp
         - sensu-plugins-apache
-      become: yes
 
     - name: configure path
       lineinfile:
@@ -238,6 +253,5 @@
 
     - name: restart sensu
       service:
-        name: sensu
+        name: sensu-client
         state: restarted
-      become: yes
