@@ -30,6 +30,10 @@
 
   tasks:
 
+    - name: include environment variables
+      include_vars:
+        dir: "vars/{{ inventory }}"
+
     - name: install apt mirror packages
       package:
         name: "{{ mirror_packages }}"
