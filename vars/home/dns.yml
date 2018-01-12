@@ -20,3 +20,21 @@ dns:
       mx: []
       records: "{{ nets.home.reservations.values() | map('reverse_record') | list }}"
       cnames: []
+
+pdns:
+  config:
+    dnsupdate: yes
+    allow-dnsupdate-from: "{{ servers.dhcp | ipaddr('host') | join(' ') + ' 127.0.0.1/32' }}"
+    master: yes
+    setuid: pdns
+    setgid: pdns
+    slave: no
+    local-address: "{{ ansible_default_ipv4.address }}:53"
+    security-poll-suffix: ''
+  backends:
+    gmysql:
+      user: pdns
+      host: 127.0.0.1
+      password: "{{ passwords.mysql.pdns }}"
+      dbname: pdns
+  domains: "{{ dns.zones.values() }}"
