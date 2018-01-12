@@ -1,0 +1,39 @@
+---
+raspbian_release: https://downloads.raspberrypi.org/raspbian_lite_latest
+rasbian_timezone: "{{ timezone }}"
+raspbian_hosts:
+  - hostname: "{{ hostvars['rpia.home.nephelai.io']['inventory_hostname'] }}"
+    ifaces:
+      - name: eth0
+        method: static
+        ip-address: "{{ hostvars['rpia.home.nephelai.io']['ansible_host'] }}"
+        prefix: "{{ nets.home.netmask }}"
+        gateway: "{{ nets.home.router }}"
+  - hostname: "{{ hostvars['rpib.home.nephelai.io']['inventory_hostname'] }}"
+    ifaces:
+      - name: eth0
+        method: static
+        ip-address: "{{ hostvars['rpib.home.nephelai.io']['ansible_host'] }}"
+        prefix: "{{ nets.home.netmask }}"
+        gateway: "{{ nets.home.router }}"
+  - hostname: "{{ hostvars['rpic.home.nephelai.io']['inventory_hostname'] }}"
+    ifaces:
+      - name: eth0
+        method: static
+        ip-address: "{{ hostvars['rpic.home.nephelai.io']['ansible_host'] }}"
+        prefix: "{{ nets.home.netmask }}"
+        gateway: "{{ nets.home.router }}"
+  - hostname: "{{ hostvars['rpid.home.nephelai.io']['inventory_hostname'] }}"
+    ifaces:
+      - name: eth0
+        method: static
+        ip-address: "{{ hostvars['rpid.home.nephelai.io']['ansible_host'] }}"
+        prefix: "{{ nets.home.netmask }}"
+        gateway: "{{ nets.home.router }}"
+  - hostname: "{{ hostvars['rpie.home.nephelai.io']['inventory_hostname'] }}"
+    ifaces:
+      - name: eth0
+        method: static
+        ip-address: "{{ hostvars['rpie.home.nephelai.io']['ansible_host'] }}"
+        prefix: "{{ nets.home.netmask }}"
+        gateway: "{{ nets.home.router }}"

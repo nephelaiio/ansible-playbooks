@@ -1,0 +1,6 @@
+---
+servers:
+  dhcp: "{{ groups['dhcp'] | map('extract', hostvars, ['ansible_host']) | list }}"
+  recursors: "{{ groups['recursors'] | map('extract', hostvars, ['ansible_host']) | list }}"
+  dns: "{{ groups['pdns'] | map('extract', hostvars, ['ansible_host']) | list }}"
+  mail: "{{ groups['mail'] | map('extract', hostvars, ['ansible_host']) | list }}"

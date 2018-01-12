@@ -1,0 +1,22 @@
+---
+dns:
+  zones:
+    home:
+      name: home.nephelai.io
+      hostmaster: master@home.nephelai.io
+      mx: "{{ groups['mail'] ]}"
+      ns: "{{ groups['recursors'] }}"
+      records: "{{ nets.home.reservations.values() }}"
+      cnames:
+        home.nephelai.io: rpia.home.nephelai.io
+        unifi.home.nephelai.io: "{{ groups['unifi'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
+        nfs.home.nephelai.io: "{{ groups['backup'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
+        "{{ apt_url }}": "{{ groups['mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
+        "{{ sensu_url }}": "{{ groups['sensu'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
+    emoh:
+      name: "{{ nets.home.zone }}"
+      hostmaster: master@home.nephelai.io
+      ns: "{{ groups['recursors'] }}"
+      mx: []
+      records: "{{ nets.home.reservations.values() | map('reverse_record') | list }}"
+      cnames: []

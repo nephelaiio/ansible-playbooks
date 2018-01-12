@@ -1,0 +1,24 @@
+---
+sensu_rabbitmq_port: 5672
+uchiwa_version: 1.0.0
+uchiwa_port: 3000
+uchiwa_conf: /etc/sensu/uchiwa.json
+uchiwa_home: /opt/uchiwa
+uchiwa_service_home: "{{ uchiwa_home }}/web"
+uchiwa_gopath: "{{ uchiwa_home }}/src"
+uchiwa_src: "{{ uchiwa_gopath }}/github.com/sensu/uchiwa"
+uchiwa_user: uchiwa
+uchiwa_binary: "{{ uchiwa_home }}/bin/uchiwa"
+uchiwa_settings:
+  sensu:
+    - "{{ sensu_conf_common.api | combine({'name': 'home', 'pass': sensu_conf_common.api.password }) }}"
+  uchiwa:
+    host: "{{ ansible_default_ipv4.address }}"
+    port: 3000
+sensu_conf_checks:
+  checks:
+    ntp:
+      command: "{{ sensu_ruby_path }}/bin/check-ntp.rb"
+      subscribers:
+        - home
+      interval: 60
