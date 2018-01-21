@@ -51,7 +51,7 @@
         lease_time: 1800
         networks: "{{ nets.values() }}"
         zones: "{{ dns.zones.values() }}"
-        failover: "{{ dhcp.failover }}"
+        failover: "{{ dhcp_failover }}"
         domain_name: "{{ dns.zones.home.name }}"
       notify: restart dhcpd
 
