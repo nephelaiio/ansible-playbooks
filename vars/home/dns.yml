@@ -4,7 +4,7 @@ dns:
     home:
       name: home.nephelai.io
       hostmaster: master@home.nephelai.io
-      mx: "{{ groups['mail'] ]}"
+      mx: "{{ groups['mail'] }}"
       ns: "{{ groups['recursors'] }}"
       records: "{{ nets.home.reservations.values() }}"
       cnames:
