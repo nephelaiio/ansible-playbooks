@@ -1,0 +1,132 @@
+---
+- name: Configure apt package mirror
+
+  hosts: mirror
+
+  environment: "{{ proxy_env | default({}) }}"
+
+  become: yes
+
+  vars:
+
+    ubuntu_mirror_state: present
+    centos_mirror_state: absent
+    kvm_mirror_state: present
+    apache_root: /var/www/html/mirror
+    ubuntu_mirror: archive.ubuntu.com
+    ubuntu_mirror_list: /etc/apt/mirror.list
+    ubuntu_mirror_path: "/var/spool/apt-mirror/mirror/{{ ubuntu_mirror }}/ubuntu"
+    centos_mirror: mirrors.liquidweb.com
+    centos_mirror_path: "{{ apache_root }}/centos"
+    epel_mirror_path: "{{ apache_root }}/epel"
+    centos_rsync_options: "-avSHP --exclude i386 --exclude ppc64 --exclude SRPMs --exclude drpms --exclude centosplus --numeric-ids --exclude ?Server --exclude testing --exclude beta --exclude .html --numeric-ids --delete --delete-delay --delay-updates"
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "vars/{{ variables }}"
+
+    - name: install apt mirror packages
+      package:
+        name:
+          - apt-mirror
+          - apache2
+          - apt-transport-https
+          - util-linux
+          - wget
+
+    - name: remove deb-src mirrors
+      lineinfile:
+        path: "{{ ubuntu_mirror_list }}"
+        regexp: '^deb-src(.*)$'
+        line: '#deb-src\1'
+        backrefs: yes
+
+    - name: remove deb-src mirrors
+      lineinfile:
+        path: "{{ ubuntu_mirror_list }}"
+        regexp: '^deb-src(.*)$'
+        line: '#deb-src\1'
+        backrefs: yes
+
+    - name: add apt mirror update cronjob
+      cron:
+        name: 'update apt-mirror cache'
+        job: 'flock -n /tmp/apt-mirror apt-mirror'
+        state: "{{ ubuntu_mirror_state }}"
+        special_time: daily
+
+    - name: add mirror clean cronjob
+      cron:
+        name: 'clean apt-mirror cache'
+        job: 'flock -n /tmp/apt-mirror /var/spool/apt-mirror/var/clean.sh'
+        state: "{{ ubuntu_mirror_state }}"
+        special_time: daily
+
+    - name: create mirror root
+      file:
+        path: "{{ apache_root }}"
+        state: directory
+
+    - name: create ubuntu link
+      file:
+        path: "{{ apache_root }}/ubuntu"
+        src: "{{ ubuntu_mirror_path }}"
+        state: link
+        force: yes
+
+    - name: install yum mirror packages
+      package:
+        name:
+          - rsync
+
+    - name: create centos mirror path
+      file:
+        path: "{{ centos_mirror_path }}"
+        state: directory
+
+    - name: add centos mirror cronjob
+      cron:
+        name: 'update centos mirror cache'
+        job: "flock -n /tmp/centos-mirror /usr/bin/rsync {{ centos_rsync_options }} rsync://{{ centos_mirror }}/CentOS/ {{ centos_mirror_path }}"
+        state: "{{ centos_mirror_state }}"
+        special_time: daily
+
+    - name: add epel mirror cronjob
+      cron:
+        name: 'update epel mirror cache'
+        job: "flock -n /tmp/epel-mirror /usr/bin/rsync {{ centos_rsync_options }} rsync://{{ centos_mirror }}/fedora-epel/ {{ epel_mirror_path }}"
+        state: "{{ centos_mirror_state }}"
+        special_time: daily
+
+    - name: install kvm mirror packages
+      package:
+        name:
+          - wget
+
+    - name: create kvm image mirror paths
+      file:
+        path: "{{ apache_root }}/{{ item.value.url | urlsplit('path') | dirname }}"
+        state: directory
+      with_dict: "{{ kvm_images }}"
+
+    - name: add kvm image mirror cronjob
+      cron:
+        name: "update {{ item.key }} kvm image"
+        job: "wget {{ item.value.src }} -O {{ apache_root }}{{ item.value.url | urlsplit('path') }}"
+        state: "{{ kvm_mirror_state }}"
+        special_time: daily
+      with_dict: "{{ kvm_images }}"
+
+    - name: configure apache
+      include_role:
+        name: geerlingguy.apache
+      vars:
+        apache_create_vhosts: true
+        apache_remove_default_vhost: true
+        apache_vhosts_filename: 003-aptmirror.conf
+        apache_vhosts_template: apache/mirror.conf.j2
+        mirror_root: "{{ apache_root }}"
+        mirror_vhost: "*:80"
+        mirror_servername: "{{ mirror_url | urlsplit('hostname') }}"
