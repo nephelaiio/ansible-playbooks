@@ -3,26 +3,37 @@
 
   hosts: unifi
 
+  become: yes
+
+  roles:
+
+    - nephelaiio.plugins
+
   vars:
-    certbot:
-      bin: /usr/bin/certbot
-      url: https://dl.eff.org/certbot-auto
-      email: teodoro.cook@gmail.com
-      certdir: /etc/letsencrypt/live
+
+    letsencrypt_basedir: /etc/letsencrypt
+    letsencrypt_certdir: "{{ letsencrypt_basedir }}/live"
+    letsencrypt_keydir: "{{ letsencrypt_basedir }}/keys"
+    letsencrypt_account_keyfile: "{{ letsencrypt_keydir }}/id_rsa.letsencrypt"
+    letsencrypt_domain: "{{ unifi_hostname }}"
+    letsencrypt_zone: "{{ unifi_hostname | split_with('.') | tail | join('.') }}"
+    letsencrypt_domain_keyfile: "{{ letsencrypt_keydir }}/id_rsa.{{ letsencrypt_domain }}"
+    letsencrypt_domain_csrfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.csr"
+    letsencrypt_domain_crtfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.crt"
+
     nginx:
       vhosts:
         home_https:
           listen: "443 ssl"
-          server_name: home.nephelai.io
-          filename: home.nephelai.io.https.conf
+          server_name: "{{ unifi_hostname }}"
+          filename: "{{ unifi_hostname }}.https.conf"
           root: /var/www/html/unifi
-          access_log: /var/log/nginx/home.nephelai.io.access.log
-          error_log: /var/log/nginx/home.nephelai.io.error.log
-          ssl_ciphers: "ECDH+AESGCM:ECDH+AES256:ECDH+AES128:DH+3DES:!ADH:!AECDH:!MD5"
+          access_log: "/var/log/nginx/{{ unifi_hostname }}.access.log"
+          error_log: "/var/log/nginx/{{ unifi_hostname }}.error.log"
           extra_parameters: |
             keepalive_timeout   300;
-            ssl_certificate {{ certbot.certdir }}/home.nephelai.io/fullchain.pem;
-            ssl_certificate_key {{ certbot.certdir }}/home.nephelai.io/privkey.pem;
+            ssl_certificate {{ letsencrypt_domain_crtfile }};
+            ssl_certificate_key {{ letsencrypt_domain_keyfile }};
             ssl_session_cache   shared:SSL:10m;
             ssl_session_timeout 10m;
             ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
@@ -31,7 +42,6 @@
             ssl_ciphers ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:DHE-RSA-AES256-SHA;
             add_header Strict-Transport-Security max-age=31536000;
             add_header X-Frame-Options DENY;
-            error_log /var/log/unifi/nginx.log;
             proxy_cache off;
             proxy_store off;
             location / {
@@ -45,79 +55,147 @@
               proxy_connect_timeout   5;
               proxy_read_timeout      240;
               proxy_intercept_errors  on;
-              proxy_pass https://unifi.home.nephelai.io:8443/;
+              proxy_pass https://{{ unifi_hostname }}:8443/;
               proxy_http_version 1.1;
               proxy_set_header Upgrade $http_upgrade;
               proxy_set_header Connection "upgrade";
-              if ($scheme = http) {
-                return 301 https://$server_name$request_uri; #CHANGE THIS (uncomment) after cert installation
-              }
             }
         home_http:
           listen: "80"
-          server_name: home.nephelai.io
-          filename: home.nephelai.io.http.conf
+          server_name: "{{ unifi_hostname }}"
+          filename: "{{ unifi_hostname }}.http.conf"
           root: /var/www/html/unifi
-          access_log: /var/log/nginx/home.nephelai.io.http.access.log
-          error_log: /var/log/nginx/home.nephelai.io.http.error.log
+          access_log: "/var/log/nginx/{{ unifi_hostname }}.access.log"
+          error_log: "/var/log/nginx/{{ unifi_hostname }}.error.log"
           extra_parameters: |
-            rewrite ^/unifi(.*) https://home.nephelai.io/unifi$1 permanent;
+            keepalive_timeout   300;
+            add_header Strict-Transport-Security max-age=31536000;
+            add_header X-Frame-Options DENY;
+            proxy_cache off;
+            proxy_store off;
+            location / {
+              proxy_redirect          off;
+              proxy_pass_header       Server;
+              proxy_set_header        X-Real-IP $remote_addr;
+              proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header        X-Scheme $scheme;
+              proxy_set_header        Host $http_host;
+              proxy_set_header        X-NginX-Proxy true;
+              proxy_connect_timeout   5;
+              proxy_read_timeout      240;
+              proxy_intercept_errors  on;
+              proxy_pass https://{{ unifi_hostname }}:8443/;
+              proxy_http_version 1.1;
+              proxy_set_header Upgrade $http_upgrade;
+              proxy_set_header Connection "upgrade";
+            }
 
   tasks:
 
+    - name: load private variables
+      include_vars:
+        dir: "vars/{{ variables }}"
+
     - name: install unifi
-      become: yes
       include_role:
         name: nephelaiio.unifi-controller
 
+    - name: create letsencrypt folders
+      file:
+        path: "{{ item }}"
+        mode: 0755
+        state: directory
+      with_items: 
+        - "{{ letsencrypt_certdir }}"
+        - "{{ letsencrypt_keydir }}"
+
+    - name: create key
+      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_email }}" -f {{ letsencrypt_account_keyfile }} -q -N ""'
+      args:
+        creates: "{{ letsencrypt_account_keyfile }}"
+
+    - name: create domain key
+      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_email }}" -f {{ letsencrypt_domain_keyfile }} -q -N ""'
+      args:
+        creates: "{{ letsencrypt_domain_keyfile }}"
+
+    - name: create csr
+      shell: 'openssl req -new -nodes -key {{ letsencrypt_domain_keyfile }} -out {{ letsencrypt_domain_csrfile }} -subj "/CN={{ letsencrypt_domain }}"'
+      args:
+        creates: "{{ letsencrypt_domain_csrfile }}"
+
+    - name: create challenge
+      letsencrypt:
+        account_key: "{{ letsencrypt_account_keyfile }}"
+        challenge: dns-01
+        csr: "{{ letsencrypt_domain_csrfile }}"
+        dest: "{{ letsencrypt_domain_crtfile }}"
+        agreement: https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf
+      register: letsencrypt_challenge
+
+    - name: install pip
+      include_role:
+        name: nephelaiio.pip
+
+    - name: install route53 dependencies
+      pip:
+        name: boto
+
+    - name: create route53 txt record for certificate validation
+      route53:
+        command: create
+        aws_access_key: "{{ aws_access_key_id }}"
+        aws_secret_key: "{{ aws_secret_access_key }}"
+        zone: "{{ letsencrypt_zone }}"
+        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_zone }}"
+        retry_interval: 300
+        type: TXT
+        ttl: 7200
+        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
+        wait: yes
+        overwrite: yes
+      when: letsencrypt_challenge | changed
+      ignore_errors: yes
+
+    - name: wait for txt record propagation
+      pause:
+        seconds: 60
+
+    - name: validate challenge
+      letsencrypt:
+        account_key: "{{ letsencrypt_account_keyfile }}"
+        challenge: dns-01
+        csr: "{{ letsencrypt_domain_csrfile }}"
+        dest: "{{ letsencrypt_domain_crtfile }}"
+        data: "{{ letsencrypt_challenge }}"
+        remaining_days: 20
+      when: letsencrypt_challenge | changed
+
+    - name: delete route53 txt record for certificate validation
+      route53:
+        command: delete
+        aws_access_key: "{{ aws.access_key_id }}"
+        aws_secret_key: "{{ aws.secret_access_key }}"
+        zone: "{{ letsencrypt_zone }}"
+        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_zone }}"
+        retry_interval: 300
+        type: TXT
+        ttl: 7200
+        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
+        wait: yes
+      when: letsencrypt_challenge | changed
+      ignore_errors: yes
+
     - name: create vhost roots
-      become: yes
       file:
         state: directory
         path: "{{ item }}"
       with_items: "{{ nginx.vhosts.values() | map(attribute='root') | list }}"
 
     - name: install nginx
-      become: yes
       include_role:
         name: geerlingguy.nginx
       vars:
         nginx_remove_default_vhost: true
         nginx_vhosts:
           - "{{ nginx.vhosts.home_http }}"
-
-    - name: install certbot
-      become: yes
-      get_url:
-        url: "{{ certbot.url }}"
-        dest: "{{ certbot.bin }}"
-
-    - name: set certbot permissions
-      become: yes
-      file:
-        path: "{{ certbot.bin }}"
-        state: file
-        mode: 0755
-
-    - name: run certbot
-      become: yes
-      command: "{{ certbot.bin }} --nginx certonly -q -d {{ item }} --email {{ certbot.email }} --agree-tos"
-      args:
-        creates: "/etc/letsencrypt/live/{{ item }}"
-      with_items: "{{ nginx.vhosts.values() | map(attribute='server_name') | list }}"
-
-    - name: install certbot cronjob
-      become: yes
-      cron:
-        name: renew letsencrypt certificates
-        special_time: daily
-        user: root
-        cron_file: certbot
-        job: "{{ certbot.bin }} -q renew"
-
-    - name: configure nginx
-      become: yes
-      include_role:
-        name: geerlingguy.nginx
-      vars:
-        nginx_vhosts: "{{ nginx.vhosts.values() }}"
