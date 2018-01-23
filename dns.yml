@@ -3,6 +3,8 @@
 
   hosts: recursors
 
+  become: yes
+
   vars:
 
     bind_fwd_zones: "{{ dns.zones.values() | map(attribute='name') | list }}"
@@ -10,17 +12,21 @@
 
   roles:
 
-    - nephelaiio.bind
     - nephelaiio.plugins
 
   tasks:
 
-    - debug:
-        var: bind_local_config
+    - name: include private variables
+      include_vars:
+        dir: "vars/{{ variables }}"
+
+    - name: install bind
+      include_role:
+        name: nephelaiio.bind
 
     - name: flush cache
       command: rndc flush
-      become: yes
+      changed_when: false
 
 
 - name: Configure pdns authoritative server
@@ -30,6 +36,10 @@
   become: yes
 
   tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "vars/{{ variables }}"
 
     - name: inspect nameservers
       changed_when: False
@@ -96,7 +106,7 @@
         mysql "{{ pdns.backends.gmysql.dbname }}" -e "
         SOURCE {{ tmpdir.path }}/schema.sql;"
       changed_when: false
-
+      
     - name: build data initialization script
       changed_when: false
       template:
@@ -104,6 +114,9 @@
         dest: "{{ tmpdir.path }}/data.sql"
       vars:
         domains: "{{ pdns.domains }}"
+        mx_ttl: 3600
+        mx_priority: 10
+        ns_ttl: 3600
         keys:
           - "{{ tsigkeys.dhcp }}"
 

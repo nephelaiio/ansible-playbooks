@@ -8,11 +8,13 @@ dns:
       ns: "{{ groups['recursors'] }}"
       records: "{{ nets.home.reservations.values() }}"
       cnames:
-        home.nephelai.io: rpia.home.nephelai.io
-        unifi.home.nephelai.io: "{{ groups['unifi'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
-        nfs.home.nephelai.io: "{{ groups['backup'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
-        "{{ apt_url }}": "{{ groups['mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
-        "{{ sensu_url }}": "{{ groups['sensu'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"
+        - [home.nephelai.io, rpia.home.nephelai.io]
+        - [nfs.home.nephelai.io, "{{ groups['backup'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
+        - ["{{ unifi_url | urlsplit('hostname') }}", "{{ groups['unifi'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
+        - ["{{ mirror_url | urlsplit('hostname') }}", "{{ groups['mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
+        - ["{{ apt_url | urlsplit('hostname') }}", "{{ groups['mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
+        - ["{{ yum_url | urlsplit('hostname') }}", "{{ groups['mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
+        - ["{{ sensu_url | urlsplit('hostname') }}", "{{ groups['sensu'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
     emoh:
       name: "{{ nets.home.zone }}"
       hostmaster: master@home.nephelai.io

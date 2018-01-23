@@ -1,11 +1,2 @@
 ---
-sensu_url: http://sensu.home.nephelai.io
-sensu_user: sensu
-sensu_user_home: /opt/sensu
-sensu_ruby_path: "{{ sensu_user_home }}/embedded"
-sensu_api_host: "{{ sensu_url | urlsplit('hostname') }}"
-sensu_conf_client:
-  client:
-    name: "{{ ansible_hostname }}"
-    address: "{{ ansible_default_ipv4.address }}"
-    subscriptions: "{{ sensu_subscriptions }}"
+sensu_url: "http://sensu.{{ base_domain }}"

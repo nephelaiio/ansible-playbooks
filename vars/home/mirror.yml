@@ -1,0 +1,7 @@
+---
+mirror_url: "http://repo.{{ base_domain }}"
+apt_url: "apt.{{ base_domain }}"
+yum_url: "yum.{{ base_domain }}"
+mirror_alias:
+  - "{{ apt_url }}"
+  - "{{ yum_url }}"

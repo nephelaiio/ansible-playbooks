@@ -1,5 +1,14 @@
 ---
-mirror_url: "http://repo.{{ base_domain }}"
-mirror_alias:
-  - "apt.{{ base_domain }}"
-  - "yum.{{ base_domain }}"
+ubuntu_mirror_state: present
+centos_mirror_state: absent
+kvm_mirror_state: present
+raspbian_mirror_state: present
+apache_root: /var/www/html/mirror
+ubuntu_mirror: archive.ubuntu.com
+ubuntu_mirror_list: /etc/apt/mirror.list
+ubuntu_mirror_path: "/var/spool/apt-mirror/mirror/{{ ubuntu_mirror }}/ubuntu"
+centos_mirror: mirrors.liquidweb.com
+centos_mirror_path: "{{ apache_root }}/centos"
+epel_mirror_path: "{{ apache_root }}/epel"
+centos_rsync_options: "-avSHP --exclude i386 --exclude ppc64 --exclude SRPMs --exclude drpms --exclude centosplus --numeric-ids --exclude ?Server --exclude testing --exclude beta --exclude .html --numeric-ids --delete --delete-delay --delay-updates"
+raspbian_mirror_path: "{{ apache_root }}/{{ raspbian_release.url | urlsplit('path') | dirname }}"

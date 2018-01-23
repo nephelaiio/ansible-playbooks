@@ -15,9 +15,9 @@ INSERT IGNORE INTO domains(name, type)
 {% for domain in domains %}
 {%   for ns in domain.ns %}
 SET @name = '{{ domain.name }}',
-  @content = '{{ ns.name }}',
+  @content = '{{ ns }}',
   @type = 'NS',
-  @ttl = {{ ns.ttl | default(3600) }}; 
+  @ttl = {{ ns_ttl | default(3600) }}; 
 SELECT id INTO @id FROM domains
 WHERE name like '{{ domain.name }}';
 DELETE FROM records
@@ -30,10 +30,10 @@ VALUES(@id, @name, @content, @type, @ttl);
 {% for domain in domains %}
 {%   for mx in domain.mx %}
 SET @name = '{{ domain.name }}',
-  @content = '{{ mx.name }}',
+  @content = '{{ mx }}',
   @type = 'MX',
-  @ttl = {{ mx.ttl | default(3600) }},
-  @prio = {{ mx.priority | default(10) }}; 
+  @ttl = {{ mx_ttl | default(3600) }},
+  @prio = {{ mx_priority | default(10) }}; 
 SELECT id INTO @id FROM domains
 WHERE name like '{{ domain.name }}';
 DELETE FROM records
@@ -58,8 +58,8 @@ INSERT INTO records(domain_id, name, content, type, ttl)
 {%   endfor %}
 
 {%   for cname in domain.cnames %}
-SET @name = '{{ cname }}',
-    @content = '{{ domain.cnames[cname] }}',
+SET @name = '{{ cname.1 }}',
+    @content = '{{ cname.2 }}',
     @type = 'CNAME',
     @ttl = 3600; 
 SELECT id INTO @id FROM domains
