@@ -106,7 +106,7 @@
         mysql "{{ pdns.backends.gmysql.dbname }}" -e "
         SOURCE {{ tmpdir.path }}/schema.sql;"
       changed_when: false
-      
+
     - name: build data initialization script
       changed_when: false
       template:
