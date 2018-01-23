@@ -4,6 +4,7 @@ ignore: |
   galaxy/
   resources/
   **/vault.yml
+  **/vault/
 
 rules:
   braces:
