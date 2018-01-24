@@ -7,19 +7,9 @@
 
   become: yes
 
-  vars:
+  roles:
 
-    ubuntu_mirror_state: present
-    centos_mirror_state: absent
-    kvm_mirror_state: present
-    apache_root: /var/www/html/mirror
-    ubuntu_mirror: archive.ubuntu.com
-    ubuntu_mirror_list: /etc/apt/mirror.list
-    ubuntu_mirror_path: "/var/spool/apt-mirror/mirror/{{ ubuntu_mirror }}/ubuntu"
-    centos_mirror: mirrors.liquidweb.com
-    centos_mirror_path: "{{ apache_root }}/centos"
-    epel_mirror_path: "{{ apache_root }}/epel"
-    centos_rsync_options: "-avSHP --exclude i386 --exclude ppc64 --exclude SRPMs --exclude drpms --exclude centosplus --numeric-ids --exclude ?Server --exclude testing --exclude beta --exclude .html --numeric-ids --delete --delete-delay --delay-updates"
+    - nephelaiio.plugins
 
   tasks:
 
@@ -114,10 +104,22 @@
     - name: add kvm image mirror cronjob
       cron:
         name: "update {{ item.key }} kvm image"
-        job: "wget {{ item.value.src }} -O {{ apache_root }}{{ item.value.url | urlsplit('path') }}"
+        job: "wget {{ item.value.src }} -O {{ apache_root }}/{{ item.value.url | urlsplit('path') }}"
         state: "{{ kvm_mirror_state }}"
         special_time: daily
       with_dict: "{{ kvm_images }}"
+
+    - name: create raspbian image mirror paths
+      file:
+        path: "{{ raspbian_mirror_path }}"
+        state: directory
+
+    - name: add raspbian image mirror cronjob
+      cron:
+        name: "update raspbian image"
+        job: "wget {{ raspbian_release.src }} -O {{ apache_root }}/{{ raspbian_release.url | urlsplit('path') }}"
+        state: "{{ raspbian_mirror_state }}"
+        special_time: daily
 
     - name: configure apache
       include_role:
