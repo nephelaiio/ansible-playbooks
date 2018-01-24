@@ -2,14 +2,14 @@
 dns:
   zones:
     home:
-      name: home.nephelai.io
-      hostmaster: master@home.nephelai.io
+      name: "{{ base_domain }}"
+      hostmaster: "master@{{ base_domain }}"
       mx: "{{ groups['mail'] }}"
       ns: "{{ groups['recursors'] }}"
       records: "{{ nets.home.reservations.values() }}"
       cnames:
-        - [home.nephelai.io, rpia.home.nephelai.io]
-        - [nfs.home.nephelai.io, "{{ groups['backup'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
+        - ["{{ base_domain }}", rpia.home.nephelai.io]
+        - ["nfs.{{ base_domain }}", "{{ groups['backup'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
         - ["{{ unifi_url | urlsplit('hostname') }}", "{{ groups['unifi'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
         - ["{{ mirror_url | urlsplit('hostname') }}", "{{ groups['mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
         - ["{{ apt_url | urlsplit('hostname') }}", "{{ groups['mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]

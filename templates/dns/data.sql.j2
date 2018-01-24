@@ -58,8 +58,8 @@ INSERT INTO records(domain_id, name, content, type, ttl)
 {%   endfor %}
 
 {%   for cname in domain.cnames %}
-SET @name = '{{ cname.1 }}',
-    @content = '{{ cname.2 }}',
+SET @name = '{{ cname.0 }}',
+    @content = '{{ cname.1 }}',
     @type = 'CNAME',
     @ttl = 3600; 
 SELECT id INTO @id FROM domains
