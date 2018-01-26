@@ -1,5 +1,7 @@
 ---
-raspbian_release: https://downloads.raspberrypi.org/raspbian_lite_latest
+raspbian_release:
+  src: "https://downloads.raspberrypi.org/raspbian_lite_latest"
+  url: "{{ mirror_url }}/raspbian/raspbian_lite_latest"
 rasbian_timezone: "{{ timezone }}"
 raspbian_hosts:
   - hostname: "{{ hostvars['rpia.home.nephelai.io']['inventory_hostname'] }}"

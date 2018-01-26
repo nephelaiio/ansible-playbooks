@@ -1,172 +1,46 @@
 ---
-- name: inspect current user
-  command: whoami
-  register: inspect_username
+- name: Create raspbian images
 
-- name: define ssh key location
-  set_fact:
-    sshkey: "~{{ inspect_username.stdout }}/.ssh/id_rsa.pub"
+  hosts: mirror
 
-- name: create temporary target directory
-  tempfile:
-    state: directory
-    prefix: img
-  register: tmpdir_dest
+  environment: "{{ proxy_env | default({}) }}"
 
-- name: register target root directory
-  set_fact:
-    root_dir: "{{ tmpdir_dest.path }}/root"
-
-- name: register target boot directory
-  set_fact:
-    boot_dir: "{{ tmpdir_dest.path }}/boot"
-
-- name: create target directories
-  file:
-    path: "{{ dir }}"
-    state: directory
-  loop_control:
-    loop_var: dir
-  with_items:
-    - "{{ root_dir }}"
-    - "{{ boot_dir }}"
-
-- name: create image target directory
-  file:
-    state: directory
-    path: files/images
-
-- name: register target raspbian iso file
-  set_fact:
-    dest_img: "{{ playbook_dir }}/files/images/{{ raspbian_host }}.img"
-
-- name: fetch raspbian source image
-  get_url:
-    url: "{{ raspbian_release }}"
-    dest: "{{ dest_img | dirname }}/raspbian.archive"
-
-- name: unarchive raspbian image
-  unarchive:
-    src: "{{ dest_img | dirname }}/raspbian.archive"
-    dest: "{{ dest_img | dirname }}"
-    remote_src: yes
-    list_files: yes
-  register: raspbian_img
-
-- name: copy raspbian source image
-  copy:
-    src: "files/images/{{ raspbian_img.files[0] }}"
-    dest: "{{ dest_img }}"
-
-- name: inspect raspbian root partition offset
-  shell: "fdisk -l {{ dest_img }} | awk '/Linux/{print $2}'"
-  register: root_offset
-
-- name: calculate root partition offset
-  set_fact:
-    raspbian_root_offset: "{{ (root_offset.stdout | int) * (raspbian_block_size | default(512)) }}"
-
-- name: mount raspbian root partition
-  command: "mount -t ext4 -o offset={{ raspbian_root_offset }} {{ dest_img }} {{ tmpdir_dest.path }}"
-  args:
-    warn: no
   become: yes
 
-- name: inspect raspbian boot partition offset
-  shell: "fdisk -l {{ dest_img }} | awk '/FAT32/{print $2}'"
-  register: boot_offset
+  vars:
 
-- name: calculate boot partition offset
-  set_fact:
-    raspbian_boot_offset: "{{ (boot_offset.stdout | int) * (raspbian_block_size | default(512)) }}"
+    raspbian_group: raspberry
+    raspbian_user_name:  teddyphreak
+    raspbian_user_pubkey: "{{ users[raspbian_user_name].pubkey }}"
+    raspbian_user_id: 1000
+    raspbian_group_id: 1000
 
-- name: inspect raspbian boot partition sectors
-  shell: "fdisk -l {{ dest_img }} | awk '/FAT32/{print $4}'"
-  register: boot_size
+  roles:
 
-- name: calculate boot partition size
-  set_fact:
-    raspbian_boot_size: "{{ (boot_size.stdout | int) * (raspbian_block_size | default(512)) }}"
+    - nephelaiio.plugins
 
-- name: mount raspbian boot partition
-  command: "mount -t vfat -o offset={{ raspbian_boot_offset }},sizelimit={{ raspbian_boot_size }} {{ dest_img }} {{ tmpdir_dest.path }}/boot"
-  args:
-    warn: no
-  become: yes
+  tasks:
 
-- name: set hostname
-  copy:
-    dest: "{{ tmpdir_dest.path }}/etc/hostname"
-    content: "{{ raspbian_host | split_with('.') | head }}"
-    force: yes
-    mode: 0644
-  become: yes
+    - name: include private variables
+      include_vars:
+        dir: "vars/{{ variables }}"
 
-- name: update hosts file
-  lineinfile:
-    path: "{{ tmpdir_dest.path }}/etc/hosts"
-    regexp: "^127.0.1.1"
-    line: "127.0.1.1       {{ raspbian_host }} {{ raspbian_host | split_with('.') | first }}"
-    insertafter: EOF
-  become: yes
+    - name: install requirements
+      package:
+        name: unzip
 
-- name: disable mac based interface naming
-  lineinfile:
-    path: "{{ tmpdir_dest.path }}/boot/cmdline.txt"
-    line: "net.ifnames=0"
-    insertafter: EOF
-  become: yes
+    - name: define raspbian image archive
+      set_fact:
+        raspbian_local_image: "{{ raspbian_mirror_path }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
 
-- name: configure interfaces
-  template:
-    src: templates/images/interface.j2
-    dest: "{{ tmpdir_dest.path }}/etc/network/interfaces.d/{{ iface.name }}"
-  loop_control:
-    loop_var: iface
-  with_items: "{{ raspbian_ifaces }}"
-  become: yes
+    - name: fetch raspbian source image
+      get_url:
+        url: "{{ raspbian_release.url }}"
+        dest: "{{ raspbian_local_image }}"
 
-- name: configure ssh autostart
-  file:
-    path: "{{ tmpdir_dest.path }}/boot/ssh"
-    state: touch
-  become: yes
-
-- name: create ssh user directory
-  file:
-    state: directory
-    path: "{{ tmpdir_dest.path }}/home/pi/.ssh"
-    owner: "{{ raspbian_user_id | default(1000) }}"
-    group: "{{ raspbian_group_id | default(1000) }}"
-    mode: 0700
-  become: yes
-
-- name: copy ssh user key
-  copy:
-    src: "{{ sshkey }}"
-    dest: "{{ tmpdir_dest.path }}/home/pi/.ssh/authorized_keys"
-    owner: "{{ raspbian_user_id | default(1000) }}"
-    group: "{{ raspbian_group_id | default(1000) }}"
-    mode: 0600
-  become: yes
-
-- name: unmount raspbian target image
-  command: "umount {{ mntitem }}"
-  args:
-    warn: no
-  loop_control:
-    loop_var: mntitem
-  with_items:
-    - "{{ tmpdir_dest.path }}/boot"
-    - "{{ tmpdir_dest.path }}"
-  become: yes
-
-- name: remove temporary directories
-  file:
-    path: "{{ tmpitem }}"
-    state: absent
-  with_items:
-    - "{{ tmpdir_dest.path }}"
-  loop_control:
-    loop_var: tmpitem
-  become: yes
+    - name: create raspbian images
+      include_tasks: raspbian/image_create.yml
+      vars:
+        raspbian_host: "{{ item }}"
+        raspbian_source_image: "{{ raspbian_local_image }}"
+      with_items: "{{ raspbian_hosts }}"
