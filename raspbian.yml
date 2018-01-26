@@ -23,7 +23,7 @@
 
     - name: include private variables
       include_vars:
-        dir: "vars/{{ variables }}"
+        dir: "{{ variables }}"
 
     - name: install requirements
       package:

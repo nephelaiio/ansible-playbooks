@@ -94,7 +94,7 @@
 
     - name: load private variables
       include_vars:
-        dir: "vars/{{ variables }}"
+        dir: "{{ variables }}"
 
     - name: install unifi
       include_role:

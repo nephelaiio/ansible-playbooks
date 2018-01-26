@@ -1,6 +1,7 @@
 ---
 timezone: America/Costa_Rica
-variables: home
+inventory: home
+variables: "vars/{{ inventory }}"
 base_domain: home.nephelai.io
 
 docker_user_manage: false

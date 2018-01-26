@@ -17,7 +17,7 @@
 
     - name: include global variables
       include_vars:
-        dir: "vars/{{ variables }}"
+        dir: "{{ variables }}"
 
     - name: inspect nameservers
       changed_when: False
