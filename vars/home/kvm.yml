@@ -2,10 +2,12 @@
 kvm_images:
   xenial:
     src: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
+    url: "{{ mirror_url }}/kvm/xenial-server-cloudimg-amd64-disk1.img"
     pool: default
     format: qcow2
   centos:
     src: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2.xz
+    url: "{{ mirror_url }}/kvm/CentOS-7-x86_64-GenericCloud.qcow2.xz"
     pool: default
     format: qcow2
 
