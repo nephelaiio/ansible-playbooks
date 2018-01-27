@@ -10,7 +10,7 @@
   vars:
 
     raspbian_group: raspberry
-    raspbian_user_name:  teddyphreak
+    raspbian_user_name: teddyphreak
     raspbian_user_pubkey: "{{ users[raspbian_user_name].pubkey }}"
     raspbian_user_id: 1000
     raspbian_group_id: 1000
