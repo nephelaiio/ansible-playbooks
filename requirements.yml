@@ -17,6 +17,8 @@
   version: 1.5.2
 - src: geerlingguy.mysql
   version: 2.8.0
+- src: nephelaiio.plugins
+  version: 1.0.1
 - src: nephelaiio.vim
   version: 1.0.9
 - src: nephelaiio.tree
