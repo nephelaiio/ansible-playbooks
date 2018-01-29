@@ -3,9 +3,12 @@
 
   hosts: kvm
 
+  become: yes
+
   vars:
 
-    iptables_savefile: /etc/iptables/iptables.rules
+    provisioning_groups:
+      - kvm_guests
     nat_in: br1
     nat_out:
       - br0
@@ -16,6 +19,19 @@
     - nephelaiio.plugins
 
   tasks:
+
+    - name: include variable definitions
+      include_vars:
+        dir: "{{ variables }}"
+
+    - name: include os variable overrides
+      include_vars: "{{ item }}"
+      with_first_found:
+        - files:
+            - "vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version }}.yml"
+            - "vars/{{ ansible_distrubition | lower }}.yml"
+            - "vars/{{ ansible_os_family | lower }}.yml"
+          skip: true
 
     - name: configure bridging
       sysctl:
@@ -33,70 +49,93 @@
           value: 0
         - name: net.ipv4.ip_forward
           value: 1
-      become: yes
 
-    - name: install pacman requirements
-      package:
-        name:
-          - qemu
-          - libvirt
-          - libvirt-python
-          - bridge-utils
-          - dnsmasq
-          - ebtables
-          - dmidecode
-          - cloud-init
-          - cdrtools
-          - python-lxml
-          - dhcp
-        update_cache: yes
-      become: yes
+    - block:
+
+        - name: install pacman requirements
+          package:
+            name:
+              - qemu
+              - libvirt
+              - libvirt-python
+              - bridge-utils
+              - dnsmasq
+              - ebtables
+              - dmidecode
+              - cloud-init
+              - cdrtools
+              - python-lxml
+              - dhcp
+            update_cache: yes
+
+        - name: configure dhcp
+          template:
+            src: dhcp/dhcpd.conf.j2
+            dest: /etc/dhcpd.conf
+          vars:
+            lease_time: 1800
+            networks:
+              - "{{ nets.kvm }}"
+            zones: "{{ dns.zones.values() }}"
+          notify: restart dhcpd
+
+        - name: initialize iptables configuration
+          file:
+            path: "{{ iptables_savefile }}"
+            state: touch
+
+        - name: manage services
+          service:
+            name: "{{ item }}"
+            state: started
+            enabled: yes
+          with_items:
+            - dhcpd4  # dhcpd4 (arch) | isc-dhcp-server (debian)
+
       when: ansible_os_family == 'Archlinux'
 
-    - name: install apt requirements
-      package:
-        name:
-          - qemu-kvm
-          - qemu-utils
-          - libvirt0
-          - python-libvirt
-          - bridge-utils
-          - ebtables
-          - dmidecode
-          - python-lxml
-          - genisoimage
-          - isc-dhcp-server
-      become: yes
+    - block:
+
+        - name: install apt requirements
+          package:
+            name:
+              - qemu-kvm
+              - qemu-utils
+              - libvirt0
+              - python-libvirt
+              - bridge-utils
+              - ebtables
+              - dmidecode
+              - python-lxml
+              - genisoimage
+              - isc-dhcp-server
+
+        - name: configure dhcp
+          template:
+            src: dhcp/dhcpd.conf.j2
+            dest: /etc/default/isc-dhcp-server
+          vars:
+            iface: "{{ nat_in }}"
+          notify: restart dhcpd
+
+        - name: configure iptables configuration autoload
+          lineinfile:
+            path: /etc/network/interfaces
+            insertafter: "^iface {{ item }} inet"
+            line: "    pre-up iptables-restore < {{ iptables_savefile }}"
+          with_items: "{{ nat_out }}"
+
+        - name: manage services
+          service:
+            name: "{{ item }}"
+            state: started
+            enabled: yes
+          with_items:
+            - isc-dhcp-server  # dhcpd4 (arch) | isc-dhcp-server (debian)
+
       when: ansible_os_family == 'Debian'
 
-    - name: configure dhcp
-      template:
-        src: dhcp/dhcpd.conf.j2
-        dest: /etc/dhcpd.conf
-      vars:
-        lease_time: 1800
-        networks:
-          - "{{ nets.private }}"
-        zones: "{{ dns.zones.values() }}"
-      notify: restart dhcpd
-      become: yes
-
     - meta: flush_handlers
-
-    - name: manage services
-      service:
-        name: "{{ item }}"
-        state: started
-        enabled: yes
-      become: yes
-      with_items:
-        - dhcpd4  # dhcpd4 (arch) | isc-dhcp-server (debian)
-
-    - name: initialize iptables configuration
-      file:
-        path: "{{ iptables_savefile }}"
-        state: touch
-      become: yes
 
     - name: configure nat
       iptables:
@@ -104,7 +143,6 @@
         chain: POSTROUTING
         out_interface: "{{ item }}"
         jump: MASQUERADE
-      become: yes
       with_items: "{{ nat_out }}"
 
     - name: configure nat
@@ -115,7 +153,6 @@
         match: state
         ctstate: RELATED,ESTABLISHED
         jump: ACCEPT
-      become: yes
       with_items: "{{ nat_out }}"
 
     - name: configure nat
@@ -124,41 +161,14 @@
         in_interface: "{{ nat_in }}"
         out_interface: "{{ item }}"
         jump: ACCEPT
-      become: yes
       with_items: "{{ nat_out }}"
 
     - name: save iptables configuration
       shell: "iptables-save > {{ iptables_savefile }}"
-      become: yes
 
-    - name: install apt requirements
+    - name: install requirements
       package:
-        name:
-          - qemu-kvm
-          - qemu-utils
-          - libvirt0
-          - python-libvirt
-          - bridge-utils
-          - ebtables
-          - dmidecode
-          - python-lxml
-          - genisoimage
-      become: yes
-      when: ansible_os_family == 'Debian'
-
-    - name: install pacman requirements
-      package:
-        name:
-          - qemu
-          - libvirt
-          - libvirt-python
-          - bridge-utils
-          - ebtables
-          - dmidecode
-          - python-lxml
-          - cdrtools
-      become: yes
-      when: ansible_os_family == 'Archlinux'
+        name: "{{ kvm_requirement_packages }}"
 
     - name: create image target directory
       file:
@@ -185,29 +195,58 @@
 
     - meta: flush_handlers
 
-    - name: destroy VMs
+    - name: define groups
+      set_fact:
+        kvm_vms: "{{ kvm_vms | default([]) + groups[groupitem] }}"
+      loop_control:
+        loop_var: groupitem
+      with_items: "{{ provisioning_groups }}"
+
+    - name: initialize vm list
+      set_fact:
+        vms: []
+
+    - name: define vm list
+      set_fact:
+        vms: "{{ vms + [ {} | combine(
+          kvm_profiles[hostvars[hostnameitem].kvm_profile | default('default')],
+          {
+            'name': hostnameitem.split('.') | first,
+            'nic': {
+              'host': hostvars[hostnameitem]['inventory_hostname'],
+              'ip-address': hostvars[hostnameitem]['ansible_host'],
+              'hw-address': hostvars[hostnameitem]['hw_address'],
+            }
+          },
+          hostvars[hostnameitem],
+          recursive=true) ] }}"
+      loop_control:
+        loop_var: hostnameitem
+      with_items: "{{ kvm_vms }}"
+
+    - name: destroy vms
       include_tasks: kvm/vm_destroy.yml
       vars:
-        vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
-        pool: "{{ kvm.pools[vm.pool].path }}"
+        pool: "{{ kvm_pools[vm.pool].path }}"
         iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
-      with_items: "{{ kvm.vms.values() }}"
+      loop_control:
+        loop_var: vm
+      with_items: "{{ vms }}"
 
-    - name: create VMs
+    - name: create vms
       include_tasks: kvm/vm_create.yml
       vars:
-        vm: "{{ kvm.defaults.vm | combine(item, recursive='true') }}"
         img: "{{ kvm_images[vm.image].src | basename | with_ext(kvm_images[vm.image].format) }}"
-        pool: "{{ kvm.pools[vm.pool].path }}"
+        pool: "{{ kvm_pools[vm.pool].path }}"
         iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
-      with_items: "{{ kvm.vms.values() }}"
+        user: "{{ users.teddyphreak }}"
+      loop_control:
+        loop_var: vm
+      with_items: "{{ vms }}"
 
   handlers:
 
     - name: restart dhcpd
       service:
-        name: "{{ item }}"
+        name: "{{ dhcp_service }}"
         state: restarted
-      become: yes
-      with_items:
-        - dhcpd4  # dhcpd4 (arch) | isc-dhcp-server (debian)
