@@ -26,7 +26,7 @@ failover peer "failover-partner" {
 ddns-update-style interim;
 
 # Option definitions common to all supported networks...
-option domain-name-servers {{ servers.recursors | join(', ') }};
+option domain-name-servers {{ recursors | default(servers.recursors) | join(', ') }};
 default-lease-time {{ lease_time }};
 max-lease-time {{ 12 * lease_time }};
 
@@ -54,7 +54,7 @@ subnet {{ n.network }} netmask {{ n.netmask }} {
   option domain-name "{{ n.domain_name }}";
 {%   endif %}
 {%   if 'ns' in n %}
-  option domain-name-servers {{ n.ns | join (',') }};
+  option domain-name-servers {{ n.ns | list | join(',') }};
 {%   endif %}
 }
 {%   if 'zone' in n %}
@@ -62,12 +62,12 @@ zone {{ n.zone }} {
   primary {{ servers.dns | first }};
 }
 {%   endif %}
-{%   for r in n.reservations.values() %}
-host {{ r.host }} {
-  hardware ethernet {{ r['hw-address'] }};
+{%   for r in n.reservations.values() + (hostvars.values() | select('test_network', n.network + '/' + n.netmask) | map('alias_keys', {'inventory_hostname': 'host', 'ansible_host': 'ip-address' }) | list)  %}
+host {{ r['host'] }} {
+  hardware ethernet {{ r['hw_address'] }};
   fixed-address {{ r['ip-address'] }};
-  option domain-name "{{ r.host | split_with('.') | tail | join('.') }}";
-  option host-name "{{ r.host | split_with('.') | head }}";
+  option domain-name "{{ r['host'] | split_with('.') | tail | join('.') }}";
+  option host-name "{{ r['host'] | split_with('.') | head }}";
 }
 {%   endfor %}
 {% endfor %}
