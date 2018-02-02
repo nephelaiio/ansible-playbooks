@@ -6,7 +6,7 @@ dns:
       hostmaster: "master@{{ base_domain }}"
       mx: "{{ groups['mail'] }}"
       ns: "{{ groups['recursors'] }}"
-      records: "{{ nets.home.reservations.values() }}"
+      records: "{{ nets.home.reservations.values() + (hostvars.values() | select('test_network', nets.home.network + '/' + nets.home.netmask) | map('alias_keys', {'inventory_hostname': 'host', 'ansible_host': 'ip-address' }) | list) }}"
       cnames:
         - ["{{ base_domain }}", rpia.home.nephelai.io]
         - ["nfs.{{ base_domain }}", "{{ groups['backup'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
@@ -20,7 +20,7 @@ dns:
       hostmaster: master@home.nephelai.io
       ns: "{{ groups['recursors'] }}"
       mx: []
-      records: "{{ nets.home.reservations.values() | map('reverse_record') | list }}"
+      records: "{{ (nets.home.reservations.values() + (hostvars.values() | select('test_network', nets.home.network + '/' + nets.home.netmask) | map('alias_keys', {'inventory_hostname': 'host', 'ansible_host': 'ip-address' }) | list)) | map('reverse_record') | list }}"
       cnames: []
 
 pdns:
