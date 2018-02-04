@@ -9,6 +9,10 @@
 
   tasks:
 
+    - name: include private variables
+      include_vars:
+        dir: "{{ variables }}"
+
     - name: Configure remote logging
       include_role:
         name: alekseyp.papertrail
