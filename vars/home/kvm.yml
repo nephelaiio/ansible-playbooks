@@ -13,8 +13,8 @@ kvm_images:
     format: qcow2
 
 kvm_profiles:
-  small:
-    state: present  # | recreate | absent
+  default:
+    state: present  # present | recreate | absent
     memory: 2048
     cpu: 2
     image: xenial
@@ -26,8 +26,9 @@ kvm_profiles:
       type: bridge
       net: br1
       prefix: "{{ nets.kvm.netmask }}"
-      gateway: "{{ nets.kvm.router | ipaddr('address') }}"
-      nameservers: "{{ servers.recursors }}"
+      gateway: "{{ nets.kvm.router }}"
+      nameservers: "{{ nets.kvm.ns }}"
+      namesearch: "{{ dns.search_domains }}"
 
 kvm_pools:
   default:
