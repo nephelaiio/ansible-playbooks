@@ -1,5 +1,7 @@
 ---
 dns:
+  search_domains:
+    - "{{ base_domain }}"
   zones:
     home:
       name: "{{ base_domain }}"
