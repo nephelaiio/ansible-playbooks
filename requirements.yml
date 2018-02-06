@@ -3,8 +3,6 @@
   version: v1.2
 - src: alekseyp.papertrail
   version: v0.3
-- src: atosatto.docker-swarm
-  version: v1.3.2
 - src: franklinkim.users
   version: 1.9.1
 - src: geerlingguy.apache
@@ -22,17 +20,17 @@
 - src: nephelaiio.vim
   version: 1.0.9
 - src: nephelaiio.tree
-  version: 1.0.1
+  version: 1.0.2
 - src: nephelaiio.devtools
-  version: 1.0.6
+  version: 2.0.0
 - src: nephelaiio.rbenv
-  version: 1.1.1
+  version: 2.0.2
 - src: nephelaiio.pyenv
-  version: 1.0.8
+  version: 1.0.10
 - src: nephelaiio.tmux
-  version: 1.0.8
+  version: 2.0.1
 - src: nephelaiio.vagrant
-  version: 1.0.1
+  version: 2.0.0
 - src: nephelaiio.i3
   version: 1.0.4
 - src: nephelaiio.docker
@@ -40,7 +38,7 @@
 - src: nephelaiio.bind
   version: 1.0.5
 - src: nephelaiio.unifi-controller
-  version: 1.0.2
+  version: 2.0.0
 - src: nephelaiio.nfs
   version: 1.0.1
 - src: nephelaiio.sensu
@@ -48,6 +46,4 @@
 - src: nephelaiio.golang
   version: 1.0.1
 - src: nephelaiio.ubuntu-installer
-  version: 1.0.9
-- src: nephelaiio.gitlab
-  version: 1.0.5
+  version: 2.0.1
