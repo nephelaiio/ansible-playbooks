@@ -5,22 +5,34 @@
     prefix: kvm_{{ vm.name }}_
   register: tmpdir
   changed_when: False
+  become: no
 
-- name: set image var path
+- name: set target disk path var
   set_fact:
-    disk: "{{ pool }}/{{ vm.name }}.img"
+    vm_img: "{{ tmpdir.path }}/{{ img.url | basename }}"
+    vm_disk: "{{ pool }}/{{ vm.name }}.img"
 
-- name: copy vm disk
-  copy:
-    src: "files/kvm/{{ img }}"
-    dest: "{{ disk }}"
-    force: no
-    mode: 0644
-  when: vm.state in ['present', 'recreate']
+- name: fetch image
+  get_url:
+    url: "{{ img.url }}"
+    dest: "{{ vm_img }}"
+    mode: 0666
+
+- name: uncompress image
+  command: "qemu-img convert -O {{ format }} {{ source }} {{ target }}"
+  args:
+    chdir: "{{ img_dir }}"
+    creates: "{{ target }}"
+  vars:
+    format: "{{ img.format }}"
+    source: "{{ vm_img }}"
+    target: "{{ vm_disk }}"
   register: diskcopy
 
 - name: resize vm disk
   command: "qemu-img resize {{ disk }} {{ vm.size }}"
+  vars:
+    disk: "{{ vm_disk }}"
   when: diskcopy.changed
 
 - name: create cloud image user data
@@ -28,13 +40,14 @@
     src: kvm/user-data.yml.j2
     dest: "{{ tmpdir.path }}/user-data"
   vars:
-    ssh_user: "{{ user.username }}"
-    ssh_key: "{{ lookup('file', '~/.ssh/id_rsa.pub') }}"
+    ssh_user: "{{ ansible_guest_username }}"
+    ssh_key: "{{ ansible_guest_ssh_key }}"
     hostname: "{{ vm.name.split('.') | first }}"
     fqdn: "{{ vm.nic.host }}"
     iface: "{{ vm.nic }}"
-    apt_mirror: "{{ mirror_url | urlsplit('hostname') }}"
+    mirror_host: "{{ mirror_url | urlsplit('hostname') }}"
   when: diskcopy.changed
+  become: no
 
 - name: create cloud image network config
   template:
@@ -43,6 +56,7 @@
   vars:
     iface: "{{ vm.nic }}"
   when: diskcopy.changed
+  become: no
 
 - name: create cloud image meta data
   template:
@@ -53,6 +67,7 @@
     hostname: "{{ vm.name.split('.') | first }}"
     fqdn: "{{ vm.nic.host }}"
   when: diskcopy.changed
+  become: no
 
 - name: create cloud image iso
   command: genisoimage -output {{ iso }} -volid cidata -joliet -r meta-data user-data network-config
@@ -64,29 +79,31 @@
   set_fact:
     domain_def: "{{ tmpdir.path }}/vm_{{ vm.name }}.xml"
 
-- name: create vm templates
+- name: create vm template
   template:
     src: kvm/vm.xml.j2
     dest: "{{ domain_def }}"
+  vars:
+    disk: "{{ vm_disk }}"
+  become: no
 
-- name: slurp domain definition
+- name: get vm template contents
   slurp:
     src: "{{ domain_def }}"
-  register: domain_xml
+  register: domain
 
-- name: create vms
+- name: create vm
   virt:
     name: "{{ vm.name }}"
     command: define
-    xml: "{{ domain_xml.content | b64decode }}"
+    xml: "{{ domain['content'] | b64decode }}"
   when: diskcopy.changed
 
-- name: manage vms
+- name: manage vm
   virt:
     name: "{{ vm.name }}"
-    state: "{{ state }}"
-  vars:
     state: "{{ vm.state | regex_replace('recreate', 'running') | regex_replace('present', 'running') }}"
+    xml: "{{ domain['content'] | b64encode }}"
   when: vm.state in ['present', 'recreate', 'running']
 
 - name: autostart vm
@@ -99,3 +116,4 @@
     path: "{{ tmpdir.path }}"
     state: absent
   changed_when: false
+  become: no

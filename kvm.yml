@@ -12,7 +12,8 @@
     nat_in: br1
     nat_out:
       - br0
-    apt_mirror: apt.home.nephelai.io
+    img_dir: "{{ playbook_dir }}/files/kvm"
+    ansible_kvm_user: teddyphreak
 
   roles:
 
@@ -197,32 +198,32 @@
 
     - name: define groups
       set_fact:
-        kvm_vms: "{{ kvm_vms | default([]) + groups[groupitem] }}"
+        loop_groups: "{{ loop_groups | default([]) + [ {'hostnames': groups[groupitem] } ] }}"
       loop_control:
         loop_var: groupitem
       with_items: "{{ provisioning_groups }}"
 
-    - name: initialize vm list
+    - name: define vms
       set_fact:
-        vms: []
-
-    - name: define vm list
-      set_fact:
-        vms: "{{ vms + [ {} | combine(
-          kvm_profiles[hostvars[hostnameitem].kvm_profile | default('default')],
-          {
-            'name': hostnameitem.split('.') | first,
-            'nic': {
-              'host': hostvars[hostnameitem]['inventory_hostname'],
-              'ip-address': hostvars[hostnameitem]['ansible_host'],
-              'hw-address': hostvars[hostnameitem]['hw_address'],
-            }
-          },
-          hostvars[hostnameitem],
-          recursive=true) ] }}"
+        vms: "{{ vms | default([]) + [ {} | combine(
+        kvm_profiles[hostvars[hostnameitem.1].kvm_profile | default('default')],
+        {
+          'name': hostnameitem.1.split('.') | first,
+          'nic': {
+            'host': hostvars[hostnameitem.1]['inventory_hostname'],
+            'ip-address': hostvars[hostnameitem.1]['ansible_host'],
+            'hw-address': hostvars[hostnameitem.1]['hw_address'],
+            'nameservers': nets[hostvars[hostnameitem.1]['network'] | default('kvm')].ns,
+          }
+        },
+        hostvars[hostnameitem.1],
+        recursive=true) ] }}"
       loop_control:
         loop_var: hostnameitem
-      with_items: "{{ kvm_vms }}"
+      with_subelements:
+        - "{{ loop_groups }}"
+        - hostnames
+      no_log: "{{ kvm_nolog }}"
 
     - name: destroy vms
       include_tasks: kvm/vm_destroy.yml
@@ -232,17 +233,21 @@
       loop_control:
         loop_var: vm
       with_items: "{{ vms }}"
+      no_log: "{{ kvm_nolog }}"
 
     - name: create vms
       include_tasks: kvm/vm_create.yml
       vars:
-        img: "{{ kvm_images[vm.image].src | basename | with_ext(kvm_images[vm.image].format) }}"
+        img: "{{ kvm_images[vm.image] }}"
         pool: "{{ kvm_pools[vm.pool].path }}"
         iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
-        user: "{{ users.teddyphreak }}"
+        ansible_guest_user: "{{ users[ansible_kvm_user] }}"
+        ansible_guest_username: "{{ ansible_guest_user.username }}"
+        ansible_guest_ssh_key: "{{ ansible_guest_user.pubkey }}"
       loop_control:
         loop_var: vm
       with_items: "{{ vms }}"
+      no_log: "{{ kvm_nolog }}"
 
   handlers:
 
