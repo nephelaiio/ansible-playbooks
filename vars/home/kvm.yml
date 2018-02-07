@@ -1,6 +1,11 @@
 ---
 kvm_nolog: no
 kvm_images:
+  stretch:
+    src: http://cdimage.debian.org/cdimage/openstack/current-9/debian-9-openstack-amd64.qcow2
+    url: "{{ mirror_url }}/kvm/debian-9-openstack-amd64-disk1.qcow2"
+    pool: default
+    format: qcow2
   xenial:
     src: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
     url: "{{ mirror_url }}/kvm/xenial-server-cloudimg-amd64-disk1.img"

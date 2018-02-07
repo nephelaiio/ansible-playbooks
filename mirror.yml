@@ -26,32 +26,23 @@
           - util-linux
           - wget
 
-    - name: remove deb-src mirrors
-      lineinfile:
-        path: "{{ ubuntu_mirror_list }}"
-        regexp: '^deb-src(.*)$'
-        line: '#deb-src\1'
-        backrefs: yes
-
-    - name: remove deb-src mirrors
-      lineinfile:
-        path: "{{ ubuntu_mirror_list }}"
-        regexp: '^deb-src(.*)$'
-        line: '#deb-src\1'
-        backrefs: yes
+    - name: configure apt mirror
+      template:
+        src: apt/mirror.list.j2
+        dest: "{{ apt_mirror_conf }}"
 
     - name: add apt mirror update cronjob
       cron:
         name: 'update apt-mirror cache'
         job: 'flock -n /tmp/apt-mirror apt-mirror'
-        state: "{{ ubuntu_mirror_state }}"
+        state: "{{ apt_mirror_state }}"
         special_time: daily
 
     - name: add mirror clean cronjob
       cron:
         name: 'clean apt-mirror cache'
         job: 'flock -n /tmp/apt-mirror /var/spool/apt-mirror/var/clean.sh'
-        state: "{{ ubuntu_mirror_state }}"
+        state: "{{ apt_mirror_state }}"
         special_time: daily
 
     - name: create mirror root
@@ -63,6 +54,13 @@
       file:
         path: "{{ apache_root }}/ubuntu"
         src: "{{ ubuntu_mirror_path }}"
+        state: link
+        force: yes
+
+    - name: create debian link
+      file:
+        path: "{{ apache_root }}/debian"
+        src: "{{ debian_mirror_path }}"
         state: link
         force: yes
 

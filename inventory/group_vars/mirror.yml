@@ -1,12 +1,14 @@
 ---
-ubuntu_mirror_state: present
+apt_mirror_state: present
 centos_mirror_state: absent
 kvm_mirror_state: present
 raspbian_mirror_state: present
 apache_root: /var/www/html/mirror
 ubuntu_mirror: archive.ubuntu.com
-ubuntu_mirror_list: /etc/apt/mirror.list
+debian_mirror: deb.debian.org
+apt_mirror_conf: /etc/apt/mirror.list
 ubuntu_mirror_path: "/var/spool/apt-mirror/mirror/{{ ubuntu_mirror }}/ubuntu"
+debian_mirror_path: "/var/spool/apt-mirror/mirror/{{ debian_mirror }}/ubuntu"
 centos_mirror: mirrors.liquidweb.com
 centos_mirror_path: "{{ apache_root }}/centos"
 epel_mirror_path: "{{ apache_root }}/epel"
