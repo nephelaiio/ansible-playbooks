@@ -1,4 +1,6 @@
 #cloud-config
+packages:
+  - python-minimal
 package_update: true
 package_upgrade: true
 package_reboot_if_required: true
@@ -13,13 +15,12 @@ users:
     ssh-authorized-keys:
       - {{ ssh_key }}
 apt:
+  disable_suites:
+    - backports
   primary:
-    - arches: [default]
-      search:
-{% if apt_mirror is defined %}
-        - http://{{ apt_mirror }}/ubuntu/
-{% endif %}
-        - http://archive.ubuntu.com/ubuntu/
+    - arches:
+        - amd64
+      uri: http://{{ apt_mirror }}/ubuntu/
   disable_suites:
     - backports
 {% if apt_proxy_http_uri is defined %}
@@ -30,19 +31,15 @@ apt:
 {% endif %}
 runcmd:
   - [ sh, -c, "echo 127.0.1.1 {{ fqdn }} {{ hostname }} >> /etc/hosts" ] 
-{% if 'ip-address' in iface %}
+{% if iface.method == 'static' %}
   - [ sh, -c, "echo {{ iface['ip-address'] }} {{ fqdn }} {{ hostname }} >> /etc/hosts" ]
-{% if 'nameservers' in iface %}
-{% for ns in iface.nameservers %}
+{%   for ns in iface.nameservers %}
   - [ sh, -c, "echo '    dns-nameserver {{ ns }}' >> /etc/network/interfaces.d/50-cloud-init.cfg" ]
-{% endfor %}
-{% endif %}
-{% if 'namesearch' in iface %}
+{%   endfor %}
+{%   if 'namesearch' in iface %}
   - [ sh, -c, "echo '    dns-search {{ iface.namesearch | join(' ') }}' >> /etc/network/interfaces.d/50-cloud-init.cfg" ]
-{% endif %}
+{%   endif %}
 {% endif %}
   - [ sh, -c, "sed -i -e '/deb-src/d' /etc/apt/sources.list" ]
   - [ sh, -c, "for arch in $(dpkg --print-foreign-architectures); do dpkg --remove-architecture $arch ; done" ]
   - [ sh, -c, "echo 'ARRAY <ignore> devices=/dev/sda' >> /etc/mdadm/mdadm.conf" ]
-  - [ sh, -c, "apt-get update" ]
-  - [ sh, -c, "apt-get install -y python-minimal" ]

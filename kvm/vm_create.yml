@@ -45,7 +45,7 @@
     hostname: "{{ vm.name.split('.') | first }}"
     fqdn: "{{ vm.nic.host }}"
     iface: "{{ vm.nic }}"
-    mirror_host: "{{ mirror_url | urlsplit('hostname') }}"
+    apt_mirror: "{{ mirror_url | urlsplit('hostname') }}"
   when: diskcopy.changed
   become: no
 

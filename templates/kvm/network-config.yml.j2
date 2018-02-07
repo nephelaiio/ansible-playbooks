@@ -4,12 +4,10 @@ ethernets:
     match:
       mac_address: "{{ iface['hw-address'] }}"
     set-name: {{ iface['name'] }}
-{% if 'ip-address' in iface %}
+{% if iface['method'] == 'static' %}
     addresses:
       - {{ iface['ip-address'] }}/{{ iface['prefix'] }}
-{% if 'gateway' in iface %}
     gateway4: {{ iface['gateway'] }}
-{% endif %}
 {% else %}
     dhcp4: true
 {% endif %}
