@@ -176,24 +176,6 @@
         path: files/kvm
         state: directory
 
-    - name: fetch images
-      get_url:
-        url: "{{ item.value.src }}"
-        dest: "files/kvm/{{ item.value.src | basename }}"
-        mode: 0644
-      with_dict: "{{ kvm_images }}"
-
-    - name: uncompress images
-      command: "qemu-img convert -O {{ format }} {{ img }} {{ target }}"
-      args:
-        chdir: "files/kvm"
-        creates: "{{ target }}"
-      vars:
-        format: "{{ item.value.format }}"
-        img: "{{ item.value.src | basename }}"
-        target: "{{ item.value.src | basename | with_ext(item.value.format) }}"
-      with_dict: "{{ kvm_images }}"
-
     - meta: flush_handlers
 
     - name: define groups
