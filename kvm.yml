@@ -185,50 +185,16 @@
         loop_var: groupitem
       with_items: "{{ provisioning_groups }}"
 
-    - name: define vms
-      set_fact:
-        vms: "{{ vms | default([]) + [ {} | combine(
-        kvm_profiles[hostvars[hostnameitem.1].kvm_profile | default('default')],
-        {
-          'name': hostnameitem.1.split('.') | first,
-          'nic': {
-            'host': hostvars[hostnameitem.1]['inventory_hostname'],
-            'ip-address': hostvars[hostnameitem.1]['ansible_host'],
-            'hw-address': hostvars[hostnameitem.1]['hw_address'],
-            'nameservers': nets[hostvars[hostnameitem.1]['network'] | default('kvm')].ns,
-          }
-        },
-        hostvars[hostnameitem.1],
-        recursive=true) ] }}"
-      loop_control:
-        loop_var: hostnameitem
-      with_subelements:
-        - "{{ loop_groups }}"
-        - hostnames
-      no_log: "{{ kvm_nolog }}"
-
-    - name: destroy vms
-      include_tasks: kvm/vm_destroy.yml
+    - name: manage vms
+      include_tasks: kvm/vm_manage.yml
       vars:
-        pool: "{{ kvm_pools[vm.pool].path }}"
-        iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
-      loop_control:
-        loop_var: vm
-      with_items: "{{ vms }}"
-      no_log: "{{ kvm_nolog }}"
-
-    - name: create vms
-      include_tasks: kvm/vm_create.yml
-      vars:
-        img: "{{ kvm_images[vm.image] }}"
-        pool: "{{ kvm_pools[vm.pool].path }}"
-        iso: "{{ pool }}/cloud_init_{{ vm.name }}.iso"
+        name: "{{ item.1 }}"
         ansible_guest_user: "{{ users[ansible_kvm_user] }}"
         ansible_guest_username: "{{ ansible_guest_user.username }}"
         ansible_guest_ssh_key: "{{ ansible_guest_user.pubkey }}"
-      loop_control:
-        loop_var: vm
-      with_items: "{{ vms }}"
+      with_subelements:
+        - "{{ loop_groups }}"
+        - hostnames
       no_log: "{{ kvm_nolog }}"
 
   handlers:
