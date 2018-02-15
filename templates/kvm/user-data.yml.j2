@@ -7,7 +7,7 @@ package_upgrade: true
 package_reboot_if_required: true
 users:
   - name: {{ ssh_user }}
-    passwd: $6$FLtrHwDCFhzzNmDd$JZPl0qz0ksLPOf/oz3IJylAbt4JhOPC6J1zJ72ATU4rMrCLMZOQygN7y835lo6VOBRVyj5mJE9QPKypJrXNdC/
+    passwd: {{ ssh_pass | password_hash('sha512') }}
     groups: sudo,admin
     lock_passwd: false
     system: false

@@ -191,6 +191,7 @@
         name: "{{ item.1 }}"
         ansible_guest_user: "{{ users[ansible_kvm_user] }}"
         ansible_guest_username: "{{ ansible_guest_user.username }}"
+        ansible_guest_password: "{{ ansible_guest_user.password }}"
         ansible_guest_ssh_key: "{{ ansible_guest_user.pubkey }}"
       with_subelements:
         - "{{ loop_groups }}"

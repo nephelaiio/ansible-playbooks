@@ -115,6 +115,7 @@
             dest: "{{ tmpdir.path }}/user-data"
           vars:
             ssh_user: "{{ ansible_guest_username }}"
+            ssh_pass: "{{ ansible_guest_password }}"
             ssh_key: "{{ ansible_guest_ssh_key }}"
             hostname: "{{ vm.name }}"
             fqdn: "{{ vm.nic.host }}"
