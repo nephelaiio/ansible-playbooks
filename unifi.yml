@@ -147,7 +147,7 @@
         aws_access_key: "{{ aws_access_key_id }}"
         aws_secret_key: "{{ aws_secret_access_key }}"
         zone: "{{ letsencrypt_zone }}"
-        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_zone }}"
+        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_domain }}"
         retry_interval: 300
         type: TXT
         ttl: 7200
