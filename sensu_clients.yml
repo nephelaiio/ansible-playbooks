@@ -1,0 +1,48 @@
+---
+- name: Configure sensu clients
+
+  hosts: all:!no_monitor
+
+  become: yes
+
+  vars:
+
+   clean_up: true
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "vars/{{ inventory }}"
+
+    - name: install sensu
+      include_role:
+        name: nephelaiio.sensu
+      vars:
+        sensu_server: false
+        users:
+          - username: sensu
+            name: sensu service user
+            system: yes
+        users_group: sensu
+
+    - name: install plugin sensu requirements
+      package:
+        name:
+          - ntpdate
+
+    - name: install sensu plugins
+      gem:
+        executable: "/usr/bin/gem"
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - sensu-plugins-http
+        - sensu-plugins-ntp
+
+  handlers:
+
+    - name: restart sensu
+      service:
+        name: sensu-client
+        state: restarted
