@@ -1,2 +1,3 @@
 ---
 sensu_url: "http://sensu.{{ base_domain }}"
+sensu_server_host: "{{ groups['sensu_servers'] | map('extract', hostvars, 'ansible_host') | first }}"

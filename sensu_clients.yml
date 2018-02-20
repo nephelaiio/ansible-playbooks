@@ -1,13 +1,13 @@
 ---
 - name: Configure sensu clients
 
-  hosts: all:!no_monitor
+  hosts: sensu_clients:!no_monitor
 
   become: yes
 
   vars:
 
-   clean_up: true
+    clean_up: true
 
   tasks:
 
@@ -19,12 +19,15 @@
       include_role:
         name: nephelaiio.sensu
       vars:
-        sensu_server: false
+        sensu_server: no
         users:
           - username: sensu
             name: sensu service user
             system: yes
         users_group: sensu
+        sensu_api_host: "{{ sensu_server_host }}"
+        sensu_redis_host: "{{ sensu_server_host }}"
+        sensu_rabbitmq_host: "{{ sensu_server_host }}"
 
     - name: install plugin sensu requirements
       package:
