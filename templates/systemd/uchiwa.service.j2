@@ -1,11 +1,13 @@
 [Unit]
 Description=Uchiwa - dashboard for Sensu
-After=syslog.target
-After=network.target
+
 [Service]
-Type=forking
-PIDFile=/run/uchiwa.pid
-ExecStart=/sbin/start-stop-daemon -b -S -d {{ home }} -m -p /run/uchiwa.pid -c {{ user }} -g {{ group }} -x {{ bin }} -- -c {{ conf }}
-ExecStop=/sbin/start-stop-daemon -K -p /run/uchiwa.pid
+User={{ user }}
+Group={{ group }}
+ExecStart={{ bin }} -c {{ conf }} -p {{ assets }}
+KillMode=process
+Restart-on=on-failure
+RestartSec=1min
+
 [Install]
 WantedBy=multi-user.target
