@@ -1,0 +1,221 @@
+---
+- name: Configure reverse proxy
+
+  hosts: none
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "{{ vault }}"
+
+    - name: install sensu reverse proxy
+      include_role:
+        name: geerlingguy.apache
+      vars:
+        apache_create_vhosts: true
+        apache_remove_default_vhost: true
+        apache_vhosts_filename: 008-sensu.conf
+        apache_vhosts_template: apache/revproxy.conf.j2
+        apache_mods_enabled:
+          - proxy.load
+          - proxy_http.load
+          - ssl.load
+          - slotmem_shm.load
+          - proxy_balancer.load
+          - lbmethod_bytraffic.load
+        proxy_port: 80
+        proxy_virtualhost: "*:{{ proxy_port }}"
+        proxy_servername: "{{ sensu_url | urlsplit('hostname') }}"
+        proxy_backend_proto: "http"
+        proxy_backend_members: "{{ groups['sensu_servers'] | map('extract', hostvars, ['ansible_host']) | list }}"
+        proxy_backend_port: "{{ uchiwa_port }}"
+
+
+- name: Configure sensu server
+
+  hosts: sensu_servers
+
+  vars:
+
+    go_tarball: https://dl.google.com/go/go1.10.linux-armv6l.tar.gz
+    go_home: /opt/go
+    uchiwa_user: uchiwa
+    uchiwa_group: uchiwa
+    uchiwa_home: /opt/uchiwa
+    uchiwa_src: "{{ uchiwa_home }}/src/github.com/sensu/uchiwa"
+    uchiwa_service_home: "{{ uchiwa_src }}/build"
+    uchiwa_binary: "{{ uchiwa_service_home }}/uchiwa"
+    uchiwa_conf: /etc/sensu/uchiwa.json
+    uchiwa_pid_dir: /var/run/uchiwa
+    uchiwa_settings:
+      sensu:
+        - "{{ sensu_conf_common.api | combine({'name': 'home', 'pass': sensu_conf_common.api.password }) }}"
+      uchiwa:
+        host: "{{ ansible_default_ipv4.address }}"
+        port: 3000
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "vars/{{ inventory }}"
+
+    - name: install sensu
+      include_role:
+        name: nephelaiio.sensu
+      vars:
+        sensu_server: true
+        users:
+          - username: "{{ sensu_user }}"
+            name: sensu service user
+            system: yes
+        users_group: "{{ sensu_group }}"
+        sensu_api_host: "{{ sensu_server_host }}"
+        sensu_redis_host: "{{ sensu_server_host }}"
+        sensu_rabbitmq_host: "{{ sensu_server_host }}"
+      become: yes
+
+    - name: install uchiwa build dependency packages
+      package:
+        name:
+          - git
+          - npm
+          - nodejs
+          - nodejs-legacy
+      become: yes
+
+    - name: install uchiwa npm build dependencies
+      npm:
+        name: bower
+        global: yes
+
+    - name: create uchiwa user
+      include_role:
+        name: franklinkim.users
+      vars:
+        users:
+          - username: "{{ uchiwa_user }}"
+            home: "{{ uchiwa_home }}"
+        users_group: "{{ uchiwa_group }}"
+      become: yes
+
+    - name: create go root
+      unarchive:
+        src: "{{ go_tarball }}"
+        dest: "{{ go_home | dirname }}"
+        remote_src: yes
+      become: yes
+
+    - name: inspect username
+      command: whoami
+      register: remote_user
+
+    - name: set uchiwa build permissions
+      file:
+        path: "{{ uchiwa_home }}"
+        owner: "{{ remote_user.stdout }}"
+        recurse: yes
+      become: yes
+      changed_when: false
+
+    - name: retrieve uchiwa sources
+      shell: "{{ go_home }}/bin/go get -d github.com/sensu/uchiwa"
+      environment:
+        GOPATH: "{{ uchiwa_home }}"
+
+    - name: build uchiwa
+      command: "{{ go_home }}/bin/go build -o build/uchiwa ."
+      args:
+        chdir: "{{ uchiwa_src }}"
+      environment:
+        GOPATH: "{{ uchiwa_home }}"
+
+    - name: install npm dependencies
+      command: npm install --production
+      args:
+        chdir: "{{ uchiwa_src }}"
+      changed_when: false
+
+    - name: install bower dependencies
+      command: bower install
+      args:
+        chdir: "{{ uchiwa_src }}"
+      changed_when: false
+
+    - name: set uchiwa runtime permissions
+      file:
+        path: "{{ uchiwa_home }}"
+        owner: "{{ uchiwa_user }}"
+        recurse: yes
+      become: yes
+      changed_when: false
+
+    - name: create uchiwa configuration directory
+      file:
+        dest: "{{ uchiwa_conf | dirname }}"
+        state: directory
+      become: yes
+
+    - name: configure uchiwa
+      copy:
+        dest: "{{ uchiwa_conf }}"
+        content: "{{ uchiwa_settings | to_nice_json }}"
+        owner: "{{ uchiwa_user }}"
+      notify:
+        - restart uchiwa
+      become: yes
+
+    - name: create systemd service units
+      template:
+        src: systemd/uchiwa.service.j2
+        dest: "/etc/systemd/system/uchiwa.service"
+      vars:
+        user: "{{ uchiwa_user }}"
+        group: "{{ uchiwa_group }}"
+        bin: "{{ uchiwa_binary }}"
+        conf: "{{ uchiwa_conf }}"
+        assets: "{{ uchiwa_src }}/public"
+      become: yes
+      notify: reload systemd
+
+    - name: manage systemd tmpfiles
+      template:
+        src: systemd/uchiwa.tmpfiles.conf.j2
+        dest: /usr/lib/tmpfiles.d/uchiwa.conf
+      vars:
+        pid_dir: "{{ uchiwa_pid_dir }}"
+      become: yes
+
+    - meta: flush_handlers
+
+    - name: manage service
+      service:
+        name: uchiwa
+        state: started
+        enabled: yes
+      become: yes
+
+  handlers:
+
+    - name: reload systemd
+      command: systemctl daemon-reload
+      tags:
+        - skip_ansible_lint
+      become: yes
+
+    - name: restart uchiwa
+      service:
+        name: uchiwa
+        state: restarted
+      become: yes

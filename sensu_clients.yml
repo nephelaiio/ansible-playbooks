@@ -21,13 +21,10 @@
       vars:
         sensu_server: no
         users:
-          - username: sensu
+          - username: "{{ sensu_user }}"
             name: sensu service user
             system: yes
-        users_group: sensu
-        sensu_api_host: "{{ sensu_server_host }}"
-        sensu_redis_host: "{{ sensu_server_host }}"
-        sensu_rabbitmq_host: "{{ sensu_server_host }}"
+        users_group: "{{ sensu_group }}"
 
     - name: install plugin sensu requirements
       package:
