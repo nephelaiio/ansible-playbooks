@@ -1,5 +1,5 @@
 ---
-- name: Create raspbian images
+- name: create raspbian images
 
   hosts: mirror
 
@@ -9,7 +9,7 @@
 
   vars:
 
-    raspbian_group: raspberry
+    raspbian_inventory_group: raspberry
     raspbian_user_name: teddyphreak
     raspbian_user_pubkey: "{{ users[raspbian_user_name].pubkey }}"
     raspbian_user_id: 1000
@@ -41,6 +41,15 @@
     - name: create raspbian images
       include_tasks: raspbian/image_create.yml
       vars:
-        raspbian_host: "{{ item }}"
+        raspbian_host:
+          hostname: "{{ hostitem }}"
+          ifaces:
+            - name: eth0
+              method: satic
+              ip-address: "{{ hostvars[hostitem]['ansible_host'] }}"
+              prefix: "{{ nets.home.netmask }}"
+              gateway: "{{ nets.home.router }}"
         raspbian_source_image: "{{ raspbian_local_image }}"
-      with_items: "{{ raspbian_hosts }}"
+      loop_control:
+        loop_var: hostitem
+      with_items: "{{ groups[raspbian_inventory_group] }}"
