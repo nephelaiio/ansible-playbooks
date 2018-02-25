@@ -1,7 +1,9 @@
 ---
 - name: Create nuc images
 
-  hosts: localhost
+  hosts: mirror
+
+  become: yes
 
   roles:
 
@@ -9,17 +11,14 @@
 
   vars:
 
-    ubuntu_release_xenial: "16.04.3"
-    ubuntu_release_aartful: "17.10"
+    nuc_inventory_group: nuc
+    nuc_user_name: teddyphreak
+    nuc_user_pass: "{{ users[nuc_user_name].password | password_hash('sha512') }}"
+    nuc_user_pubkey: "{{ users[nuc_user_name].pubkey }}"
+    nuc_user_name: teddyphreak
+    ubuntu_release: "16.04.3"
     ubuntu_timezone: America/Costa_Rica
-    ubuntu_image_dir: "{{ playbook_dir }}/files/images"
-    ubuntu_hosts:
-      - host: nuca.home.nephelai.io
-        interface:
-          static: false  # true | false
-        disk: /dev/nvme0n1
-        release: "{{ ubuntu_release_xenial }}"
-        timezone: "{{ ubuntu_timezone }}"
+    ubuntu_image_dir: "{{ nuc_mirror_path }}"
 
   tasks:
 
@@ -27,53 +26,20 @@
       include_vars:
         dir: "vars/{{ inventory }}"
 
-    - name: inspect current user
-      command: whoami
-      changed_when: false
-      register: inspect_username
-
-    - name: define target user
-      set_fact:
-        target_username: "{{ inspect_username.stdout }}"
-
-    - name: inspect current user pass
-      command: "getent shadow {{ inspect_username.stdout }}"
-      become: yes
-      changed_when: false
-      register: inspect_password
-
-    - name: define target password
-      set_fact:
-        target_password: "{{ inspect_password.stdout | split_with(':') | tail | head }}"
-
-    - name: inspect current user ssh key
-      command: "cat ~{{ target_username }}/.ssh/id_rsa.pub"
-      register: inspect_sshkey
-      changed_when: false
-
-    - name: create ssh key for current user
-      command: "ssh-keygen -b 2048 -t rsa -f ~{{ target_username }}/.ssh/id_rsa.pub -q -N ''"
-      args:
-        creates: "~{{ target_username }}/.ssh/id_rsa.pub"
-      when:
-        - (inspect_sshkey | trim == '')
-
-    - name: define default ssh key
-      set_fact:
-        target_sshkey: "{{ inspect_sshkey.stdout }}"
-
     - include_role:
         name: nephelaiio.ubuntu-installer
       vars:
-        ubuntu_installer_hostname: "{{ hostitem.host }}"
-        ubuntu_installer_interface: "{{ hostitem.interface }}"
-        ubuntu_installer_disk: "{{ hostitem.disk }}"
-        ubuntu_installer_release: "{{ hostitem.release }}"
+        ubuntu_installer_hostname: "{{ hostitem }}"
+        ubuntu_installer_interface:
+          static: false
+        ubuntu_installer_disk: /dev/nvme0n1
+        ubuntu_installer_release: "{{ ubuntu_release }}"
         ubuntu_installer_target_dir: "{{ ubuntu_image_dir }}"
         ubuntu_installer_halt: 'true'
-        ubuntu_installer_username: "{{ target_username }}"
-        ubuntu_installer_password: "{{ target_password }}"
-        ubuntu_installer_sshkey: "{{ target_sshkey }}"
+        ubuntu_installer_username: "{{ nuc_user_name }}"
+        ubuntu_installer_password: "{{ nuc_user_pass }}"
+        ubuntu_installer_sshkey: "{{ nuc_user_pubkey }}"
+        ubuntu_installer_timezone: "{{ ubuntu_timezone }}"
       loop_control:
         loop_var: hostitem
-      with_items: "{{ ubuntu_hosts }}"
+      with_items: "{{ groups[nuc_inventory_group] }}"
