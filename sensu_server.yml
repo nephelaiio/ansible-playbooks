@@ -82,8 +82,10 @@
             system: yes
         users_group: "{{ sensu_group }}"
         sensu_api_host: "{{ sensu_server_host }}"
-        sensu_redis_host: "{{ sensu_server_host }}"
+        sensu_redis_host: localhost
         sensu_rabbitmq_host: "{{ sensu_server_host }}"
+        rabbitmq_user_tags:
+          - management
       become: yes
 
     - name: install uchiwa build dependency packages
