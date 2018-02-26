@@ -1,19 +1,5 @@
 ---
-- name: Create raspbian images
-
-  hosts: localhost
-
-  roles:
-
-    - nephelaiio.plugins
-
-  tasks:
-
-    - include_tasks: raspbian.yml
-      vars:
-        raspbian_host: "{{ item.hostname }}"
-        raspbian_ifaces: "{{ item.ifaces }}"
-      with_items: "{{ raspbian_hosts }}"
+- import_playbook: raspbian.yml
 
 - import_playbook: nuc.yml
 
