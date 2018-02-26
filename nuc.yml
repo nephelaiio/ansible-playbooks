@@ -15,7 +15,6 @@
     nuc_user_name: teddyphreak
     nuc_user_pass: "{{ users[nuc_user_name].password | password_hash('sha512') }}"
     nuc_user_pubkey: "{{ users[nuc_user_name].pubkey }}"
-    nuc_user_name: teddyphreak
     ubuntu_release: "16.04.3"
     ubuntu_timezone: America/Costa_Rica
     ubuntu_image_dir: "{{ nuc_mirror_path }}"
