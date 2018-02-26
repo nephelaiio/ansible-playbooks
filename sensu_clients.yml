@@ -39,6 +39,9 @@
       with_items:
         - sensu-plugins-http
         - sensu-plugins-ntp
+        - sensu-plugins-disk-checks
+        - sensu-plugins-dhcp
+        - sensu-plugins-load
 
   handlers:
 
