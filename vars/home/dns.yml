@@ -8,7 +8,7 @@ dns:
       hostmaster: "master@{{ base_domain }}"
       mx: "{{ groups['mail'] }}"
       ns: "{{ groups['recursors'] }}"
-      records: "{{ nets.home.reservations.values() + (hostvars.values() | select('test_property', '.*.' + base_domain, 'ansible_hostname') | map('alias_keys', {'inventory_hostname': 'host', 'ansible_host': 'ip-address' }) | list) }}"
+      records: "{{ nets.home.reservations.values() + (hostvars.values() | select('test_property', '.*.' + base_domain, 'inventory_hostname') | map('alias_keys', {'inventory_hostname': 'host', 'ansible_host': 'ip-address' }) | list) }}"
       cnames:
         - ["{{ base_domain }}", rpia.home.nephelai.io]
         - ["nfs.{{ base_domain }}", "{{ groups['backup'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
