@@ -13,7 +13,7 @@
 
     - name: include private variables
       include_vars:
-        dir: "{{ vault }}"
+        dir: "vars/{{ inventory }}"
 
     - name: install sensu reverse proxy
       include_role:

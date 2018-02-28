@@ -41,7 +41,7 @@
         - sensu-plugins-ntp
         - sensu-plugins-disk-checks
         - sensu-plugins-dhcp
-        - sensu-plugins-load
+        - sensu-plugins-loadavg
 
   handlers:
 

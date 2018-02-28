@@ -15,8 +15,8 @@ sensu_conf_common:
     host: "{{ sensu_rabbitmq_host }}"
     port: "{{ sensu_rabbitmq_port }}"
     vhost: "{{ sensu_rabbitmq_vhost }}"
-    user: "{{ sensu_rabbitmq_user }}"
-    password: "{{ sensu_rabbitmq_pass }}"
+    user: "{{ sensu_rabbitmq_user_name }}"
+    password: "{{ sensu_rabbitmq_user_pass }}"
   api:
     host: "{{ sensu_api_host }}"
     port: "{{ sensu_api_port }}"
