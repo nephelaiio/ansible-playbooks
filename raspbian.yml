@@ -33,9 +33,14 @@
       set_fact:
         raspbian_local_image: "{{ raspbian_mirror_path }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
 
+    - name: create raspbian image target directory
+      file:
+        state: directory
+        path: "{{ raspbian_local_image | dirname }}"
+
     - name: fetch raspbian source image
       get_url:
-        url: "{{ raspbian_release.url }}"
+        url: "{{ raspbian_release.src }}"
         dest: "{{ raspbian_local_image }}"
 
     - name: create raspbian images
