@@ -31,7 +31,7 @@
         ubuntu_installer_hostname: "{{ hostitem }}"
         ubuntu_installer_interface:
           static: false
-        ubuntu_installer_disk: /dev/nvme0n1
+        ubuntu_installer_disk: "{{ hostvars[hostitem].ubuntu_installer_disk | default('/dev/nvme0n1') }}"
         ubuntu_installer_release: "{{ ubuntu_release }}"
         ubuntu_installer_target_dir: "{{ ubuntu_image_dir }}"
         ubuntu_installer_halt: 'true'
