@@ -1,4 +1,8 @@
 ---
+- import_playbook: raspbian.yml
+
+- import_playbook: centos.yml
+
 - name: Configure raspbian
 
   hosts: raspberry

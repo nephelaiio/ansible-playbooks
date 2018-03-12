@@ -9,3 +9,6 @@ iface {{ iface.name }} inet {{ iface.method }}
 {% if 'gateway' in iface %}
     gateway {{ iface['gateway'] }}
 {% endif %}
+{% if 'resolvers' in iface %}
+    dns-nameservers {{ iface['resolvers'] | join(' ') }}
+{% endif %}
