@@ -21,17 +21,10 @@
       include_vars:
         dir: "{{ variables }}"
 
-    - name: inspect nameservers
-      changed_when: False
-      command: "host -W 1 www.google.com"
-      ignore_errors: true
-      register: resolv
-
     - name: install dhcpd
       apt:
         name: "{{ item }}"
         state: latest
-        update_cache: yes
       with_items:
         - isc-dhcp-server
       notify: restart dhcpd

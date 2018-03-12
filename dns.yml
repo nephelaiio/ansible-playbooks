@@ -41,15 +41,8 @@
       include_vars:
         dir: "{{ variables }}"
 
-    - name: inspect nameservers
-      changed_when: False
-      command: "host -W 1 www.google.com"
-      ignore_errors: true
-      register: resolv
-
     - name: install dns utilities
       apt:
-        update_cache: yes
         name: dnsutils
         state: latest
 
@@ -77,7 +70,6 @@
 
     - name: install powerdns
       apt:
-        update_cache: yes
         name: "{{ item }}"
         state: latest
       with_items:
