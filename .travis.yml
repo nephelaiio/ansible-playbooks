@@ -6,6 +6,8 @@ sudo: required
 install:
   - sudo apt-get update
   - sudo apt-get install -y libvirt-dev
+  - sudo pip install yamllint
+  - sudo pip install flake8
 
 script:
   - yamllint ./ -c ./.yamllint
