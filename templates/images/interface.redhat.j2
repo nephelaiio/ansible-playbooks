@@ -1,0 +1,18 @@
+NAME={{ iface.name }}
+DEVICE={{ iface.name }}
+ONBOOT=yes
+NM_CONTROLLED=no
+BOOTPROTO={{ iface.method }}
+{% if 'ip-address' in iface %}
+IPADDR={{ iface['ip-address'] }}
+{% endif %}
+{% if 'prefix' in iface %}
+NETMASK={{ iface['prefix'] }}
+{% endif %}
+{% if 'gateway' in iface %}
+GATEWAY={{ iface['gateway'] }}
+{% endif %}
+{% if 'resolvers' in iface %}
+DNS1={{ iface['resolvers'][0] }}
+DNS2={{ iface['resolvers'][1] }}
+{% endif %}
