@@ -1,3 +1,6 @@
+DELETE FROM records where TRUE;
+DELETE FROM domains where TRUE;
+
 {% for domain in domains %}
 SET @name = '{{ domain.name }}',
   @content = '{{ inventory_hostname }} {{ domain.hostmaster }} {{ domain.serial | default(0) }} {{ domain.refresh | default(3600) }} {{ domain.retry | default(600) }} {{ domain.expire | default(10800) }} {{ domain.ttl | default(600) }}',
@@ -6,9 +9,7 @@ SET @name = '{{ domain.name }}',
 INSERT IGNORE INTO domains(name, type)
   VALUES(@name, @type);
   SELECT id INTO @id FROM domains WHERE name like @name;
-  DELETE FROM records
-  WHERE domain_id = @id AND type = @type AND name = @name;
-  INSERT INTO records(domain_id, name, content, type, ttl)
+INSERT INTO records(domain_id, name, content, type, ttl)
   VALUES(@id, @name, @content, @type, @ttl);
 {% endfor %}
 
@@ -19,11 +20,9 @@ SET @name = '{{ domain.name }}',
   @type = 'NS',
   @ttl = {{ ns_ttl | default(3600) }}; 
 SELECT id INTO @id FROM domains
-WHERE name like '{{ domain.name }}';
-DELETE FROM records
-WHERE domain_id = @id AND type = @type AND name = @name;
+  WHERE name like '{{ domain.name }}';
 INSERT INTO records(domain_id, name, content, type, ttl)
-VALUES(@id, @name, @content, @type, @ttl);
+  VALUES(@id, @name, @content, @type, @ttl);
 {%   endfor %}
 {% endfor %}
 
@@ -35,11 +34,9 @@ SET @name = '{{ domain.name }}',
   @ttl = {{ mx_ttl | default(3600) }},
   @prio = {{ mx_priority | default(10) }}; 
 SELECT id INTO @id FROM domains
-WHERE name like '{{ domain.name }}';
-DELETE FROM records
-WHERE domain_id = @id AND type = @type AND name = @name;
+  WHERE name like '{{ domain.name }}';
 INSERT INTO records(domain_id, name, content, type, ttl, prio)
-VALUES(@id, @name, @content, @type, @ttl, @prio);
+  VALUES(@id, @name, @content, @type, @ttl, @prio);
 {%   endfor %}
 {% endfor %}
 
@@ -51,8 +48,6 @@ SET @name = '{{ record.host }}',
     @ttl = {{ record.ttl | default(3600) }}; 
 SELECT id INTO @id FROM domains
   WHERE name like '{{ domain.name }}';
-DELETE FROM records
-  WHERE domain_id = @id AND type = @type AND name = @name;
 INSERT INTO records(domain_id, name, content, type, ttl)
   VALUES(@id, @name, @content, @type, @ttl);
 {%   endfor %}
@@ -64,8 +59,6 @@ SET @name = '{{ cname.0 }}',
     @ttl = 3600; 
 SELECT id INTO @id FROM domains
   WHERE name like '{{ domain.name }}';
-DELETE FROM records
-  WHERE domain_id = @id AND type = @type AND name = @name;
 INSERT INTO records(domain_id, name, content, type, ttl)
   VALUES(@id, @name, @content, @type, @ttl);
 {%   endfor %}
