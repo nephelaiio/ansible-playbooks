@@ -134,6 +134,12 @@
     group: "{{ redhat_user_stat.stat.gid }}"
     mode: 0600
 
+- name: disable ssh password logins
+  lineinfile:
+    regexp: '^#?PasswordAuthentication'
+    line: "PasswordAuthentication no"
+    dest: "{{ tmpdir_dest.path }}/etc/ssh/sshd_config"
+
 - name: install fedora wifi firmware requirements
   get_url:
     url: "https://fedora.roving-it.com/brcmfmac43430-sdio.txt"

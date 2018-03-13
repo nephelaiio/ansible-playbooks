@@ -137,6 +137,12 @@
     group: "{{ raspbian_group_id | default(1000) }}"
     mode: 0600
 
+- name: disable ssh password logins
+  lineinfile:
+    regexp: '^#?PasswordAuthentication'
+    line: "PasswordAuthentication no"
+    dest: "{{ tmpdir_dest.path }}/etc/ssh/sshd_config"
+
 - name: unmount raspbian target image
   command: "umount {{ mntitem }}"
   args:
