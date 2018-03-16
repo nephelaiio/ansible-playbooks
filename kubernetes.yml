@@ -1,0 +1,60 @@
+---
+- name: Install etcd
+
+  hosts: etcd
+
+  become: yes
+
+  vars:
+
+    etcd_cluster_group: etcd
+    etcd_cluster_hosts: "{{ groups[etcd_cluster_group] }}"
+    etcd_cluster_vars: "{{ etcd_cluster_hosts | map('extract', hostvars) | list }}"
+    etcd_cluster_hostnames: "{{ etcd_cluster_vars | json_query('[*].ansible_fqdn') }}"
+    etcd_cluster_addresses: "{{ etcd_cluster_vars | json_query('[*].ansible_default_ipv4.address') }}"
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: configure etcd
+      template:
+        src: kubernetes/etcd.conf.j2
+        dest: /etc/default/etcd
+      vars:
+        etcd_hostname: "{{ ansible_fqdn }}"
+        etcd_scheme: http
+        etcd_local_address: "{{ ansible_default_ipv4.address }}"
+        etcd_peer_port: 2380
+        etcd_client_port: 2379
+        etcd_cluster_name: k8s
+        etcd_cluster_token: k8s-token
+        etcd_cluster_state: new
+        etcd_initial_cluster: "{{ etcd_cluster_hosts | zip(etcd_cluster_addresses) | map('map_format', '%s=' + etcd_scheme + '://%s:' + (etcd_peer_port | string)) | join(',') }}"
+        etcd_extra_config: |
+          ETCD_UNSUPPORTED_ARCH=arm
+      notify: restart etcd
+
+    - name: install etcd packages
+      apt:
+        name: etcd
+        state: present
+        
+      notify: restart etcd 
+
+    - name: manage etcd service
+      service:
+        name: etcd
+        state: started
+        enabled: yes
+
+  handlers:
+
+    - name: restart etcd
+      service:
+        name: etcd
+        state: restarted
+
+  
