@@ -3,8 +3,6 @@
 
   hosts: docker_swarm
 
-  environment: "{{ proxy_env | default({}) }}"
-
   become: yes
 
   roles:

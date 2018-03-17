@@ -3,8 +3,6 @@
 
   hosts: mirror
 
-  environment: "{{ proxy_env | default({}) }}"
-
   become: yes
 
   vars:
