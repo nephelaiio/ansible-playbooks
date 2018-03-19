@@ -5,75 +5,68 @@
 
   become: yes
 
-  vars:
-
-    apache_packages:
-      - apache2
-    apache_services:
-      - apache2
-    apache_conf_dir: /etc/apache2
-    apache_vhost_filename: 004-awx.conf
-    apache_vhost_template: apache/revproxy.conf.j2
-    apache_mods_enabled:
-      - proxy.load
-      - proxy_http.load
-      - proxy_balancer.load
-      - lbmethod_bytraffic.load
-    proxy_port: 80
-    proxy_virtualhost: "*:{{ proxy_port }}"
-    proxy_servername: "{{ awx_url | urlsplit('hostname') }}"
-    proxy_backend_proto: "http"
-    proxy_backend_members: "{{ groups['awx'] | map('extract', hostvars, ['ansible_host']) | list }}"
-    proxy_backend_port: "80"
-
   tasks:
 
+    - name: include private variables
+      include_vars:
+        dir: "vars/{{ variables }}/vault"
+
     - name: install apache
-      package:
-        name: "{{ item }}"
-        state: present
-      with_items: "{{ apache_packages }}"
+      include_role:
+        name: geerlingguy.apache
+      vars:
+        apache_create_vhosts: true
+        apache_remove_default_vhost: true
+        apache_vhosts_filename: 004-awx.conf
+        apache_vhosts_template: apache/awx.revproxy.conf.j2
+        apache_mods_enabled:
+          - proxy.load
+          - proxy_http.load
+          - proxy_balancer.load
+          - proxy_wstunnel.load
+          - ssl.load
+        proxy_servername: "{{ awx_url | urlsplit('hostname') }}"
+        proxy_backend_host: "{{ groups['awx'] | map('extract', hostvars, ['ansible_host']) | first }}"
+        proxy_backend_proto: http
+        proxy_backend_port: "{{ awx_port }}"
+        awx_key_path: "/etc/ssl/private/awx.{{ base_domain }}.pem"
+        awx_csr_path: "/etc/ssl/csr/awx.{{ base_domain }}.csr"
+        awx_pem_path: "/etc/ssl/csr/awx.{{ base_domain }}.pem"
 
-    - name: enable modules
-      command: "a2enmod {{ item }}"
-      args:
-        creates: "{{ apache_conf_dir }}/mods-enabled/{{ item }}"
-      notify: restart apache
-      with_items: "{{ apache_mods_enabled }}"
+    - name: install pip requirements
+      pip:
+        name: PyOpenSSL
 
-    - name: configure apache
-      template:
-        src: "{{ apache_vhost_template }}"
-        dest: "{{ apache_conf_dir }}/sites-available/{{ apache_vhost_filename }}"
-      notify: restart apache
-
-    - name: activate apache configuration
+    - name: create certificate paths
       file:
-        src: "{{ apache_conf_dir }}/sites-available/{{ apache_vhost_filename }}"
-        dest: "{{ apache_conf_dir }}/sites-enabled/{{ apache_vhost_filename }}"
-        state: link
-      notify: restart apache
+        state: directory
+        dest: "{{ item | dirname }}"
+      with_items:
+        - "{{ awx_key_path }}"
+        - "{{ awx_csr_path }}"
+        - "{{ awx_pem_path }}"
 
-    - name: prune apache configuration
-      file:
-        path: "/etc/apache2/sites-enabled/000-default.conf"
-        state: absent
-      notify: restart apache
+    - name: create awx certificate private key
+      openssl_privatekey:
+        path: "{{ awx_key_path }}"
 
-  handlers:
+    - name: create awx certificate signing request
+      openssl_csr:
+        path: "{{ awx_csr_path }}"
+        privatekey_path: "{{ awx_key_path }}"
+        CN: "{{ proxy_servername }}"
+        O: nephelaiio.io
+        OU: Home
+        ST: San Jose
+        L: San Jose
 
-    - name: restart apache
-      service:
-        name: "{{ item }}"
-        state: restarted
-      with_items: "{{ apache_services }}"
+    - name: create awx self signed certificate
+      openssl_certificate:
+        path: "{{ awx_pem_path }}"
+        privatekey_path: "{{ awx_key_path }}"
+        csr_path: "{{ awx_csr_path }}"
+        provider: selfsigned
 
-
-- name: Install postgres
-
-  hosts: awx
-
-  become: yes
 
 - name: Install awx
 
@@ -83,37 +76,305 @@
 
   vars:
 
-    postgresql_global_config_options:
-      - option: listen_addresses
-        value: "*"
-    postgresql_databases:
-      - name: "{{ pg_database }}"
-    postgresql_users:
-      - name: "{{ pg_username }}"
-        password: "{{ pg_password }}"
-        db: "{{ pg_database }}"
-    postgresql_hba_entries:
-      - { type: local, database: all, user: postgres, auth_method: peer }
-      - { type: local, database: all, user: all, auth_method: peer }
-      - { type: host, database: all, user: all, address: '127.0.0.1/32', auth_method: md5 }
-      - { type: host, database: all, user: all, address: "{{ pg_hostname }}/32", auth_method: md5 }
-      - { type: host, database: "{{ pg_database }}", user: "{{ pg_username }}", address: "0.0.0.0/0", auth_method: md5 }
+    awx_version: 1.0.2
+    awx_nolog: false
+    awx_cli_conf: /root/.tower_cli.cfg
+    awx_pg_hostname: "{{ ansible_default_ipv4.address }}"
+    awx_pg_db: "awx_{{ awx_version | regex_replace('\\.', '') }}"
+    awx_pg_port: 5432
+    awx_settings:
+      AUTH_LDAP_SERVER_URI: "ldap://10.50.2.3:389 ldap://10.50.2.2:389"
+      AUTH_LDAP_USER_ATTR_MAP: "{'first_name': 'givenName', 'last_name': 'sn', 'email': 'mail'}"
+      AUTH_LDAP_GROUP_TYPE: "ActiveDirectoryGroupType"
+      AUTH_LDAP_GROUP_SEARCH: "['ou=Groups,dc=true,dc=local', 'SCOPE_SUBTREE', '(objectClass=group)']"
+      AUTH_LDAP_BIND_DN: "cn=AWX AD Bind,ou=Service Users,dc=true,dc=local"
+      AUTH_LDAP_USER_SEARCH: "['ou=Office Users,dc=true,dc=local', 'SCOPE_SUBTREE', '(sAMAccountName=%(user)s)']"
+      AUTH_LDAP_USER_FLAGS_BY_GROUP: "{'is_superuser': 'cn=AWX Admins,OU=Groups,DC=True,DC=local'}"
+      AUTH_LDAP_REQUIRE_GROUP: "{{ awx_ad_bind_user }}"
+      AUTH_LDAP_BIND_PASSWORD: "{{ awx_ad_bind_pass }}"
+    awx_organizations:
+      - name: Default
+        state: absent
+      - name: true.local
+        state: present
+        credentials:
+          - name: Demo Credential
+            state: absent
+          - name: awx.true.local
+            state: absent
+          - name: git.true.local
+            kind: scm
+            inputs:
+              username: "{{ awx_gitlab_user }}"
+              password: "{{ awx_gitlab_pass }}"
+          - name: vault.true.local
+            kind: vault
+            inputs:
+              vault_password: "{{ awx_vault_pass }}"
+          - name: local
+            kind: ssh
+            inputs:
+              username: "{{ users.ansible.username }}"
+              ssh_key_data: "{{ users.ansible.privkey }}"
+        projects:
+          - name: local
+            state: absent
+          - name: true.local
+            organization: true.local
+            scm_type: git
+            scm_url: http://git.true.local/operations/ansible-playbooks.git
+            scm_branch: master
+            scm_delete_on_update: false
+            scm_credential: git.true.local
+            scm_update_on_launch: true
+            scm_update_cache_timeout: 0
+            scm_clean: false
+        inventories:
+          - name: local
+            state: absent
+          - name: true.local
+            source: scm
+            source_project: true.local
+            source_path: inventory/local
+            overwrite: true
+            overwrite_vars: true
+            update_on_launch: false
+            update_on_project_update: true
+        templates:
+          - name: Demo Job Template
+            state: absent
+          - name: awx.true.local
+            job_type: run
+            project: true.local
+            inventory: true.local
+            playbook: awx.yml
+            vault_credential: vault.true.local
+            credential: local
+          - name: provision.true.local
+            job_type: run
+            project: true.local
+            inventory: true.local
+            playbook: kvm.yml
+            vault_credential: vault.true.local
+            credential: local
+          - name: mirror.true.local
+            job_type: run
+            project: true.local
+            inventory: true.local
+            playbook: mirror.yml
+            vault_credential: vault.true.local
+            credential: local
+          - name: gitlab.true.local
+            job_type: run
+            project: true.local
+            inventory: true.local
+            playbook: gitlab.yml
+            vault_credential: vault.true.local
+            credential: local
 
   tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "vars/{{ vault }}/vault"
 
     - name: install postgresql
       include_role:
         name: geerlingguy.postgresql
+      vars:
+        postgresql_global_config_options:
+          - option: listen_addresses
+            value: "*"
+        postgresql_databases:
+          - name: "{{ awx_pg_db }}"
+            port: "{{ awx_pg_port }}"
+        postgresql_users:
+          - name: "{{ awx_pg_user }}"
+            password: "{{ awx_pg_pass }}"
+            db: "{{ awx_pg_db }}"
+        postgresql_hba_entries:
+          - { type: local, database: all, user: postgres, auth_method: peer }
+          - { type: local, database: all, user: all, auth_method: peer }
+          - { type: host, database: all, user: all, address: '127.0.0.1/32', auth_method: md5 }
+          - { type: host, database: all, user: all, address: "{{ awx_pg_hostname }}/32", auth_method: md5 }
+          - { type: host, database: "{{ awx_pg_db }}", user: "{{ awx_pg_user }}", address: "0.0.0.0/0", auth_method: md5 }
+
+    - name: create backup destination
+      file:
+        state: directory
+        path: "{{ backup_dir }}"
+
+    - name: manage pgpass configuration file
+      copy:
+        dest: /root/.pgpass
+        mode: 0600
+        content: "{{ awx_pg_hostname }}:{{ awx_pg_port }}:{{ awx_pg_db }}:{{ awx_pg_user }}:{{ awx_pg_pass }}\n"
+
+    - name: manage postgresql backup creation job
+      cron:
+        name: backup
+        job: "/usr/bin/pg_dump -h {{ awx_pg_hostname }} -U {{ awx_pg_user }} -d {{ awx_pg_db }} > {{ backup_dir }}/{{ awx_pg_db }}.$(date +\\%Y\\%m\\%d-\\%H\\%M\\%S).sqldump"
+        special_time: hourly
+
+    - name: manage postgresql backup cleanup job
+      cron:
+        name: cleanup
+        job: "/usr/bin/find \"{{ backup_dir }}/\" -mtime +7 -delete"
+        special_time: hourly
 
     - name: install docker
       include_role:
         name: nephelaiio.docker
 
-    - name: check awx installer variables
-      include_role:
-        name: check_vars
-        tasks_from: check_docker
+    - name: define awx installer variables
+      set_fact:
+        dockerhub_base: ansible
+        dockerhub_version: "{{ awx_version }}"
+        default_admin_user: "{{ awx_admin_user }}"
+        default_admin_password: "{{ awx_admin_pass }}"
+        awx_secret_key: "{{ awx_secret_pass }}"
+        host_port: "{{ awx_port }}"
+        pg_hostname: "{{ awx_pg_hostname }}"
+        pg_username: "{{ awx_pg_user }}"
+        pg_password: "{{ awx_pg_pass }}"
+        pg_database: "{{ awx_pg_db }}"
+        pg_port: "{{ awx_pg_port }}"
+        awx_container_search_domains: "{{ dns.search_domains | join(',') }}"
+        # http_proxy: http://proxy:3128
+        # https_proxy: http://proxy:3128
+        # no_proxy: mycorp.org
 
     - name: check awx installer variables
-      include_role:
-        name: local_docker
+      include_tasks: awx/check_vars.yml
+
+    - name: install local docker awx images
+      include_tasks: awx/local_docker.yml
+
+    - name: install tower cli
+      pip:
+        name: ansible-tower-cli
+        state: latest
+
+    - name: create tower cli configuration file
+      template:
+        src: awx/tower_cli.cfg.j2
+        dest: "{{ awx_cli_conf }}"
+        mode: 640
+      vars:
+        host: "{{ awx_url | urlsplit('hostname') }}"
+        username: "{{ awx_admin_user }}"
+        password: "{{ awx_admin_pass }}"
+        verify_ssl: false
+        verbose: false
+
+    - name: wait for awx startup
+      uri:
+        url: "{{ awx_url }}"
+        status_code: 200
+      register: awx_up
+      until: awx_up.status == 200
+      retries: 10
+      delay: 60
+
+    - name: destroy awx job templates
+      include_tasks: awx/template_destroy.yml
+      vars:
+        template: "{{ item.1 }}"
+      with_subelements:
+        - "{{ awx_organizations | selectattr('templates', 'defined') | list }}"
+        - templates
+      when: item.0.state | default('present') == 'absent' or item.1.state | default('present') == 'absent'
+      no_log: "{{ awx_nolog }}"
+
+    - name: destroy awx inventories
+      include_tasks: awx/inventory_destroy.yml
+      vars:
+        inventory: "{{ item.1 }}"
+      with_subelements:
+        - "{{ awx_organizations | selectattr('inventories', 'defined') | list }}"
+        - inventories
+      when: item.0.state | default('present') == 'absent' or item.1.state | default('present') == 'absent'
+      no_log: "{{ awx_nolog }}"
+
+    - name: destroy awx projects
+      include_tasks: awx/project_destroy.yml
+      vars:
+        project: "{{ item.1 }}"
+      with_subelements:
+        - "{{ awx_organizations | selectattr('projects', 'defined') | list }}"
+        - projects
+      when: item.0.state | default('present') == 'absent' or item.1.state | default('present') == 'absent'
+      no_log: "{{ awx_nolog }}"
+
+    - name: destroy awx credentials
+      include_tasks: awx/credential_destroy.yml
+      vars:
+        credential: "{{ item.1 }}"
+      with_subelements:
+        - "{{ awx_organizations | selectattr('credentials', 'defined') | list }}"
+        - credentials
+      when: item.0.state | default('present') == 'absent' or item.1.state | default('present') == 'absent'
+      no_log: "{{ awx_nolog }}"
+
+    - name: destroy awx organizations
+      include_tasks: awx/organization_destroy.yml
+      vars:
+        organization: "{{ item }}"
+      with_items: "{{ awx_organizations }}"
+      when: item.state | default('present') == 'absent'
+      no_log: "{{ awx_nolog }}"
+
+    - name: create awx organizations
+      include_tasks: awx/organization_create.yml
+      vars:
+        name: "{{ item.name }}"
+      with_items: "{{ awx_organizations }}"
+      when: item.state | default('present') == 'present'
+      no_log: "{{ awx_nolog }}"
+
+    - name: create awx credentials
+      include_tasks: awx/credential_create.yml
+      vars:
+        organization: "{{ item.0.name }}"
+        credential: "{{ item.1 }}"
+      with_subelements:
+        - "{{ awx_organizations | selectattr('credentials', 'defined') | list }}"
+        - credentials
+      when: item.0.state == 'present' and item.1.state == 'present'
+      no_log: "{{ awx_nolog }}"
+
+    - name: create awx projects
+      include_tasks: awx/project_create.yml
+      vars:
+        project: "{{ item.1 }}"
+      with_subelements:
+        - "{{ awx_organizations | selectattr('projects', 'defined') | list }}"
+        - projects
+      when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
+      no_log: "{{ awx_nolog }}"
+
+    - name: create awx inventories
+      include_tasks: awx/inventory_create.yml
+      vars:
+        organization: "{{ item.0.name }}"
+        inventory: "{{ item.1 }}"
+      with_subelements:
+        - "{{ awx_organizations | selectattr('inventories', 'defined') | list }}"
+        - inventories
+      when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
+      no_log: "{{ awx_nolog }}"
+
+    - name: manage awx settings
+      command: "awx-cli setting modify {{ item.key }} \"{{ item.value }}\""
+      with_dict: "{{ awx_settings }}"
+      no_log: "{{ awx_nolog }}"
+
+    - name: create awx job templates
+      include_tasks: awx/template_create.yml
+      vars:
+        template: "{{ item.1 }}"
+      with_subelements:
+        - "{{ awx_organizations | selectattr('templates', 'defined') | list }}"
+        - templates
+      when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
+      no_log: "{{ awx_nolog }}"

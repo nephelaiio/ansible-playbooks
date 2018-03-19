@@ -6,7 +6,7 @@
   vars:
 
     nfs_exports:
-      - "/home {{ nets.private.network }}/{{ nets.private.netmask }}(rw,sync,no_root_squash)"
+      - "/home {{ nets.kvm.network }}/{{ nets.kvm.netmask }}(rw,sync,no_root_squash)"
 
   roles:
 

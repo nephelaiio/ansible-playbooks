@@ -1,11 +1,32 @@
-Listen {{ proxy_port | default('80') }}
+Listen 80
+Listen 443
 
-<VirtualHost {{ proxy_virtualhost }}>
+<VirtualHost *:80>
   ServerName {{ proxy_servername }}
 
   ProxyRequests On
   ProxyPreserveHost On
-  SSLProxyEngine On
+
+  ProxyPass "/" "balancer://revproxy/" 
+  ProxyPassReverse "/" "balancer:://revproxy/"
+
+  <Proxy "balancer://revproxy">
+    {% for member in proxy_backend_members %}
+    BalancerMember "{{ proxy_backend_proto | default('http') }}://{{ member }}:{{ proxy_backend_port | default('80') }}"
+    {% endfor %}
+    ProxySet lbmethod={{ proxy_lbmethod | default('bytraffic') }}
+  </Proxy>
+
+  ErrorLog ${APACHE_LOG_DIR}/revproxy-error.log
+  CustomLog ${APACHE_LOG_DIR}/revproxy-access.log combined
+</VirtualHost>
+
+
+<VirtualHost *:443>
+  ServerName {{ proxy_servername }}
+
+  ProxyRequests On
+  ProxyPreserveHost On
 
   ProxyPass "/" "balancer://revproxy/" 
   ProxyPassReverse "/" "balancer:://revproxy/"

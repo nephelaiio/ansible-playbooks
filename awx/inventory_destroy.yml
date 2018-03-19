@@ -1,0 +1,7 @@
+---
+- name: destroy inventory sources
+  command: "awx-cli inventory_source delete -n {{ inventory.name | quote }}"
+  with_items: "{{ inventory.sources | default ([]) }}"
+
+- name: destroy inventory
+  command: "awx-cli inventory delete -n {{ inventory.name | quote }}"
