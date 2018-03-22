@@ -2,6 +2,8 @@
 mirror_url: "http://repo.{{ base_domain }}"
 apt_url: "http://apt.{{ base_domain }}"
 yum_url: "http://yum.{{ base_domain }}"
-mirror_alias:
-  - "{{ apt_url | urlsplit('hostname') }}"
-  - "{{ yum_url | urlsplit('hostname') }}"
+
+web_root: /var/www/html/mirror
+mirror_root: "{{ web_root }}"
+raspbian_mirror_dir: raspbian
+iso_mirror_dir: iso

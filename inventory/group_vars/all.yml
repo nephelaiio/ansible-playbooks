@@ -3,11 +3,3 @@ timezone: America/Costa_Rica
 inventory: home
 variables: "vars/{{ inventory }}"
 base_domain: home.nephelai.io
-
-docker_user_manage: false
-docker_group_manage: false
-
-backup_dir: /backups
-
-sensu_subscriptions:
-  - all

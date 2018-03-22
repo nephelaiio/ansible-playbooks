@@ -1,5 +1,4 @@
 ---
 raspbian_release:
-  src: "https://downloads.raspberrypi.org/raspbian_lite_latest"
-  url: "{{ mirror_url }}/raspbian/raspbian_lite_latest"
-rasbian_timezone: "{{ timezone }}"
+  url: "https://downloads.raspberrypi.org/raspbian_lite_latest"
+  checksum: sha256:d58b4bd15e53380b8627df49b26ff7ccd80fc5d424a5cafe48a83fee58fc7047

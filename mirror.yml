@@ -1,7 +1,7 @@
 ---
 - name: Configure package mirrors
 
-  hosts: mirror
+  hosts: apt_mirror
 
   environment: "{{ proxy_env | default({}) }}"
 
@@ -9,14 +9,12 @@
 
   vars:
 
-    web_root: /var/www/html/mirror
-    mirror_root: "{{ mirror_target.path }}"
     raspbian_mirror_root: "{{ mirror_root }}/raspbian"
     raspbian_mirror_host: archive.raspbian.org
+    raspbian_mirror_list: /etc/apt/mirror.ubuntu.list
     ubuntu_mirror_root: "{{ mirror_root }}/ubuntu"
     ubuntu_mirror_host: archive.ubuntu.com
     ubuntu_mirror_list: /etc/apt/mirror.ubuntu.list
-    ubuntu_mirror_path: "{{ ubuntu_mirror_root }}/mirror/{{ ubuntu_mirror_host }}/ubuntu"
     ubuntu_vhost_path: "{{ web_root }}/ubuntu"
     centos_mirror_root: "{{ mirror_root }}/centos"
     centos_mirror_host: mirror.sfo12.us.leaseweb.net
@@ -35,30 +33,26 @@
 
     - name: include private variables
       include_vars:
-        dir: "{{ vault }}"
+        dir: "{{ variables }}"
 
-    - name: install nfs client
-      include_role:
-        name: nephelaiio.nfs
-      vars:
-        nfs_server: no
+    - name: install mirror packages
+      package:
+        name:
+          - apt-mirror
+          - apt-transport-https
+          - util-linux
+          - wget
 
-    - name: create mirror root
+    - name: create mirror directories
       file:
         path: "{{ item }}"
         state: directory
         mode: 0755
       with_items:
         - "{{ mirror_root }}"
-
-    - name: install mirror packages
-      package:
-        name:
-          - apt-mirror
-          - apache2
-          - apt-transport-https
-          - util-linux
-          - wget
+        - "{{ web_root }}"
+        - "{{ ubuntu_mirror_root }}"
+        - "{{ raspbian_mirror_root }}"
 
     - name: manage ubuntu mirror configuration
       template:
@@ -74,96 +68,30 @@
           - http://{{ ubuntu_mirror_host }}/ubuntu xenial-security main restricted universe multiverse
           - http://{{ ubuntu_mirror_host }}/ubuntu xenial-updates main restricted universe multiverse
           - http://{{ ubuntu_mirror_host }}/ubuntu xenial-backports main restricted universe multiverse
-        extra_config: |
-          deb-armhf http://archive.raspbian.org/raspbian jessie main contrib non-free
-          deb-armhf http://archive.raspbian.org/raspbian jessie main firmware rpi ui
+
+    - name: add ubuntu mirror update cronjob
+      cron:
+        name: 'update ubuntu apt-mirror cache'
+        job: "flock -n /tmp/ubuntu-mirror {{ ubuntu_mirror_list }}"
+        special_time: daily
 
     - name: manage raspbian mirror configuration
       template:
         src: mirror/mirror.list.j2
-        dest: /etc/apt/raspbian.list
+        dest: "{{ raspbian_mirror_list }}"
       vars:
-        base_path: "{{ ubuntu_mirror_root }}"
+        base_path: "{{ raspbian_mirror_root }}"
         arches:
           - armhf
         mirrors:
           - "http://{{ raspbian_mirror_host }}/raspbian jessie main contrib non-free"
           - "http://{{ raspbian_mirror_host }}/raspbian jessie main firmware rpi ui"
-        extra_config: |
 
-    - name: create mirror directories
-      file:
-        path: "{{ item }}"
-        state: directory
-        mode: 0755
-      with_items:
-        - "{{ mirror_root }}"
-        - "{{ web_root }}"
-        - "{{ ubuntu_mirror_root }}"
-
-    - name: create ubuntu mirror link
-      file:
-        path: "{{ ubuntu_vhost_path }}"
-        src: "{{ ubuntu_mirror_path }}"
-        state: link
-        force: yes
-
-    - name: add apt mirror update cronjob
+    - name: add raspbian mirror update cronjob
       cron:
-        name: 'update apt-mirror cache'
-        job: 'flock -n /tmp/apt-mirror apt-mirror'
-        state: "{{ apt_mirror_state }}"
+        name: 'update raspbian apt-mirror cache'
+        job: "flock -n /tmp/raspbian-mirror {{ raspbian_mirror_list }}"
         special_time: daily
-
-    - name: add apt mirror clean cronjob
-      cron:
-        name: 'clean apt-mirror cache'
-        job: 'flock -n /tmp/apt-mirror /var/spool/apt-mirror/var/clean.sh'
-        state: "{{ apt_mirror_state }}"
-        special_time: daily
-
-    - name: install yum mirror packages
-      package:
-        name:
-          - rsync
-
-    - name: add centos mirror cronjob
-      cron:
-        name: 'update centos mirror cache'
-        job: "flock -n /tmp/centos-mirror /usr/bin/rsync {{ centos_rsync_options }} rsync://{{ centos_mirror_host }}/centos/ {{ centos_mirror_root }}"
-        state: "{{ yum_mirror_state }}"
-        special_time: daily
-
-    - name: create centos mirror root
-      file:
-        path: "{{ centos_mirror_root }}"
-        state: directory
-
-    - name: create centos link
-      file:
-        path: "{{ centos_vhost_path }}"
-        src: "{{ centos_mirror_root }}"
-        state: link
-        force: yes
-
-    - name: add epel mirror cronjob
-      cron:
-        name: 'update epel mirror cache'
-        job: "flock -n /tmp/epel-mirror /usr/bin/rsync {{ epel_rsync_options }} {{ epel_mirror_url }} {{ epel_mirror_root }}"
-        state: "{{ yum_mirror_state }}"
-        special_time: daily
-
-    - name: create epel mirror root
-      file:
-        path: "{{ epel_mirror_root }}"
-        state: directory
-
-    - name: create epel link
-      file:
-        path: "{{ epel_vhost_path }}"
-        src: "{{ epel_mirror_root }}"
-        state: link
-        force: yes
 
     - name: configure apache
       include_role:
@@ -175,10 +103,73 @@
         apache_vhosts_template: apache/mirror.conf.j2
         mirror_root: "{{ web_root }}"
         mirror_vhost: "*:80"
-        mirror_servername: "{{ mirror_url | urlsplit('hostname') }}"
-        mirror_serveralias: "{{ mirror_alias }}"
+        mirror_servername: "{{ apt_url | urlsplit('hostname') }}"
         mirror_admin: tedc@imail.ag
 
+
+
+- name: Configure iso package mirror
+
+  hosts: file_mirror
+
+  environment: "{{ proxy_env | default({}) }}"
+
+  become: yes
+
+  vars:
+
+    iso_mirror_root: "{{ mirror_root }}/{{ iso_mirror_dir }}"
+    iso_mirror_targets:
+      - url: http://releases.ubuntu.com/16.04/ubuntu-16.04.4-server-amd64.iso
+        checksum: sha256:0a03608988cfd2e50567990dc8be96fb3c501e198e2e6efcb846d89efc7b89f2
+    raspbian_mirror_root: "{{ mirror_root }}/{{ raspbian_mirror_dir }}"
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "{{ variables }}"
+
+    - name: install mirror packages
+      package:
+        name:
+          - wget
+
+    - name: create mirror directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0755
+      with_items:
+        - "{{ mirror_root }}"
+        - "{{ web_root }}"
+        - "{{ iso_mirror_root }}"
+
+    - name: download isos
+      get_url:
+        url: "{{ item.url }}"
+        dest: "{{ iso_mirror_root }}/{{ item.url | urlsplit('path') | basename }}"
+        checksum: "{{ item.checksum }}"
+      with_items: "{{ iso_mirror_targets }}"
+
+    - name: download raspbian image
+      get_url:
+        url: "{{ raspbian_release.url }}"
+        dest: "{{ raspbian_mirror_root }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
+        checksum: "{{ raspbian_release.checksum }}"
+
+    - name: configure apache
+      include_role:
+        name: geerlingguy.apache
+      vars:
+        apache_create_vhosts: true
+        apache_remove_default_vhost: true
+        apache_vhosts_filename: 003-filemirror.conf
+        apache_vhosts_template: apache/mirror.conf.j2
+        mirror_root: "{{ web_root }}"
+        mirror_vhost: "*:80"
+        mirror_servername: "{{ mirror_url | urlsplit('hostname') }}"
+        mirror_admin: tedc@imail.ag
 
 
 
@@ -186,7 +177,7 @@
 
 - name: Configure apt package mirror
 
-  hosts: mirror
+  hosts: none
 
   become: yes
 
@@ -247,7 +238,7 @@
             path: "{{ web_root }}/debian"
             src: "{{ debian_mirror_path }}"
             state: link
-          force: yes
+            force: yes
 
       when: apt_mirror_state | default('absent') == 'present'
 
