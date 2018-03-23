@@ -9,16 +9,16 @@
 
   vars:
 
-    raspbian_mirror_root: "{{ mirror_root }}/raspbian"
+    raspbian_mirror_root: "{{ mirror_root }}/{{ raspbian_mirror_dir }}"
     raspbian_mirror_host: archive.raspbian.org
-    raspbian_mirror_list: /etc/apt/mirror.ubuntu.list
-    ubuntu_mirror_root: "{{ mirror_root }}/ubuntu"
+    raspbian_mirror_list: /etc/apt/mirror.raspbian.list
+    ubuntu_mirror_root: "{{ mirror_root }}/{{ ubuntu_mirror_dir }}"
     ubuntu_mirror_host: archive.ubuntu.com
     ubuntu_mirror_list: /etc/apt/mirror.ubuntu.list
-    ubuntu_vhost_path: "{{ web_root }}/ubuntu"
-    centos_mirror_root: "{{ mirror_root }}/centos"
+    ubuntu_vhost_path: "{{ web_root }}/{{ ubuntu_mirror_dir }}"
+    centos_mirror_root: "{{ mirror_root }}/{{ centos_mirror_dir }}"
     centos_mirror_host: mirror.sfo12.us.leaseweb.net
-    centos_vhost_path: "{{ web_root }}/centos"
+    centos_vhost_path: "{{ web_root }}/{{ centos_mirror_dir }}"
     epel_mirror_url: rsync://mirror.nodesdirect.com/epel
     epel_mirror_root: "{{ mirror_root }}/epel"
     epel_vhost_path: "{{ web_root }}/epel"
@@ -68,11 +68,19 @@
           - http://{{ ubuntu_mirror_host }}/ubuntu xenial-security main restricted universe multiverse
           - http://{{ ubuntu_mirror_host }}/ubuntu xenial-updates main restricted universe multiverse
           - http://{{ ubuntu_mirror_host }}/ubuntu xenial-backports main restricted universe multiverse
+        limit_speed: 200k
+
+    - name: create ubuntu mirror link
+      file:
+        path: "{{ web_root }}/{{ ubuntu_mirror_dir }}"
+        src: "{{ ubuntu_mirror_root }}"
+        state: link
+        force: yes
 
     - name: add ubuntu mirror update cronjob
       cron:
         name: 'update ubuntu apt-mirror cache'
-        job: "flock -n /tmp/ubuntu-mirror {{ ubuntu_mirror_list }}"
+        job: "flock -n /tmp/ubuntu-mirror apt-mirror {{ ubuntu_mirror_list }}"
         special_time: daily
 
     - name: manage raspbian mirror configuration
@@ -86,11 +94,19 @@
         mirrors:
           - "http://{{ raspbian_mirror_host }}/raspbian jessie main contrib non-free"
           - "http://{{ raspbian_mirror_host }}/raspbian jessie main firmware rpi ui"
+        limit_speed: 200k
+
+    - name: create raspbian mirror link
+      file:
+        path: "{{ web_root }}/{{ raspbian_mirror_dir }}"
+        src: "{{ raspbian_mirror_root }}"
+        state: link
+        force: yes
 
     - name: add raspbian mirror update cronjob
       cron:
         name: 'update raspbian apt-mirror cache'
-        job: "flock -n /tmp/raspbian-mirror {{ raspbian_mirror_list }}"
+        job: "flock -n /tmp/raspbian-mirror apt-mirror {{ raspbian_mirror_list }}"
         special_time: daily
 
     - name: configure apache
@@ -152,11 +168,25 @@
         checksum: "{{ item.checksum }}"
       with_items: "{{ iso_mirror_targets }}"
 
+    - name: create iso mirror link
+      file:
+        path: "{{ web_root }}/{{ iso_mirror_dir }}"
+        src: "{{ iso_mirror_root }}"
+        state: link
+        force: yes
+
     - name: download raspbian image
       get_url:
         url: "{{ raspbian_release.url }}"
         dest: "{{ raspbian_mirror_root }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
         checksum: "{{ raspbian_release.checksum }}"
+
+    - name: create raspbian image link
+      file:
+        path: "{{ web_root }}/{{ raspbian_mirror_dir }}"
+        src: "{{ raspbian_mirror_root }}"
+        state: link
+        force: yes
 
     - name: configure apache
       include_role:

@@ -9,6 +9,7 @@ set postmirror_script $var_path/postmirror.sh
 set run_postmirror    0
 set nthreads          20
 set _tilde            0
+set limit_speed       {{ limit_speed | default('50k') }}
 
 {% for arch in arches %}
 {% for mirror in mirrors %}
