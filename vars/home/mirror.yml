@@ -9,4 +9,4 @@ mirror_root: /opt/mirror
 ubuntu_mirror_dir: ubuntu
 raspbian_mirror_dir: raspbian
 centos_mirror_dir: centos
-archive_mirror_dir: archives
+archive_mirror_dir: archive

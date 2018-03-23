@@ -13,7 +13,6 @@
     archive_mirror_targets:
       - url: http://releases.ubuntu.com/16.04/ubuntu-16.04.4-server-amd64.iso
         checksum: sha256:0a03608988cfd2e50567990dc8be96fb3c501e198e2e6efcb846d89efc7b89f2
-    raspbian_mirror_root: "{{ mirror_root }}/{{ raspbian_mirror_dir }}"
 
   tasks:
 
@@ -43,23 +42,16 @@
         checksum: "{{ item.checksum }}"
       with_items: "{{ archive_mirror_targets }}"
 
-    - name: create iso mirror link
-      file:
-        path: "{{ web_root }}/{{ archive_mirror_dir }}"
-        src: "{{ archive_mirror_root }}"
-        state: link
-        force: yes
-
     - name: download raspbian image
       get_url:
         url: "{{ raspbian_release.url }}"
-        dest: "{{ raspbian_mirror_root }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
+        dest: "{{ archive_mirror_root }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
         checksum: "{{ raspbian_release.checksum }}"
 
-    - name: create raspbian image link
+    - name: create archive mirror link
       file:
-        path: "{{ web_root }}/{{ raspbian_mirror_dir }}"
-        src: "{{ raspbian_mirror_root }}"
+        path: "{{ web_root }}/{{ archive_mirror_dir }}"
+        src: "{{ archive_mirror_root }}"
         state: link
         force: yes
 
