@@ -1,0 +1,87 @@
+---
+- name: Configure ubuntu package mirrors
+
+  hosts: ubuntu_mirror
+
+  environment: "{{ proxy_env | default({}) }}"
+
+  become: yes
+
+  vars:
+
+    ubuntu_mirror_thread_num: 20
+    ubuntu_mirror_thread_speed: 10k
+    ubuntu_mirror_root: "{{ mirror_root }}/{{ ubuntu_mirror_dir }}"
+    ubuntu_mirror_host: archive.ubuntu.com
+    ubuntu_mirror_list: /etc/apt/mirror.ubuntu.list
+    ubuntu_vhost_path: "{{ web_root }}/{{ ubuntu_mirror_dir }}"
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: install mirror packages
+      package:
+        name:
+          - apt-mirror
+          - apt-transport-https
+          - util-linux
+          - wget
+
+    - name: create mirror directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0755
+      with_items:
+        - "{{ mirror_root }}"
+        - "{{ web_root }}"
+        - "{{ ubuntu_mirror_root }}"
+
+    - name: manage ubuntu mirror configuration
+      template:
+        src: mirror.list.j2
+        dest: "{{ ubuntu_mirror_list }}"
+      vars:
+        base_path: "{{ ubuntu_mirror_root }}"
+        arches:
+          - i386
+          - amd64
+        mirrors:
+          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial main restricted universe multiverse"
+          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial-security main restricted universe multiverse"
+          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial-updates main restricted universe multiverse"
+          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial-backports main restricted universe multiverse"
+        threads: "{{ ubuntu_mirror_thread_num }}"
+        thread_speed: "{{ ubuntu_mirror_thread_speed }}"
+
+    - name: create ubuntu mirror link
+      file:
+        path: "{{ web_root }}/{{ ubuntu_mirror_dir }}"
+        src: "{{ ubuntu_mirror_root }}/mirror/{{ ubuntu_mirror_host }}/ubuntu"
+        state: absent
+
+    - name: add ubuntu mirror update cronjob
+      cron:
+        name: 'update ubuntu apt-mirror cache'
+        job: "flock -n /tmp/ubuntu-mirror apt-mirror {{ ubuntu_mirror_list }}"
+        special_time: daily
+
+    - name: configure apache
+      include_role:
+        name: geerlingguy.apache
+      vars:
+        apache_create_vhosts: true
+        apache_remove_default_vhost: true
+        apache_vhosts_filename: 003-aptmirror.conf
+        apache_vhosts_template: apache.conf.j2
+        mirror_root: "{{ web_root }}"
+        mirror_vhost: "*:80"
+        mirror_servername: "{{ ubuntu_url | urlsplit('hostname') }}"
+        mirror_admin: tedc@imail.ag

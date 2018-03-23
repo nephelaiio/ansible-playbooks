@@ -1,0 +1,77 @@
+---
+- name: Configure archive package mirror
+
+  hosts: archive_mirror
+
+  environment: "{{ proxy_env | default({}) }}"
+
+  become: yes
+
+  vars:
+
+    archive_mirror_root: "{{ mirror_root }}/{{ archive_mirror_dir }}"
+    archive_mirror_targets:
+      - url: http://releases.ubuntu.com/16.04/ubuntu-16.04.4-server-amd64.iso
+        checksum: sha256:0a03608988cfd2e50567990dc8be96fb3c501e198e2e6efcb846d89efc7b89f2
+    raspbian_mirror_root: "{{ mirror_root }}/{{ raspbian_mirror_dir }}"
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: install mirror packages
+      package:
+        name:
+          - wget
+
+    - name: create mirror directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0755
+      with_items:
+        - "{{ mirror_root }}"
+        - "{{ web_root }}"
+        - "{{ archive_mirror_root }}"
+
+    - name: download isos
+      get_url:
+        url: "{{ item.url }}"
+        dest: "{{ archive_mirror_root }}/{{ item.url | urlsplit('path') | basename }}"
+        checksum: "{{ item.checksum }}"
+      with_items: "{{ archive_mirror_targets }}"
+
+    - name: create iso mirror link
+      file:
+        path: "{{ web_root }}/{{ archive_mirror_dir }}"
+        src: "{{ archive_mirror_root }}"
+        state: link
+        force: yes
+
+    - name: download raspbian image
+      get_url:
+        url: "{{ raspbian_release.url }}"
+        dest: "{{ raspbian_mirror_root }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
+        checksum: "{{ raspbian_release.checksum }}"
+
+    - name: create raspbian image link
+      file:
+        path: "{{ web_root }}/{{ raspbian_mirror_dir }}"
+        src: "{{ raspbian_mirror_root }}"
+        state: link
+        force: yes
+
+    - name: configure apache
+      include_role:
+        name: geerlingguy.apache
+      vars:
+        apache_create_vhosts: true
+        apache_remove_default_vhost: true
+        apache_vhosts_filename: 003-filemirror.conf
+        apache_vhosts_template: apache.conf.j2
+        mirror_root: "{{ web_root }}"
+        mirror_vhost: "*:80"
+        mirror_servername: "{{ archive_url | urlsplit('hostname') }}"
+        mirror_admin: tedc@imail.ag

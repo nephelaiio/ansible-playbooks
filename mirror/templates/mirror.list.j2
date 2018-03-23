@@ -7,9 +7,9 @@ set cleanscript       $var_path/clean.sh
 set defaultarch       amd64
 set postmirror_script $var_path/postmirror.sh
 set run_postmirror    0
-set nthreads          20
+set nthreads          {{ threads | default('20') }}
 set _tilde            0
-set limit_speed       {{ limit_speed | default('50k') }}
+set limit_speed       {{ thread_speed | default('10k') }}
 
 {% for arch in arches %}
 {% for mirror in mirrors %}

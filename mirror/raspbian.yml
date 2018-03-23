@@ -1,0 +1,84 @@
+---
+- name: Configure raspbian package mirrors
+
+  hosts: raspbian_mirror
+
+  environment: "{{ proxy_env | default({}) }}"
+
+  become: yes
+
+  vars:
+
+    raspbian_mirror_thread_num: 20
+    raspbian_mirror_thread_speed: 10k
+    raspbian_mirror_root: "{{ mirror_root }}/{{ raspbian_mirror_dir }}"
+    raspbian_mirror_host: archive.raspbian.org
+    raspbian_mirror_list: /etc/apt/mirror.raspbian.list
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: install mirror packages
+      package:
+        name:
+          - apt-mirror
+          - apt-transport-https
+          - util-linux
+          - wget
+
+    - name: create mirror directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        mode: 0755
+      with_items:
+        - "{{ mirror_root }}"
+        - "{{ web_root }}"
+        - "{{ raspbian_mirror_root }}"
+
+    - name: manage raspbian mirror configuration
+      template:
+        src: mirror.list.j2
+        dest: "{{ raspbian_mirror_list }}"
+      vars:
+        base_path: "{{ raspbian_mirror_root }}"
+        arches:
+          - armhf
+        mirrors:
+          - "http://{{ raspbian_mirror_host }}/raspbian jessie main contrib non-free"
+          - "http://{{ raspbian_mirror_host }}/raspbian jessie main firmware rpi ui"
+        threads: "{{ raspbian_mirror_thread_num }}"
+        thread_speed: "{{ raspbian_mirror_thread_speed }}"
+
+    - name: create raspbian mirror link
+      file:
+        path: "{{ web_root }}/{{ raspbian_mirror_dir }}"
+        src: "{{ raspbian_mirror_root }}/mirror/{{ raspbian_mirror_host }}/raspbian"
+        state: link
+        force: yes
+
+    - name: add raspbian mirror update cronjob
+      cron:
+        name: 'update raspbian apt-mirror cache'
+        job: "flock -n /tmp/raspbian-mirror apt-mirror {{ raspbian_mirror_list }}"
+        special_time: daily
+
+    - name: configure apache
+      include_role:
+        name: geerlingguy.apache
+      vars:
+        apache_create_vhosts: true
+        apache_remove_default_vhost: true
+        apache_vhosts_filename: 003-raspbianmirror.conf
+        apache_vhosts_template: apache.conf.j2
+        mirror_root: "{{ web_root }}"
+        mirror_vhost: "*:80"
+        mirror_servername: "{{ raspbian_url | urlsplit('hostname') }}"
+        mirror_admin: tedc@imail.ag

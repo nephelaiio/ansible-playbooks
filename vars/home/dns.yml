@@ -11,12 +11,11 @@ dns:
       records: "{{ nets.home.reservations.values() + (hostvars.values() | select('test_property', '.*.' + base_domain, 'inventory_hostname') | map('alias_keys', {'inventory_hostname': 'host', 'ansible_host': 'ip-address' }) | list) }}"
       cnames:
         - ["{{ base_domain }}", rpia.home.nephelai.io]
-        - ["nfs.{{ base_domain }}", "{{ groups['backup'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
         - ["{{ unifi_url | urlsplit('hostname') }}", "{{ groups['unifi'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
-        - ["{{ mirror_url | urlsplit('hostname') }}", "{{ groups['mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
-        - ["{{ apt_url | urlsplit('hostname') }}", "{{ groups['mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
-        - ["{{ yum_url | urlsplit('hostname') }}", "{{ groups['mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
-        - ["{{ sensu_url | urlsplit('hostname') }}", "{{ groups['sensu'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
+        - ["{{ archive_url | urlsplit('hostname') }}", "{{ groups['archive_mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
+        - ["{{ ubuntu_url | urlsplit('hostname') }}", "{{ groups['ubuntu_mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
+        - ["{{ raspbian_url | urlsplit('hostname') }}", "{{ groups['raspbian_mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
+        - ["{{ centos_url | urlsplit('hostname') }}", "{{ groups['centos_mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
     emoh:
       name: "{{ nets.home.zone }}"
       hostmaster: master@home.nephelai.io

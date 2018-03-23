@@ -1,11 +1,12 @@
 ---
-mirror_url: "http://repo.{{ base_domain }}"
-apt_url: "http://apt.{{ base_domain }}"
-yum_url: "http://yum.{{ base_domain }}"
+archive_url: "http://archive.{{ base_domain }}"
+ubuntu_url: "http://ubuntu.{{ base_domain }}"
+raspbian_url: "http://raspbian.{{ base_domain }}"
+centos_url: "http://centos.{{ base_domain }}"
 
 web_root: /var/www/html/mirror
 mirror_root: /opt/mirror
 ubuntu_mirror_dir: ubuntu
 raspbian_mirror_dir: raspbian
 centos_mirror_dir: centos
-iso_mirror_dir: iso
+archive_mirror_dir: archives
