@@ -1,7 +1,7 @@
 ---
 - name: Configure apt package mirror
 
-  hosts: none
+  hosts: centos_mirror
 
   become: yes
 

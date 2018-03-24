@@ -65,7 +65,6 @@
       file:
         path: "{{ web_root }}/{{ ubuntu_mirror_dir }}"
         src: "{{ ubuntu_mirror_root }}/mirror/{{ ubuntu_mirror_host }}/ubuntu"
-        state: absent
 
     - name: add ubuntu mirror update cronjob
       cron:
