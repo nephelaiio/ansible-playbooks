@@ -41,8 +41,8 @@
       apt:
         name: etcd
         state: present
-        
-      notify: restart etcd 
+
+      notify: restart etcd
 
     - name: manage etcd service
       service:
@@ -56,5 +56,3 @@
       service:
         name: etcd
         state: restarted
-
-  

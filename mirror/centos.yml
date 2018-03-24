@@ -6,7 +6,7 @@
   become: yes
 
   vars:
-    
+
     centos_mirror_root: "{{ mirror_root }}/{{ centos_mirror_dir }}"
     centos_mirror_host: mirror.sfo12.us.leaseweb.net
     centos_vhost_path: "{{ web_root }}/{{ centos_mirror_dir }}"
