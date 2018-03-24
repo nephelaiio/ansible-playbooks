@@ -61,7 +61,7 @@
       vars:
         apache_create_vhosts: true
         apache_remove_default_vhost: true
-        apache_vhosts_filename: 003-filemirror.conf
+        apache_vhosts_filename: 003-archivemirror.conf
         apache_vhosts_template: apache.conf.j2
         mirror_root: "{{ web_root }}"
         mirror_vhost: "*:80"
