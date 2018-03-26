@@ -65,6 +65,8 @@
       file:
         path: "{{ web_root }}/{{ ubuntu_mirror_dir }}"
         src: "{{ ubuntu_mirror_root }}/mirror/{{ ubuntu_mirror_host }}/ubuntu"
+        state: link
+        force: yes
 
     - name: add ubuntu mirror update cronjob
       cron:
@@ -84,3 +86,24 @@
         mirror_vhost: "*:80"
         mirror_servername: "{{ ubuntu_url | urlsplit('hostname') }}"
         mirror_admin: tedc@imail.ag
+
+    - name: install pip
+      package:
+        name: python-pip
+        state: latest
+      delegate_to: "{{ groups['pdns'] | first }}"
+
+    - name: install pip requirements
+      pip:
+        name: dnspython
+        state: latest
+      delegate_to: "{{ groups['pdns'] | first }}"
+
+    - name: create ubuntu mirror dns record
+      nsupdate:
+        server: "{{ servers.dns | first }}"
+        zone: "{{ base_domain }}"
+        record: "{{ ubuntu_url | urlsplit('hostname') | split_with('.') | first }}"
+        type: A
+        value: "{{ ansible_default_ipv4.address }}"
+      delegate_to: "{{ groups['pdns'] | first }}"

@@ -106,8 +106,6 @@
         dest: "{{ tmpdir.path }}/data.sql"
       vars:
         domains: "{{ pdns.domains }}"
-        mx_ttl: 3600
-        mx_priority: 10
         ns_ttl: 3600
         keys:
           - "{{ tsigkeys.dhcp }}"

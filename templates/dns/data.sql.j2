@@ -1,6 +1,3 @@
-DELETE FROM records where TRUE;
-DELETE FROM domains where TRUE;
-
 {% for domain in domains %}
 SET @name = '{{ domain.name }}',
   @content = '{{ inventory_hostname }} {{ domain.hostmaster }} {{ domain.serial | default(0) }} {{ domain.refresh | default(3600) }} {{ domain.retry | default(600) }} {{ domain.expire | default(10800) }} {{ domain.ttl | default(600) }}',
@@ -8,9 +5,11 @@ SET @name = '{{ domain.name }}',
   @ttl = {{ domain.ttl | default(600) }};
 INSERT IGNORE INTO domains(name, type)
   VALUES(@name, @type);
-  SELECT id INTO @id FROM domains WHERE name like @name;
+SELECT id INTO @id FROM domains WHERE name like @name;
 INSERT INTO records(domain_id, name, content, type, ttl)
-  VALUES(@id, @name, @content, @type, @ttl);
+  VALUES(@id, @name, @content, @type, @ttl)
+  ON CONFLICT DO UPDATE
+  SET name = @name, content = @content, type = @type, ttl = @ttl;
 {% endfor %}
 
 {% for domain in domains %}
@@ -22,21 +21,9 @@ SET @name = '{{ domain.name }}',
 SELECT id INTO @id FROM domains
   WHERE name like '{{ domain.name }}';
 INSERT INTO records(domain_id, name, content, type, ttl)
-  VALUES(@id, @name, @content, @type, @ttl);
-{%   endfor %}
-{% endfor %}
-
-{% for domain in domains %}
-{%   for mx in domain.mx %}
-SET @name = '{{ domain.name }}',
-  @content = '{{ mx }}',
-  @type = 'MX',
-  @ttl = {{ mx_ttl | default(3600) }},
-  @prio = {{ mx_priority | default(10) }}; 
-SELECT id INTO @id FROM domains
-  WHERE name like '{{ domain.name }}';
-INSERT INTO records(domain_id, name, content, type, ttl, prio)
-  VALUES(@id, @name, @content, @type, @ttl, @prio);
+  VALUES(@id, @name, @content, @type, @ttl)
+  ON CONFLICT DO UPDATE
+  SET name = @name, content = @content, type = @type, ttl = @ttl;
 {%   endfor %}
 {% endfor %}
 
@@ -48,8 +35,10 @@ SET @name = '{{ record.host }}',
     @ttl = {{ record.ttl | default(3600) }}; 
 SELECT id INTO @id FROM domains
   WHERE name like '{{ domain.name }}';
-INSERT INTO records(domain_id, name, content, type, ttl)
-  VALUES(@id, @name, @content, @type, @ttl);
+INSERT IGNORE INTO records(domain_id, name, content, type, ttl)
+  VALUES(@id, @name, @content, @type, @ttl)
+  ON CONFLICT DO UPDATE
+  SET name = @name, content = @content, type = @type, ttl = @ttl;
 {%   endfor %}
 
 {%   for cname in domain.cnames %}
@@ -59,7 +48,9 @@ SET @name = '{{ cname.0 }}',
     @ttl = 3600; 
 SELECT id INTO @id FROM domains
   WHERE name like '{{ domain.name }}';
-INSERT INTO records(domain_id, name, content, type, ttl)
-  VALUES(@id, @name, @content, @type, @ttl);
+INSERT IGNORE INTO records(domain_id, name, content, type, ttl)
+  VALUES(@id, @name, @content, @type, @ttl)
+  ON CONFLICT DO UPDATE
+  SET name = @name, content = @content, type = @type, ttl = @ttl;
 {%   endfor %}
 {% endfor %}

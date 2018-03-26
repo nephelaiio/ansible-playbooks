@@ -6,28 +6,21 @@ dns:
     home:
       name: "{{ base_domain }}"
       hostmaster: "master@{{ base_domain }}"
-      mx: "{{ groups['mail'] }}"
       ns: "{{ groups['recursors'] }}"
       records: "{{ nets.home.reservations.values() + (hostvars.values() | select('test_property', '.*.' + base_domain, 'inventory_hostname') | map('alias_keys', {'inventory_hostname': 'host', 'ansible_host': 'ip-address' }) | list) }}"
       cnames:
         - ["{{ base_domain }}", rpia.home.nephelai.io]
-        - ["{{ unifi_url | urlsplit('hostname') }}", "{{ groups['unifi'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
-        - ["{{ archive_url | urlsplit('hostname') }}", "{{ groups['archive_mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
-        - ["{{ ubuntu_url | urlsplit('hostname') }}", "{{ groups['ubuntu_mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
-        - ["{{ raspbian_url | urlsplit('hostname') }}", "{{ groups['raspbian_mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
-        - ["{{ centos_url | urlsplit('hostname') }}", "{{ groups['centos_mirror'] | map('extract', hostvars, ['inventory_hostname']) | list | first }}"]
     emoh:
       name: "{{ nets.home.zone }}"
       hostmaster: master@home.nephelai.io
       ns: "{{ groups['recursors'] }}"
-      mx: []
       records: "{{ (nets.home.reservations.values() + (hostvars.values() | select('test_network', nets.home.network + '/' + nets.home.netmask) | map('alias_keys', {'inventory_hostname': 'host', 'ansible_host': 'ip-address' }) | list)) | map('reverse_record') | list }}"
       cnames: []
 
 pdns:
   config:
     dnsupdate: yes
-    allow-dnsupdate-from: "{{ servers.dhcp | ipaddr('host') | join(' ') + ' 127.0.0.1/32' }}"
+    allow-dnsupdate-from: "{{ (nets.home.network + '/' + nets.home.netmask) | ipaddr('net') }}"
     master: yes
     setuid: pdns
     setgid: pdns

@@ -199,3 +199,24 @@
         nginx_remove_default_vhost: true
         nginx_vhosts:
           - "{{ nginx.vhosts.home_http }}"
+
+    - name: install pip
+      package:
+        name: python-pip
+        state: latest
+      delegate_to: "{{ groups['pdns'] | first }}"
+
+    - name: install pip requirements
+      pip:
+        name: dnspython
+        state: latest
+      delegate_to: "{{ groups['pdns'] | first }}"
+
+    - name: create unifi dns record
+      nsupdate:
+        server: "{{ servers.dns | first }}"
+        zone: "{{ base_domain }}"
+        record: "{{ unifi_hostname | split_with('.') | first }}"
+        type: A
+        value: "{{ ansible_default_ipv4.address }}"
+      delegate_to: "{{ groups['pdns'] | first }}"

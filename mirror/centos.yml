@@ -26,6 +26,8 @@
       include_vars:
         dir: "{{ variables }}"
 
+        
+
     - name: create mirror root
       file:
         path: "{{ web_root }}"
