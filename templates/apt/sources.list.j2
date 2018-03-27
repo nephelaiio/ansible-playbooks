@@ -1,0 +1,10 @@
+deb http://{{ apt_mirror_main }}/{{ apt_distribution }} {{ apt_release }} {{ apt_repositories }}
+{% if apt_mirror_updates is defined -%}
+deb http://{{ apt_mirror_updates }}/{{ apt_distribution }} {{ apt_release }}-updates {{ apt_repositories }}
+{%- endif %}
+{% if apt_mirror_backports is defined -%}
+deb http://{{ apt_mirror_backports }}/{{ apt_distribution }} {{ apt_release }}-backports {{ apt_repositories }}
+{%- endif %}
+{% if apt_mirror_security is defined -%}
+deb http://{{ apt_mirror_security }}/{{ apt_distribution }} {{ apt_release }}-security {{ apt_repositories }}
+{%- endif %}
