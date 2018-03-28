@@ -1,9 +1,0 @@
----
-redhat_releases:
-  centos:
-    url: "{{ mirror_url }}/{{ centos_mirror_path | urlsplit('path') | basename }}/centos-7-aarch64.img.xz"
-    src: http://mirror.centos.org/altarch/7/isos/aarch64/CentOS-7-aarch64.img.xz
-  fedora:
-    url: "{{ mirror_url }}/{{ fedora_mirror_path | urlsplit('path') | basename }}/fedora-27-aarch64.img.xz"
-    src: https://download.fedoraproject.org/pub/fedora/linux/releases/27/Spins/armhfp/images/Fedora-Minimal-armhfp-27-1.6-sda.raw.xz
-redhat_timezone: "{{ timezone }}"
