@@ -9,16 +9,10 @@
       include_vars:
         dir: "vars/{{ inventory }}"
 
-    - name: install apt prerequisites
-      become: yes
-      apt:
-        name: aptitude
-        state: present
-      when: ansible_os_family == 'Debian'
-
     - name: upgrade apt
       become: yes
       apt:
+        force_apt_get: yes
         upgrade: safe
       when: ansible_os_family == 'Debian'
 
