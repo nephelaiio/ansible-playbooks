@@ -1,7 +1,7 @@
 ---
 - name: create raspbian images
 
-  hosts: archive_mirror
+  hosts: localhost
 
   become: yes
 
@@ -12,6 +12,7 @@
     raspbian_user_pubkey: "{{ users[raspbian_user_name].pubkey }}"
     raspbian_user_id: 1000
     raspbian_group_id: 1000
+    raspbian_target_path: "{{ playbook_dir }}/../files/images"
 
   roles:
 
@@ -36,7 +37,7 @@
 
     - name: define raspbian image archive
       set_fact:
-        raspbian_local_image: "{{ tmpdir.path }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
+        raspbian_local_image: "{{ raspbian_target_path }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
 
     - name: fetch raspbian source image
       get_url:
@@ -46,7 +47,6 @@
     - name: create raspbian images
       include_tasks: raspbian/image_create.yml
       vars:
-        raspbian_target_path: "{{ playbook_dir }}/files/images"
         raspbian_host:
           hostname: "{{ hostitem }}"
           ifaces:

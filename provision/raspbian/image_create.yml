@@ -110,7 +110,7 @@
 
 - name: configure interfaces
   template:
-    src: templates/images/interface.debian.j2
+    src: ../templates/images/interface.debian.j2
     dest: "{{ tmpdir_dest.path }}/etc/network/interfaces.d/{{ iface.name }}"
   loop_control:
     loop_var: iface
