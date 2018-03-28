@@ -30,7 +30,7 @@
 
 - name: register target raspbian iso file
   set_fact:
-    dest_img: "{{ raspbian_mirror_path }}/{{ raspbian_host.hostname }}.img"
+    dest_img: "{{ raspbian_target_path }}/{{ raspbian_host.hostname }}.img"
 
 - name: unarchive raspbian image
   unarchive:

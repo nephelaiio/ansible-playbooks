@@ -1,7 +1,7 @@
 ---
 - name: Create nuc images
 
-  hosts: mirror
+  hosts: localhost
 
   become: yes
 
@@ -15,15 +15,13 @@
     nuc_user_name: teddyphreak
     nuc_user_pass: "{{ users[nuc_user_name].password | password_hash('sha512') }}"
     nuc_user_pubkey: "{{ users[nuc_user_name].pubkey }}"
-    ubuntu_release: "16.04.3"
     ubuntu_timezone: America/Costa_Rica
-    ubuntu_image_dir: "{{ nuc_mirror_path }}"
 
   tasks:
 
     - name: include environment variables
       include_vars:
-        dir: "vars/{{ inventory }}"
+        dir: "../vars/{{ inventory }}"
 
     - include_role:
         name: nephelaiio.ubuntu-installer
@@ -33,7 +31,7 @@
           static: false
         ubuntu_installer_disk: "{{ hostvars[hostitem].ubuntu_installer_disk | default('/dev/nvme0n1') }}"
         ubuntu_installer_release: "{{ ubuntu_release }}"
-        ubuntu_installer_target_dir: "{{ ubuntu_image_dir }}"
+        ubuntu_installer_target_dir: "{{ playbook_dir }}/../files/images"
         ubuntu_installer_halt: 'true'
         ubuntu_installer_username: "{{ nuc_user_name }}"
         ubuntu_installer_password: "{{ nuc_user_pass }}"

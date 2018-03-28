@@ -1,7 +1,7 @@
 ---
 - name: create raspbian images
 
-  hosts: mirror
+  hosts: archive_mirror
 
   become: yes
 
@@ -21,29 +21,32 @@
 
     - name: include private variables
       include_vars:
-        dir: "{{ variables }}"
+        dir: "../{{ variables }}"
 
     - name: install requirements
       package:
         name: unzip
 
+    - name: create temporary directory
+      tempfile:
+        state: directory
+        prefix: raspbian
+      register: tmpdir
+      changed_when: false
+
     - name: define raspbian image archive
       set_fact:
-        raspbian_local_image: "{{ raspbian_mirror_path }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
-
-    - name: create raspbian image target directory
-      file:
-        state: directory
-        path: "{{ raspbian_local_image | dirname }}"
+        raspbian_local_image: "{{ tmpdir.path }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
 
     - name: fetch raspbian source image
       get_url:
-        url: "{{ raspbian_release.src }}"
+        url: "{{ archive_url }}/{{ archive_mirror_dir }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
         dest: "{{ raspbian_local_image }}"
 
     - name: create raspbian images
       include_tasks: raspbian/image_create.yml
       vars:
+        raspbian_target_path: "{{ playbook_dir }}/files/images"
         raspbian_host:
           hostname: "{{ hostitem }}"
           ifaces:
@@ -56,3 +59,9 @@
       loop_control:
         loop_var: hostitem
       with_items: "{{ groups[raspbian_inventory_group] }}"
+
+    - name: remove temporary directory
+      file:
+        path: "{{ tmpdir.path }}"
+        state: absent
+      changed_when: false

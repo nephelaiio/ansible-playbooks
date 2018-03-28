@@ -1,6 +1,6 @@
 ---
-- import_playbook: raspbian.yml
+- import_playbook: provision/nuc.yml
 
-- import_playbook: nuc.yml
+- import_playbook: provision/raspbian.yml
 
 - import_playbook: kvm.yml
