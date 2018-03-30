@@ -20,10 +20,11 @@
     letsencrypt_domain_keyfile: "{{ letsencrypt_keydir }}/id_rsa.{{ letsencrypt_domain }}"
     letsencrypt_domain_csrfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.csr"
     letsencrypt_domain_crtfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.crt"
+    letsencrypt_domain_chainfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.chain.crt"
 
     nginx:
       vhosts:
-        home_https:
+        unifi_https:
           listen: "443 ssl"
           server_name: "{{ unifi_hostname }}"
           filename: "{{ unifi_hostname }}.https.conf"
@@ -32,7 +33,7 @@
           error_log: "/var/log/nginx/{{ unifi_hostname }}.error.log"
           extra_parameters: |
             keepalive_timeout   300;
-            ssl_certificate {{ letsencrypt_domain_crtfile }};
+            ssl_certificate {{ letsencrypt_domain_chainfile }};
             ssl_certificate_key {{ letsencrypt_domain_keyfile }};
             ssl_session_cache   shared:SSL:10m;
             ssl_session_timeout 10m;
@@ -40,35 +41,6 @@
             ssl_prefer_server_ciphers on;
             ssl_stapling on;
             ssl_ciphers ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:DHE-RSA-AES256-SHA;
-            add_header Strict-Transport-Security max-age=31536000;
-            add_header X-Frame-Options DENY;
-            proxy_cache off;
-            proxy_store off;
-            location / {
-              proxy_redirect          off;
-              proxy_pass_header       Server;
-              proxy_set_header        X-Real-IP $remote_addr;
-              proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_set_header        X-Scheme $scheme;
-              proxy_set_header        Host $http_host;
-              proxy_set_header        X-NginX-Proxy true;
-              proxy_connect_timeout   5;
-              proxy_read_timeout      240;
-              proxy_intercept_errors  on;
-              proxy_pass https://{{ unifi_hostname }}:8443/;
-              proxy_http_version 1.1;
-              proxy_set_header Upgrade $http_upgrade;
-              proxy_set_header Connection "upgrade";
-            }
-        home_http:
-          listen: "80"
-          server_name: "{{ unifi_hostname }}"
-          filename: "{{ unifi_hostname }}.http.conf"
-          root: /var/www/html/unifi
-          access_log: "/var/log/nginx/{{ unifi_hostname }}.access.log"
-          error_log: "/var/log/nginx/{{ unifi_hostname }}.error.log"
-          extra_parameters: |
-            keepalive_timeout   300;
             add_header Strict-Transport-Security max-age=31536000;
             add_header X-Frame-Options DENY;
             proxy_cache off;
@@ -121,8 +93,7 @@
 
     - name: create csr
       shell: 'openssl req -new -nodes -key {{ letsencrypt_domain_keyfile }} -out {{ letsencrypt_domain_csrfile }} -subj "/CN={{ letsencrypt_domain }}"'
-      args:
-        creates: "{{ letsencrypt_domain_csrfile }}"
+      changed_when: false
 
     - name: create challenge
       letsencrypt:
@@ -130,8 +101,13 @@
         challenge: dns-01
         csr: "{{ letsencrypt_domain_csrfile }}"
         dest: "{{ letsencrypt_domain_crtfile }}"
-        agreement: https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf
+        fullchain_dest: "{{ letsencrypt_domain_chainfile }}"
+        terms_agreed: yes
+        acme_directory: https://acme-v01.api.letsencrypt.org/directory
       register: letsencrypt_challenge
+
+    - debug:
+        var: letsencrypt_challenge
 
     - name: install pip
       include_role:
@@ -154,12 +130,13 @@
         value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
         wait: yes
         overwrite: yes
-      when: letsencrypt_challenge | changed
+      when: "'challenge_data' in letsencrypt_challenge"
       ignore_errors: yes
 
     - name: wait for txt record propagation
       pause:
         seconds: 60
+      when: "'challenge_data' in letsencrypt_challenge"
 
     - name: validate challenge
       letsencrypt:
@@ -167,15 +144,17 @@
         challenge: dns-01
         csr: "{{ letsencrypt_domain_csrfile }}"
         dest: "{{ letsencrypt_domain_crtfile }}"
+        fullchain_dest: "{{ letsencrypt_domain_chainfile }}"
         data: "{{ letsencrypt_challenge }}"
-        remaining_days: 20
-      when: letsencrypt_challenge | changed
+        terms_agreed: yes
+        acme_directory: https://acme-v01.api.letsencrypt.org/directory
+      when: "'challenge_data' in letsencrypt_challenge"
 
     - name: delete route53 txt record for certificate validation
       route53:
         command: delete
-        aws_access_key: "{{ aws.access_key_id }}"
-        aws_secret_key: "{{ aws.secret_access_key }}"
+        aws_access_key: "{{ aws_access_key_id }}"
+        aws_secret_key: "{{ aws_secret_access_key }}"
         zone: "{{ letsencrypt_zone }}"
         record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_zone }}"
         retry_interval: 300
@@ -183,7 +162,7 @@
         ttl: 7200
         value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
         wait: yes
-      when: letsencrypt_challenge | changed
+      when: "'challenge_data' in letsencrypt_challenge"
       ignore_errors: yes
 
     - name: create vhost roots
@@ -198,7 +177,7 @@
       vars:
         nginx_remove_default_vhost: true
         nginx_vhosts:
-          - "{{ nginx.vhosts.home_http }}"
+          - "{{ nginx.vhosts.unifi_https }}"
 
     - name: install pip
       package:
