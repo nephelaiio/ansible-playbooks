@@ -107,7 +107,7 @@
       delegate_to: "{{ groups['pdns'] | first }}"
 
 
-- name: Configure Raspbian mirror clients 
+- name: Configure Raspbian mirror clients
 
   hosts: raspberry
 
@@ -139,5 +139,3 @@
       apt:
         force_apt_get: yes
         update_cache: yes
-
-

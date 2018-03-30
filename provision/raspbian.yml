@@ -3,8 +3,6 @@
 
   hosts: localhost
 
-  become: yes
-
   vars:
 
     raspbian_inventory_group: raspberry
@@ -27,6 +25,7 @@
     - name: install requirements
       package:
         name: unzip
+      become: yes
 
     - name: create temporary directory
       tempfile:
@@ -59,6 +58,7 @@
       loop_control:
         loop_var: hostitem
       with_items: "{{ groups[raspbian_inventory_group] }}"
+      become: yes
 
     - name: remove temporary directory
       file:
