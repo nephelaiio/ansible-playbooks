@@ -1,8 +1,4 @@
 ---
-- import_playbook: raspbian.yml
-
-- import_playbook: redhat.yml
-
 - name: Configure raspbian
 
   hosts: raspberry
@@ -40,7 +36,7 @@
       changed_when: false
 
     - name: Fix rsyslog
-      copy:
+      template:
         dest: /etc/rsyslog.conf
         src: raspberry/rsyslog.conf
       register: configure_rsyslog
