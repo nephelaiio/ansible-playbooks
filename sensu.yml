@@ -1,4 +1,0 @@
----
-- import_playbook: sensu_server.yml
-
-- import_playbook: sensu_clients.yml
