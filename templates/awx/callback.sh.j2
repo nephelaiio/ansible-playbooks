@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+#{{ ansible_managed }}
+
+SCRIPT=$( realpath $0 )
+SCRIPTPATH=$( dirname $SCRIPT )
+SCRIPTNAME=$( basename $SCRIPT )
+SCRIPTLOCK="${SCRIPTPATH}/${SCRIPTNAME}.lock"
+
+if [ -f $SCRIPTLOCK ]; then
+    echo "Success: Script has successfully executed previuosly"
+    exit 0
+fi
+
+CURL_AUTH="{{ awx_callback_user }}:{{ awx_callback_pass }}"
+CURL_DATA="{\"host_config_key\": \"{{ awx_callback_configkey }}\"}"
+TEMPLATE_ID=$( curl --user $CURL_AUTH -s {{ awx_callback_url }}/api/v2/job_templates/ | jq '.results[] | select(.name=="{{ awx_callback_template }}") | .id' )
+HTTP_STATUS=$( curl --user $CURL_AUTH -s -i -X POST -H 'Content-Type:application/json' --data "$CURL_DATA" {{ awx_callback_url }}/api/v2/job_templates/$TEMPLATE_ID/callback/ 2>&1 | tee {{ awx_callback_log }} | head -n1 | awk '{print $2}' )
+CURL_RC=$?
+
+if [ ${CURL_RC} -ne 0 ]; then
+    fatal ${CURL_RC} "curl exited with ${CURL_RC}, halting."
+fi
+
+# Extract http status code
+if [[ ${HTTP_STATUS} -ge 300 ]]; then
+    fatal 1 "${HTTP_STATUS} received, encountered problem, halting."
+else
+    echo "Success: ${HTTP_STATUS} received."
+    touch ${SCRIPTLOCK}
+fi

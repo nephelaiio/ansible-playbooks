@@ -1,71 +1,174 @@
 ---
 - name: Install reverse proxy
 
-  hosts: revproxy
+  hosts: awx
 
   become: yes
+
+  vars:
+
+    awx_backend_proto: http
+    letsencrypt_basedir: /etc/letsencrypt
+    letsencrypt_certdir: "{{ letsencrypt_basedir }}/live"
+    letsencrypt_keydir: "{{ letsencrypt_basedir }}/keys"
+    letsencrypt_account_keyfile: "{{ letsencrypt_keydir }}/id_rsa.letsencrypt"
+    letsencrypt_domain: "{{ awx_hostname }}"
+    letsencrypt_zone: "{{ awx_hostname | split_with('.') | tail | join('.') }}"
+    letsencrypt_domain_keyfile: "{{ letsencrypt_keydir }}/id_rsa.{{ letsencrypt_domain }}"
+    letsencrypt_domain_csrfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.csr"
+    letsencrypt_domain_crtfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.crt"
+    letsencrypt_domain_chainfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.chain.crt"
+    nginx:
+      vhosts:
+        awx_https:
+          listen: "443 ssl"
+          server_name: "{{ awx_hostname }}"
+          filename: "{{ awx_hostname }}.https.conf"
+          access_log: "/var/log/nginx/{{ awx_hostname }}.access.log"
+          error_log: "/var/log/nginx/{{ awx_hostname }}.error.log"
+          extra_parameters: |
+            keepalive_timeout   300;
+            ssl_certificate {{ letsencrypt_domain_chainfile }};
+            ssl_certificate_key {{ letsencrypt_domain_keyfile }};
+            ssl_session_cache   shared:SSL:10m;
+            ssl_session_timeout 10m;
+            ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+            ssl_prefer_server_ciphers on;
+            ssl_stapling on;
+            ssl_ciphers ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:DHE-RSA-AES256-SHA;
+            add_header Strict-Transport-Security max-age=31536000;
+            add_header X-Frame-Options DENY;
+            proxy_cache off;
+            proxy_store off;
+            location / {
+              proxy_pass {{ awx_backend_proto }}://127.0.0.1:{{ awx_port }}/;
+              proxy_http_version 1.1;
+              proxy_set_header   Host               $host;
+              proxy_set_header   X-Real-IP          $remote_addr;
+              proxy_set_header   X-Forwarded-For    $proxy_add_x_forwarded_for;
+              proxy_set_header   X-Forwarded-Proto  $scheme;
+              proxy_set_header   Upgrade            $http_upgrade;
+              proxy_set_header   Connection         "upgrade";
+            }
+
+  roles:
+
+    - nephelaiio.plugins
 
   tasks:
 
     - name: include private variables
       include_vars:
-        dir: "vars/{{ variables }}/vault"
+        dir: "{{ variables }}"
 
-    - name: install apache
-      include_role:
-        name: geerlingguy.apache
-      vars:
-        apache_create_vhosts: true
-        apache_remove_default_vhost: true
-        apache_vhosts_filename: 004-awx.conf
-        apache_vhosts_template: apache/awx.revproxy.conf.j2
-        apache_mods_enabled:
-          - proxy.load
-          - proxy_http.load
-          - proxy_balancer.load
-          - proxy_wstunnel.load
-          - ssl.load
-        proxy_servername: "{{ awx_url | urlsplit('hostname') }}"
-        proxy_backend_host: "{{ groups['awx'] | map('extract', hostvars, ['ansible_host']) | first }}"
-        proxy_backend_proto: http
-        proxy_backend_port: "{{ awx_port }}"
-        awx_key_path: "/etc/ssl/private/awx.{{ base_domain }}.pem"
-        awx_csr_path: "/etc/ssl/csr/awx.{{ base_domain }}.csr"
-        awx_pem_path: "/etc/ssl/csr/awx.{{ base_domain }}.pem"
+    - name: install package requirements
+      package:
+        name:
+          - python-pip
+          - acl
+        state: latest
 
-    - name: install pip requirements
-      pip:
-        name: PyOpenSSL
-
-    - name: create certificate paths
+    - name: create letsencrypt folders
       file:
+        path: "{{ item }}"
+        mode: 0755
         state: directory
-        dest: "{{ item | dirname }}"
       with_items:
-        - "{{ awx_key_path }}"
-        - "{{ awx_csr_path }}"
-        - "{{ awx_pem_path }}"
+        - "{{ letsencrypt_certdir }}"
+        - "{{ letsencrypt_keydir }}"
 
-    - name: create awx certificate private key
-      openssl_privatekey:
-        path: "{{ awx_key_path }}"
+    - name: create key
+      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_email }}" -f {{ letsencrypt_account_keyfile }} -q -N ""'
+      args:
+        creates: "{{ letsencrypt_account_keyfile }}"
 
-    - name: create awx certificate signing request
-      openssl_csr:
-        path: "{{ awx_csr_path }}"
-        privatekey_path: "{{ awx_key_path }}"
-        CN: "{{ proxy_servername }}"
-        O: nephelaiio.io
-        OU: Home
-        ST: San Jose
-        L: San Jose
+    - name: create domain key
+      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_email }}" -f {{ letsencrypt_domain_keyfile }} -q -N ""'
+      args:
+        creates: "{{ letsencrypt_domain_keyfile }}"
 
-    - name: create awx self signed certificate
-      openssl_certificate:
-        path: "{{ awx_pem_path }}"
-        privatekey_path: "{{ awx_key_path }}"
-        csr_path: "{{ awx_csr_path }}"
-        provider: selfsigned
+    - name: create csr
+      shell: 'openssl req -new -nodes -key {{ letsencrypt_domain_keyfile }} -out {{ letsencrypt_domain_csrfile }} -subj "/CN={{ letsencrypt_domain }}"'
+      changed_when: false
+
+    - name: create challenge
+      letsencrypt:
+        account_key: "{{ letsencrypt_account_keyfile }}"
+        challenge: dns-01
+        csr: "{{ letsencrypt_domain_csrfile }}"
+        dest: "{{ letsencrypt_domain_crtfile }}"
+        fullchain_dest: "{{ letsencrypt_domain_chainfile }}"
+        terms_agreed: yes
+        acme_directory: https://acme-v01.api.letsencrypt.org/directory
+      register: letsencrypt_challenge
+
+    - debug:
+        var: letsencrypt_challenge
+
+    - name: install pip
+      include_role:
+        name: nephelaiio.pip
+
+    - name: install route53 dependencies
+      pip:
+        name: boto
+
+    - name: create route53 txt record for certificate validation
+      route53:
+        command: create
+        aws_access_key: "{{ aws_access_key_id }}"
+        aws_secret_key: "{{ aws_secret_access_key }}"
+        zone: "{{ letsencrypt_zone }}"
+        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_domain }}"
+        retry_interval: 300
+        type: TXT
+        ttl: 7200
+        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
+        wait: yes
+        overwrite: yes
+      when: "'challenge_data' in letsencrypt_challenge"
+      ignore_errors: yes
+
+    - name: wait for txt record propagation
+      pause:
+        seconds: 60
+      when: "'challenge_data' in letsencrypt_challenge"
+
+    - name: validate challenge
+      letsencrypt:
+        account_key: "{{ letsencrypt_account_keyfile }}"
+        challenge: dns-01
+        csr: "{{ letsencrypt_domain_csrfile }}"
+        dest: "{{ letsencrypt_domain_crtfile }}"
+        fullchain_dest: "{{ letsencrypt_domain_chainfile }}"
+        data: "{{ letsencrypt_challenge }}"
+        terms_agreed: yes
+        acme_directory: https://acme-v01.api.letsencrypt.org/directory
+      when: "'challenge_data' in letsencrypt_challenge"
+
+    - name: delete route53 txt record for certificate validation
+      route53:
+        command: delete
+        aws_access_key: "{{ aws_access_key_id }}"
+        aws_secret_key: "{{ aws_secret_access_key }}"
+        zone: "{{ letsencrypt_zone }}"
+        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_zone }}"
+        retry_interval: 300
+        type: TXT
+        ttl: 7200
+        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
+        wait: yes
+      when: "'challenge_data' in letsencrypt_challenge"
+      ignore_errors: yes
+
+
+    - name: install nginx
+      include_role:
+        name: geerlingguy.nginx
+      vars:
+        nginx_remove_default_vhost: true
+        nginx_vhosts:
+          - "{{ nginx.vhosts.awx_https }}"
 
 
 - name: Install awx
@@ -76,107 +179,24 @@
 
   vars:
 
-    awx_version: 1.0.2
-    awx_nolog: false
+    awx_version: 1.0.5
     awx_cli_conf: /root/.tower_cli.cfg
-    awx_pg_hostname: "{{ ansible_default_ipv4.address }}"
+    awx_pg_hostname: "{{ ansible_host }}"
     awx_pg_db: "awx_{{ awx_version | regex_replace('\\.', '') }}"
     awx_pg_port: 5432
     awx_settings:
-      AUTH_LDAP_SERVER_URI: "ldap://10.50.2.3:389 ldap://10.50.2.2:389"
-      AUTH_LDAP_USER_ATTR_MAP: "{'first_name': 'givenName', 'last_name': 'sn', 'email': 'mail'}"
-      AUTH_LDAP_GROUP_TYPE: "ActiveDirectoryGroupType"
-      AUTH_LDAP_GROUP_SEARCH: "['ou=Groups,dc=true,dc=local', 'SCOPE_SUBTREE', '(objectClass=group)']"
-      AUTH_LDAP_BIND_DN: "cn=AWX AD Bind,ou=Service Users,dc=true,dc=local"
-      AUTH_LDAP_USER_SEARCH: "['ou=Office Users,dc=true,dc=local', 'SCOPE_SUBTREE', '(sAMAccountName=%(user)s)']"
-      AUTH_LDAP_USER_FLAGS_BY_GROUP: "{'is_superuser': 'cn=AWX Admins,OU=Groups,DC=True,DC=local'}"
-      AUTH_LDAP_REQUIRE_GROUP: "{{ awx_ad_bind_user }}"
-      AUTH_LDAP_BIND_PASSWORD: "{{ awx_ad_bind_pass }}"
-    awx_organizations:
-      - name: Default
-        state: absent
-      - name: true.local
-        state: present
-        credentials:
-          - name: Demo Credential
-            state: absent
-          - name: awx.true.local
-            state: absent
-          - name: git.true.local
-            kind: scm
-            inputs:
-              username: "{{ awx_gitlab_user }}"
-              password: "{{ awx_gitlab_pass }}"
-          - name: vault.true.local
-            kind: vault
-            inputs:
-              vault_password: "{{ awx_vault_pass }}"
-          - name: local
-            kind: ssh
-            inputs:
-              username: "{{ users.ansible.username }}"
-              ssh_key_data: "{{ users.ansible.privkey }}"
-        projects:
-          - name: local
-            state: absent
-          - name: true.local
-            organization: true.local
-            scm_type: git
-            scm_url: http://git.true.local/operations/ansible-playbooks.git
-            scm_branch: master
-            scm_delete_on_update: false
-            scm_credential: git.true.local
-            scm_update_on_launch: true
-            scm_update_cache_timeout: 0
-            scm_clean: false
-        inventories:
-          - name: local
-            state: absent
-          - name: true.local
-            source: scm
-            source_project: true.local
-            source_path: inventory/local
-            overwrite: true
-            overwrite_vars: true
-            update_on_launch: false
-            update_on_project_update: true
-        templates:
-          - name: Demo Job Template
-            state: absent
-          - name: awx.true.local
-            job_type: run
-            project: true.local
-            inventory: true.local
-            playbook: awx.yml
-            vault_credential: vault.true.local
-            credential: local
-          - name: provision.true.local
-            job_type: run
-            project: true.local
-            inventory: true.local
-            playbook: kvm.yml
-            vault_credential: vault.true.local
-            credential: local
-          - name: mirror.true.local
-            job_type: run
-            project: true.local
-            inventory: true.local
-            playbook: mirror.yml
-            vault_credential: vault.true.local
-            credential: local
-          - name: gitlab.true.local
-            job_type: run
-            project: true.local
-            inventory: true.local
-            playbook: gitlab.yml
-            vault_credential: vault.true.local
-            credential: local
+      REMOTE_HOST_HEADERS: "[u'REMOTE_ADDR', u'REMOTE_HOST', u'HTTP_X_FORWARDED_FOR']"
+      PROXY_IP_WHITELIST: "[u'127.0.0.1', u'{{ ansible_hostname }}']"
+
+  roles:
+
+    - nephelaiio.plugins
 
   tasks:
 
     - name: include private variables
       include_vars:
-        dir: "vars/{{ vault }}/vault"
+        dir: "{{ variables }}"
 
     - name: install postgresql
       include_role:
@@ -199,32 +219,29 @@
           - { type: host, database: all, user: all, address: "{{ awx_pg_hostname }}/32", auth_method: md5 }
           - { type: host, database: "{{ awx_pg_db }}", user: "{{ awx_pg_user }}", address: "0.0.0.0/0", auth_method: md5 }
 
-    - name: create backup destination
-      file:
-        state: directory
-        path: "{{ backup_dir }}"
-
     - name: manage pgpass configuration file
       copy:
         dest: /root/.pgpass
         mode: 0600
         content: "{{ awx_pg_hostname }}:{{ awx_pg_port }}:{{ awx_pg_db }}:{{ awx_pg_user }}:{{ awx_pg_pass }}\n"
 
-    - name: manage postgresql backup creation job
-      cron:
-        name: backup
-        job: "/usr/bin/pg_dump -h {{ awx_pg_hostname }} -U {{ awx_pg_user }} -d {{ awx_pg_db }} > {{ backup_dir }}/{{ awx_pg_db }}.$(date +\\%Y\\%m\\%d-\\%H\\%M\\%S).sqldump"
-        special_time: hourly
-
-    - name: manage postgresql backup cleanup job
-      cron:
-        name: cleanup
-        job: "/usr/bin/find \"{{ backup_dir }}/\" -mtime +7 -delete"
-        special_time: hourly
+    - name: create awx dns record
+      nsupdate:
+        server: "{{ servers.dns | first }}"
+        zone: "{{ base_domain }}"
+        record: "{{ awx_hostname | split_with('.') | first }}"
+        type: A
+        value: "{{ ansible_default_ipv4.address }}"
+      delegate_to: "{{ groups['pdns'] | first }}"
 
     - name: install docker
       include_role:
         name: nephelaiio.docker
+      vars:
+        pip_packages: pip
+        pip_packages_helpers:
+          - python-setuptools
+          - ca-certificates
 
     - name: define awx installer variables
       set_fact:
@@ -240,9 +257,6 @@
         pg_database: "{{ awx_pg_db }}"
         pg_port: "{{ awx_pg_port }}"
         awx_container_search_domains: "{{ dns.search_domains | join(',') }}"
-        # http_proxy: http://proxy:3128
-        # https_proxy: http://proxy:3128
-        # no_proxy: mycorp.org
 
     - name: check awx installer variables
       include_tasks: awx/check_vars.yml
@@ -275,6 +289,21 @@
       until: awx_up.status == 200
       retries: 10
       delay: 60
+
+    - name: manage awx settings
+      command: "awx-cli setting modify {{ item.key }} \"{{ item.value }}\""
+      with_dict: "{{ awx_settings }}"
+      no_log: "{{ awx_nolog }}"
+
+    - name: destroy awx job schedules
+      include_tasks: awx/schedule_destroy.yml
+      vars:
+        schedule: "{{ item.1 }}"
+      with_subelements:
+        - "{{ awx_organizations | selectattr('schedules', 'defined') | list }}"
+        - schedules
+      when: item.0.state | default('present') == 'absent' or item.1.state | default('present') == 'absent'
+      no_log: "{{ awx_nolog }}"
 
     - name: destroy awx job templates
       include_tasks: awx/template_destroy.yml
@@ -317,7 +346,7 @@
       no_log: "{{ awx_nolog }}"
 
     - name: destroy awx organizations
-      include_tasks: awx/organization_destroy.yml
+      command: "awx-cli organization delete -n {{ organization.name | quote }}"
       vars:
         organization: "{{ item }}"
       with_items: "{{ awx_organizations }}"
@@ -325,7 +354,7 @@
       no_log: "{{ awx_nolog }}"
 
     - name: create awx organizations
-      include_tasks: awx/organization_create.yml
+      command: "awx-cli organization create -n {{ name | string | quote }}"
       vars:
         name: "{{ item.name }}"
       with_items: "{{ awx_organizations }}"
@@ -346,6 +375,7 @@
     - name: create awx projects
       include_tasks: awx/project_create.yml
       vars:
+        organization: "{{ item.0.name }}"
         project: "{{ item.1 }}"
       with_subelements:
         - "{{ awx_organizations | selectattr('projects', 'defined') | list }}"
@@ -364,11 +394,6 @@
       when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
       no_log: "{{ awx_nolog }}"
 
-    - name: manage awx settings
-      command: "awx-cli setting modify {{ item.key }} \"{{ item.value }}\""
-      with_dict: "{{ awx_settings }}"
-      no_log: "{{ awx_nolog }}"
-
     - name: create awx job templates
       include_tasks: awx/template_create.yml
       vars:
@@ -378,3 +403,19 @@
         - templates
       when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
       no_log: "{{ awx_nolog }}"
+
+    - name: create awx job schedules
+      include_tasks: awx/schedule_create.yml
+      vars:
+        schedule: "{{ item.1 }}"
+      with_subelements:
+        - "{{ awx_organizations | selectattr('schedules', 'defined') | list }}"
+        - schedules
+      when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
+      no_log: "{{ awx_nolog }}"
+
+    - name: install pip requirements
+      pip:
+        name: dnspython
+        state: latest
+      delegate_to: "{{ groups['pdns'] | first }}"

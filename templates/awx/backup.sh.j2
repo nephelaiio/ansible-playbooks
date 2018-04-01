@@ -1,5 +1,0 @@
-#!/usr/bin/env bash
-PGPASSFILE=/root/.pgpass
-mkdir -p {{ backup_dir }}
-/usr/bin/pg_dump -h {{ pg_hostname }} -U {{ pg_username }} -d {{ pg_database }} > {{ backup_dir }}/{{ pg_database }}.$(date +%Y%m%d-%H%M%S).sqldump
-/usr/bin/find "{{ backup_dir }}/" -mtime +7 -delete

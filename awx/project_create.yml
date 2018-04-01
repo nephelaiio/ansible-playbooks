@@ -1,13 +1,9 @@
 ---
-- name: retrieve organization id
-  command: "awx-cli organization get -n \"{{ project.organization }}\" -f json"
-  register: org_id
-
 - name: build project configuration options
   set_fact:
     name: "-n {{ project.name | string | quote }}"
     description: "{{ ('--description ' + project.description | string | quote) if 'description' in project else '' }}"
-    organization: "{{ ('--organization ' + project.organization | string | quote) if 'organization' in project else '' }}"
+    project_org: "{{ '--organization ' + organization | string | quote }}"
     scm_type: "--scm-type {{ project.scm_type | string | quote }}"
     scm_url: "{{ ('--scm-url ' + project.scm_url | string | quote) if 'scm_url' in project else '' }}"
     scm_branch: "{{ ('--scm-branch ' + project.scm_branch | string | quote) if 'scm_branch' in project else '' }}"
@@ -23,7 +19,7 @@
     project_source_create_args: "{{ name }} {{ description }} {{ scm_type }} {{ scm_url }} {{ scm_branch }} {{ scm_credential }} {{ scm_clean }} {{ scm_delete_on_update }} {{ scm_update_on_launch }} {{ job_timeout }}"
 
 - name: create project
-  command: "awx-cli project create {{ organization }} {{ scm_update_cache_timeout }} {{ project_source_create_args }}"
+  command: "awx-cli project create {{ project_org }} {{ scm_update_cache_timeout }} {{ project_source_create_args }}"
 
 - name: update project
   command: "awx-cli project modify {{ project_source_create_args }}"
