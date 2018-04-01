@@ -5,10 +5,6 @@
 
   tasks:
 
-    - name: include environment variables
-      include_vars:
-        dir: "vars/{{ inventory }}"
-
     - name: upgrade apt
       become: yes
       apt:
