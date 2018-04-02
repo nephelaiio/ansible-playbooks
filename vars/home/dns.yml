@@ -25,7 +25,7 @@ pdns:
     setuid: pdns
     setgid: pdns
     slave: no
-    local-address: "{{ ansible_default_ipv4.address }}:53"
+    local-address: "*:53"
     security-poll-suffix: ''
   backends:
     gmysql:
