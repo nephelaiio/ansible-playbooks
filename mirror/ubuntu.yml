@@ -11,7 +11,7 @@
 
     - name: install pip
       package:
-        name: pip
+        name: python-pip
         state: latest
 
     - name: install pip requirements
