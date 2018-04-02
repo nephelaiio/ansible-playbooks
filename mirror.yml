@@ -1,4 +1,16 @@
 ---
+- name: Install local requirements
+
+  hosts: localhost
+
+  tasks:
+
+    - name: install pip requirements
+      pip:
+        name: netaddr
+        state: latest
+
+
 - import_playbook: mirror/ubuntu.yml
 
 - import_playbook: mirror/raspbian.yml
