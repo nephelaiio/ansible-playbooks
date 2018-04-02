@@ -1,16 +1,4 @@
 ---
-- name: Install local requirements
-
-  hosts: localhost
-
-  tasks:
-
-    - name: install pip requirements
-      pip:
-        name: netaddr
-        state: latest
-
-
 - name: Configure papertrail
 
   hosts:
