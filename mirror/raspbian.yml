@@ -103,7 +103,7 @@
         zone: "{{ base_domain }}"
         record: "{{ raspbian_url | urlsplit('hostname') | split_with('.') | head }}"
         type: A
-        value: "{{ ansible_default_ipv4.address }}"
+        value: "{{ inventory_hostname }}"
       delegate_to: "{{ groups['pdns'] | first }}"
 
 
