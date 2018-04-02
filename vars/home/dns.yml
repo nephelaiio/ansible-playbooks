@@ -25,7 +25,7 @@ pdns:
     setuid: pdns
     setgid: pdns
     slave: no
-    local-address: "*:53"
+    local-address: "0.0.0.0:53"
     security-poll-suffix: ''
   backends:
     gmysql:
