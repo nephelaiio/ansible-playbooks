@@ -86,5 +86,5 @@
         zone: "{{ base_domain }}"
         record: "{{ archive_url | urlsplit('hostname') | split_with('.') | head }}"
         type: A
-        value: "{{ inventory_hostname }}"
+        value: "{{ ansible_default_ipv4.address }}"
       delegate_to: "{{ groups['pdns'] | first }}"
