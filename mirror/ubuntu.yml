@@ -1,7 +1,7 @@
 ---
 - name: Install inventory dependencies
 
-  hosts: ubuntu_mirrors
+  hosts: ubuntu_mirror
 
   gather_facts: false
 
