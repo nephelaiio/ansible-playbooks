@@ -1,4 +1,20 @@
 ---
+- name: Install inventory dependencies
+
+  hosts: ubuntu_mirrors
+
+  gather_facts: false
+
+  become: yes
+
+  tasks:
+
+    - name: install pip requirements
+      pip:
+        name: netaddr
+        state: latest
+
+
 - name: Configure ubuntu package mirrors
 
   hosts: ubuntu_mirror
