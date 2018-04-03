@@ -21,7 +21,7 @@
 
     - name: configure etcd
       template:
-        src: kubernetes/etcd.conf.j2
+        src: ../kubernetes/etcd.conf.j2
         dest: /etc/default/etcd
       vars:
         etcd_hostname: "{{ ansible_fqdn }}"
