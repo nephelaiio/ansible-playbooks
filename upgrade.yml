@@ -54,4 +54,9 @@
         - skip_ansible_lint
 
     - name: upgrade pip
+      package:
+        name: pip
+        state: latest
+
+    - name: upgrade pip packages
       command: pip install --upgrade
