@@ -55,7 +55,7 @@
 
     - name: upgrade pip
       package:
-        name: pip
+        name: python-pip
         state: latest
 
     - name: upgrade pip packages
