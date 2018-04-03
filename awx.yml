@@ -102,9 +102,6 @@
         acme_directory: https://acme-v01.api.letsencrypt.org/directory
       register: letsencrypt_challenge
 
-    - debug:
-        var: letsencrypt_challenge
-
     - name: install pip
       include_role:
         name: nephelaiio.pip
