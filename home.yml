@@ -1,0 +1,16 @@
+---
+- import_playbook: site/ipv6.yml
+  vars:
+    ipv6_hosts: home
+
+- import_playbook: site/ntp.yml
+  vars:
+    ntp_hosts: home
+
+- import_playbook: site/papertrail.yml
+  vars:
+    papertrail_hosts: home
+
+- import_playbook: site/raspbian.yml
+  vars:
+    raspbian_hosts: raspberry

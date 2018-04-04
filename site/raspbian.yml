@@ -1,0 +1,30 @@
+---
+- name: Configure raspbian
+
+  hosts: "{{ raspbian_hosts }}"
+
+  become: yes
+
+  tasks:
+
+    - name: Install rpi-update
+      apt:
+        name: rpi-update
+        state: latest
+        update_cache: yes
+
+    - name: Upgrade firmware
+      shell: rpi-update
+      changed_when: false
+
+    - name: Fix rsyslog
+      template:
+        dest: /etc/rsyslog.conf
+        src: rsyslog.conf
+      register: configure_rsyslog
+
+    - name: Restart rsyslog
+      service:
+        name: rsyslog
+        state: restarted
+      when: configure_rsyslog.changed

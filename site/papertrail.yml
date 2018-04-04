@@ -1,9 +1,7 @@
 ---
 - name: Configure papertrail
 
-  hosts:
-    - nuc
-    - raspberry
+  hosts: "{{ papertrail_hosts }}"
 
   become: yes
 
@@ -11,7 +9,7 @@
 
     - name: include private variables
       include_vars:
-        dir: "{{ variables }}"
+        dir: "../{{ variables }}"
 
     - name: Configure remote logging
       include_role:
