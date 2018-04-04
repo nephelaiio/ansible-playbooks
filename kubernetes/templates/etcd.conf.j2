@@ -34,7 +34,7 @@ ETCD_ADVERTISE_CLIENT_URLS="{{ etcd_scheme }}://{{ etcd_local_address | default(
 # ETCD_PEER_KEY_FILE
 # ETCD_PEER_CLIENT_CERT_AUTH
 # ETCD_PEER_TRUSTED_CA_FILE
-# ETCD_DEBUG
+ETCD_DEBUG={{ etcd_debug | default('false') }}
 # ETCD_LOG_PACKAGE_LEVELS
 # DAEMON_ARGS=""
 {{ etcd_extra_config | default('') }}

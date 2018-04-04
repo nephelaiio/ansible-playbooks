@@ -7,6 +7,7 @@
 
   vars:
 
+    etcd_debug: 'true'
     etcd_cluster_group: etcd
     etcd_cluster_hosts: "{{ groups[etcd_cluster_group] }}"
     etcd_cluster_vars: "{{ etcd_cluster_hosts | map('extract', hostvars) | list }}"
@@ -18,6 +19,10 @@
     - nephelaiio.plugins
 
   tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
 
     - name: configure etcd
       template:
@@ -41,7 +46,6 @@
       apt:
         name: etcd
         state: present
-
       notify: restart etcd
 
     - name: manage etcd service
