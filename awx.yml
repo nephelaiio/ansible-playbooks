@@ -158,7 +158,6 @@
       when: "'challenge_data' in letsencrypt_challenge"
       ignore_errors: yes
 
-
     - name: install nginx
       include_role:
         name: geerlingguy.nginx
