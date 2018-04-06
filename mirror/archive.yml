@@ -55,18 +55,19 @@
         state: link
         force: yes
 
-    - name: configure apache
+    - name: configure nginx
       include_role:
-        name: geerlingguy.apache
+        name: geerlingguy.nginx
       vars:
-        apache_create_vhosts: true
-        apache_remove_default_vhost: true
-        apache_vhosts_filename: 003-archivemirror.conf
-        apache_vhosts_template: apache.conf.j2
-        mirror_root: "{{ web_root }}"
-        mirror_vhost: "*:80"
-        mirror_servername: "{{ archive_url | urlsplit('hostname') }}"
-        mirror_admin: tedc@imail.ag
+        nginx_remove_default_vhost: true
+        nginx_vhosts:
+          - listen: "80"
+            root: "{{ web_root }}"
+            server_name: "{{ archive_url | urlsplit('hostname') }}"
+            access_log: "/var/log/nginx/{{ archive_url | urlsplit('hostname') }}.access.log"
+            error_log: "/var/log/nginx/{{ archive_url | urlsplit('hostname') }}.error.log"
+            extra_parameters: |
+              autoindex on;
 
     - name: install pip
       package:
