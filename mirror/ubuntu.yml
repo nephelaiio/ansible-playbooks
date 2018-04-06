@@ -80,7 +80,7 @@
       vars:
         nginx_remove_default_vhost: true
         nginx_vhosts:
-          - listen: "80 http2"
+          - listen: "80"
             root: "{{ web_root }}"
             server_name: "{{ ubuntu_url | urlsplit('hostname') }}"
             access_log: "/var/log/nginx/{{ ubuntu_url | urlsplit('hostname') }}.access.log"
