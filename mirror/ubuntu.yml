@@ -82,7 +82,7 @@
         nginx_vhosts:
           - listen: "80 http2"
             root: "{{ web_root }}"
-            servername: "{{ ubuntu_url | urlsplit('hostname') }}"
+            server_name: "{{ ubuntu_url | urlsplit('hostname') }}"
             access_log: "/var/log/nginx/{{ ubuntu_url | urlsplit('hostname') }}.access.log"
             error_log: "/var/log/nginx/{{ ubuntu_url | urlsplit('hostname') }}.error.log"
             extra_parameters: |
