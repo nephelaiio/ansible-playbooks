@@ -26,7 +26,7 @@
 - name: create image target directory
   file:
     state: directory
-    path: files/images
+    path: "{{ raspbian_target_path }}"
 
 - name: register target raspbian iso file
   set_fact:

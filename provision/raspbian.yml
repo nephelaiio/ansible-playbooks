@@ -10,7 +10,7 @@
     raspbian_user_pubkey: "{{ users[raspbian_user_name].pubkey }}"
     raspbian_user_id: 1000
     raspbian_group_id: 1000
-    raspbian_target_path: "{{ playbook_dir }}/../files/images"
+    raspbian_image_path: "{{ playbook_dir }}/../files/images"
 
   roles:
 
@@ -36,12 +36,12 @@
 
     - name: define raspbian image archive
       set_fact:
-        raspbian_local_image: "{{ raspbian_target_path }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
+        raspbian_local_image: "{{ raspbian_image_path }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
 
     - name: fetch raspbian source image
       get_url:
         url: "{{ archive_url }}/{{ archive_mirror_dir }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
-        dest: "{{ raspbian_local_image }}"
+        dest: "{{ raspbian_local_image | realpath }}"
 
     - name: create raspbian images
       include_tasks: raspbian/image_create.yml
@@ -55,6 +55,7 @@
               prefix: "{{ nets.home.netmask }}"
               gateway: "{{ nets.home.router }}"
         raspbian_source_image: "{{ raspbian_local_image }}"
+        raspbian_target_path: "{{ raspbian_image_path | realpath }}"
       loop_control:
         loop_var: hostitem
       with_items: "{{ groups[raspbian_inventory_group] }}"
