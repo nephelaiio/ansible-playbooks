@@ -86,7 +86,7 @@
             access_log: "/var/log/nginx/{{ ubuntu_url | urlsplit('hostname') }}.access.log"
             error_log: "/var/log/nginx/{{ ubuntu_url | urlsplit('hostname') }}.error.log"
             extra_parameters: |
-              autoindex on
+              autoindex on;
 
     - name: install pip
       package:
