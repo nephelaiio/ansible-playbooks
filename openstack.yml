@@ -1,0 +1,2 @@
+---
+- import_playbook: openstack/prepare.yml

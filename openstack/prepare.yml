@@ -1,0 +1,71 @@
+---
+- name: Configure openstack networking
+
+  hosts: openstack
+
+  become: yes
+
+  vars:
+
+    installer_dir: /tmp/openstack
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: install bridge utils
+      package:
+        name: bridge-utils
+        state: latest
+
+    - name: install 802.1q module
+      modprobe:
+        name: 8021q
+        state: present
+
+    - name: ensure module loading at boot time
+      lineinfile:
+        path: /etc/modules 
+        line: '8021q'
+
+    - name: add interfaces
+      template:
+        src: interfaces.j2
+        dest: /etc/network/interfaces.d/openstack
+      vars:
+        base_interface: "{{ ansible_default_ipv4.alias }}"
+        management_vlan: 2
+        management_ip: "{{ management_host }}"
+        management_gw: "{{ nets.management.router }}"
+        management_mask: "{{ nets.management.netmask }}"
+        storage_vlan: 5
+        storage_ip: "{{ storage_host }}"
+        storage_gw: "{{ nets.storage.router }}"
+        storage_mask: "{{ nets.storage.netmask }}"
+        openstack_vlan: 4
+
+      notify: restart networking
+
+    - meta: flush_handlers
+
+    - name: clone ansible openstack repo
+      git:
+        repo: https://git.openstack.org/openstack/openstack-ansible
+        dest: "{{ installer_dir }}"
+        version: 16.0.10
+      delegate_to: localhost
+      run_once: yes
+
+    - name: bootstrap ansible
+      command: "{{ installer_dir }}/scripts/bootstrap-ansible.sh"
+      delegate_to: localhost
+      run_once: yes
+
+  handlers:
+
+    - name: restart networking
+      service:
+        name: networking
+        state: restarted
