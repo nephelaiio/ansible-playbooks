@@ -23,7 +23,7 @@
 
     - name: include variable definitions
       include_vars:
-        dir: "{{ variables }}"
+        dir: "../{{ variables }}"
 
     - name: include os variable overrides
       include_vars: "{{ item }}"
@@ -71,7 +71,7 @@
 
         - name: configure dhcp
           template:
-            src: ../dhcp/dhcpd.conf.j2
+            src: dhcpd.conf.j2
             dest: /etc/dhcpd.conf
           vars:
             lease_time: 1800
@@ -113,7 +113,7 @@
 
         - name: configure dhcp
           template:
-            src: ../dhcp/dhcpd.conf.j2
+            src: dhcpd.conf.j2
             dest: /etc/default/isc-dhcp-server
           vars:
             iface: "{{ nat_in }}"
