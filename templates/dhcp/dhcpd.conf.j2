@@ -63,12 +63,14 @@ zone {{ n.zone }} {
 }
 {%   endif %}
 {%   for r in n.reservations.values() + (hostvars.values() | select('test_network', n.network + '/' + n.netmask) | map('alias_keys', {'inventory_hostname': 'host', 'ansible_host': 'ip-address' }) | list)  %}
+{%     if 'hw_address' in r %}
 host {{ r['host'] }} {
   hardware ethernet {{ r['hw_address'] }};
   fixed-address {{ r['ip-address'] }};
   option domain-name "{{ r['host'] | split_with('.') | tail | join('.') }}";
   option host-name "{{ r['host'] | split_with('.') | head }}";
 }
+{%     endif %}
 {%   endfor %}
 {% endfor %}
 
