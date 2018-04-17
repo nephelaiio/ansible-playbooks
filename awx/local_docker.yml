@@ -1,7 +1,7 @@
 ---
-- name: Manage AWX Container Images
+- name: manage awx container images
   block:
-    - name: Export Docker web image if it isnt local and there isnt a registry defined
+    - name: export docker web image if it isnt local and there isnt a registry defined
       docker_image:
         name: "{{ awx_web_image }}"
         tag: "{{ awx_version }}"
@@ -9,7 +9,7 @@
       when: inventory_hostname != "localhost" and docker_registry is not defined
       delegate_to: localhost
 
-    - name: Export Docker task image if it isnt local and there isnt a registry defined
+    - name: export docker task image if it isnt local and there isnt a registry defined
       docker_image:
         name: "{{ awx_task_image }}"
         tag: "{{ awx_version }}"
@@ -17,7 +17,7 @@
       when: inventory_hostname != "localhost" and docker_registry is not defined
       delegate_to: localhost
 
-    - name: Authenticate with Docker registry if registry password given
+    - name: authenticate with docker registry if registry password given
       docker_login:
         registry: "{{ docker_registry }}"
         username: "{{ docker_registry_username }}"
@@ -26,30 +26,30 @@
       when: docker_registry is defined and docker_registry_password is defined
       delegate_to: localhost
 
-    - name: Set docker base path
+    - name: set docker base path
       set_fact:
         docker_deploy_base_path: "{{ awx_base_path|default('/tmp') }}/docker_deploy"
       when: ansible_connection != "local" and docker_registry is not defined
 
-    - name: Ensure directory exists
+    - name: ensure directory exists
       file:
         path: "{{ docker_deploy_base_path }}"
         state: directory
       when: ansible_connection != "local" and docker_registry is not defined
 
-    - name: Copy web image to docker execution
+    - name: copy web image to docker execution
       copy:
         src: "{{ awx_local_base_config_path|default('/tmp') }}/{{ awx_web_image }}_{{ awx_version }}.tar"
         dest: "{{ docker_deploy_base_path }}/{{ awx_web_image }}_{{ awx_version }}.tar"
       when: ansible_connection != "local" and docker_registry is not defined
 
-    - name: Copy task image to docker execution
+    - name: copy task image to docker execution
       copy:
         src: "{{ awx_local_base_config_path|default('/tmp') }}/{{ awx_task_image }}_{{ awx_version }}.tar"
         dest: "{{ docker_deploy_base_path }}"
       when: ansible_connection != "local" and docker_registry is not defined
 
-    - name: Load web image
+    - name: load web image
       docker_image:
         name: "{{ awx_web_image }}"
         tag: "{{ awx_version }}"
@@ -57,7 +57,7 @@
         timeout: 300
       when: ansible_connection != "local" and docker_registry is not defined
 
-    - name: Load task image
+    - name: load task image
       docker_image:
         name: "{{ awx_task_image }}"
         tag: "{{ awx_version }}"
@@ -69,20 +69,20 @@
         name: image_push
       when: docker_registry is defined and dockerhub_base is not defined
 
-    - name: Set full image path for local install
+    - name: set full image path for local install
       set_fact:
         awx_web_docker_actual_image: "{{ awx_web_image }}:{{ awx_version }}"
         awx_task_docker_actual_image: "{{ awx_task_image }}:{{ awx_version }}"
       when: docker_registry is not defined
   when: dockerhub_base is not defined
 
-- name: Set DockerHub Image Paths
+- name: set dockerhub image paths
   set_fact:
     awx_web_docker_actual_image: "{{ dockerhub_base }}/awx_web:{{ dockerhub_version }}"
     awx_task_docker_actual_image: "{{ dockerhub_base }}/awx_task:{{ dockerhub_version }}"
   when: dockerhub_base is defined
 
-- name: Activate postgres container
+- name: activate postgres container
   docker_container:
     name: postgres
     state: started
@@ -98,7 +98,7 @@
   when: pg_hostname is not defined or pg_hostname == ''
   register: postgres_container_activate
 
-- name: Activate rabbitmq container
+- name: activate rabbitmq container
   docker_container:
     name: rabbitmq
     state: started
@@ -108,19 +108,19 @@
       RABBITMQ_DEFAULT_VHOST: "awx"
   register: rabbitmq_container_activate
 
-- name: Activate memcached container
+- name: activate memcached container
   docker_container:
     name: memcached
     state: started
     restart_policy: unless-stopped
     image: memcached:alpine
 
-- name: Wait for postgres and rabbitmq to activate
+- name: wait for postgres and rabbitmq to activate
   pause:
     seconds: 15
   when: postgres_container_activate.changed or rabbitmq_container_activate.changed
 
-- name: Set properties without postgres for awx_web
+- name: set properties without postgres for awx_web
   set_fact:
     pg_hostname_actual: "{{ pg_hostname }}"
     awx_web_container_links:
@@ -128,7 +128,7 @@
       - memcached
   when: pg_hostname is defined
 
-- name: Set properties with postgres for awx_web
+- name: set properties with postgres for awx_web
   set_fact:
     pg_hostname_actual: postgres
     awx_web_container_links:
@@ -137,7 +137,7 @@
       - postgres
   when: pg_hostname is not defined or pg_hostname == ''
 
-- name: Set properties without postgres for awx_task
+- name: set properties without postgres for awx_task
   set_fact:
     pg_hostname_actual: "{{ pg_hostname }}"
     awx_task_container_links:
@@ -146,7 +146,7 @@
       - awx_web:awxweb
   when: pg_hostname is defined
 
-- name: Set properties with postgres for awx_task
+- name: set properties with postgres for awx_task
   set_fact:
     pg_hostname_actual: postgres
     awx_task_container_links:
@@ -156,7 +156,7 @@
       - postgres
   when: pg_hostname is not defined or pg_hostname == ''
 
-- name: Activate AWX Web Container
+- name: activate awx web container
   docker_container:
     name: awx_web
     state: started
@@ -188,7 +188,7 @@
       AWX_ADMIN_USER: "{{ default_admin_user|default('admin') }}"
       AWX_ADMIN_PASSWORD: "{{ default_admin_password|default('password') }}"
 
-- name: Activate AWX Task Container
+- name: activate awx task container
   docker_container:
     name: awx_task
     state: started
