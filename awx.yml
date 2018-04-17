@@ -268,6 +268,21 @@
         verify_ssl: false
         verbose: false
 
+    - name: install pip requirements
+      pip:
+        name: dnspython
+        state: latest
+      delegate_to: "{{ groups['pdns'] | first }}"
+
+    - name: create awx dns record
+      nsupdate:
+        server: "{{ servers.dns | first }}"
+        zone: "{{ base_domain }}"
+        record: "{{ awx_hostname | split_with('.') | first }}"
+        type: A
+        value: "{{ ansible_default_ipv4.address }}"
+      delegate_to: "{{ groups['pdns'] | first }}"
+
     - name: wait for awx startup
       uri:
         url: "{{ awx_url }}"
@@ -400,18 +415,3 @@
         - schedules
       when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
       no_log: "{{ awx_nolog }}"
-
-    - name: install pip requirements
-      pip:
-        name: dnspython
-        state: latest
-      delegate_to: "{{ groups['pdns'] | first }}"
-
-    - name: create awx dns record
-      nsupdate:
-        server: "{{ servers.dns | first }}"
-        zone: "{{ base_domain }}"
-        record: "{{ awx_hostname | split_with('.') | first }}"
-        type: A
-        value: "{{ ansible_default_ipv4.address }}"
-      delegate_to: "{{ groups['pdns'] | first }}"
