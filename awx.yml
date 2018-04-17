@@ -221,15 +221,6 @@
         mode: 0600
         content: "{{ awx_pg_hostname }}:{{ awx_pg_port }}:{{ awx_pg_db }}:{{ awx_pg_user }}:{{ awx_pg_pass }}\n"
 
-    - name: create awx dns record
-      nsupdate:
-        server: "{{ servers.dns | first }}"
-        zone: "{{ base_domain }}"
-        record: "{{ awx_hostname | split_with('.') | first }}"
-        type: A
-        value: "{{ ansible_default_ipv4.address }}"
-      delegate_to: "{{ groups['pdns'] | first }}"
-
     - name: install docker
       include_role:
         name: nephelaiio.docker
@@ -414,4 +405,13 @@
       pip:
         name: dnspython
         state: latest
+      delegate_to: "{{ groups['pdns'] | first }}"
+
+    - name: create awx dns record
+      nsupdate:
+        server: "{{ servers.dns | first }}"
+        zone: "{{ base_domain }}"
+        record: "{{ awx_hostname | split_with('.') | first }}"
+        type: A
+        value: "{{ ansible_default_ipv4.address }}"
       delegate_to: "{{ groups['pdns'] | first }}"
