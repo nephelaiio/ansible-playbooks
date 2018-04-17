@@ -41,6 +41,11 @@
       include_vars:
         dir: "{{ variables }}"
 
+    - name: install python dns modules
+      pip:
+        name: dnspython
+        state: latest
+
     - name: install dns utilities
       apt:
         name: dnsutils

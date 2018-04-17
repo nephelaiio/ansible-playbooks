@@ -8,8 +8,8 @@ INSERT IGNORE INTO domains(name, type)
 SELECT id INTO @id FROM domains WHERE name like @name;
 INSERT INTO records(domain_id, name, content, type, ttl)
   VALUES(@id, @name, @content, @type, @ttl)
-  ON CONFLICT DO UPDATE
-  SET name = @name, content = @content, type = @type, ttl = @ttl;
+  ON DUPLICATE KEY UPDATE
+  name = @name, content = @content, type = @type, ttl = @ttl;
 {% endfor %}
 
 {% for domain in domains %}
@@ -22,8 +22,8 @@ SELECT id INTO @id FROM domains
   WHERE name like '{{ domain.name }}';
 INSERT INTO records(domain_id, name, content, type, ttl)
   VALUES(@id, @name, @content, @type, @ttl)
-  ON CONFLICT DO UPDATE
-  SET name = @name, content = @content, type = @type, ttl = @ttl;
+  ON DUPLICATE KEY UPDATE
+  name = @name, content = @content, type = @type, ttl = @ttl;
 {%   endfor %}
 {% endfor %}
 
@@ -37,8 +37,8 @@ SELECT id INTO @id FROM domains
   WHERE name like '{{ domain.name }}';
 INSERT IGNORE INTO records(domain_id, name, content, type, ttl)
   VALUES(@id, @name, @content, @type, @ttl)
-  ON CONFLICT DO UPDATE
-  SET name = @name, content = @content, type = @type, ttl = @ttl;
+  ON DUPLICATE KEY UPDATE
+  name = @name, content = @content, type = @type, ttl = @ttl;
 {%   endfor %}
 
 {%   for cname in domain.cnames %}
@@ -50,7 +50,7 @@ SELECT id INTO @id FROM domains
   WHERE name like '{{ domain.name }}';
 INSERT IGNORE INTO records(domain_id, name, content, type, ttl)
   VALUES(@id, @name, @content, @type, @ttl)
-  ON CONFLICT DO UPDATE
-  SET name = @name, content = @content, type = @type, ttl = @ttl;
+  ON DUPLICATE KEY UPDATE
+  name = @name, content = @content, type = @type, ttl = @ttl;
 {%   endfor %}
 {% endfor %}
