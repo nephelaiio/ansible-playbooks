@@ -6,4 +6,4 @@
   tasks:
 
     - name: Run ansible galaxy
-      command: ansible-galaxy install -r requirements.yml -p galaxy/ --force
+      command: ansible-galaxy install -r roles/requirements.yml -p galaxy/ --force
