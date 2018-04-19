@@ -1,0 +1,52 @@
+---
+- name: Create kvm guests
+
+  hosts: kvm_guests
+
+  become: yes
+
+  vars:
+
+    ansible_kvm_user: teddyphreak
+
+  tasks:
+
+    - name: include variable definitions
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: include os variable overrides
+      include_vars: "{{ item }}"
+      with_first_found:
+        - files:
+            - "vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version }}.yml"
+            - "vars/{{ ansible_distrubition | lower }}.yml"
+            - "vars/{{ ansible_os_family | lower }}.yml"
+          skip: true
+
+    - name: create image target directory
+      file:
+        path: files/kvm
+        state: directory
+
+    - name: define groups
+      set_fact:
+        loop_groups: "{{ loop_groups | default([]) + [ {'hostnames': groups[groupitem] } ] }}"
+      loop_control:
+        loop_var: groupitem
+      with_items: "{{ kvm_provisioning_groups }}"
+
+
+    - name: manage vms
+      include_tasks: kvm/vm_manage.yml
+      vars:
+        name: "{{ item.1 }}"
+        ansible_guest_user: "{{ users[ansible_kvm_user] }}"
+        ansible_guest_username: "{{ ansible_guest_user.username }}"
+        ansible_guest_password: "{{ ansible_guest_user.password }}"
+        ansible_guest_ssh_key: "{{ ansible_guest_user.pubkey }}"
+        img_dir: "{{ playbook_dir }}/files/kvm"
+      with_subelements:
+        - "{{ loop_groups }}"
+        - hostnames
+      no_log: "{{ kvm_nolog }}"

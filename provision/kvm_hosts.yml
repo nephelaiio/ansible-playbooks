@@ -1,19 +1,16 @@
 ---
-- name: Create KVM guests
+- name: Configure kvm hosts
 
-  hosts: kvm
+  hosts: kvm_hosts
 
   become: yes
 
   vars:
 
-    provisioning_groups:
-      - kvm_guests
+    kvm_provisioning_group: kvm_guests
     nat_in: br1
     nat_out:
       - br0
-    img_dir: "{{ playbook_dir }}/files/kvm"
-    ansible_kvm_user: teddyphreak
 
   roles:
 
@@ -170,33 +167,6 @@
     - name: install requirements
       package:
         name: "{{ kvm_requirement_packages }}"
-
-    - name: create image target directory
-      file:
-        path: files/kvm
-        state: directory
-
-    - meta: flush_handlers
-
-    - name: define groups
-      set_fact:
-        loop_groups: "{{ loop_groups | default([]) + [ {'hostnames': groups[groupitem] } ] }}"
-      loop_control:
-        loop_var: groupitem
-      with_items: "{{ provisioning_groups }}"
-
-    - name: manage vms
-      include_tasks: kvm/vm_manage.yml
-      vars:
-        name: "{{ item.1 }}"
-        ansible_guest_user: "{{ users[ansible_kvm_user] }}"
-        ansible_guest_username: "{{ ansible_guest_user.username }}"
-        ansible_guest_password: "{{ ansible_guest_user.password }}"
-        ansible_guest_ssh_key: "{{ ansible_guest_user.pubkey }}"
-      with_subelements:
-        - "{{ loop_groups }}"
-        - hostnames
-      no_log: "{{ kvm_nolog }}"
 
   handlers:
 
