@@ -13,9 +13,9 @@
     archive_mirror_targets:
       - url: http://releases.ubuntu.com/16.04/ubuntu-16.04.4-server-amd64.iso
         checksum: sha256:0a03608988cfd2e50567990dc8be96fb3c501e198e2e6efcb846d89efc7b89f2
-      - url: http://mirrors.ucr.ac.cr/centos/6.9/isos/x86_64/CentOS-6.9-x86_64-minimal.iso
+      - url: http://mirrors.liquidweb.com/CentOS/6/isos/x86_64/CentOS-6.9-x86_64-minimal.iso
         checksum: sha256:422af57b493b8af49d485885a730c5a1d955f803fac85aa51311c393168b9080
-      - url: http://mirrors.ucr.ac.cr/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1708.iso
+      - url: http://mirrors.liquidweb.com/CentOS/7/isos/x86_64/CentOS-7-x86_64-Minimal-1708.iso
         checksum: sha256:bba314624956961a2ea31dd460cd860a77911c1e0a56e4820a12b9c5dad363f5
 
   tasks:
