@@ -14,6 +14,7 @@
     raspbian_mirror_root: "{{ mirror_root }}/{{ raspbian_mirror_dir }}"
     raspbian_mirror_host: archive.raspbian.org
     raspbian_mirror_list: /etc/apt/mirror.raspbian.list
+    raspbian_image_root: "{{ mirror_root }}/{{ archive_mirror_dir }}"
 
   roles:
 
