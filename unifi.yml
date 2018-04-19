@@ -56,7 +56,7 @@
               proxy_connect_timeout   5;
               proxy_read_timeout      240;
               proxy_intercept_errors  on;
-              proxy_pass https://{{ unifi_hostname }}:8443/;
+              proxy_pass https://localhost:8443/;
               proxy_http_version 1.1;
               proxy_set_header Upgrade $http_upgrade;
               proxy_set_header Connection "upgrade";
@@ -162,26 +162,6 @@
       when: "'challenge_data' in letsencrypt_challenge"
       ignore_errors: yes
 
-    - name: create vhost roots
-      file:
-        state: directory
-        path: "{{ item }}"
-      with_items: "{{ nginx.vhosts.values() | map(attribute='root') | list }}"
-
-    - name: install nginx
-      include_role:
-        name: geerlingguy.nginx
-      vars:
-        nginx_remove_default_vhost: true
-        nginx_vhosts:
-          - "{{ nginx.vhosts.unifi_https }}"
-
-    - name: install pip
-      package:
-        name: python-pip
-        state: latest
-      delegate_to: "{{ groups['pdns'] | first }}"
-
     - name: install pip requirements
       pip:
         name: dnspython
@@ -196,3 +176,17 @@
         type: A
         value: "{{ ansible_default_ipv4.address }}"
       delegate_to: "{{ groups['pdns'] | first }}"
+
+    - name: create vhost roots
+      file:
+        state: directory
+        path: "{{ item }}"
+      with_items: "{{ nginx.vhosts.values() | map(attribute='root') | list }}"
+
+    - name: install nginx
+      include_role:
+        name: geerlingguy.nginx
+      vars:
+        nginx_remove_default_vhost: true
+        nginx_vhosts:
+          - "{{ nginx.vhosts.unifi_https }}"
