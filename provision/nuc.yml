@@ -1,5 +1,56 @@
 ---
-- name: Create nuc images
+- name: Create centos nuc images
+
+  hosts: localhost
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.plugins
+
+  vars:
+
+    nuc_inventory_group: nuc
+    nuc_user_name: teddyphreak
+    nuc_user_pass: "{{ users[nuc_user_name].password | password_hash('sha512') }}"
+    nuc_user_pubkey: "{{ users[nuc_user_name].pubkey }}"
+    centos_timezone: America/Costa_Rica
+    centos_target_dir: "{{ playbook_dir }}/../files/images/centos"
+
+  tasks:
+
+    - name: include environment variables
+      include_vars:
+        dir: "../vars/{{ inventory }}"
+
+    - name: create target dir
+      file:
+        state: directory
+        path: "{{ item }}"
+      with_items:
+        - "{{ centos_target_dir | dirname }}"
+        - "{{ centos_target_dir }}"
+
+    - include_role:
+        name: nephelaiio.centos-installer
+      vars:
+        centos_installer_hostname: "{{ hostitem }}"
+        centos_installer_interface:
+          static: false
+        centos_installer_disk: "{{ hostvars[hostitem].centos_installer_disk | default('/dev/nvme0n1') }}"
+        centos_installer_target_dir: "{{ playbook_dir }}/../files/images"
+        centos_installer_halt: 'true'
+        centos_installer_username: "{{ nuc_user_name }}"
+        centos_installer_password: "{{ nuc_user_pass }}"
+        centos_installer_sshkey: "{{ nuc_user_pubkey }}"
+        centos_installer_timezone: "{{ centos_timezone }}"
+      loop_control:
+        loop_var: hostitem
+      with_items: "{{ groups[nuc_inventory_group] }}"
+
+
+- name: Create ubuntu nuc images
 
   hosts: localhost
 
@@ -16,12 +67,21 @@
     nuc_user_pass: "{{ users[nuc_user_name].password | password_hash('sha512') }}"
     nuc_user_pubkey: "{{ users[nuc_user_name].pubkey }}"
     ubuntu_timezone: America/Costa_Rica
+    ubuntu_target_dir: "{{ playbook_dir }}/../files/images/ubuntu"
 
   tasks:
 
     - name: include environment variables
       include_vars:
         dir: "../vars/{{ inventory }}"
+
+    - name: create target dir
+      file:
+        state: directory
+        path: "{{ item }}"
+      with_items:
+        - "{{ ubuntu_target_dir | dirname }}"
+        - "{{ ubuntu_target_dir }}"
 
     - include_role:
         name: nephelaiio.ubuntu-installer
