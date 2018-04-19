@@ -57,6 +57,3 @@
       package:
         name: python-pip
         state: latest
-
-    - name: upgrade pip packages
-      command: pip install --upgrade
