@@ -13,6 +13,8 @@
     archive_mirror_targets:
       - url: http://releases.ubuntu.com/16.04/ubuntu-16.04.4-server-amd64.iso
         checksum: sha256:0a03608988cfd2e50567990dc8be96fb3c501e198e2e6efcb846d89efc7b89f2
+      - url: http://old-releases.ubuntu.com/releases/16.04.3/ubuntu-16.04.3-server-amd64.iso
+        checksum: sha256:a06cd926f5855d4f21fb4bc9978a35312f815fbda0d0ef7fdc846861f4fc4600
       - url: http://mirrors.liquidweb.com/CentOS/6/isos/x86_64/CentOS-6.9-x86_64-minimal.iso
         checksum: sha256:422af57b493b8af49d485885a730c5a1d955f803fac85aa51311c393168b9080
       - url: http://mirrors.liquidweb.com/CentOS/7/isos/x86_64/CentOS-7-x86_64-Minimal-1708.iso
@@ -89,7 +91,7 @@
       nsupdate:
         server: "{{ servers.dns | first }}"
         zone: "{{ base_domain }}"
-        record: "{{ archive_url | urlsplit('hostname') | split_with('.') | head }}"
+        record: "{{ archive_url | urlsplit('hostname') | split_with('.') | first }}"
         type: A
         value: "{{ ansible_default_ipv4.address }}"
       delegate_to: "{{ groups['pdns'] | first }}"
