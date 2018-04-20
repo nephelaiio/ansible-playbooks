@@ -3,4 +3,3 @@ timezone: America/Costa_Rica
 inventory: home
 variables: "vars/{{ inventory }}"
 base_domain: home.nephelai.io
-ubuntu_release: 16.04.3
