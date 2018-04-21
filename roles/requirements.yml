@@ -46,6 +46,6 @@
 - src: nephelaiio.golang
   version: 1.0.1
 - src: nephelaiio.ubuntu-installer
-  version: 2.1.1
+  version: 2.1.3
 - src: nephelaiio.centos-installer
-  version: 1.0.0
+  version: 1.0.2
