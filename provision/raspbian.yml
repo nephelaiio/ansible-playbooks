@@ -50,7 +50,7 @@
           hostname: "{{ hostitem }}"
           ifaces:
             - name: eth0
-              method: satic
+              method: static
               ip-address: "{{ hostvars[hostitem]['ansible_host'] }}"
               prefix: "{{ nets.home.netmask }}"
               gateway: "{{ nets.home.router }}"
