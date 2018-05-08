@@ -1,4 +1,4 @@
 ---
 raspbian_release:
   url: "https://downloads.raspberrypi.org/raspbian_lite/images/raspbian_lite-2018-03-14/2018-03-13-raspbian-stretch-lite.zip"
-  checksum: sha256:d58b4bd15e53380b8627df49b26ff7ccd80fc5d424a5cafe48a83fee58fc7047
+  checksum: sha256:5a0747b2bfb8c8664192831b7dc5b22847718a1cb77639a1f3db3683b242dc96
