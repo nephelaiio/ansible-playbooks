@@ -6,15 +6,17 @@
 - src: franklinkim.users
   version: 1.9.1
 - src: geerlingguy.apache
-  version: 2.1.1
+  version: 3.0.0
 - src: geerlingguy.nginx
-  version: 2.5.0
+  version: 2.6.0
 - src: geerlingguy.java
-  version: 1.7.4
+  version: 1.8.0
 - src: geerlingguy.ntp
-  version: 1.5.2
+  version: 1.6.0
 - src: geerlingguy.mysql
-  version: 2.8.0
+  version: 2.9.0
+- src: geerlingguy.php
+  version: 3.6.0
 - src: nephelaiio.plugins
   version: 1.0.5
 - src: nephelaiio.vim
@@ -41,11 +43,9 @@
   version: 2.0.0
 - src: nephelaiio.nfs
   version: 1.0.1
-- src: nephelaiio.sensu
-  version: 2.0.5
 - src: nephelaiio.golang
   version: 1.0.1
 - src: nephelaiio.ubuntu-installer
-  version: 2.1.4
+  version: 2.1.6
 - src: nephelaiio.centos-installer
   version: 1.0.2
