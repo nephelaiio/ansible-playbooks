@@ -1,0 +1,1 @@
+librenms_url: "https://librenms.{{ base_domain }}"
