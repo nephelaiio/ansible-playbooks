@@ -17,7 +17,7 @@
     nginx_vhosts:
       - listen: 443 ssl http2
         server_name: "{{ librenms_hostname }}"
-        root:  "{{ librenms_root }}"
+        root: "{{ librenms_root }}"
         index: index.php
         state: present
         filename: "librenms.conf"
@@ -39,7 +39,7 @@
     - nephelaiio.plugins
 
   tasks:
-    
+
     - name: include private variables
       include_vars:
         dir: "{{ variables }}"
@@ -66,7 +66,7 @@
         - 'sql-mode=""'
         - 'innodb_file_per_table=1'
       notify: restart mysql
-      
+
     - name: install php
       include_role:
         name: geerlingguy.php
@@ -81,7 +81,6 @@
           - php-xml
           - python-memcache
           - python-mysqldb
-          - php-imagemagick
         php_webserver_daemon: nginx
         php_use_managed_ini: no
 
@@ -214,7 +213,7 @@
 
 
     - name: install nginx
-      include_role: 
+      include_role:
         name: geerlingguy.nginx
       vars:
         nginx_vhosts:
