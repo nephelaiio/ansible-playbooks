@@ -7,7 +7,7 @@
 
   vars:
 
-    librenms_root: /var/www/librenms
+    librenms_root: /opt/librenms
     librenms_hostname: "{{ librenms_url | urlsplit('hostname') }}"
     mysql_packages:
       - mariadb-client
@@ -24,6 +24,9 @@
     letsencrypt_domain_crtfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.crt"
     letsencrypt_domain_chainfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.chain.crt"
     composer_path: /usr/local/bin/composer
+    nginx_group: www-data
+    librenms_group: librenms
+    librenms_user: librenms
 
   roles:
 
@@ -85,6 +88,7 @@
       with_items:
         - /etc/php/7.0/cli/php.ini
         - /etc/php/7.0/fpm/php.ini
+      notify: restart fpm
 
     - name: enable php mcrypt
       command: phpenmod mcrypt
@@ -258,11 +262,22 @@
                 deny all;
               }
 
+    - name: create librenms group
+      group:
+        name: "{{ librenms_group }}"
+
+    - name: create librenms user
+      user:
+        name: "{{ librenms_user }}"
+        group: "{{ librenms_group }}"
+        groups: "{{ nginx_group }}"
+        system: yes
+
     - name: set librenms root folder permissions
       file:
         path: "{{ librenms_root | basename }}"
-        owner: www-data
-        group: www-data
+        owner: "{{ librenms_user }}"
+        group: "{{ nginx_group }}"
         state: directory
         recurse: yes
 
@@ -272,19 +287,31 @@
         chdir: "{{ librenms_root | dirname }}"
         creates: "{{ librenms_root }}"
       changed_when: false
-      become_user: www-data
 
     - name: set librenms permissions
       file:
         path: "{{ librenms_root }}"
-        owner: www-data
-        group: www-data
+        owner: "{{ librenms_user }}"
+        group: "{{ nginx_group }}"
+        mode: 0775
         state: directory
         recurse: yes
+
+    - name: define daily cronjob
+      cron:
+        name: librenms daily
+        special_time: daily
+        job: "/bin/bash {{ librenms_root }}/daily.sh"
+        user: "{{ librenms_user }}"
 
   handlers:
 
     - name: restart mysql
       service:
         name: mysql
+        state: restarted
+
+    - name: restart fpm
+      service:
+        name: php7.0-fpm
         state: restarted
