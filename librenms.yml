@@ -13,16 +13,6 @@
       - mariadb-client
       - mariadb-server
       - python-mysqldb
-    nginx_remove_default_vhost: true
-    nginx_vhosts:
-      - listen: 443 ssl http2
-        server_name: "{{ librenms_hostname }}"
-        root: "{{ librenms_root }}"
-        index: index.php
-        state: present
-        filename: "librenms.conf"
-        access_log: "/var/log/nginx/{{ librenms_hostname }}.access.log"
-        error_log: "/var/log/nginx/{{ librenms_hostname }}.error.log"
     letsencrypt_basedir: /etc/letsencrypt
     letsencrypt_certdir: "{{ letsencrypt_basedir }}/live"
     letsencrypt_keydir: "{{ letsencrypt_basedir }}/keys"
@@ -33,6 +23,7 @@
     letsencrypt_domain_csrfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.csr"
     letsencrypt_domain_crtfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.crt"
     letsencrypt_domain_chainfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.chain.crt"
+    composer_path: /usr/local/bin/composer
 
   roles:
 
@@ -66,6 +57,8 @@
         - 'sql-mode=""'
         - 'innodb_file_per_table=1'
       notify: restart mysql
+
+    - meta: flush_handlers
 
     - name: install php
       include_role:
@@ -111,6 +104,12 @@
           - snmpd
           - whois
         state: latest
+
+    - name: install php composer
+      include_role:
+        name: geerlingguy.composer
+      vars:
+        composer_keep_updated: yes
 
     - name: create librenms dns record
       nsupdate:
@@ -211,17 +210,26 @@
       when: "'challenge_data' in letsencrypt_challenge"
       ignore_errors: yes
 
-
     - name: install nginx
       include_role:
         name: geerlingguy.nginx
       vars:
+        nginx_remove_default_vhost: true
         nginx_vhosts:
+          - listen: "80"
+            server_name: "{{ librenms_hostname }}"
+            filename: "{{ librenms_hostname }}.http.conf"
+            access_log: "/var/log/nginx/{{ librenms_hostname }}.access.log"
+            error_log: "/var/log/nginx/{{ librenms_hostname }}.error.log"
+            extra_parameters: |
+              return 301 https://{{ librenms_hostname }}$request_uri;
           - listen: "443 ssl"
-            server_name: "{{ awx_hostname }}"
-            filename: "{{ awx_hostname }}.conf"
-            access_log: "/var/log/nginx/{{ awx_hostname }}.access.log"
-            error_log: "/var/log/nginx/{{ awx_hostname }}.error.log"
+            root: "{{ librenms_root }}/html"
+            server_name: "{{ librenms_hostname }}"
+            index: index.php
+            filename: "{{ librenms_hostname }}.https.conf"
+            access_log: "/var/log/nginx/{{ librenms_hostname }}.access.log"
+            error_log: "/var/log/nginx/{{ librenms_hostname }}.error.log"
             extra_parameters: |
               keepalive_timeout   300;
               ssl_certificate {{ letsencrypt_domain_chainfile }};
@@ -249,16 +257,30 @@
               location ~ /\.ht {
                 deny all;
               }
-              location / {
-                proxy_pass {{ awx_backend_proto }}://127.0.0.1:{{ awx_port }}/;
-                proxy_http_version 1.1;
-                proxy_set_header   Host               $host;
-                proxy_set_header   X-Real-IP          $remote_addr;
-                proxy_set_header   X-Forwarded-For    $proxy_add_x_forwarded_for;
-                proxy_set_header   X-Forwarded-Proto  $scheme;
-                proxy_set_header   Upgrade            $http_upgrade;
-                proxy_set_header   Connection         "upgrade";
-              }
+
+    - name: set librenms root folder permissions
+      file:
+        path: "{{ librenms_root | basename }}"
+        owner: www-data
+        group: www-data
+        state: directory
+        recurse: yes
+
+    - name: install librenms
+      command: "{{ composer_path }} create-project --no-dev --keep-vcs  librenms/librenms {{ librenms_root | basename }} dev-master"
+      args:
+        chdir: "{{ librenms_root | dirname }}"
+        creates: "{{ librenms_root }}"
+      changed_when: false
+      become_user: www-data
+
+    - name: set librenms permissions
+      file:
+        path: "{{ librenms_root }}"
+        owner: www-data
+        group: www-data
+        state: directory
+        recurse: yes
 
   handlers:
 
