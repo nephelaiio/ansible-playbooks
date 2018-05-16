@@ -266,6 +266,15 @@
       group:
         name: "{{ librenms_group }}"
 
+    - name: manage nginx group memberships
+      user:
+        append: yes
+        name: "{{ nginx_user }}"
+        groups: "{{ librenms_group }}"
+      notify:
+        - restart nginx
+        - restart fpm
+
     - name: create librenms user
       user:
         name: "{{ librenms_user }}"
@@ -277,7 +286,7 @@
       file:
         path: "{{ librenms_root | basename }}"
         owner: "{{ librenms_user }}"
-        group: "{{ nginx_group }}"
+        group: "{{ librenms_group }}"
         state: directory
         recurse: yes
 
@@ -292,17 +301,41 @@
       file:
         path: "{{ librenms_root }}"
         owner: "{{ librenms_user }}"
-        group: "{{ nginx_group }}"
+        group: "{{ librenms_group }}"
         mode: 0775
         state: directory
         recurse: yes
+      notify:
+        - restart nginx
+        - restart fpm
 
-    - name: define daily cronjob
-      cron:
-        name: librenms daily
-        special_time: daily
-        job: "/bin/bash {{ librenms_root }}/daily.sh"
-        user: "{{ librenms_user }}"
+    - name: set librenms acl permissions
+      acl:
+        path: "{{ item }}"
+        default: yes
+        recursive: yes
+        state: present
+        permissions: rwx
+        etype: group
+      with_items:
+        - /opt/librenms/rrd
+        - /opt/librenms/logs
+        - /opt/librenms/bootstrap/cache/
+        - /opt/librenms/storage/
+      notify: restart nginx
+
+    - name: manage librenms cron job
+      copy:
+        src: "{{ librenms_root }}/librenms.nonroot.cron"
+        dest: /etc/cron.d/librenms
+        remote_src: yes
+      notify: restart cron
+
+    - name: manage librenms logrotate configuration
+      copy:
+        src: "{{ librenms_root }}/misc/librenms.logrotate"
+        dest: /etc/logrotate.d/librenms
+        remote_src: yes
 
   handlers:
 
@@ -314,4 +347,14 @@
     - name: restart fpm
       service:
         name: php7.0-fpm
+        state: restarted
+
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+
+    - name: restart cron
+      service:
+        name: cron
         state: restarted
