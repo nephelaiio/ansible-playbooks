@@ -1,0 +1,3 @@
+---
+graylog_url: https://logs.home.nephelai.io
+graylog_hostname: "{{ graylog_url | urlsplit('hostname') }}"

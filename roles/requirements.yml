@@ -51,3 +51,9 @@
   version: 2.1.6
 - src: nephelaiio.centos-installer
   version: 1.0.2
+- src: https://github.com/Graylog2/graylog-ansible-role.git
+  version: 2.4.0
+  name: graylog2.graylog
+- src: https://github.com/elastic/ansible-elasticsearch.git
+  version: 6.2.4
+  name: elastic.elasticsearch
