@@ -5,15 +5,12 @@
 
   roles:
 
-    - role: graylog2.graylog
-      tags: graylog
+    - nephelaiio.plugins
 
   vars:
 
-    graylog_backend_proto: http
-    graylog_backend_port: 9200
+    graylog_backend_port: 9000
     graylog_backend_address: 127.0.0.1
-    graylog_transport_port: 9300
     graylog_install_java: no
     graylog_install_mongodb: yes
     graylog_web_endpoint_uri: "{{ graylog_url }}/api"
@@ -24,11 +21,14 @@
     es_templates: no
     es_version_lock: no
     es_heap_size: 1g
+    es_cluster_port: 9200
+    es_transport_port: 9300
+    graylog_backend_proto: http
     es_config:
       node.name: graylog
       cluster.name: graylog
-      http.port: "{{ graylog_backend_port }}"
-      transport.port: "{{ graylog_transport_port }}"
+      http.port: "{{ es_cluster_port }}"
+      transport.tcp.port: "{{ es_transport_port }}"
       network.host: "{{ graylog_backend_address }}"
       node.data: yes
       node.master: yes
@@ -48,6 +48,10 @@
     - name: include private variables
       include_vars:
         dir: "{{ variables }}"
+
+    - name: install graylog
+      include_role:
+        name: graylog2.graylog
 
     - name: install package requirements
       package:
