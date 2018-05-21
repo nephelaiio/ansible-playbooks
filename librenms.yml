@@ -337,6 +337,24 @@
         dest: /etc/logrotate.d/librenms
         remote_src: yes
 
+    - name: manage librenms configuration
+      template:
+        src: librenms/config.php.j2
+        dest: "{{ librenms_root }}/config.php"
+      vars:
+        librenms_config_db_name: "{{ librenms_db_name }}"
+        librenms_config_db_user: "{{ librenms_db_user }}"
+        librenms_config_db_pass: "{{ librenms_db_pass }}"
+        librenms_config_root: "{{ librenms_root }}"
+        librenms_config_url: "{{ librenms_url }}"
+        librenms_config_graylog_url: "{{ graylog_url }}"
+        librenms_config_graylog_port: 443
+        librenms_config_graylog_user: admin
+        librenms_config_graylog_pass: admin
+        librenms_config_graylog_version: 2.4
+      notify:
+        - restart fpm
+
   handlers:
 
     - name: restart mysql
