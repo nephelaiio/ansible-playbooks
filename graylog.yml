@@ -1,5 +1,7 @@
 ---
-- hosts: graylog
+- name: Install and configure graylog server
+
+  hosts: graylog
 
   become: true
 
@@ -201,3 +203,38 @@
         type: A
         value: "{{ ansible_default_ipv4.address }}"
       delegate_to: "{{ groups['pdns'] | first }}"
+
+
+- name: Install and configure graylog syslog forwarding
+
+  hosts:
+    - nuc
+    - raspberry
+
+  become: true
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "{{ variables }}"
+
+    - name: configure rsyslog
+      template:
+        src: graylog/rsyslog.conf.j2
+        dest: /etc/rsyslog.d/80-graylog.conf
+      vars:
+        graylog_host: "{{ graylog_hostname }}"
+        graylog_port: "{{ graylog_syslog_port }}"
+      notify: restart rsyslog
+
+  handlers:
+
+    - name: restart rsyslog
+      service:
+        name: rsyslog
+        state: restarted
