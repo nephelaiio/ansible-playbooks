@@ -7,7 +7,16 @@
 
   vars:
 
-    installer_dir: /tmp/openstack
+    openstack_ansible_root: /opt/openstack-ansible
+    openstack_ansible_version: 16.0.10
+    openstack_management_net:
+      router: "{{ nets.management.router }}"
+      netmask: "{{ nets.management.netmask }}"
+      vlan: "{{ nets.management.vlan }}"
+    openstack_storage_net:
+      router: "{{ nets.storage.router }}"
+      netmask: "{{ nets.storage.netmask }}"
+      vlan: "{{ nets.storage.vlan }}"
 
   tasks:
 
@@ -25,10 +34,10 @@
         name: 8021q
         state: present
 
-    - name: ensure module loading at boot time
+    - name: load 802.1q module at boot time
       lineinfile:
-        path: /etc/modules 
-        line: '8021q'
+        path: /etc/modules
+        line: 8021q
 
     - name: add interfaces
       template:
@@ -36,16 +45,15 @@
         dest: /etc/network/interfaces.d/openstack
       vars:
         base_interface: "{{ ansible_default_ipv4.alias }}"
-        management_vlan: 2
+        management_vlan: "{{ openstack_management_net.vlan }}"
         management_ip: "{{ management_host }}"
-        management_gw: "{{ nets.management.router }}"
-        management_mask: "{{ nets.management.netmask }}"
-        storage_vlan: 5
+        management_gw: "{{ openstack_management_net.router }}"
+        management_mask: "{{ openstack_management_net.netmask }}"
+        storage_vlan: "{{ openstack_storage_net.vlan }}"
         storage_ip: "{{ storage_host }}"
-        storage_gw: "{{ nets.storage.router }}"
-        storage_mask: "{{ nets.storage.netmask }}"
+        storage_gw: "{{ openstack_storage_net.router }}"
+        storage_mask: "{{ openstack_storage_net.netmask }}"
         openstack_vlan: 4
-
       notify: restart networking
 
     - meta: flush_handlers
@@ -53,15 +61,38 @@
     - name: clone ansible openstack repo
       git:
         repo: https://git.openstack.org/openstack/openstack-ansible
-        dest: "{{ installer_dir }}"
-        version: 16.0.10
+        dest: "{{ openstack_ansible_root }}"
+        version: "{{ openstack_ansible_version }}"
       delegate_to: localhost
       run_once: yes
+      notify: bootstrap ansible
 
-    - name: bootstrap ansible
-      command: "{{ installer_dir }}/scripts/bootstrap-ansible.sh"
-      delegate_to: localhost
-      run_once: yes
+    - name: configure os
+      package:
+        name:
+          - debootstrap
+          - ifenslave
+          - ifenslave-2.6
+          - lsof
+          - lvm2
+          - tcpdump
+          - vlan
+          - ntp
+        state: latest
+
+    - service:
+        name: ntp
+        state: started
+        enabled: yes
+
+    - name: load bonding module at boot time
+      lineinfile:
+        path: /etc/modules
+        line: bonding
+
+    - name: create configuration directory
+      file:
+        path: /etc/
 
   handlers:
 
@@ -69,3 +100,8 @@
       service:
         name: networking
         state: restarted
+
+    - name: bootstrap ansible
+      command: "{{ openstack_ansible_root }}/scripts/bootstrap-ansible.sh"
+      delegate_to: localhost
+      run_once: yes

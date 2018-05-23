@@ -1,14 +1,14 @@
 auto {{ base_interface }}.{{ management_vlan }}
 iface {{ base_interface }}.{{ management_vlan }} inet manual
-  vlan-raw-device eno1
+  vlan-raw-device {{ base_interface }}
 
 auto {{ base_interface }}.{{ storage_vlan }}
 iface {{ base_interface }}.{{ storage_vlan }} inet manual
-  vlan-raw-device eno1
+  vlan-raw-device {{ base_interface }}
 
 auto {{ base_interface }}.{{ openstack_vlan }}
 iface {{ base_interface }}.{{ openstack_vlan }} inet manual
-  vlan-raw-device eno1
+  vlan-raw-device {{ base_interface }}
 
 auto br-mgmt
 iface br-mgmt inet manual
