@@ -1,0 +1,154 @@
+---
+awx_organizations:
+  - name: Default
+    state: absent
+
+  - name: global
+    state: present
+
+    credentials:
+      - name: Demo Credential
+        state: absent
+      - name: github.com
+        kind: scm
+        inputs:
+          username: "{{ awx_github_user }}"
+          password: "{{ awx_github_pass }}"
+      - name: home.vault
+        kind: vault
+        inputs:
+          vault_password: "{{ awx_vault_home_pass }}"
+      - name: home.ssh
+        kind: ssh
+        inputs:
+          username: "{{ users.teddyphreak.username }}"
+          ssh_key_data: "{{ users.teddyphreak.privkey }}"
+
+    projects:
+      - name: Demo Project
+        state: absent
+      - name: nephelai.io
+        scm_type: git
+        scm_url: https://github.com/nephelaiio/ansible-playbooks.git
+        scm_branch: master
+        scm_delete_on_update: false
+        scm_credential: github.com
+        scm_update_on_launch: true
+        scm_update_cache_timeout: 60
+        scm_clean: false
+
+    inventories:
+      - name: home
+        source: scm
+        source_project: nephelai.io
+        source_path: inventory
+        overwrite: true
+        overwrite_vars: true
+        update_on_launch: true
+        update_on_project_update: false
+
+    templates:
+      - name: Demo Job Template
+        state: absent
+      - name: ping.home
+        job_type: run
+        project: nephelai.io
+        inventory: home
+        playbook: ping.yml
+        vault_credential: home.vault
+        credential: home.ssh
+      - name: mirror.home
+        job_type: run
+        project: nephelai.io
+        inventory: home
+        playbook: mirror.yml
+        vault_credential: home.vault
+        credential: home.ssh
+        host_config_key: "{{ awx_host_key }}"
+      - name: upgrade.home
+        job_type: run
+        project: nephelai.io
+        inventory: home
+        playbook: upgrade.yml
+        credential: home.ssh
+        host_config_key: "{{ awx_host_key }}"
+      - name: papertrail.home
+        state: absent
+        job_type: run
+        project: nephelai.io
+        inventory: home
+        playbook: papertrail.yml
+        vault_credential: home.vault
+        credential: home.ssh
+        host_config_key: "{{ awx_host_key }}"
+      - name: dhcp.home
+        job_type: run
+        project: nephelai.io
+        inventory: home
+        playbook: dhcp.yml
+        vault_credential: home.vault
+        credential: home.ssh
+        host_config_key: "{{ awx_host_key }}"
+      - name: dns.home
+        job_type: run
+        project: nephelai.io
+        inventory: home
+        playbook: dns.yml
+        vault_credential: home.vault
+        credential: home.ssh
+        host_config_key: "{{ awx_host_key }}"
+      - name: unifi.home
+        job_type: run
+        project: nephelai.io
+        inventory: home
+        playbook: unifi.yml
+        vault_credential: home.vault
+        credential: home.ssh
+        host_config_key: "{{ awx_host_key }}"
+      - name: kubernetes.home
+        job_type: run
+        project: nephelai.io
+        inventory: home
+        playbook: kubernetes.yml
+        vault_credential: home.vault
+        credential: home.ssh
+        host_config_key: "{{ awx_host_key }}"
+      - name: os.home
+        job_type: run
+        project: nephelai.io
+        inventory: home
+        playbook: home.yml
+        vault_credential: home.vault
+        credential: home.ssh
+        host_config_key: "{{ awx_host_key }}"
+
+    schedules:
+      - name: upgrade.home
+        job_template: upgrade.home
+        enabled: true
+        rrule: "DTSTART:20180401T000000Z RRULE:FREQ=DAILY;INTERVAL=1"
+      - name: mirror.home
+        job_template: mirror.home
+        enabled: true
+        rrule: "DTSTART:20180401T001000Z RRULE:FREQ=DAILY;INTERVAL=1"
+      - name: papertrail.home
+        state: absent
+        job_template: papertrail.home
+        enabled: true
+        rrule: "DTSTART:20180401T003000Z RRULE:FREQ=DAILY;INTERVAL=1"
+      - name: dhcp.home
+        job_template: dhcp.home
+        enabled: true
+        rrule: "DTSTART:20180401T004000Z RRULE:FREQ=DAILY;INTERVAL=1"
+      - name: dns.home
+        job_template: dns.home
+        enabled: true
+        rrule: "DTSTART:20180401T002000Z RRULE:FREQ=DAILY;INTERVAL=1"
+      - name: unifi.home
+        job_template: unifi.home
+        enabled: true
+        rrule: "DTSTART:20180401T005000Z RRULE:FREQ=WEEKLY;INTERVAL=1"
+      - name: os.home
+        job_template: os.home
+        enabled: true
+        rrule: "DTSTART:20180401T003000Z RRULE:FREQ=DAILY;INTERVAL=1"
