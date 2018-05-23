@@ -45,7 +45,7 @@
     letsencrypt_domain_crtfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.crt"
     letsencrypt_domain_chainfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.chain.crt"
 
-  tasks: 
+  tasks:
 
     - name: include private variables
       include_vars:
