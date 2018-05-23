@@ -5,21 +5,44 @@ nets:
     netmask: 255.255.255.0
     router: 192.168.1.1
     zone: 1.168.192.in-addr.arpa
+    vlan: 1
     ns: "{{ servers.recursors }}"
     pools:
       - range: '192.168.1.65 192.168.1.127'
-    reservations: {}
+    reservations:
+      fw01:
+        host: fw01.home.nephelai.io
+        hw_address: 78:8a:20:c5:b6:9b
+        ip-address: 192.168.1.1
+      sw01:
+        host: sw01.home.nephelai.io
+        hw_address: f0:9f:c2:c2:15:9a
+        ip-address: 192.168.1.69
+      sw02:
+        host: sw02.home.nephelai.io
+        hw_address: f0:9f:c2:c2:57:ac
+        ip-address: 192.168.1.96
+      ap01:
+        host: ap01.home.nephelai.io
+        hw_address: f0:9f:c2:80:cd:a0
+        ip-address: 192.168.1.98
+      ap02:
+        host: ap02.home.nephelai.io
+        hw_address: f0:9f:c2:b4:36:e8
+        ip-address: 192.168.1.99
   management:
     network: 192.168.4.0
     netmask: 255.255.255.0
     router: 192.168.4.1
     zone: 4.168.192.in-addr.arpa
+    vlan: 2
     pools: []
     reservations: {}
   storage:
     network: 192.168.5.0
     netmask: 255.255.255.0
     router: 192.168.5.1
+    vlan: 5
     zone: 5.168.192.in-addr.arpa
     pools: []
     reservations: {}
