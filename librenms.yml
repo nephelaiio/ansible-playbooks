@@ -376,3 +376,79 @@
       service:
         name: cron
         state: restarted
+
+
+- name: Configure Librenms devices
+
+  hosts:
+    - nuc
+    - raspberry
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "{{ variables }}"
+      tags:
+        - devices
+
+    - name: install snmpd
+      package:
+        name: snmpd
+        state: latest
+
+    - name: configure snmpd
+      template:
+        src: librenms/snmpd.conf.j2
+        dest: /etc/snmp/snmpd.conf
+      vars:
+        snmpd_location: home
+        snmpd_contact: "{{ snmp_contact }}"
+        snmpd_community: "{{ snmp_community }}"
+      notify: restart snmpd
+
+    - name: start snmpd
+      service:
+        name: snmpd
+        state: started
+        enabled: yes
+
+    - name: query librenms devices
+      uri:
+        url: "{{ librenms_url }}/api/v0/devices"
+        body_format: json
+        headers:
+          X-Auth-Token: "{{ librenms_api_token }}"
+        return_content: yes
+      register: librenms_devices
+      tags:
+        - devices
+
+    - name: map librenms registrations
+      set_fact:
+        librenms_hostnames: "{{ librenms_devices.json.devices | map(attribute='hostname') | list }}"
+      tags:
+        - devices
+
+    - name: create librenms devices
+      uri:
+        url: "{{ librenms_url }}/api/v0/devices"
+        method: POST
+        body_format: json
+        body: TODO
+        headers:
+          X-Auth-Token: "{{ librenms_api_token }}"
+        return_content: yes
+
+  handlers:
+
+    - name: restart snmpd
+      service:
+        name: snmpd
+        state: restarted
