@@ -1,3 +1,5 @@
+# {{ ansible_managed }}
+
 deb http://{{ apt_mirror_main }}/{{ apt_distribution }} {{ apt_release }} {{ apt_repositories }}
 {% if apt_mirror_updates is defined -%}
 deb http://{{ apt_mirror_updates }}/{{ apt_distribution }} {{ apt_release }}-updates {{ apt_repositories }}
