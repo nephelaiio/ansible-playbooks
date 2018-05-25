@@ -413,6 +413,15 @@
         snmpd_community: "{{ snmp_community }}"
       notify: restart snmpd
 
+    - name: configure snmp daemon options
+      lineinfile:
+        path: /etc/default/snmpd
+        backrefs: yes
+        regexp: "^SNMPDOPTS='-Lsd(.*)$"
+        line: "SNMPDOPTS='-Ls6d\\1"
+      when: ansible_os_family == 'Debian'
+      notify: restart snmpd
+
     - name: start snmpd
       service:
         name: snmpd
@@ -441,10 +450,18 @@
         url: "{{ librenms_url }}/api/v0/devices"
         method: POST
         body_format: json
-        body: TODO
+        body:
+          hostname: "{{ inventory_hostname }}"
+          version: v2c
+          community: "{{ snmp_community }}"
         headers:
           X-Auth-Token: "{{ librenms_api_token }}"
         return_content: yes
+
+    - name: restart snmpd
+      service:
+        name: snmpd
+        state: restarted
 
   handlers:
 
