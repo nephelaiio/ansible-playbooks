@@ -117,6 +117,11 @@
 
   become: yes
 
+  vars:
+
+    apt_mirror_default: mirrordirector.raspbian.org
+    apt_mirror_local: "{{ raspbian_url | urlsplit('hostname') }}"
+
   roles:
 
     - nephelaiio.plugins
@@ -127,12 +132,17 @@
       include_vars:
         dir: "../{{ variables }}"
 
+    - name: remove stale apt definitions
+      file:
+        path: /etc/apt/sources.list.d/raspi.list
+        state: absent
+
     - name: manage apt repositories
       template:
         src: ../templates/apt/sources.list.j2
         dest: /etc/apt/sources.list
       vars:
-        apt_mirror_main: mirrordirector.raspbian.org
+        apt_mirror_main: "{{ apt_mirror_local }}"
         apt_distribution: "{{ ansible_lsb.id | lower }}"
         apt_release: "{{ ansible_lsb.codename | lower }}"
         apt_repositories: main contrib non-free rpi
