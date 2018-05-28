@@ -9,10 +9,6 @@
 
   become: yes
 
-  vars:
-
-    samba_domain: ad.home.nephelai.io
-
   tasks:
 
     - name: include private variables
@@ -28,4 +24,15 @@
           - winbind
           - libpam-winbind
           - libnss-winbind
+          - dnsutils
         state: present
+
+    - name: disable non essential daemons
+      service:
+        name: "{{ item }}"
+        state: stopped
+        enabled: no
+      with_items:
+        - smbd
+        - nmbd
+        - winbind

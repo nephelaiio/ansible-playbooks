@@ -4,3 +4,4 @@ servers:
   recursors: "{{ groups['recursors'] | map('extract', hostvars, ['ansible_host']) | list }}"
   dns: "{{ groups['pdns'] | map('extract', hostvars, ['ansible_host']) | list }}"
   mail: "{{ groups['mail'] | map('extract', hostvars, ['ansible_host']) | list }}"
+  samba: "{{ groups['samba'] | map('extract', hostvars, ['ansible_host']) | list }}"
