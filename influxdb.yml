@@ -1,0 +1,45 @@
+---
+- name: Install Influxdb
+
+  hosts: influxdb
+
+  become: yes
+
+  vars:
+
+    influxdb_version: 1.5
+    influxdb_root: /opt/influxdb 
+    influxdb_data: "{{ influxdb_root }}/data"
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "{{ variables }}"
+
+    - name: install docker
+      include_role:
+        name: nephelaiio.docker
+      vars:
+        pip_packages: pip
+        pip_packages_helpers:
+          - python-setuptools
+          - ca-certificates
+
+    - name: pull influxdb docker image
+      docker_image:
+        name: influxdb
+        tag: "{{ influxdb_version }}"
+
+    - name: create influxdb directories
+      file:
+        state: directory
+        path: "{{ item }}"
+      with_items:
+        - "{{ influxdb_root }}"
+        - "{{ influxdb_data }}"
+
