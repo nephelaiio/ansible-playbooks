@@ -36,3 +36,9 @@
         - smbd
         - nmbd
         - winbind
+
+    - name: unmask samba ad daemon
+      command: systemctl unmask samba-ad-dc
+      args:
+        warn: false
+      changed_when: false
