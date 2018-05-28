@@ -8,7 +8,9 @@
   vars:
 
     bind_fwd_zones: "{{ dns.zones.values() | map(attribute='name') | list }}"
-    bind_conf_local: "{{ bind_fwd_zones | map('zone_fwd', servers.dns) | list }}"
+    bind_fwd_samba: "{{ [ samba_domain ] | map('zone_fwd', servers.samba) | list }}"
+    bind_fwd_pdns: "{{ bind_fwd_zones | map('zone_fwd', servers.dns) | list }}"
+    bind_conf_local: "{{ (bind_fwd_samba + bind_fwd_pdns) | list}}"
 
   roles:
 
