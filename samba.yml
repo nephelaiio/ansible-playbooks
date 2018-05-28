@@ -1,0 +1,31 @@
+---
+- name: Set up samba domain controller
+
+  hosts: samba
+
+  roles:
+
+    - nephelaiio.plugins
+
+  become: yes
+
+  vars:
+
+    samba_domain: ad.home.nephelai.io
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "{{ variables }}"
+
+    - name: install packages
+      package:
+        name:
+          - samba
+          - krb5-user
+          - krb5-config
+          - winbind
+          - libpam-winbind
+          - libnss-winbind
+        state: present
