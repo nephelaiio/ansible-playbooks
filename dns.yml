@@ -37,11 +37,28 @@
 
   become: yes
 
+  vars:
+
+    pdns_hostname: "{{ pdns_url | urlsplit('hostname') }}"
+    letsencrypt_basedir: /etc/letsencrypt
+    letsencrypt_certdir: "{{ letsencrypt_basedir }}/live"
+    letsencrypt_keydir: "{{ letsencrypt_basedir }}/keys"
+    letsencrypt_account_keyfile: "{{ letsencrypt_keydir }}/id_rsa.letsencrypt"
+    letsencrypt_domain: "{{ pdns_hostname }}"
+    letsencrypt_zone: "{{ pdns_hostname | split_with('.') | tail | join('.') }}"
+    letsencrypt_record: "{{ pdns_hostname | split_with('.') | head }}"
+    letsencrypt_domain_keyfile: "{{ letsencrypt_keydir }}/id_rsa.{{ letsencrypt_domain }}"
+    letsencrypt_domain_csrfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.csr"
+    letsencrypt_domain_crtfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.crt"
+    letsencrypt_domain_chainfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.chain.crt"
+
   tasks:
 
     - name: include private variables
       include_vars:
         dir: "{{ variables }}"
+      tags:
+        - always
 
     - name: install python dns modules
       pip:
@@ -57,6 +74,8 @@
       include_role:
         name: geerlingguy.mysql
       vars:
+        mysql_root_pass: "{{ pdns_mysql_root_pass }}"
+        mysql_root_password_update: yes
         mysql_packages:
           - mariadb-client
           - mariadb-server
@@ -67,13 +86,6 @@
           - name: '{{ pdns.backends.gmysql.user }}'
             password: '{{ pdns.backends.gmysql.password }}'
             priv: '{{ pdns.backends.gmysql.dbname }}.*:ALL'
-
-    - name: create temporary directory
-      tempfile:
-        state: directory
-        prefix: pdns
-      register: tmpdir
-      changed_when: false
 
     - name: install powerdns
       apt:
@@ -92,42 +104,205 @@
         backends: "{{ pdns.backends }}"
       notify: restart pdns
 
-    - meta: clear_facts
+    - meta: flush_handlers
 
-    - name: build database initialization script
-      template:
-        src: dns/schema.sql.j2
-        dest: "{{ tmpdir.path }}/schema.sql"
-      changed_when: false
-
-    - name: initialize database
-      command: |
-        mysql "{{ pdns.backends.gmysql.dbname }}" -e "
-        SOURCE {{ tmpdir.path }}/schema.sql;"
-      changed_when: false
-
-    - name: build data initialization script
-      changed_when: false
-      template:
-        src: dns/data.sql.j2
-        dest: "{{ tmpdir.path }}/data.sql"
-      vars:
-        domains: "{{ pdns.domains }}"
-        ns_ttl: 3600
-        keys:
-          - "{{ tsigkeys.dhcp }}"
-
-    - name: override records
-      command: |
-        mysql "{{ pdns.backends.gmysql.dbname }}" -e "
-        SOURCE {{ tmpdir.path }}/data.sql;"
-      changed_when: false
-
-    - name: remove temporary directory
+    - name: create letsencrypt folders
       file:
-        path: "{{ tmpdir.path }}"
-        state: absent
+        path: "{{ item }}"
+        mode: 0755
+        state: directory
+      with_items:
+        - "{{ letsencrypt_certdir }}"
+        - "{{ letsencrypt_keydir }}"
+
+    - name: create key
+      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_email }}" -f {{ letsencrypt_account_keyfile }} -q -N ""'
+      args:
+        creates: "{{ letsencrypt_account_keyfile }}"
+
+    - name: create domain key
+      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_email }}" -f {{ letsencrypt_domain_keyfile }} -q -N ""'
+      args:
+        creates: "{{ letsencrypt_domain_keyfile }}"
+
+    - name: create csr
+      shell: 'openssl req -new -nodes -key {{ letsencrypt_domain_keyfile }} -out {{ letsencrypt_domain_csrfile }} -subj "/CN={{ letsencrypt_domain }}"'
       changed_when: false
+
+    - name: create challenge
+      letsencrypt:
+        account_key: "{{ letsencrypt_account_keyfile }}"
+        challenge: dns-01
+        csr: "{{ letsencrypt_domain_csrfile }}"
+        dest: "{{ letsencrypt_domain_crtfile }}"
+        fullchain_dest: "{{ letsencrypt_domain_chainfile }}"
+        terms_agreed: yes
+        acme_directory: https://acme-v01.api.letsencrypt.org/directory
+      register: letsencrypt_challenge
+
+    - name: install route53 dependencies
+      pip:
+        name: boto
+
+    - name: create route53 txt record for certificate validation
+      route53:
+        command: create
+        aws_access_key: "{{ aws_access_key_id }}"
+        aws_secret_key: "{{ aws_secret_access_key }}"
+        zone: "{{ letsencrypt_zone }}"
+        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_domain }}"
+        retry_interval: 300
+        type: TXT
+        ttl: 7200
+        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
+        wait: yes
+        overwrite: yes
+      when: "'challenge_data' in letsencrypt_challenge"
+      ignore_errors: yes
+
+    - name: wait for txt record propagation
+      pause:
+        seconds: 60
+      when: "'challenge_data' in letsencrypt_challenge"
+
+    - name: validate challenge
+      letsencrypt:
+        account_key: "{{ letsencrypt_account_keyfile }}"
+        challenge: dns-01
+        csr: "{{ letsencrypt_domain_csrfile }}"
+        dest: "{{ letsencrypt_domain_crtfile }}"
+        fullchain_dest: "{{ letsencrypt_domain_chainfile }}"
+        data: "{{ letsencrypt_challenge }}"
+        terms_agreed: yes
+        acme_directory: https://acme-v01.api.letsencrypt.org/directory
+      when: "'challenge_data' in letsencrypt_challenge"
+
+    - name: delete route53 txt record for certificate validation
+      route53:
+        command: delete
+        aws_access_key: "{{ aws_access_key_id }}"
+        aws_secret_key: "{{ aws_secret_access_key }}"
+        zone: "{{ letsencrypt_zone }}"
+        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_zone }}"
+        retry_interval: 300
+        type: TXT
+        ttl: 7200
+        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
+        wait: yes
+      when: "'challenge_data' in letsencrypt_challenge"
+      ignore_errors: yes
+
+    - name: install nginx
+      include_role:
+        name: geerlingguy.nginx
+      vars:
+        nginx_remove_default_vhost: true
+        nginx_vhosts:
+          - listen: 80
+            server_name: "{{ pdns_hostname }}"
+            filename: "{{ pdns_hostname }}.http.conf"
+            access_log: "/var/log/nginx/{{ pdns_hostname }}.access.log"
+            error_log: "/var/log/nginx/{{ pdns_hostname }}.error.log"
+            extra_parameters: |
+              return 301 https://{{ pdns_hostname }}$request_uri;
+          - listen: "443 ssl"
+            server_name: "{{ pdns_hostname }}"
+            filename: "{{ pdns_hostname }}.https.conf"
+            access_log: "/var/log/nginx/{{ pdns_hostname }}.access.log"
+            error_log: "/var/log/nginx/{{ pdns_hostname }}.error.log"
+            extra_parameters: |
+              keepalive_timeout   300;
+              ssl_certificate {{ letsencrypt_domain_chainfile }};
+              ssl_certificate_key {{ letsencrypt_domain_keyfile }};
+              ssl_session_cache   shared:SSL:10m;
+              ssl_session_timeout 10m;
+              ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+              ssl_prefer_server_ciphers on;
+              ssl_stapling on;
+              ssl_ciphers ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:DHE-RSA-AES256-SHA;
+              add_header Strict-Transport-Security max-age=31536000;
+              add_header X-Frame-Options DENY;
+              proxy_cache off;
+              proxy_store off;
+              location / {
+                proxy_pass {{ pdns_api_proto }}://127.0.0.1:{{ pdns_api_port }}/;
+                proxy_http_version 1.1;
+                proxy_set_header   Host               $host;
+                proxy_set_header   X-Real-IP          $remote_addr;
+                proxy_set_header   X-Forwarded-For    $proxy_add_x_forwarded_for;
+                proxy_set_header   X-Forwarded-Proto  $scheme;
+                proxy_set_header   Upgrade            $http_upgrade;
+                proxy_set_header   Connection         "upgrade";
+              }
+
+    - name: query pdns zones
+      uri:
+        url: "{{ pdns_api_proto }}://localhost:{{ pdns_api_port }}/api/v1/servers/localhost/zones"
+        method: GET
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+      register: pdns_zones_query
+      tags:
+        - query
+
+    - name: build list of existing zones
+      set_fact:
+        pdns_zones: "{{ pdns_zones_query.json | map(attribute='id') | list }}"
+      tags:
+        - query
+
+    - name: create zones
+      uri:
+        url: "{{ pdns_api_proto }}://localhost:{{ pdns_api_port }}/api/v1/servers/localhost/zones"
+        method: POST
+        body_format: json
+        body:
+          kind: Native
+          name: "{{ zone.name }}"
+          masters: []
+          nameservers: "{{ zone.ns }}"
+          rrsets:
+            - "{{ soa_record }}"
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 201
+      vars:
+        zone: "{{ dns.zones[item] }}"
+        soa_record:
+          content: "{{ ansible_fqdn }} dnsmaster.{{ zone.name }} 0 3600 600 10800 600"
+          disabled: false
+          name: "{{ zone.name }}"
+          type: SOA
+          ttl: 3600
+      with_items: "{{ dns.zones.keys() }}"
+      when: zone.name not in pdns_zones
+      tags:
+        - query
+
+    - name: replace pdns dns record
+      uri:
+        url: "{{ pdns_api_proto }}://localhost:{{ pdns_api_port }}/api/v1/servers/localhost/zones/{{ zone }}"
+        method: PATCH
+        return_content: yes
+        body_format: json
+        body:
+          rrsets:
+            - name: "{{ fqdn }}"
+              type: A
+              ttl: 3600
+              changetype: REPLACE
+              records:
+                - content: "{{ ansible_default_ipv4.address }}"
+                  disabled: no
+                  set-ptr: no
+                  comments: []
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        fqdn: "{{ letsencrypt_domain }}."
+        record: "{{ letsencrypt_record }}"
+        zone: "{{ letsencrypt_zone }}"
 
   handlers:
 

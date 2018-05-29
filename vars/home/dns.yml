@@ -1,4 +1,8 @@
 ---
+pdns_url: "https://pdns.{{ base_domain }}"
+pdns_api_proto: http
+pdns_api_port: 8081
+
 dns:
   search_domains:
     - "{{ base_domain }}"
@@ -19,6 +23,12 @@ dns:
 
 pdns:
   config:
+    api: yes
+    api-key: "{{ pdns_api_key }}"
+    webserver: yes
+    webserver-address: 127.0.0.1
+    webserver-port: "{{ pdns_api_port }}"
+    webserver-allow-from: 127.0.0.1
     dnsupdate: yes
     allow-dnsupdate-from: "{{ (nets.home.network + '/' + nets.home.netmask) | ipaddr('net') }}"
     master: yes
@@ -29,8 +39,8 @@ pdns:
     security-poll-suffix: ''
   backends:
     gmysql:
-      user: pdns
+      user: "{{ pdns_mysql_user }}"
       host: 127.0.0.1
-      password: "{{ passwords.mysql.pdns }}"
+      password: "{{ pdns_mysql_pass }}"
       dbname: pdns
   domains: "{{ dns.zones.values() }}"
