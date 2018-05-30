@@ -195,14 +195,30 @@
                 proxy_set_header   Connection         "upgrade";
               }
 
-    - name: create graylog dns record
-      nsupdate:
-        server: "{{ servers.dns | first }}"
-        zone: "{{ base_domain }}"
-        record: "{{ graylog_hostname | split_with('.') | first }}"
-        type: A
-        value: "{{ ansible_default_ipv4.address }}"
-      delegate_to: "{{ groups['pdns'] | first }}"
+    - name: update graylog pdns record
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ graylog_url_zone }}"
+        method: PATCH
+        return_content: yes
+        body_format: json
+        body:
+          rrsets:
+            - name: "{{ graylog_url_host }}"
+              type: A
+              ttl: 3600
+              changetype: REPLACE
+              records:
+                - content: "{{ ansible_default_ipv4.address }}"
+                  disabled: no
+                  set-ptr: no
+                  comments: []
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        graylog_url_host: "{{ graylog_url | urlsplit('hostname') }}."
+        graylog_url_zone: "{{ graylog_url_host | split_with('.') | tail | join('.') }}"
+      register: pdns_zones_query
 
 
 - name: Install and configure graylog syslog forwarding
