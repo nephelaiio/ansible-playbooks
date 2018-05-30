@@ -242,14 +242,10 @@
         headers:
           X-API-Key: "{{ pdns_api_key }}"
       register: pdns_zones_query
-      tags:
-        - query
 
     - name: build list of existing zones
       set_fact:
         pdns_zones: "{{ pdns_zones_query.json | map(attribute='id') | list }}"
-      tags:
-        - query
 
     - name: create zones
       uri:
@@ -258,9 +254,9 @@
         body_format: json
         body:
           kind: Native
-          name: "{{ zone.name }}"
+          name: "{{ zone_name }}"
           masters: []
-          nameservers: "{{ zone.ns }}"
+          nameservers: "{{ zone_ns }}"
           rrsets:
             - "{{ soa_record }}"
         headers:
@@ -268,16 +264,16 @@
         status_code: 201
       vars:
         zone: "{{ dns.zones[item] }}"
+        zone_name: "{{ zone.name }}."
+        zone_ns: "{{ zone.ns }}"
         soa_record:
-          content: "{{ ansible_fqdn }} dnsmaster.{{ zone.name }} 0 3600 600 10800 600"
+          content: "{{ ansible_fqdn }} dnsmaster.{{ zone_name }} 0 3600 600 10800 600"
           disabled: false
-          name: "{{ zone.name }}"
+          name: "{{ zone_name }}"
           type: SOA
           ttl: 3600
       with_items: "{{ dns.zones.keys() }}"
-      when: zone.name not in pdns_zones
-      tags:
-        - query
+      when: zone_name not in pdns_zones
 
     - name: replace pdns dns record
       uri:
