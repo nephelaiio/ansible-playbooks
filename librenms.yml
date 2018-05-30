@@ -115,14 +115,30 @@
       vars:
         composer_keep_updated: yes
 
-    - name: create librenms dns record
-      nsupdate:
-        server: "{{ servers.dns | first }}"
-        zone: "{{ base_domain }}"
-        record: "{{ librenms_hostname | split_with('.') | first }}"
-        type: A
-        value: "{{ ansible_default_ipv4.address }}"
-      delegate_to: "{{ groups['pdns'] | first }}"
+    - name: update librenms pdns record
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ librenms_url_zone }}"
+        method: PATCH
+        return_content: yes
+        body_format: json
+        body:
+          rrsets:
+            - name: "{{ librenms_url_host }}"
+              type: A
+              ttl: 3600
+              changetype: REPLACE
+              records:
+                - content: "{{ ansible_default_ipv4.address }}"
+                  disabled: no
+                  set-ptr: no
+                  comments: []
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        librenms_url_host: "{{ librenms_url | urlsplit('hostname') }}."
+        librenms_url_zone: "{{ librenms_url_host | split_with('.') | tail | join('.') }}"
+      register: pdns_zones_query
 
     - name: create letsencrypt folders
       file:
