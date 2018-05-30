@@ -87,6 +87,13 @@
             password: '{{ pdns.backends.gmysql.password }}'
             priv: '{{ pdns.backends.gmysql.dbname }}.*:ALL'
 
+    - name: create temporary directory
+      tempfile:
+        state: directory
+        prefix: pdns
+      register: tmpdir
+      changed_when: false
+
     - name: install powerdns
       apt:
         name: "{{ item }}"
@@ -94,6 +101,24 @@
       with_items:
         - pdns-server
         - pdns-backend-mysql
+
+    - name: build database initialization script
+      template:
+        src: dns/schema.sql.j2
+        dest: "{{ tmpdir.path }}/schema.sql"
+      changed_when: false
+
+    - name: initialize database
+      command: |
+        mysql "{{ pdns.backends.gmysql.dbname }}" -e "
+        SOURCE {{ tmpdir.path }}/schema.sql;"
+      changed_when: false
+
+    - name: remove temporary directory
+      file:
+        path: "{{ tmpdir.path }}"
+        state: absent
+      changed_when: false
 
     - name: configure powerdns
       template:
