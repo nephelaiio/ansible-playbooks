@@ -20,6 +20,10 @@
       - url: http://mirrors.liquidweb.com/CentOS/7/isos/x86_64/CentOS-7-x86_64-Minimal-1708.iso
         checksum: sha256:bba314624956961a2ea31dd460cd860a77911c1e0a56e4820a12b9c5dad363f5
 
+  roles:
+
+    - nephelaiio.plugins
+
   tasks:
 
     - name: include private variables
