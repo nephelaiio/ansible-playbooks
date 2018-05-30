@@ -271,20 +271,30 @@
         verify_ssl: false
         verbose: false
 
-    - name: install pip requirements
-      pip:
-        name: dnspython
-        state: latest
-      delegate_to: "{{ groups['pdns'] | first }}"
-
-    - name: create awx dns record
-      nsupdate:
-        server: "{{ servers.dns | first }}"
-        zone: "{{ base_domain }}"
-        record: "{{ awx_hostname | split_with('.') | first }}"
-        type: A
-        value: "{{ ansible_default_ipv4.address }}"
-      delegate_to: "{{ groups['pdns'] | first }}"
+    - name: update awx pdns record
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ awx_url_zone }}"
+        method: PATCH
+        return_content: yes
+        body_format: json
+        body:
+          rrsets:
+            - name: "{{ awx_url_host }}"
+              type: A
+              ttl: 3600
+              changetype: REPLACE
+              records:
+                - content: "{{ ansible_default_ipv4.address }}"
+                  disabled: no
+                  set-ptr: no
+                  comments: []
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        awx_url_host: "{{ awx_url | urlsplit('hostname') }}."
+        awx_url_zone: "{{ awx_url_host | split_with('.') | tail | join('.') }}"
+      register: pdns_zones_query
 
     - name: wait for awx container startup
       pause:
