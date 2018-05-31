@@ -8,7 +8,7 @@
   vars:
 
     influxdb_version: 1.5
-    influxdb_root: /opt/influxdb 
+    influxdb_root: /opt/influxdb
     influxdb_data: "{{ influxdb_root }}/data"
 
   roles:
@@ -42,4 +42,3 @@
       with_items:
         - "{{ influxdb_root }}"
         - "{{ influxdb_data }}"
-
