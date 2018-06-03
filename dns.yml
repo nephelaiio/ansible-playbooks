@@ -252,6 +252,7 @@
               location / {
                 proxy_pass {{ pdns_api_proto }}://127.0.0.1:{{ pdns_api_port }}/;
                 proxy_http_version 1.1;
+                proxy_redirect     off;
                 proxy_set_header   Host               $host;
                 proxy_set_header   X-Real-IP          $remote_addr;
                 proxy_set_header   X-Forwarded-For    $proxy_add_x_forwarded_for;
@@ -272,7 +273,7 @@
       set_fact:
         pdns_zones: "{{ pdns_zones_query.json | map(attribute='id') | list }}"
 
-    - name: create zones
+    - name: update zones
       uri:
         url: "{{ pdns_api_proto }}://localhost:{{ pdns_api_port }}/api/v1/servers/localhost/zones"
         method: POST
@@ -292,15 +293,99 @@
         zone_name: "{{ zone.name }}."
         zone_ns: "{{ zone.ns }}"
         soa_record:
-          content: "{{ ansible_fqdn }} dnsmaster.{{ zone_name }} 0 3600 600 10800 600"
+          content: "{{ ansible_fqdn }} dnsmaster.{{ zone_name }} 0 {{ dns_ttl }} 600 10800 600"
           disabled: false
           name: "{{ zone_name }}"
           type: SOA
-          ttl: 3600
+          ttl: "{{ dns_ttl }}"
       with_items: "{{ dns.zones.keys() }}"
       when: zone_name not in pdns_zones
 
-    - name: replace pdns dns record
+    - name: query zone records
+      uri:
+        url: "{{ pdns_api_proto }}://localhost:{{ pdns_api_port }}/api/v1/servers/localhost/zones/{{ zone_name }}"
+        method: GET
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+      vars:
+        zone_name: "{{ item }}."
+      with_items:
+        - "{{ dns.zones.values() | map(attribute='name') | list }}"
+      register: pdns_records_query
+      tags:
+        - records
+
+    - name: build list of existing records
+      set_fact:
+        pdns_records: "{{ pdns_records_query.results | map(attribute='json') | map(attribute='rrsets') | flatten | map(attribute='name') | list }}"
+      tags:
+        - records
+
+    - name: create zone records
+      uri:
+        url: "{{ pdns_api_proto }}://localhost:{{ pdns_api_port }}/api/v1/servers/localhost/zones/{{ zone_name }}"
+        method: PUT
+        body_format: json
+        body:
+          rrsets:
+            - "{{ record_rrset }}"
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        zone: "{{ item.0 }}"
+        zone_name: "{{ zone.name }}."
+        record: "{{ item.1 }}"
+        record_name: "{{ record.host }}."
+        record_rrset:
+          name: "{{ record_name }}"
+          type: "{{ record.type }}"
+          ttl: "{{ dns_ttl }}"
+          changetype: 'REPLACE'
+          records:
+            - content: "{{ record['ip-address'] + ('.' if record.type == 'PTR' else '') }}"
+              disabled: false
+              set-ptr: false
+      with_subelements:
+        - "{{ dns.zones.values() }}"
+        - records
+      when: not record_name in pdns_records
+      tags:
+        - records
+
+    - name: update zone records
+      uri:
+        url: "{{ pdns_api_proto }}://localhost:{{ pdns_api_port }}/api/v1/servers/localhost/zones/{{ zone_name }}"
+        method: PATCH
+        body_format: json
+        body:
+          rrsets:
+            - "{{ record_rrset }}"
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        zone: "{{ item.0 }}"
+        zone_name: "{{ zone.name }}."
+        record: "{{ item.1 }}"
+        record_name: "{{ record.host }}."
+        record_rrset:
+          name: "{{ record_name }}"
+          type: "{{ record.type }}"
+          ttl: "{{ dns_ttl }}"
+          changetype: 'REPLACE'
+          records:
+            - content: "{{ record['ip-address'] + ('.' if record.type == 'PTR' else '') }}"
+              disabled: false
+              set-ptr: false
+      with_subelements:
+        - "{{ dns.zones.values() }}"
+        - records
+      when: record_name in pdns_records
+      tags:
+        - records
+
+    - name: update pdns dns record
       uri:
         url: "{{ pdns_api_proto }}://localhost:{{ pdns_api_port }}/api/v1/servers/localhost/zones/{{ zone }}"
         method: PATCH
@@ -310,7 +395,7 @@
           rrsets:
             - name: "{{ fqdn }}"
               type: A
-              ttl: 3600
+              ttl: "{{ dns_ttl }}"
               changetype: REPLACE
               records:
                 - content: "{{ ansible_default_ipv4.address }}"
@@ -331,3 +416,90 @@
       service:
         name: pdns
         state: restarted
+
+
+- name: Register hosts in dns
+
+  hosts: all:!localhost
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "{{ variables }}"
+      tags:
+        - always
+
+    - name: query zone records
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ zone_name }}"
+        method: GET
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+      vars:
+        zone_name: "{{ item }}."
+      with_items:
+        - "{{ dns.zones.values() | map(attribute='name') | list }}"
+      register: pdns_records_query
+      tags:
+        - records
+
+    - name: build list of existing records
+      set_fact:
+        pdns_records: "{{ pdns_records_query.results | map(attribute='json') | map(attribute='rrsets') | flatten | map(attribute='name') | list }}"
+      tags:
+        - records
+
+    - name: create host record
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ zone_name }}"
+        method: POST
+        body_format: json
+        body:
+          rrsets:
+            - "{{ record_rrset }}"
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        zone_name: "{{ ansible_fqdn | split_with('.') | tail | join('.') }}."
+        record_name: "{{ ansible_fqdn }}."
+        record_rrset:
+          name: "{{ record_name }}"
+          type: A
+          ttl: "{{ dns_ttl }}"
+          changetype: 'REPLACE'
+          records:
+            - content: "{{ ansible_default_ipv4.address }}"
+              disabled: false
+              set-ptr: false
+      when: not record_name in pdns_records
+      tags:
+        - records
+
+    - name: update host record
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ zone_name }}"
+        method: PATCH
+        body_format: json
+        body:
+          rrsets:
+            - "{{ record_rrset }}"
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        zone_name: "{{ ansible_fqdn | split_with('.') | tail | join('.') }}."
+        record_name: "{{ ansible_fqdn }}."
+        record_rrset:
+          name: "{{ record_name }}"
+          type: A
+          ttl: "{{ dns_ttl }}"
+          changetype: 'REPLACE'
+          records:
+            - content: "{{ ansible_default_ipv4.address }}"
+              disabled: false
+              set-ptr: false
+      when: record_name in pdns_records
+      tags:
+        - records

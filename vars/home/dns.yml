@@ -3,6 +3,8 @@ pdns_url: "https://pdns.{{ base_domain }}"
 pdns_api_proto: http
 pdns_api_port: 8081
 
+dns_ttl: 3600
+
 dns:
   search_domains:
     - "{{ base_domain }}"
@@ -11,14 +13,14 @@ dns:
       name: "{{ base_domain }}"
       hostmaster: "master@{{ base_domain }}"
       ns: "{{ groups['recursors'] }}"
-      records: "{{ nets.home.reservations.values() + (hostvars.values() | select('test_property', '.*.' + base_domain, 'inventory_hostname') | map('alias_keys', {'inventory_hostname': 'host', 'ansible_host': 'ip-address' }) | list) }}"
+      records: "{{ nets.home.reservations.values() | map('merge_dicts', {'type': 'A'}) | list }}"
       cnames:
         - ["{{ base_domain }}", rpia.home.nephelai.io]
     emoh:
       name: "{{ nets.home.zone }}"
       hostmaster: master@home.nephelai.io
       ns: "{{ groups['recursors'] }}"
-      records: "{{ (nets.home.reservations.values() + (hostvars.values() | select('test_network', nets.home.network + '/' + nets.home.netmask) | map('alias_keys', {'inventory_hostname': 'host', 'ansible_host': 'ip-address' }) | list)) | map('reverse_record') | list }}"
+      records: "{{ nets.home.reservations.values() | map('reverse_record') | list }}"
       cnames: []
 
 pdns:
