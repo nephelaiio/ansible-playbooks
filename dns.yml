@@ -268,23 +268,26 @@
         headers:
           X-API-Key: "{{ pdns_api_key }}"
       register: pdns_zones_query
+      tags:
+        - always
 
     - name: build list of existing zones
       set_fact:
         pdns_zones: "{{ pdns_zones_query.json | map(attribute='id') | list }}"
+      tags:
+        - always
 
-    - name: update zones
+    - name: create zones
       uri:
         url: "{{ pdns_api_proto }}://localhost:{{ pdns_api_port }}/api/v1/servers/localhost/zones"
         method: POST
         body_format: json
         body:
-          kind: Native
+          type: Zone
+          kind: Master
           name: "{{ zone_name }}"
-          masters: []
-          nameservers: "{{ zone_ns }}"
-          rrsets:
-            - "{{ soa_record }}"
+          soa_edit: 'INCEPTION-INCREMENT'
+          nameservers: "{{ zone_ns | map('map_format', '%s.') | list }}"
         headers:
           X-API-Key: "{{ pdns_api_key }}"
         status_code: 201
@@ -292,14 +295,10 @@
         zone: "{{ dns.zones[item] }}"
         zone_name: "{{ zone.name }}."
         zone_ns: "{{ zone.ns }}"
-        soa_record:
-          content: "{{ ansible_fqdn }} dnsmaster.{{ zone_name }} 0 {{ dns_ttl }} 600 10800 600"
-          disabled: false
-          name: "{{ zone_name }}"
-          type: SOA
-          ttl: "{{ dns_ttl }}"
       with_items: "{{ dns.zones.keys() }}"
       when: zone_name not in pdns_zones
+      tags:
+        - zones
 
     - name: query zone records
       uri:
@@ -317,7 +316,14 @@
 
     - name: build list of existing records
       set_fact:
-        pdns_records: "{{ pdns_records_query.results | map(attribute='json') | map(attribute='rrsets') | flatten | map(attribute='name') | list }}"
+        pdns_records: "{{ pdns_records_query.results | map(attribute='json') | map(attribute='rrsets') | flatten | json_query(query) | list }}"
+      vars:
+        query: "[?type!='SOA'].name"
+      tags:
+        - records
+
+    - debug:
+        msg: "{{ dns.zones.values() }}"
       tags:
         - records
 
@@ -327,6 +333,7 @@
         method: PUT
         body_format: json
         body:
+          kind: Master
           rrsets:
             - "{{ record_rrset }}"
         headers:
@@ -337,19 +344,22 @@
         zone_name: "{{ zone.name }}."
         record: "{{ item.1 }}"
         record_name: "{{ record.host }}."
+        record_type: "{{ record.type }}"
         record_rrset:
           name: "{{ record_name }}"
-          type: "{{ record.type }}"
+          type: "{{ record_type }}"
           ttl: "{{ dns_ttl }}"
           changetype: 'REPLACE'
           records:
-            - content: "{{ record['ip-address'] + ('.' if record.type == 'PTR' else '') }}"
+            - content: "{{ record['ip-address'] }}"
               disabled: false
-              set-ptr: false
+              set-ptr: true
       with_subelements:
         - "{{ dns.zones.values() }}"
         - records
-      when: not record_name in pdns_records
+      when:
+        - not record_name in pdns_records
+        - record_type != 'PTR'
       tags:
         - records
 
@@ -369,19 +379,22 @@
         zone_name: "{{ zone.name }}."
         record: "{{ item.1 }}"
         record_name: "{{ record.host }}."
+        record_type: "{{ record.type }}"
         record_rrset:
           name: "{{ record_name }}"
-          type: "{{ record.type }}"
+          type: "{{ record_type }}"
           ttl: "{{ dns_ttl }}"
           changetype: 'REPLACE'
           records:
-            - content: "{{ record['ip-address'] + ('.' if record.type == 'PTR' else '') }}"
+            - content: "{{ record['ip-address'] }}"
               disabled: false
-              set-ptr: false
+              set-ptr: true
       with_subelements:
         - "{{ dns.zones.values() }}"
         - records
-      when: record_name in pdns_records
+      when:
+        - not record_name in pdns_records
+        - record_type != 'PTR'
       tags:
         - records
 
@@ -446,7 +459,9 @@
 
     - name: build list of existing records
       set_fact:
-        pdns_records: "{{ pdns_records_query.results | map(attribute='json') | map(attribute='rrsets') | flatten | map(attribute='name') | list }}"
+        pdns_records: "{{ pdns_records_query.results | map(attribute='json') | map(attribute='rrsets') | flatten | json_query(query) | list }}"
+      vars:
+        query: "[?type!='SOA'].name"
       tags:
         - records
 
@@ -472,7 +487,7 @@
           records:
             - content: "{{ ansible_default_ipv4.address }}"
               disabled: false
-              set-ptr: false
+              set-ptr: true
       when: not record_name in pdns_records
       tags:
         - records
@@ -499,7 +514,7 @@
           records:
             - content: "{{ ansible_default_ipv4.address }}"
               disabled: false
-              set-ptr: false
+              set-ptr: true
       when: record_name in pdns_records
       tags:
         - records

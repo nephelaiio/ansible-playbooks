@@ -4,6 +4,7 @@ pdns_api_proto: http
 pdns_api_port: 8081
 
 dns_ttl: 3600
+dns_master: domainmaster.nephelai.io
 
 dns:
   search_domains:
@@ -39,6 +40,9 @@ pdns:
     slave: no
     local-address: "0.0.0.0:53"
     security-poll-suffix: ''
+    default-soa-name: "{{ ansible_fqdn }}"
+    default-soa-mail: "{{ dns_master }}"
+    default-ttl: "{{ dns_ttl }}"
   backends:
     gmysql:
       user: "{{ pdns_mysql_user }}"
