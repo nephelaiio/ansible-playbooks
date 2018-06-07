@@ -46,3 +46,7 @@ $config['graylog']['port']     = '{{ librenms_config_graylog_port }}';
 $config['graylog']['username'] = '{{ librenms_config_graylog_user }}';
 $config['graylog']['password'] = '{{ librenms_config_graylog_pass }}';
 $config['graylog']['version']  = '{{ librenms_config_graylog_version }}';
+
+## Service monitoring configuration (https://docs.librenms.org/#Extensions/Services/)
+$config['show_services'] = 1;
+$config['nagios_plugins'] = "/usr/lib/nagios/plugins";
