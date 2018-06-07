@@ -107,6 +107,7 @@
           - snmp
           - snmpd
           - whois
+          - monitoring-plugins
         state: latest
 
     - name: install php composer
@@ -473,11 +474,6 @@
         headers:
           X-Auth-Token: "{{ librenms_api_token }}"
         return_content: yes
-
-    - name: restart snmpd
-      service:
-        name: snmpd
-        state: restarted
 
   handlers:
 
