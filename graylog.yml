@@ -240,12 +240,24 @@
         dir: "{{ variables }}"
 
     - name: configure rsyslog
+      copy:
+        dest: /etc/rsyslog.d/10-fqdn.conf
+        content: "$PreserveFQDN on"
+      notify: restart rsyslog
+
+    - name: configure rsyslog
       template:
         src: graylog/rsyslog.conf.j2
         dest: /etc/rsyslog.d/80-graylog.conf
       vars:
         graylog_host: "{{ graylog_hostname }}"
         graylog_port: "{{ graylog_syslog_port }}"
+      notify: restart rsyslog
+
+    - name: configure rsyslog
+      file:
+        path: /etc/rsyslog.d/70-papertrail.conf
+        state: absent
       notify: restart rsyslog
 
   handlers:
