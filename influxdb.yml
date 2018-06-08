@@ -8,8 +8,20 @@
   vars:
 
     influxdb_version: 1.5
-    influxdb_root: /opt/influxdb
-    influxdb_data: "{{ influxdb_root }}/data"
+    influxdb_root: /var/lib/influxdb
+    influxdb_data_dir: "{{ influxdb_root }}/data"
+    influxdb_meta_dir: "{{ influxdb_root }}/meta"
+    influxdb_wal_dir: "{{ influxdb_root }}/wal-dir"
+    influxdb_api_port: 8086
+    influxdb_udp_port: 8089
+    influxdb_db_name: librenms
+    influxdb_auth_enabled: 'true'
+    influxdb_admin_user_name: admin
+    influxdb_admin_user_pass: CanadaInboxTime@89
+    influxdb_read_user_name: reader
+    influxdb_read_user_pass: YanisProsePhoto09
+    influxdb_write_user_name: writer
+    influxdb_write_user_pass: TapestryPolisStore13
 
   roles:
 
@@ -21,24 +33,82 @@
       include_vars:
         dir: "{{ variables }}"
 
-    - name: install docker
-      include_role:
-        name: nephelaiio.docker
-      vars:
-        pip_packages: pip
-        pip_packages_helpers:
-          - python-setuptools
-          - ca-certificates
+    - name: import influxdb gpg signing key
+      apt_key:
+        url: https://repos.influxdata.com/influxdb.key
 
-    - name: pull influxdb docker image
-      docker_image:
+    - name: add influxdb repository
+      apt_repository:
+        repo: "deb https://repos.influxdata.com/ubuntu {{ ansible_distribution_release }} stable"
+        filename: influxdb
+
+    - name: install influxdb pip
+      pip:
         name: influxdb
-        tag: "{{ influxdb_version }}"
+        state: latest
 
-    - name: create influxdb directories
-      file:
-        state: directory
-        path: "{{ item }}"
+    - name: install influxdb
+      package:
+        name: influxdb
+        state: present
+      notify: create influxdb admin user
+
+    - name: manage influxdb configuration
+      template:
+        src: influxdb/influxdb.conf.j2 
+        dest: /etc/influxdb/influxdb.conf
+      vars:
+        meta_dir: "{{ influxdb_meta_dir }}"
+        data_dir: "{{ influxdb_data_dir }}"
+        wal_dir: "{{ influxdb_wal_dir }}"
+        api_port: "{{ influxdb_api_port }}"
+        udp_port: "{{ influxdb_udp_port }}"
+      notify: restart influxdb
+
+    - meta: flush_handlers
+
+    - name: destroy influxdb users
+      influxdb_user:
+        user_name: "{{ item }}"
+        state: absent
+        username: "{{ influxdb_admin_user_name }}"
+        password: "{{ influxdb_admin_user_pass }}"
       with_items:
-        - "{{ influxdb_root }}"
-        - "{{ influxdb_data }}"
+        - "{{ influxdb_read_user_name }}"
+        - "{{ influxdb_write_user_name }}"
+      changed_when: false
+
+    - name: create influxdb users
+      influxdb_user:
+        user_name: "{{ item.user_name }}"
+        user_password: "{{ item.user_pass }}"
+        username: "{{ influxdb_admin_user_name }}"
+        password: "{{ influxdb_admin_user_pass }}"
+      with_items:
+        - user_name: "{{ influxdb_read_user_name }}"
+          user_pass: "{{ influxdb_read_user_pass }}"
+        - user_name: "{{ influxdb_read_user_name }}"
+          user_pass: "{{ influxdb_read_user_pass }}"
+      changed_when: false
+
+    - name: configure influxdb read permissions
+      command: influx -execute "GRANT READ ON '{{ influxdb_db_name }}' TO '{{ influxdb_read_user_name }}' -u '{{ influxdb_admin_user_name }}' -p '{{ influxdb_admin_db_pass }}"
+
+    - name: configure influxdb write permissions
+      command: influx -execute "GRANT ALL ON '{{ influxdb_db_name }}' TO '{{ influxdb_write_user_name }}' -u '{{ influxdb_admin_user_name }}' -p '{{ influxdb_admin_db_pass }}"
+
+    - name: manage influxdb service
+      service:
+        name: influxdb
+        state: started
+        enabled: yes
+
+  handlers:
+
+    - name: restart influxdb
+      service:
+        name: influxdb
+        state: restarted
+
+    - name: create influxdb admin user
+      command: influx -execute "CREATE USER {{ influxdb_admin_user_name }} WITH PASSWORD '{{ influxdb_admin_user_pass }}' WITH ALL PRIVILEGES"
