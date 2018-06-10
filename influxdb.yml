@@ -55,7 +55,7 @@
 
     - name: manage influxdb configuration
       template:
-        src: influxdb/influxdb.conf.j2 
+        src: influxdb/influxdb.conf.j2
         dest: /etc/influxdb/influxdb.conf
       vars:
         meta_dir: "{{ influxdb_meta_dir }}"
@@ -92,10 +92,10 @@
       changed_when: false
 
     - name: configure influxdb read permissions
-      command: influx -execute "GRANT READ ON '{{ influxdb_db_name }}' TO '{{ influxdb_read_user_name }}' -u '{{ influxdb_admin_user_name }}' -p '{{ influxdb_admin_db_pass }}"
+      command: influx -execute "GRANT READ ON '{{ influxdb_db_name }}' TO '{{ influxdb_read_user_name }}'" -u "{{ influxdb_admin_user_name }}" -p "{{ influxdb_admin_user_pass }}"
 
     - name: configure influxdb write permissions
-      command: influx -execute "GRANT ALL ON '{{ influxdb_db_name }}' TO '{{ influxdb_write_user_name }}' -u '{{ influxdb_admin_user_name }}' -p '{{ influxdb_admin_db_pass }}"
+      command: influx -execute "GRANT ALL ON '{{ influxdb_db_name }}' TO '{{ influxdb_write_user_name }}'" -u "{{ influxdb_admin_user_name }}" -p "{{ influxdb_admin_user_pass }}"
 
     - name: manage influxdb service
       service:
