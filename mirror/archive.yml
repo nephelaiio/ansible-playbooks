@@ -10,6 +10,7 @@
   vars:
 
     archive_mirror_root: "{{ mirror_root }}/{{ archive_mirror_dir }}"
+    kvm_mirror_root: "{{ mirror_root }}/{{ kvm_mirror_dir }}"
     archive_mirror_targets:
       - url: http://releases.ubuntu.com/16.04/ubuntu-16.04.4-server-amd64.iso
         checksum: sha256:0a03608988cfd2e50567990dc8be96fb3c501e198e2e6efcb846d89efc7b89f2
@@ -69,6 +70,7 @@
         - "{{ mirror_root }}"
         - "{{ web_root }}"
         - "{{ archive_mirror_root }}"
+        - "{{ kvm_mirror_root }}"
 
     - name: download isos
       get_url:
@@ -83,10 +85,24 @@
         dest: "{{ archive_mirror_root }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
         checksum: "{{ raspbian_release.checksum }}"
 
+    - name: download kvm images
+      get_url:
+        url: "{{ raspbian_release.url }}"
+        dest: "{{ kvm_mirror_root }}/{{ item.url | urlsplit('path') | basename }}"
+        checksum: "{{ raspbian_release.checksum }}"
+      with_items: "{{ kvm_images.values() }}"
+
     - name: create archive mirror link
       file:
         path: "{{ web_root }}/{{ archive_mirror_dir }}"
         src: "{{ archive_mirror_root }}"
+        state: link
+        force: yes
+
+    - name: create archive mirror link
+      file:
+        path: "{{ web_root }}/{{ kvm_mirror_dir }}"
+        src: "{{ kvm_mirror_root }}"
         state: link
         force: yes
 
