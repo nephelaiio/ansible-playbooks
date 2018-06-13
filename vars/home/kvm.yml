@@ -1,19 +1,16 @@
 ---
 kvm_nolog: no
 kvm_images:
-  stretch:
-    src: http://cdimage.debian.org/cdimage/openstack/current-9/debian-9-openstack-amd64.qcow2
-    url: "{{ archive_url }}/kvm/debian-9-openstack-amd64-disk1.qcow2"
-    pool: default
-    format: qcow2
   xenial:
     src: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
-    url: "{{ archive_url }}/kvm/xenial-server-cloudimg-amd64-disk1.img"
+    checksum: sha256:8831c16f1739296f92e5e5a880d35ccc1f32be5d1cd61e52f73047a88220133d
+    url: "{{ archive_url }}/{{ kvm_mirror_dir }}/xenial-server-cloudimg-amd64-disk1.img"
     pool: default
     format: qcow2
-  centos:
-    src: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2.xz
-    url: "{{ archive_url }}/kvm/CentOS-7-x86_64-GenericCloud.qcow2.xz"
+  bionic:
+    src: https://cloud-images.ubuntu.com/bionic/current/bionic-server-cloudimg-amd64.img
+    checksum: sha256:7c664f81a6bd825f529e58697d45cc5023837280b3dc953e8c5e954e1c62aab2
+    url: "{{ archive_url }}/{{ kvm_mirror_dir }}/bionic-server-cloudimg-amd64.img"
     pool: default
     format: qcow2
 
