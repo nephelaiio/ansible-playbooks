@@ -23,6 +23,12 @@ dns:
       ns: "{{ groups['recursors'] }}"
       records: "{{ nets.home.reservations.values() | map('reverse_record') | list }}"
       cnames: []
+    mvk:
+      name: "{{ nets.kvm.zone }}"
+      hostmaster: master@home.nephelai.io
+      ns: "{{ groups['recursors'] }}"
+      records: "{{ nets.kvm.reservations.values() | map('reverse_record') | list }}"
+      cnames: []
 
 pdns:
   config:
@@ -40,7 +46,7 @@ pdns:
     slave: no
     local-address: "0.0.0.0:53"
     security-poll-suffix: ''
-    default-soa-name: "{{ ansible_fqdn }}"
+    default-soa-name: "{{ groups['pdns'] | first | map(attribute='inventory_hostname') }}"
     default-soa-mail: "{{ dns_master }}"
     default-ttl: "{{ dns_ttl }}"
   backends:
