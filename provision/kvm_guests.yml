@@ -5,9 +5,15 @@
 
   become: yes
 
+  gather_facts: no
+
   vars:
 
     ansible_kvm_user: teddyphreak
+
+  roles:
+
+    - nephelaiio.plugins
 
   tasks:
 
@@ -26,27 +32,19 @@
 
     - name: create image target directory
       file:
-        path: files/kvm
+        path: /tmp/kvm
         state: directory
-
-    - name: define groups
-      set_fact:
-        loop_groups: "{{ loop_groups | default([]) + [ {'hostnames': groups[groupitem] } ] }}"
-      loop_control:
-        loop_var: groupitem
-      with_items: "{{ kvm_provisioning_groups }}"
-
+      delegate_to: localhost
+      run_once: yes
 
     - name: manage vms
-      include_tasks: kvm/vm_manage.yml
+      import_tasks: kvm/vm_manage.yml
       vars:
-        name: "{{ item.1 }}"
+        name: "{{ inventory_hostname }}"
         ansible_guest_user: "{{ users[ansible_kvm_user] }}"
         ansible_guest_username: "{{ ansible_guest_user.username }}"
         ansible_guest_password: "{{ ansible_guest_user.password }}"
         ansible_guest_ssh_key: "{{ ansible_guest_user.pubkey }}"
         img_dir: "{{ playbook_dir }}/files/kvm"
-      with_subelements:
-        - "{{ loop_groups }}"
-        - hostnames
+      delegate_to: "{{ groups['kvm'] | first }}"
       no_log: "{{ kvm_nolog }}"

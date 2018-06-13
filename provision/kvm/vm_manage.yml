@@ -1,4 +1,13 @@
 ---
+- name: register image target directory
+  set_fact:
+    img_dir: /tmp/kvm_images
+
+- name: create image target directory
+  file:
+    path: "{{ img_dir }}"
+    state: directory
+
 - block:
 
     - name: build vm {{ name }} profile definitions
@@ -10,7 +19,7 @@
             host: "{{ hostvars[name]['inventory_hostname'] }}"
             ip-address: "{{ hostvars[name]['ansible_host'] }}"
             hw-address: "{{ hostvars[name]['hw_address'] }}"
-            nameservers: "{{ nets[hostvars[name]['network'] | default('kvm')].ns }}"
+            nameservers: "{{ nets.kvm.ns }}"
         inventory_profile: "{{ hostvars[name] }}"
 
     - name: build vm {{ name }} definition
@@ -111,7 +120,7 @@
 
         - name: create vm {{ name }} cloud image user data
           template:
-            src: kvm/user-data.yml.j2
+            src: user-data.yml.j2
             dest: "{{ tmpdir.path }}/user-data"
           vars:
             ssh_user: "{{ ansible_guest_username }}"
@@ -126,7 +135,7 @@
 
         - name: create vm {{ name }} cloud image network config
           template:
-            src: kvm/network-config.yml.j2
+            src: network-config.yml.j2
             dest: "{{ tmpdir.path }}/network-config"
           vars:
             iface: "{{ vm.nic }}"
@@ -135,7 +144,7 @@
 
         - name: create vm {{ name }} cloud image meta data
           template:
-            src: kvm/meta-data.yml.j2
+            src: meta-data.yml.j2
             dest: "{{ tmpdir.path }}/meta-data"
           vars:
             instance_id: "{{ vm.name }}"
@@ -156,7 +165,7 @@
 
         - name: create vm {{ name }} template
           template:
-            src: kvm/vm.xml.j2
+            src: vm.xml.j2
             dest: "{{ domain_def }}"
           vars:
             disk: "{{ vm_disk }}"
@@ -196,6 +205,5 @@
         - vm.state in ['present', 'recreate', 'running']
 
   when:
-    - "not name in groups['no_kvm_guests']"
     - "'inventory_hostname' in hostvars[name]"
     - "'ansible_host' in hostvars[name]"
