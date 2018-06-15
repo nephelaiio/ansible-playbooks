@@ -55,6 +55,25 @@
       include_role:
         name: graylog2.graylog
 
+    - name: determine password shasum
+      shell: "echo -n {{ graylog_admin_pass }} | shasum -a 256 | cut -d ' ' -f 1"
+      register: password_hash
+      no_log: yes
+
+    - name: configure graylog
+      lineinfile:
+        path: /etc/graylog/server/server.conf
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      with_items:
+        - regexp: "^root_username +="
+          line: "root_username = {{ graylog_admin_user }}"
+        - regexp: "^root_password_sha2 +="
+          line: "root_password_sha2 = {{ password_hash.stdout }}"
+      notify: restart graylog
+
+    - meta: flush_handlers
+
     - name: install package requirements
       package:
         name:
@@ -219,6 +238,13 @@
         graylog_url_host: "{{ graylog_url | urlsplit('hostname') }}."
         graylog_url_zone: "{{ graylog_url_host | split_with('.') | tail | join('.') }}"
       register: pdns_zones_query
+
+  handlers:
+
+    - name: restart graylog
+      service:
+        name: graylog-server
+        state: restarted
 
 
 - name: Install and configure graylog syslog forwarding
