@@ -366,9 +366,16 @@
         librenms_config_url: "{{ librenms_url }}"
         librenms_config_graylog_url: "{{ graylog_url }}"
         librenms_config_graylog_port: 443
-        librenms_config_graylog_user: admin
-        librenms_config_graylog_pass: admin
+        librenms_config_graylog_user: "{{ graylog_admin_user }}"
+        librenms_config_graylog_pass: "{{ graylog_admin_pass }}"
         librenms_config_graylog_version: 2.4
+        librenms_config_influxdb_proto:
+        librenms_config_influxdb_host: "127.0.0.1"
+        librenms_config_influxdb_port: "{{ influxdb_api_port }}"
+        librenms_config_influxdb_db_name: "{{ influxdb_db_name }}"
+        librenms_config_influxdb_user_name: "{{ influxdb_write_user_name }}"
+        librenms_config_influxdb_user_pass: "{{ influxdb_write_user_pass }}"
+        librenms_config_influxdb_proto: "{{ influxdb_api_proto }}"
       notify:
         - restart fpm
 
