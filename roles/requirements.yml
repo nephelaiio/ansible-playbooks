@@ -40,7 +40,7 @@
 - src: nephelaiio.docker
   version: 1.0.3
 - src: nephelaiio.bind
-  version: 1.0.5
+  version: 2.0.0
 - src: nephelaiio.unifi-controller
   version: 2.0.0
 - src: nephelaiio.nfs
