@@ -358,6 +358,7 @@
       template:
         src: librenms/config.php.j2
         dest: "{{ librenms_root }}/config.php"
+        mode: 0750
       vars:
         librenms_config_db_name: "{{ librenms_db_name }}"
         librenms_config_db_user: "{{ librenms_db_user }}"
