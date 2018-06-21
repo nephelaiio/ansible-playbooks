@@ -98,6 +98,20 @@
         state: started
         enabled: yes
 
+    - name: configure grafana repository
+      apt_repository:
+        repo: deb https://packagecloud.io/grafana/stable/debian/ stretch main
+        filename: grafana
+
+    - name: configure grafana repository key
+      apt_key:
+        url: https://packagecloud.io/gpg.key
+
+    - name: install grafana
+      apt:
+        update_cache: yes
+        name: grafana
+
   handlers:
 
     - name: restart influxdb
