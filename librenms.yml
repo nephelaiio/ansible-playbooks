@@ -369,7 +369,6 @@
         librenms_config_graylog_user: "{{ graylog_admin_user }}"
         librenms_config_graylog_pass: "{{ graylog_admin_pass }}"
         librenms_config_graylog_version: 2.4
-        librenms_config_influxdb_proto:
         librenms_config_influxdb_host: "127.0.0.1"
         librenms_config_influxdb_port: "{{ influxdb_api_port }}"
         librenms_config_influxdb_db_name: "{{ influxdb_db_name }}"
