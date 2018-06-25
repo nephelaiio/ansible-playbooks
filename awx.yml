@@ -178,7 +178,6 @@
 
   vars:
 
-    awx_version: 1.0.5
     awx_cli_conf: /root/.tower_cli.cfg
     awx_pg_hostname: "{{ ansible_host }}"
     awx_pg_db: "awx_{{ awx_version | regex_replace('\\.', '') }}"

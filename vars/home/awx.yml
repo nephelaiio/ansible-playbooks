@@ -1,4 +1,6 @@
 ---
+awx_version: 1.0.5
+
 awx_organizations:
   - name: Default
     state: absent
