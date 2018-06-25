@@ -18,6 +18,7 @@
     letsencrypt_domain_crtfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.crt"
     letsencrypt_domain_chainfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.chain.crt"
     influxdb_root: /var/lib/influxdb
+    influxdb_db_name: librenms
     influxdb_data_dir: "{{ influxdb_root }}/data"
     influxdb_meta_dir: "{{ influxdb_root }}/meta"
     influxdb_wal_dir: "{{ influxdb_root }}/wal-dir"
