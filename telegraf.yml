@@ -1,0 +1,55 @@
+---
+- name: Install Telegraf
+
+  hosts: influxdb
+
+  become: yes
+
+  vars:
+    
+    influxdb_db_name: telegraf
+    telegraf_agent_output:
+      - 
+
+  roles:
+
+    - nephelaiio.plugins
+    - dj-wasabi.telegraf
+
+  pre_tasks: 
+
+    - name: include private variables
+      include_vars:
+        dir: "{{ variables }}"
+
+    - name: gather facts
+      setup:
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['influxdb'] }}"
+
+    - name: create influxdb database
+      influxdb_database:
+        database_name: "{{ influxdb_db_name }}"
+        username: "{{ influxdb_admin_user_name }}"
+        password: "{{ influxdb_admin_user_pass }}"
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['influxdb'] }}"
+
+    - name: configure influxdb read permissions
+      command: influx -execute "GRANT READ ON {{ influxdb_db_name }} TO {{ influxdb_read_user_name }}" -username "{{ influxdb_admin_user_name }}" -password "{{ influxdb_admin_user_pass }}"
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['influxdb'] }}"
+
+    - name: configure influxdb write permissions
+      command: influx -execute "GRANT ALL ON {{ influxdb_db_name }} TO {{ influxdb_write_user_name }}" -username "{{ influxdb_admin_user_name }}" -password "{{ influxdb_admin_user_pass }}"
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['influxdb'] }}"
+
+  tasks:
+
+    - name: set influxdb output urls
+    
+
+  
+
+  
