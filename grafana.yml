@@ -1,3 +1,4 @@
+---
 - name: Install Grafana
 
   hosts: grafana
@@ -66,7 +67,7 @@
         value: "{{ conf_value }}"
       vars:
         conf_section: "{{ item.section }}"
-        conf_option: "{{ item.option }}" 
+        conf_option: "{{ item.option }}"
         conf_value: "{{ item.value }}"
       with_items: "{{ grafana_conf }}"
       notify: restart grafana
