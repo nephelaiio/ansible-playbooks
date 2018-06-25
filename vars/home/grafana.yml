@@ -1,0 +1,9 @@
+---
+grafana_url: "https://grafana.{{ base_domain }}"
+grafana_hostname: "{{ grafana_url | urlsplit('hostname') }}"
+grafana_bind_address: 127.0.0.1
+grafana_backend_proto: http
+grafana_backend_port: 3000
+grafana_influxdb_db_name: librenms
+grafana_influxdb_user_name: "{{ influxdb_read_user_name }}"
+grafana_influxdb_user_pass: "{{ influxdb_read_user_pass }}"

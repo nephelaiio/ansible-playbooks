@@ -7,6 +7,16 @@
 
   vars:
 
+    letsencrypt_basedir: /etc/letsencrypt
+    letsencrypt_certdir: "{{ letsencrypt_basedir }}/live"
+    letsencrypt_keydir: "{{ letsencrypt_basedir }}/keys"
+    letsencrypt_account_keyfile: "{{ letsencrypt_keydir }}/id_rsa.letsencrypt"
+    letsencrypt_domain: "{{ grafana_hostname }}"
+    letsencrypt_zone: "{{ grafana_hostname | split_with('.') | tail | join('.') }}"
+    letsencrypt_domain_keyfile: "{{ letsencrypt_keydir }}/id_rsa.{{ letsencrypt_domain }}"
+    letsencrypt_domain_csrfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.csr"
+    letsencrypt_domain_crtfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.crt"
+    letsencrypt_domain_chainfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.chain.crt"
     influxdb_root: /var/lib/influxdb
     influxdb_data_dir: "{{ influxdb_root }}/data"
     influxdb_meta_dir: "{{ influxdb_root }}/meta"
@@ -97,20 +107,6 @@
         name: influxdb
         state: started
         enabled: yes
-
-    - name: configure grafana repository
-      apt_repository:
-        repo: deb https://packagecloud.io/grafana/stable/debian/ stretch main
-        filename: grafana
-
-    - name: configure grafana repository key
-      apt_key:
-        url: https://packagecloud.io/gpg.key
-
-    - name: install grafana
-      apt:
-        update_cache: yes
-        name: grafana
 
   handlers:
 
