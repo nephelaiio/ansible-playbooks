@@ -379,6 +379,33 @@
       notify:
         - restart fpm
 
+  post_tasks:
+
+    - name: create influxdb database
+      influxdb_database:
+        database_name: "{{ librenms_influxdb_db_name }}"
+        username: "{{ influxdb_admin_user_name }}"
+        password: "{{ influxdb_admin_user_pass }}"
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['influxdb'] }}"
+      run_once: yes
+
+    - name: create influxdb users
+      influxdb_user:
+        user_name: "{{ librenms_influxdb_user_name }}"
+        user_password: "{{ librenms_influxdb_user_pass }}"
+        username: "{{ influxdb_admin_user_name }}"
+        password: "{{ influxdb_admin_user_pass }}"
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['influxdb'] }}"
+      run_once: yes
+
+    - name: configure influxdb permissions
+      command: influx -execute "GRANT ALL ON {{ librenms_influxdb_db_name }} TO {{ librenms_influxdb_user_name }}" -username "{{ influxdb_admin_user_name }}" -password "{{ influxdb_admin_user_pass }}"
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['influxdb'] }}"
+      run_once: yes
+
   handlers:
 
     - name: restart mysql
@@ -481,33 +508,6 @@
         headers:
           X-Auth-Token: "{{ librenms_api_token }}"
         return_content: yes
-
-  post_tasks:
-
-    - name: create influxdb database
-      influxdb_database:
-        database_name: "{{ librenms_influxdb_db_name }}"
-        username: "{{ influxdb_admin_user_name }}"
-        password: "{{ influxdb_admin_user_pass }}"
-      delegate_to: "{{ item }}"
-      with_items: "{{ groups['influxdb'] }}"
-      run_once: yes
-
-    - name: create influxdb users
-      influxdb_user:
-        user_name: "{{ librenms_influxdb_user_name }}"
-        user_password: "{{ librenms_influxdb_user_pass }}"
-        username: "{{ influxdb_admin_user_name }}"
-        password: "{{ influxdb_admin_user_pass }}"
-      delegate_to: "{{ item }}"
-      with_items: "{{ groups['influxdb'] }}"
-      run_once: yes
-
-    - name: configure influxdb permissions
-      command: influx -execute "GRANT ALL ON {{ librenms_influxdb_db_name }} TO {{ librenms_influxdb_user_name }}" -username "{{ influxdb_admin_user_name }}" -password "{{ influxdb_admin_user_pass }}"
-      delegate_to: "{{ item }}"
-      with_items: "{{ groups['influxdb'] }}"
-      run_once: yes
 
   handlers:
 
