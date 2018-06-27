@@ -91,12 +91,6 @@
           user_pass: "{{ influxdb_write_user_pass }}"
       changed_when: false
 
-    - name: create influxdb database
-      influxdb_database:
-        database_name: "{{ influxdb_db_name }}"
-        username: "{{ influxdb_admin_user_name }}"
-        password: "{{ influxdb_admin_user_pass }}"
-
     - name: configure influxdb read permissions
       command: influx -execute "GRANT READ ON {{ influxdb_db_name }} TO {{ influxdb_read_user_name }}" -username "{{ influxdb_admin_user_name }}" -password "{{ influxdb_admin_user_pass }}"
 
