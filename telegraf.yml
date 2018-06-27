@@ -1,20 +1,29 @@
 ---
 - name: Install Telegraf
 
-  hosts: influxdb
+  hosts:
+    - nuc
+    - raspberry
 
   become: yes
 
   vars:
     
     influxdb_db_name: telegraf
+    telegraf_agent_hostname: "{{ ansible_fqdn }}"
+    telegraf_agent_logfile: /var/log/telegraf/agent.log
     telegraf_agent_output:
-      - 
+      - type: influxdb
+        config:
+          - "urls = [{{ groups['influxdb'] | map('extract', hostvars, ['ansible_fqdn']) | map('map_format', '\"' + (influxdb_api_proto | string) + '://%s:' + (influxdb_api_port | string ) + '\"') | join(',') }}]"
+          - 'database = "{{ telegraf_influxdb_db_name }}"'
+          - 'precision = "s"'
+          - 'username = "{{ telegraf_influxdb_write_user_name }}"'
+          - 'password = "{{ telegraf_influxdb_write_user_pass }}"'
 
   roles:
 
     - nephelaiio.plugins
-    - dj-wasabi.telegraf
 
   pre_tasks: 
 
@@ -29,27 +38,49 @@
 
     - name: create influxdb database
       influxdb_database:
-        database_name: "{{ influxdb_db_name }}"
+        database_name: "{{ telegraf_influxdb_db_name }}"
         username: "{{ influxdb_admin_user_name }}"
         password: "{{ influxdb_admin_user_pass }}"
       delegate_to: "{{ item }}"
       with_items: "{{ groups['influxdb'] }}"
+      run_once: yes
+
+    - name: create influxdb write user
+      influxdb_user:
+        user_name: "{{ telegraf_influxdb_write_user_name }}"
+        user_password: "{{ telegraf_influxdb_write_user_pass }}"
+        username: "{{ influxdb_admin_user_name }}"
+        password: "{{ influxdb_admin_user_pass }}"
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['influxdb'] }}"
+      run_once: yes
+
+    - name: create influxdb read user
+      influxdb_user:
+        user_name: "{{ telegraf_influxdb_read_user_name }}"
+        user_password: "{{ telegraf_influxdb_read_user_pass }}"
+        username: "{{ influxdb_admin_user_name }}"
+        password: "{{ influxdb_admin_user_pass }}"
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['influxdb'] }}"
+      run_once: yes
 
     - name: configure influxdb read permissions
-      command: influx -execute "GRANT READ ON {{ influxdb_db_name }} TO {{ influxdb_read_user_name }}" -username "{{ influxdb_admin_user_name }}" -password "{{ influxdb_admin_user_pass }}"
+      command: influx -execute "GRANT READ ON {{ telegraf_influxdb_db_name }} TO {{ telegraf_influxdb_read_user_name }}" -username "{{ influxdb_admin_user_name }}" -password "{{ influxdb_admin_user_pass }}"
       delegate_to: "{{ item }}"
       with_items: "{{ groups['influxdb'] }}"
+      run_once: yes
 
     - name: configure influxdb write permissions
-      command: influx -execute "GRANT ALL ON {{ influxdb_db_name }} TO {{ influxdb_write_user_name }}" -username "{{ influxdb_admin_user_name }}" -password "{{ influxdb_admin_user_pass }}"
+      command: influx -execute "GRANT ALL ON {{ telegraf_influxdb_db_name }} TO {{ telegraf_influxdb_write_user_name }}" -username "{{ influxdb_admin_user_name }}" -password "{{ influxdb_admin_user_pass }}"
       delegate_to: "{{ item }}"
       with_items: "{{ groups['influxdb'] }}"
+      run_once: yes
 
   tasks:
 
-    - name: set influxdb output urls
-    
+    - name: gather facts
+      setup:
 
-  
-
-  
+    - include_role:
+        name: dj-wasabi.telegraf
