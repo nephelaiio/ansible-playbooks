@@ -7,15 +7,24 @@
 
     - nephelaiio.plugins
 
+  gather_facts: no
+
   become: yes
 
+  serial: 1
+
   pre_tasks:
+
+    - name: gather group facts
+      setup:
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['samba'] }}"
 
     - name: configure host file entries
       lineinfile:
         path: /etc/hosts
-        regexp: "^{{ hostvars[item]['ansible_default_ipv4'] }}"
-        line: "{{ hostvars[item]['ansible_default_ipv4'] }} {{ hostvars[item]['ansible_fqdn'] }} {{ hostvars[item]['ansible_hostname'] }}"
+        regexp: "^{{ hostvars[item]['ansible_host'] }}"
+        line: "{{ hostvars[item]['ansible_host'] }} {{ hostvars[item]['inventory_hostname'] }} {{ hostvars[item]['inventory_hostname_short'] }}"
       with_items: "{{ groups['samba'] }}"
       when: item != inventory_hostname
 
@@ -36,6 +45,9 @@
           - libnss-winbind
           - dnsutils
         state: present
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+      failed_when: false
 
     - name: query domain state
       command: samba-tool domain level show
@@ -60,13 +72,7 @@
             - /etc/krb6.conf
 
         - name: initialize domain
-          command: "samba-tool domain provision --realm={{ samba_workgroup | upper }} --domain={{ samba_domain }} --adminpass=\"{{ samba_admin_pass }}\" --server-role=dc --dns-backend=SAMBA_INTERNAL --use-rfc2307"
-
-        - name: start samba
-          service:
-            name: samba-ad-dc
-            state: started
-            enabled: yes
+          command: "samba-tool domain provision --domain={{ samba_workgroup | upper }} --realm={{ samba_domain }} --adminpass=\"{{ samba_admin_pass }}\" --server-role=dc --dns-backend=SAMBA_INTERNAL --use-rfc2307"
 
       when:
         - domain_level.rc != 0
@@ -91,17 +97,11 @@
         - name: join domain
           command: "samba-tool domain join {{ samba_domain }} DC -U \"{{ samba_workgroup | upper }}\\administrator\" --password={{ samba_admin_pass }} --dns-backend=SAMBA_INTERNAL --option='idmap_ldb:use rfc2307 = yes'"
 
-        - name: start samba
-          service:
-            name: samba-ad-dc
-            state: started
-            enabled: yes
-
       when:
         - domain_level.rc != 0
         - groups['samba'][0] != inventory_hostname
 
-    - name: disable non essential daemons
+    - name: disable non essential services
       service:
         name: "{{ item }}"
         state: stopped
@@ -111,25 +111,37 @@
         - nmbd
         - winbind
 
-    - name: unmask samba ad daemon
+    - name: unmask samba service
       command: systemctl unmask samba-ad-dc
       args:
         warn: false
       changed_when: false
 
+    - name: manage configuration template
+      file:
+        src: samba/smb.conf.j2
+        dest: /etc/samba/smb.conf
+      vars:
+        fqdn: "{{ ansible_hostname }}"
+        workgroup: "{{ samba_workgroup }}"
+        realm: "{{ samba_domain }}"
+      register: restart samba service
+
     - name: manage configuration links
       file:
-        state: absent
-        path: "{{ item }}"
-        src: "/var/lib/samba/private/{{ item | basename }}"
-      with_items:
-        - /etc/samba/smb.conf
-        - /etc/krb5.conf
-      register: restart samba ad daemon
+        src: /etc/krb5.conf
+        dest: "/var/lib/samba/private/krb5.conf"
+      register: restart samba service
+
+    - name: manage samba service
+      service:
+        name: samba-ad-dc
+        state: started
+        enabled: yes
 
   handlers:
 
-    - name: restart samba ad daemon
+    - name: restart samba service
       service:
         name: samba-ad-dc
         state: restarted

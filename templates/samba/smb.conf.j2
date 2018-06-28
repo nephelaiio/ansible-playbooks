@@ -1,8 +1,8 @@
 # Global parameters
 [global]
-        netbios name = {{ ansible_hostname | upper }}
-        realm = {{ samba_domain | upper }}
-        workgroup = {{ samba_workgroup | upper }}
+        netbios name = {{ fqdn | upper }}
+        realm = {{ realm | upper }}
+        workgroup = {{ workgroup | upper }}
         server role = active directory domain controller
         idmap_ldb:use rfc2307 = yes
         template shell = /bin/bash
