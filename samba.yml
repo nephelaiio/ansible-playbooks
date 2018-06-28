@@ -9,6 +9,16 @@
 
   become: yes
 
+  pre_tasks:
+
+    - name: configure host file entries
+      lineinfile:
+        path: /etc/hosts
+        regexp: "^{{ hostvars[item]['ansible_default_ipv4'] }}"
+        line: "{{ hostvars[item]['ansible_default_ipv4'] }} {{ hostvars[item]['ansible_fqdn'] }} {{ hostvars[item]['ansible_hostname'] }}"
+      with_items: "{{ groups['samba'] }}"
+      when: item != inventory_hostname
+
   tasks:
 
     - name: include private variables
@@ -27,6 +37,70 @@
           - dnsutils
         state: present
 
+    - name: query domain state
+      command: samba-tool domain level show
+      register: domain_level
+      failed_when: false
+      changed_when: false
+
+    - block:
+
+        - name: stop samba
+          service:
+            name: samba-ad-dc
+            state: stopped
+
+        - name: remove stale configuration files
+          file:
+            state: absent
+            path: "{{ item }}"
+          with_items:
+            - /etc/samba/smb.conf
+            - /etc/krb5.conf
+            - /etc/krb6.conf
+
+        - name: initialize domain
+          command: "samba-tool domain provision --realm={{ samba_workgroup | upper }} --domain={{ samba_domain }} --adminpass=\"{{ samba_admin_pass }}\" --server-role=dc --dns-backend=SAMBA_INTERNAL --use-rfc2307"
+
+        - name: start samba
+          service:
+            name: samba-ad-dc
+            state: started
+            enabled: yes
+
+      when:
+        - domain_level.rc != 0
+        - groups['samba'][0] == inventory_hostname
+
+    - block:
+
+        - name: stop samba
+          service:
+            name: samba-ad-dc
+            state: stopped
+
+        - name: remove stale configuration files
+          file:
+            state: absent
+            path: "{{ item }}"
+          with_items:
+            - /etc/samba/smb.conf
+            - /etc/krb5.conf
+            - /etc/krb6.conf
+
+        - name: join domain
+          command: "samba-tool domain join {{ samba_domain }} DC -U \"{{ samba_workgroup | upper }}\\administrator\" --password={{ samba_admin_pass }} --dns-backend=SAMBA_INTERNAL --option='idmap_ldb:use rfc2307 = yes'"
+
+        - name: start samba
+          service:
+            name: samba-ad-dc
+            state: started
+            enabled: yes
+
+      when:
+        - domain_level.rc != 0
+        - groups['samba'][0] != inventory_hostname
+
     - name: disable non essential daemons
       service:
         name: "{{ item }}"
@@ -42,3 +116,20 @@
       args:
         warn: false
       changed_when: false
+
+    - name: manage configuration links
+      file:
+        state: absent
+        path: "{{ item }}"
+        src: "/var/lib/samba/private/{{ item | basename }}"
+      with_items:
+        - /etc/samba/smb.conf
+        - /etc/krb5.conf
+      register: restart samba ad daemon
+
+  handlers:
+
+    - name: restart samba ad daemon
+      service:
+        name: samba-ad-dc
+        state: restarted
