@@ -8,7 +8,7 @@
   become: yes
 
   vars:
-    
+
     influxdb_db_name: telegraf
     telegraf_agent_hostname: "{{ ansible_fqdn }}"
     telegraf_agent_logfile: /var/log/telegraf/agent.log
@@ -25,7 +25,7 @@
 
     - nephelaiio.plugins
 
-  pre_tasks: 
+  pre_tasks:
 
     - name: include private variables
       include_vars:
