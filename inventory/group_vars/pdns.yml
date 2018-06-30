@@ -1,6 +1,8 @@
 ---
 telegraf_plugins_extra:
   mysql:
-    plugin: mysql
     config:
-      - servers = ["root:{{ pdns_mysql_root_pass }}@tcp(localhost:3306)/?tls=false"]
+      - servers = ["{{ telegraf_user_name }}:{{ telegraf_user_pass }}@tcp(localhost:3306)/{{ pdns.backends.gmysql.dbname }}?tls=false"]
+  powerdns:
+    config:
+      - unix_sockets = ["/var/run/pdns.controlsocket"]

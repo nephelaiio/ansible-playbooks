@@ -86,6 +86,9 @@
           - name: '{{ pdns.backends.gmysql.user }}'
             password: '{{ pdns.backends.gmysql.password }}'
             priv: '{{ pdns.backends.gmysql.dbname }}.*:ALL'
+          - name: '{{ telegraf_user_name }}'
+            password: '{{ telegraf_user_pass }}'
+            priv: '{{ pdns.backends.gmysql.dbname }}.*:SELECT'
 
     - name: create temporary directory
       tempfile:
@@ -423,11 +426,29 @@
         record: "{{ letsencrypt_record }}"
         zone: "{{ letsencrypt_zone }}"
 
+    - name: query telegraf user
+      getent:
+        database: passwd
+      register: users_query
+
+    - name: manage telegraf user groups
+      user:
+        name: telegraf
+        append: yes
+        groups: pdns
+      when: telegraf_user_name in users_query.ansible_facts.getent_passwd
+      notify: restart telegraf
+
   handlers:
 
     - name: restart pdns
       service:
         name: pdns
+        state: restarted
+
+    - name: restart telegraf
+      service:
+        name: telegraf
         state: restarted
 
 
