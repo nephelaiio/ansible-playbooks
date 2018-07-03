@@ -108,6 +108,7 @@
           - snmpd
           - whois
           - monitoring-plugins
+          - rrdcached
         state: latest
 
     - name: install php composer
@@ -348,6 +349,14 @@
         remote_src: yes
       notify: restart cron
 
+    - name: modify librenms cronjob poll interval
+      lineinfile:
+        path: /etc/cron.d/librenms
+        regexp: '^\S+/\S+ (.*poller-wrapper\.py.*) \d+$'
+        line: '*/{{ librenms_poll_interval_min }} \1 {{ ansible_processor_vcpus }}'
+        backrefs: yes
+      notify: restart cron
+
     - name: manage librenms logrotate configuration
       copy:
         src: "{{ librenms_root }}/misc/librenms.logrotate"
@@ -376,8 +385,47 @@
         librenms_config_influxdb_user_name: "{{ librenms_influxdb_user_name }}"
         librenms_config_influxdb_user_pass: "{{ librenms_influxdb_user_pass }}"
         librenms_config_influxdb_proto: "{{ influxdb_api_proto }}"
-      notify:
-        - restart fpm
+      notify: restart fpm
+
+    - name: configure rrdcached
+      lineinfile:
+        path: /etc/default/rrdcached
+        regexp: '^{{ item.setting }}='
+        line: '{{ item.setting }}={{ item.value }}'
+      with_items:
+        - setting: DAEMON
+          value: /usr/bin/rrdcached
+        - setting: DAEMON_USER
+          value: librenms
+        - setting: DAEMON_GROUP
+          value: librenms
+        - setting: WRITE_THREADS
+          value: 4
+        - setting: WRITE_TIMEOUT
+          value: 1800
+        - setting: WRITE_JITTER
+          value: 1800
+        - setting: BASE_PATH
+          value: /opt/librenms/rrd/
+        - setting: JOURNAL_PATH
+          value: /var/lib/rrdcached/journal/
+        - setting: PIDFILE
+          value: /run/rrdcached.pid
+        - setting: SOCKFILE
+          value: /run/rrdcached.sock
+        - setting: SOCKGROUP
+          value: librenms
+        - setting: BASE_OPTIONS
+          value: '-B -F -R'
+      notify: restart rrdcached
+
+    - name: set rrdcached permissions
+      file:
+        state: directory
+        owner: "{{ librenms_user }}"
+        group: "{{ librenms_group }}"
+        path: /var/lib/rrdcached/journal
+      notify: restart rrdcached
 
   post_tasks:
 
@@ -426,6 +474,11 @@
     - name: restart cron
       service:
         name: cron
+        state: restarted
+
+    - name: restart rrdcached
+      service:
+        name: rrdcached
         state: restarted
 
 

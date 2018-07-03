@@ -61,3 +61,6 @@ $config['influxdb']['username'] = '{{ librenms_config_influxdb_user_name }}';
 $config['influxdb']['password'] = '{{ librenms_config_influxdb_user_pass }}';
 $config['influxdb']['verifySSL'] = false;
 
+## Set up RRDCached (https://github.com/librenms/librenms/blob/master/doc/Extensions/RRDCached.md)
+$config['rrdtool_version'] = '1.5.5';
+$config['rrdcached'] = "unix:/var/run/rrdcached.sock";
