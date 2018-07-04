@@ -72,5 +72,6 @@
 - src: https://github.com/elastic/ansible-elasticsearch.git
   name: elastic.elasticsearch
   version: 6.2.4
-- src: dj_wasabi.telegraf
+- src: https://github.com/dj-wasabi/ansible-telegraf
+  name: dj_wasabi.telegraf
   version: 0.9.0
