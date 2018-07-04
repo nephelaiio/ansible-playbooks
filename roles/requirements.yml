@@ -19,43 +19,58 @@
   version: 3.6.0
 - src: geerlingguy.composer
   version: 1.7.0
-- src: nephelaiio.plugins
+- src: https://github.com/nephelaiio/ansible-role-plugins.git
+  name: nephelaiio.plugins
   version: 1.0.7
-- src: nephelaiio.vim
+- src: https://github.com/nephelaiio/ansible-role-vim.git
+  name: nephelaiio.vim
   version: 2.0.1
-- src: nephelaiio.tree
+- src: https://github.com/nephelaiio/ansible-role-tree.git
+  name: nephelaiio.tree
   version: 1.0.2
-- src: nephelaiio.devtools
+- src: https://github.com/nephelaiio/ansible-role-devtools.git
+  name: nephelaiio.devtools
   version: 2.0.0
-- src: nephelaiio.rbenv
+- src: https://github.com/nephelaiio/ansible-role-rbenv.git
+  name: nephelaiio.rbenv
   version: 2.0.2
 - src: nephelaiio.pyenv
   version: 1.0.10
-- src: nephelaiio.tmux
+- src: https://github.com/nephelaiio/ansible-role-tmux.git
+  name: nephelaiio.tmux
   version: 2.0.1
-- src: nephelaiio.vagrant
+- src: https://github.com/nephelaiio/ansible-role-vagrant.git
+  name: nephelaiio.vagrant
   version: 2.0.0
-- src: nephelaiio.i3
+- src: https://github.com/nephelaiio/ansible-role-i3.git
+  name: nephelaiio.i3
   version: 1.0.4
-- src: nephelaiio.docker
+- src: https://github.com/nephelaiio/ansible-role-docker.git
+  name: nephelaiio.docker
   version: 1.0.3
-- src: nephelaiio.bind
+- src: https://github.com/nephelaiio/ansible-role-bind.git
+  name: nephelaiio.bind
   version: 2.0.0
-- src: nephelaiio.unifi-controller
+- src: https://github.com/nephelaiio/ansible-role-nfs.git
+  name: nephelaiio.unifi-controller
   version: 2.0.0
-- src: nephelaiio.nfs
+- src: https://github.com/nephelaiio/ansible-role-nfs.git
+  name: nephelaiio.nfs
   version: 1.0.1
-- src: nephelaiio.golang
+- src: https://github.com/nephelaiio/ansible-role-golang.git
+  name: nephelaiio.golang
   version: 1.0.1
-- src: nephelaiio.ubuntu-installer
-  version: 2.1.6
-- src: nephelaiio.centos-installer
-  version: 1.0.2
+- src: https://github.com/nephelaiio/ansible-role-ubuntu-installer.git
+  name: nephelaiio.ubuntu-installer
+  version: 2.1.8
+- src: https://github.com/nephelaiio/ansible-role-centos-installer.git
+  name: nephelaiio.centos-installer
+  version: 1.0.3
 - src: https://github.com/Graylog2/graylog-ansible-role.git
-  version: 2.4.0
   name: graylog2.graylog
+  version: 2.4.0
 - src: https://github.com/elastic/ansible-elasticsearch.git
-  version: 6.2.4
   name: elastic.elasticsearch
-- src: dj-wasabi.telegraf
+  version: 6.2.4
+- src: dj_wasabi.telegraf
   version: 0.9.0
