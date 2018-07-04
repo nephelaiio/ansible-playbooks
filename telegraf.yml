@@ -83,4 +83,4 @@
       setup:
 
     - include_role:
-        name: dj-wasabi.telegraf
+        name: dj_wasabi.telegraf
