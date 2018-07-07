@@ -34,7 +34,8 @@
 - src: https://github.com/nephelaiio/ansible-role-rbenv.git
   name: nephelaiio.rbenv
   version: 2.0.2
-- src: nephelaiio.pyenv
+- src: https://github.com/nephelaiio/ansible-role-pyenv.git
+  name: nephelaiio.pyenv
   version: 1.0.10
 - src: https://github.com/nephelaiio/ansible-role-tmux.git
   name: nephelaiio.tmux
@@ -45,6 +46,9 @@
 - src: https://github.com/nephelaiio/ansible-role-i3.git
   name: nephelaiio.i3
   version: 1.0.4
+- src: https://github.com/nephelaiio/ansible-role-pip.git
+  name: nephelaiio.pip
+  version: 2.0.2
 - src: https://github.com/nephelaiio/ansible-role-docker.git
   name: nephelaiio.docker
   version: 1.0.3
