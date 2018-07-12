@@ -1,0 +1,60 @@
+---
+- name: Set up openvpn server
+
+  hosts: openvpn
+
+  roles:
+
+    - nephelaiio.plugins
+
+  become: yes
+
+  vars:
+
+    openvpn_conf_root: /etc/openvpn
+    openvpn_host: "{{ openvpn_hostname }}"
+    openvpn_key_country: CR
+    openvpn_key_province: SJO
+    openvpn_key_city: San Jose
+    openvpn_key_org: nephelai.io
+    openvpn_key_key_email: pki@nephelai.io
+    openvpn_clients:
+      - tedc
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "{{ variables }}"
+
+    - name: install openvpn
+      include_role:
+        name: Stouts.openvpn
+
+    - name: create dynamic dns updater
+      copy:
+        dest: "{{ openvpn_conf_root }}/duck.sh"
+        content: 'echo url="https://www.duckdns.org/update?domains={{ duckdns_record_openvpn }}&token={{ duckdns_token }}&ip=" | curl -k -o /var/log/duckdns.log -K -'
+        mode: 0700
+
+    - name: create dynamic dns update cronjob
+      cron:
+        name: duckdns updater
+        minute: "*/5"
+        job: "{{ openvpn_conf_root }}/duck.sh"
+
+    - name: create route53 cname record
+      route53:
+        command: create
+        aws_access_key: "{{ aws_access_key_id }}"
+        aws_secret_key: "{{ aws_secret_access_key }}"
+        zone: "{{ openvpn_host | split_with('.') | tail | join('.') }}"
+        record: "{{ openvpn_host }}"
+        retry_interval: 300
+        type: CNAME
+        ttl: 7200
+        value: "{{ duckdns_record_openvpn }}.duckdns.org."
+        wait: yes
+        overwrite: yes
+      ignore_errors: yes
+
