@@ -13,13 +13,18 @@
 
     openvpn_conf_root: /etc/openvpn
     openvpn_host: "{{ openvpn_hostname }}"
+    openvpn_net: 10.8.0.0/24
+    openvpn_port: 24
+    openvpn_server: "{{ openvpn_net | ipaddr('network') }} {{ openvpn_net | ipaddr('netmask') }}"
     openvpn_key_country: CR
     openvpn_key_province: SJO
     openvpn_key_city: San Jose
     openvpn_key_org: nephelai.io
     openvpn_key_key_email: pki@nephelai.io
     openvpn_clients:
-      - tedc
+      - teddyphreak
+    openvpn_tls_auth: yes
+    openvpn_unified_client_profiles: yes
 
   tasks:
 
@@ -43,6 +48,18 @@
         minute: "*/5"
         job: "{{ openvpn_conf_root }}/duck.sh"
 
+    - name: configure iptables forwarding
+      iptables:
+        chain: FORWARD
+        in_interface: tun+
+        out_interface: "{{ ansible_default_ipv4.interface }}"
+        match:
+          - state
+        ctstate:
+          - RELATED
+          - ESTABLISHED
+        jump: ACCEPT
+
     - name: create route53 cname record
       route53:
         command: create
@@ -58,3 +75,55 @@
         overwrite: yes
       ignore_errors: yes
 
+    - name: configure iptables input
+      iptables:
+        chain: INPUT
+        in_interface: tun+
+        jump: ACCEPT
+
+    - name: configure iptables forwarding
+      iptables:
+        chain: FORWARD
+        in_interface: tun+
+        jump: ACCEPT
+
+    - name: configure iptables forwarding
+      iptables:
+        chain: FORWARD
+        in_interface: tun+
+        out_interface: "{{ ansible_default_ipv4.interface }}"
+        match:
+          - state
+        ctstate:
+          - RELATED
+          - ESTABLISHED
+        jump: ACCEPT
+
+    - name: configure iptables forwarding
+      iptables:
+        chain: FORWARD
+        out_interface: tun+
+        in_interface: "{{ ansible_default_ipv4.interface }}"
+        match:
+          - state
+        ctstate:
+          - RELATED
+          - ESTABLISHED
+        jump: ACCEPT
+
+    - name: configure iptables nat
+      iptables:
+        table: nat
+        chain: POSTROUTING
+        out_interface: "{{ ansible_default_ipv4.interface }}"
+        jump: MASQUERADE
+        protocol: all
+
+    - name: enable ipv4 forwarding
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: 1
+        state: present
+        reload: True
+
+      
