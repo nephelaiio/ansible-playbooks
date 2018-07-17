@@ -25,6 +25,9 @@
       - teddyphreak
     openvpn_tls_auth: yes
     openvpn_unified_client_profiles: yes
+    openvpn_client_routes: "{{ nets.values() | json_query('[].[network, netmask]') | map('join_with', '/') | ipaddr('net') | map('map_format', 'route %s') | list }}"
+    openvpn_client_recursors: "{{ ['script security 2' ] + (servers.recursors | map('map_format', 'dhcp-option DNS %s') | list) }}"
+    openvpn_client_options: "{{ openvpn_client_routes + openvpn_client_recursors }}"
 
   tasks:
 
