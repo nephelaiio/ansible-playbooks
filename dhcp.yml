@@ -37,6 +37,10 @@
         iface: "{{ ansible_default_ipv4.interface }}"
       notify: restart dhcpd
 
+    - name: fetch inventory
+      set_fact:
+        host_variables: "{{ groups['all'] | map('extract', hostvars) | list }}"
+
     - name: configure dhcp
       template:
         src: templates/dhcp/dhcpd.conf.j2
@@ -48,6 +52,7 @@
         zones: "{{ dhcp_zones }}"
         failover: "{{ dhcp_failover }}"
         domain_name: "{{ dns.zones.home.name }}"
+        inventory_variables: "{{ host_variables }}"
       notify: restart dhcpd
 
     - meta: flush_handlers

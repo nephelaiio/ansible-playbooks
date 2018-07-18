@@ -62,7 +62,7 @@ zone {{ n.zone }} {
   primary {{ servers.dns | first }};
 }
 {%   endif %}
-{%   for r in n.reservations.values() + (groups['all'] | map('extract', hostvars) | select('test_network', n.network + '/' + n.netmask) | map('alias_keys', {'inventory_hostname': 'host', 'ansible_host': 'ip-address' }) | list)  %}
+{%   for r in n.reservations.values() + (inventory_variables | select('test_network', n.network + '/' + n.netmask) | map('alias_keys', {'inventory_hostname': 'host', 'ansible_host': 'ip-address' }) | list)  %}
 {%     if 'hw_address' in r %}
 host {{ r['host'] }} {
   hardware ethernet {{ r['hw_address'] }};
