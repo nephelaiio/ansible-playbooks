@@ -13,10 +13,6 @@
         state: latest
         update_cache: yes
 
-    - name: Upgrade firmware
-      shell: rpi-update
-      changed_when: false
-
     - name: Fix rsyslog
       template:
         dest: /etc/rsyslog.conf
