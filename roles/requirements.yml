@@ -23,7 +23,7 @@
   version: 2.4.0
 - src: https://github.com/nephelaiio/ansible-role-plugins.git
   name: nephelaiio.plugins
-  version: 1.0.8
+  version: 1.0.9
 - src: https://github.com/nephelaiio/ansible-role-vim.git
   name: nephelaiio.vim
   version: 2.0.1
