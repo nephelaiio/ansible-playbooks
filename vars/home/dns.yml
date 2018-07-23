@@ -16,7 +16,10 @@ dns:
       ns: "{{ groups['recursors'] }}"
       records: "{{ nets.home.reservations.values() | map('merge_dicts', {'type': 'A'}) | list }}"
       cnames:
-        - ["{{ base_domain }}", rpia.home.nephelai.io]
+        - host: "{{ base_domain }}"
+          content: rpia.home.nephelai.io
+        - host: "assistant.{{ base_domain }}"
+          content: rpig.home.nephelai.io
     emoh:
       name: "{{ nets.home.zone }}"
       hostmaster: master@home.nephelai.io

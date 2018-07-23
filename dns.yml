@@ -52,6 +52,10 @@
     letsencrypt_domain_crtfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.crt"
     letsencrypt_domain_chainfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.chain.crt"
 
+  roles:
+
+    - nephelaiio.pip
+
   tasks:
 
     - name: include private variables
@@ -157,8 +161,12 @@
       shell: 'openssl req -new -nodes -key {{ letsencrypt_domain_keyfile }} -out {{ letsencrypt_domain_csrfile }} -subj "/CN={{ letsencrypt_domain }}"'
       changed_when: false
 
-    - name: create challenge
-      letsencrypt:
+    - name: install route53 dependencies
+      pip:
+        name: boto
+
+    - name: create certificate challenge
+      acme_certificate:
         account_key: "{{ letsencrypt_account_keyfile }}"
         challenge: dns-01
         csr: "{{ letsencrypt_domain_csrfile }}"
@@ -167,58 +175,9 @@
         terms_agreed: yes
         acme_directory: https://acme-v01.api.letsencrypt.org/directory
       register: letsencrypt_challenge
+      notify: generate certificate 
 
-    - name: install route53 dependencies
-      pip:
-        name: boto
-
-    - name: create route53 txt record for certificate validation
-      route53:
-        command: create
-        aws_access_key: "{{ aws_access_key_id }}"
-        aws_secret_key: "{{ aws_secret_access_key }}"
-        zone: "{{ letsencrypt_zone }}"
-        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_domain }}"
-        retry_interval: 300
-        type: TXT
-        ttl: 7200
-        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
-        wait: yes
-        overwrite: yes
-      when: "'challenge_data' in letsencrypt_challenge"
-      ignore_errors: yes
-
-    - name: wait for txt record propagation
-      pause:
-        seconds: 60
-      when: "'challenge_data' in letsencrypt_challenge"
-
-    - name: validate challenge
-      letsencrypt:
-        account_key: "{{ letsencrypt_account_keyfile }}"
-        challenge: dns-01
-        csr: "{{ letsencrypt_domain_csrfile }}"
-        dest: "{{ letsencrypt_domain_crtfile }}"
-        fullchain_dest: "{{ letsencrypt_domain_chainfile }}"
-        data: "{{ letsencrypt_challenge }}"
-        terms_agreed: yes
-        acme_directory: https://acme-v01.api.letsencrypt.org/directory
-      when: "'challenge_data' in letsencrypt_challenge"
-
-    - name: delete route53 txt record for certificate validation
-      route53:
-        command: delete
-        aws_access_key: "{{ aws_access_key_id }}"
-        aws_secret_key: "{{ aws_secret_access_key }}"
-        zone: "{{ letsencrypt_zone }}"
-        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_zone }}"
-        retry_interval: 300
-        type: TXT
-        ttl: 7200
-        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
-        wait: yes
-      when: "'challenge_data' in letsencrypt_challenge"
-      ignore_errors: yes
+    - meta: flush_handlers
 
     - name: install nginx
       include_role:
@@ -322,11 +281,6 @@
         pdns_records: "{{ pdns_records_query.results | map(attribute='json') | map(attribute='rrsets') | flatten | json_query(query) | list }}"
       vars:
         query: "[?type!='SOA'].name"
-      tags:
-        - records
-
-    - debug:
-        msg: "{{ dns.zones.values() }}"
       tags:
         - records
 
@@ -451,10 +405,61 @@
         name: telegraf
         state: restarted
 
+    - name: create route53 txt record for certificate validation
+      route53:
+        command: create
+        aws_access_key: "{{ aws_access_key_id }}"
+        aws_secret_key: "{{ aws_secret_access_key }}"
+        zone: "{{ letsencrypt_zone }}"
+        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_domain }}"
+        retry_interval: 300
+        type: TXT
+        ttl: 7200
+        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
+        wait: yes
+        overwrite: yes
+      ignore_errors: yes
+      listen: generate certificate
+
+    - name: wait for txt record propagation
+      pause:
+        seconds: 60
+      listen: generate certificate
+
+    - name: validate challenge
+      acme_certificate:
+        account_key: "{{ letsencrypt_account_keyfile }}"
+        challenge: dns-01
+        csr: "{{ letsencrypt_domain_csrfile }}"
+        dest: "{{ letsencrypt_domain_crtfile }}"
+        fullchain_dest: "{{ letsencrypt_domain_chainfile }}"
+        data: "{{ letsencrypt_challenge }}"
+        terms_agreed: yes
+        acme_directory: https://acme-v01.api.letsencrypt.org/directory
+      listen: generate certificate
+
+    - name: delete route53 txt record for certificate validation
+      route53:
+        command: delete
+        aws_access_key: "{{ aws_access_key_id }}"
+        aws_secret_key: "{{ aws_secret_access_key }}"
+        zone: "{{ letsencrypt_zone }}"
+        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_zone }}"
+        retry_interval: 300
+        type: TXT
+        ttl: 7200
+        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
+        wait: yes
+      ignore_errors: yes
+      listen: generate certificate
+
+
 
 - name: Register hosts in dns
 
-  hosts: all:!workstations
+  hosts: localhost
+
+  gather_facts: no
 
   tasks:
 
@@ -486,6 +491,10 @@
       tags:
         - records
 
+    - name: build list of inventory records
+      set_fact:
+         inventory_hostrecords: "{{ nets_dns | map('extract', dns.zones) | sum(attribute='records', start=[]) | list }}"
+
     - name: create host record
       uri:
         url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ zone_name }}"
@@ -498,18 +507,19 @@
           X-API-Key: "{{ pdns_api_key }}"
         status_code: 204
       vars:
-        zone_name: "{{ ansible_fqdn | split_with('.') | tail | join('.') }}."
-        record_name: "{{ ansible_fqdn }}."
+        record_name: "{{ item.host }}."
+        zone_name: "{{ record_name | split_with('.') | tail | join('.') }}"
         record_rrset:
           name: "{{ record_name }}"
           type: A
           ttl: "{{ dns_ttl }}"
           changetype: 'REPLACE'
           records:
-            - content: "{{ ansible_default_ipv4.address }}"
+            - content: "{{ item['ip-address'] }}"
               disabled: false
               set-ptr: true
       when: not record_name in pdns_records
+      with_items: "{{ inventory_hostrecords }}"
       tags:
         - records
 
@@ -525,17 +535,78 @@
           X-API-Key: "{{ pdns_api_key }}"
         status_code: 204
       vars:
-        zone_name: "{{ ansible_fqdn | split_with('.') | tail | join('.') }}."
-        record_name: "{{ ansible_fqdn }}."
+        record_name: "{{ item.host }}."
+        zone_name: "{{ record_name | split_with('.') | tail | join('.') }}"
         record_rrset:
           name: "{{ record_name }}"
           type: A
           ttl: "{{ dns_ttl }}"
           changetype: 'REPLACE'
           records:
-            - content: "{{ ansible_default_ipv4.address }}"
+            - content: "{{ item['ip-address'] }}"
               disabled: false
               set-ptr: true
+      with_items: "{{ inventory_hostrecords }}"
+      when: record_name in pdns_records
+      tags:
+        - records
+
+    - name: build list of inventory cnames
+      set_fact:
+         inventory_cnames: "{{ nets_dns | map('extract', dns.zones) | sum(attribute='cnames', start=[]) | list }}"
+
+    - name: create cnames
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ zone_name }}"
+        method: POST
+        body_format: json
+        body:
+          rrsets:
+            - "{{ record_rrset }}"
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        record_name: "{{ item.host }}."
+        zone_name: "{{ record_name | split_with('.') | tail | join('.') }}"
+        record_rrset:
+          name: "{{ record_name }}"
+          type: CNAME 
+          ttl: "{{ dns_ttl }}"
+          changetype: 'REPLACE'
+          records:
+            - content: "{{ item['content'] }}"
+              disabled: false
+              set-ptr: true
+      when: not record_name in pdns_records
+      with_items: "{{ inventory_cnames }}"
+      tags:
+        - records
+
+    - name: update host record
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ zone_name }}"
+        method: PATCH
+        body_format: json
+        body:
+          rrsets:
+            - "{{ record_rrset }}"
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        record_name: "{{ item.host }}."
+        zone_name: "{{ record_name | split_with('.') | tail | join('.') }}"
+        record_rrset:
+          name: "{{ record_name }}"
+          type: A
+          ttl: "{{ dns_ttl }}"
+          changetype: 'REPLACE'
+          records:
+            - content: "{{ item['content'] }}"
+              disabled: false
+              set-ptr: true
+      with_items: "{{ inventory_cnames }}"
       when: record_name in pdns_records
       tags:
         - records
