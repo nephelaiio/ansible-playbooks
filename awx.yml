@@ -22,6 +22,7 @@
   roles:
 
     - nephelaiio.plugins
+    - nephelaiio.pip
 
   tasks:
 
@@ -59,8 +60,12 @@
       shell: 'openssl req -new -nodes -key {{ letsencrypt_domain_keyfile }} -out {{ letsencrypt_domain_csrfile }} -subj "/CN={{ letsencrypt_domain }}"'
       changed_when: false
 
+    - name: install route53 dependencies
+      pip:
+        name: boto
+
     - name: create challenge
-      letsencrypt:
+      acme_certificate:
         account_key: "{{ letsencrypt_account_keyfile }}"
         challenge: dns-01
         csr: "{{ letsencrypt_domain_csrfile }}"
@@ -69,62 +74,9 @@
         terms_agreed: yes
         acme_directory: https://acme-v01.api.letsencrypt.org/directory
       register: letsencrypt_challenge
+      notify: generate certificate 
 
-    - name: install pip
-      include_role:
-        name: nephelaiio.pip
-
-    - name: install route53 dependencies
-      pip:
-        name: boto
-
-    - name: create route53 txt record for certificate validation
-      route53:
-        command: create
-        aws_access_key: "{{ aws_access_key_id }}"
-        aws_secret_key: "{{ aws_secret_access_key }}"
-        zone: "{{ letsencrypt_zone }}"
-        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_domain }}"
-        retry_interval: 300
-        type: TXT
-        ttl: 7200
-        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
-        wait: yes
-        overwrite: yes
-      when: "'challenge_data' in letsencrypt_challenge"
-      ignore_errors: yes
-
-    - name: wait for txt record propagation
-      pause:
-        seconds: 60
-      when: "'challenge_data' in letsencrypt_challenge"
-
-    - name: validate challenge
-      letsencrypt:
-        account_key: "{{ letsencrypt_account_keyfile }}"
-        challenge: dns-01
-        csr: "{{ letsencrypt_domain_csrfile }}"
-        dest: "{{ letsencrypt_domain_crtfile }}"
-        fullchain_dest: "{{ letsencrypt_domain_chainfile }}"
-        data: "{{ letsencrypt_challenge }}"
-        terms_agreed: yes
-        acme_directory: https://acme-v01.api.letsencrypt.org/directory
-      when: "'challenge_data' in letsencrypt_challenge"
-
-    - name: delete route53 txt record for certificate validation
-      route53:
-        command: delete
-        aws_access_key: "{{ aws_access_key_id }}"
-        aws_secret_key: "{{ aws_secret_access_key }}"
-        zone: "{{ letsencrypt_zone }}"
-        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_zone }}"
-        retry_interval: 300
-        type: TXT
-        ttl: 7200
-        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
-        wait: yes
-      when: "'challenge_data' in letsencrypt_challenge"
-      ignore_errors: yes
+    - meta: flush_handlers
 
     - name: install nginx
       include_role:
@@ -168,6 +120,57 @@
                 proxy_set_header   Upgrade            $http_upgrade;
                 proxy_set_header   Connection         "upgrade";
               }
+
+  handlers:
+
+    - name: create route53 txt record for certificate validation
+      route53:
+        command: create
+        aws_access_key: "{{ aws_access_key_id }}"
+        aws_secret_key: "{{ aws_secret_access_key }}"
+        zone: "{{ letsencrypt_zone }}"
+        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_domain }}"
+        retry_interval: 300
+        type: TXT
+        ttl: 7200
+        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
+        wait: yes
+        overwrite: yes
+      ignore_errors: yes
+      listen: generate certificate
+
+    - name: wait for txt record propagation
+      pause:
+        seconds: 60
+      listen: generate certificate
+
+    - name: validate challenge
+      acme_certificate:
+        account_key: "{{ letsencrypt_account_keyfile }}"
+        challenge: dns-01
+        csr: "{{ letsencrypt_domain_csrfile }}"
+        dest: "{{ letsencrypt_domain_crtfile }}"
+        fullchain_dest: "{{ letsencrypt_domain_chainfile }}"
+        data: "{{ letsencrypt_challenge }}"
+        terms_agreed: yes
+        acme_directory: https://acme-v01.api.letsencrypt.org/directory
+      listen: generate certificate
+
+    - name: delete route53 txt record for certificate validation
+      route53:
+        command: delete
+        aws_access_key: "{{ aws_access_key_id }}"
+        aws_secret_key: "{{ aws_secret_access_key }}"
+        zone: "{{ letsencrypt_zone }}"
+        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_zone }}"
+        retry_interval: 300
+        type: TXT
+        ttl: 7200
+        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
+        wait: yes
+      ignore_errors: yes
+      listen: generate certificate
+    
 
 
 - name: Install awx
