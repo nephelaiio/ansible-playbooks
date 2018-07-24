@@ -13,23 +13,21 @@ dns:
     home:
       name: "{{ base_domain }}"
       hostmaster: "master@{{ base_domain }}"
-      ns: "{{ groups['recursors'] }}"
+      ns: "{{ groups['pdns'] }}"
       records: "{{ nets.home.reservations.values() | map('merge_dicts', {'type': 'A'}) | list }}"
       cnames:
-        - host: "{{ base_domain }}"
-          content: rpia.home.nephelai.io
         - host: "assistant.{{ base_domain }}"
-          content: rpig.home.nephelai.io
+          cname: rpig.home.nephelai.io
     emoh:
       name: "{{ nets.home.zone }}"
       hostmaster: master@home.nephelai.io
-      ns: "{{ groups['recursors'] }}"
+      ns: "{{ groups['pdns'] }}"
       records: "{{ nets.home.reservations.values() | map('reverse_record') | list }}"
       cnames: []
     mvk:
       name: "{{ nets.kvm.zone }}"
       hostmaster: master@home.nephelai.io
-      ns: "{{ groups['recursors'] }}"
+      ns: "{{ groups['pdns'] }}"
       records: "{{ nets.kvm.reservations.values() | map('reverse_record') | list }}"
       cnames: []
 
