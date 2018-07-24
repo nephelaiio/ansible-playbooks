@@ -240,25 +240,15 @@
         - always
 
     - name: create zones
-      uri:
-        url: "{{ pdns_api_proto }}://localhost:{{ pdns_api_port }}/api/v1/servers/localhost/zones"
-        method: POST
-        body_format: json
-        body:
-          type: Zone
-          kind: Master
-          name: "{{ zone_name }}"
-          soa_edit: 'INCEPTION-INCREMENT'
-          nameservers: "{{ zone_ns | map('map_format', '%s.') | list }}"
-        headers:
-          X-API-Key: "{{ pdns_api_key }}"
-        status_code: 201
+      command:
+        "pdnsutil create-zone {{ zone_name }} {{ zone_ns }}"
       vars:
         zone: "{{ dns.zones[item] }}"
         zone_name: "{{ zone.name }}."
-        zone_ns: "{{ zone.ns }}"
+        zone_ns: "{{ zone.ns | map('map_format', '%s.') | list }}"
       with_items: "{{ dns.zones.keys() }}"
       when: zone_name not in pdns_zones
+      delegate_to: "{{ groups['pdns'][0] }}"
       tags:
         - zones
 
@@ -455,11 +445,9 @@
 
 
 
-- name: Register hosts in dns
+- name: Register ansible hosts in dns
 
-  hosts: localhost
-
-  gather_facts: no
+  hosts: all:!workstations:!home_assistant
 
   tasks:
 
@@ -491,14 +479,10 @@
       tags:
         - records
 
-    - name: build list of inventory records
-      set_fact:
-         inventory_hostrecords: "{{ nets_dns | map('extract', dns.zones) | sum(attribute='records', start=[]) | list }}"
-
-    - name: create host record
+    - name: create host records
       uri:
         url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ zone_name }}"
-        method: POST
+        method: PATCH
         body_format: json
         body:
           rrsets:
@@ -507,23 +491,55 @@
           X-API-Key: "{{ pdns_api_key }}"
         status_code: 204
       vars:
-        record_name: "{{ item.host }}."
-        zone_name: "{{ record_name | split_with('.') | tail | join('.') }}"
+        zone_name: "{{ ansible_fqdn | split_with('.') | tail | join('.') }}."
+        record_name: "{{ ansible_fqdn }}."
         record_rrset:
           name: "{{ record_name }}"
           type: A
           ttl: "{{ dns_ttl }}"
           changetype: 'REPLACE'
           records:
-            - content: "{{ item['ip-address'] }}"
+            - content: "{{ ansible_default_ipv4.address }}"
               disabled: false
               set-ptr: true
       when: not record_name in pdns_records
-      with_items: "{{ inventory_hostrecords }}"
       tags:
         - records
 
-    - name: update host record
+    - name: update host records
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ zone_name }}"
+        method: PATCH
+        body_format: json
+        body:
+          rrsets:
+            - "{{ record_rrset }}"
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        zone_name: "{{ ansible_fqdn | split_with('.') | tail | join('.') }}."
+        record_name: "{{ ansible_fqdn }}."
+        record_rrset:
+          name: "{{ record_name }}"
+          type: A
+          ttl: "{{ dns_ttl }}"
+          changetype: 'REPLACE'
+          records:
+            - content: "{{ ansible_default_ipv4.address }}"
+              disabled: false
+              set-ptr: true
+      when: record_name in pdns_records
+      tags:
+        - records
+
+    - name: build list of reservation records
+      set_fact:
+         inventory_reservations: "{{ nets_dns | map('extract', dns.zones) | sum(attribute='records', start=[]) | list }}"
+      delegate_to: localhost
+      run_once: yes
+
+    - name: create reservation records
       uri:
         url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ zone_name }}"
         method: PATCH
@@ -546,44 +562,50 @@
             - content: "{{ item['ip-address'] }}"
               disabled: false
               set-ptr: true
-      with_items: "{{ inventory_hostrecords }}"
+      when: not record_name in pdns_records
+      with_items: "{{ inventory_reservations }}"
+      delegate_to: localhost
+      run_once: yes
+      tags:
+        - records
+
+    - name: update reservation records
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ zone_name }}"
+        method: PATCH
+        body_format: json
+        body:
+          rrsets:
+            - "{{ record_rrset }}"
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        record_name: "{{ item.host }}."
+        zone_name: "{{ record_name | split_with('.') | tail | join('.') }}"
+        record_rrset:
+          name: "{{ record_name }}"
+          type: A
+          ttl: "{{ dns_ttl }}"
+          changetype: 'REPLACE'
+          records:
+            - content: "{{ item['ip-address'] }}"
+              disabled: false
+              set-ptr: true
+      with_items: "{{ inventory_reservations }}"
       when: record_name in pdns_records
+      delegate_to: localhost
+      run_once: yes
       tags:
         - records
 
     - name: build list of inventory cnames
       set_fact:
          inventory_cnames: "{{ nets_dns | map('extract', dns.zones) | sum(attribute='cnames', start=[]) | list }}"
+      delegate_to: localhost
+      run_once: yes
 
-    - name: create cnames
-      uri:
-        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ zone_name }}"
-        method: POST
-        body_format: json
-        body:
-          rrsets:
-            - "{{ record_rrset }}"
-        headers:
-          X-API-Key: "{{ pdns_api_key }}"
-        status_code: 204
-      vars:
-        record_name: "{{ item.host }}."
-        zone_name: "{{ record_name | split_with('.') | tail | join('.') }}"
-        record_rrset:
-          name: "{{ record_name }}"
-          type: CNAME 
-          ttl: "{{ dns_ttl }}"
-          changetype: 'REPLACE'
-          records:
-            - content: "{{ item['content'] }}"
-              disabled: false
-              set-ptr: true
-      when: not record_name in pdns_records
-      with_items: "{{ inventory_cnames }}"
-      tags:
-        - records
-
-    - name: update host record
+    - name: create cname records
       uri:
         url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ zone_name }}"
         method: PATCH
@@ -596,17 +618,49 @@
         status_code: 204
       vars:
         record_name: "{{ item.host }}."
-        zone_name: "{{ record_name | split_with('.') | tail | join('.') }}"
+        zone_name: "{{ item.host | split_with('.') | tail | join('.') }}."
+        record_rrset:
+          name: "{{ record_name }}"
+          type: CNAME 
+          ttl: "{{ dns_ttl }}"
+          changetype: 'REPLACE'
+          records:
+            - content: "{{ item['cname'] }}."
+              disabled: false
+              set-ptr: false
+      when: not record_name in pdns_records
+      with_items: "{{ inventory_cnames }}"
+      delegate_to: localhost
+      run_once: yes
+      tags:
+        - records
+
+    - name: update cname records
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ zone_name }}"
+        method: PATCH
+        body_format: json
+        body:
+          rrsets:
+            - "{{ record_rrset }}"
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        record_name: "{{ item.host }}."
+        zone_name: "{{ item.host | split_with('.') | tail | join('.') }}."
         record_rrset:
           name: "{{ record_name }}"
           type: A
           ttl: "{{ dns_ttl }}"
           changetype: 'REPLACE'
           records:
-            - content: "{{ item['content'] }}"
+            - content: "{{ item['cname'] }}."
               disabled: false
-              set-ptr: true
+              set-ptr: false
       with_items: "{{ inventory_cnames }}"
       when: record_name in pdns_records
+      delegate_to: localhost
+      run_once: yes
       tags:
         - records
