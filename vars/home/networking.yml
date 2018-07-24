@@ -33,6 +33,10 @@ nets:
         host: ap02.home.nephelai.io
         hw_address: f0:9f:c2:b4:36:e8
         ip-address: 192.168.1.99
+      rpig:
+        host: rpig.home.nephelai.io
+        hw_address: b8:27:eb:21:04:68
+        ip-address: 192.168.1.4
   management:
     network: 192.168.4.0
     netmask: 255.255.255.0
