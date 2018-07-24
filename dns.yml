@@ -651,7 +651,7 @@
         zone_name: "{{ item.host | split_with('.') | tail | join('.') }}."
         record_rrset:
           name: "{{ record_name }}"
-          type: A
+          type: CNAME
           ttl: "{{ dns_ttl }}"
           changetype: 'REPLACE'
           records:
