@@ -166,7 +166,7 @@
         name: boto
 
     - name: create certificate challenge
-      acme_certificate:
+      letsencrypt:
         account_key: "{{ letsencrypt_account_keyfile }}"
         challenge: dns-01
         csr: "{{ letsencrypt_domain_csrfile }}"
@@ -417,7 +417,7 @@
       listen: generate certificate
 
     - name: validate challenge
-      acme_certificate:
+      letsencrypt:
         account_key: "{{ letsencrypt_account_keyfile }}"
         challenge: dns-01
         csr: "{{ letsencrypt_domain_csrfile }}"
