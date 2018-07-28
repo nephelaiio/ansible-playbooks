@@ -19,6 +19,8 @@
   version: 3.6.0
 - src: geerlingguy.composer
   version: 1.7.0
+- src: geerlingguy.postgresql
+  version: 1.4.3
 - src: Stouts.openvpn
   version: 2.4.0
 - src: https://github.com/nephelaiio/ansible-role-plugins.git
