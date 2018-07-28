@@ -74,7 +74,7 @@
         terms_agreed: yes
         acme_directory: https://acme-v01.api.letsencrypt.org/directory
       register: letsencrypt_challenge
-      notify: generate certificate 
+      notify: generate certificate
 
     - meta: flush_handlers
 
@@ -170,7 +170,6 @@
         wait: yes
       ignore_errors: yes
       listen: generate certificate
-    
 
 
 - name: Install awx

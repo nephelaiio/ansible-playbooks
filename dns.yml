@@ -175,7 +175,7 @@
         terms_agreed: yes
         acme_directory: https://acme-v01.api.letsencrypt.org/directory
       register: letsencrypt_challenge
-      notify: generate certificate 
+      notify: generate certificate
 
     - meta: flush_handlers
 
@@ -444,7 +444,6 @@
       listen: generate certificate
 
 
-
 - name: Register ansible hosts in dns
 
   hosts: all:!workstations:!home_assistant
@@ -535,7 +534,7 @@
 
     - name: build list of reservation records
       set_fact:
-         inventory_reservations: "{{ nets_dns | map('extract', dns.zones) | sum(attribute='records', start=[]) | list }}"
+        inventory_reservations: "{{ nets_dns | map('extract', dns.zones) | sum(attribute='records', start=[]) | list }}"
       delegate_to: localhost
       run_once: yes
 
@@ -601,7 +600,7 @@
 
     - name: build list of inventory cnames
       set_fact:
-         inventory_cnames: "{{ nets_dns | map('extract', dns.zones) | sum(attribute='cnames', start=[]) | list }}"
+        inventory_cnames: "{{ nets_dns | map('extract', dns.zones) | sum(attribute='cnames', start=[]) | list }}"
       delegate_to: localhost
       run_once: yes
 
@@ -621,7 +620,7 @@
         zone_name: "{{ item.host | split_with('.') | tail | join('.') }}."
         record_rrset:
           name: "{{ record_name }}"
-          type: CNAME 
+          type: CNAME
           ttl: "{{ dns_ttl }}"
           changetype: 'REPLACE'
           records:
