@@ -1,4 +1,50 @@
 ---
+- name: Configure deployment hosts
+
+  hosts: awx
+
+  become: yes
+
+  vars:
+
+    openstack_ansible_root: /opt/openstack-ansible
+    openstack_ansible_url: https://git.openstack.org/openstack/openstack-ansible
+    openstack_ansible_version: 16.0.16
+    openstack_deployment_dependencies:
+      - aptitude
+      - build-essential
+      - git
+      - ntp
+      - ntpdate
+      - openssh-server
+      - python-dev
+      - sudo
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: install dependencies
+      package:
+        name: "{{ openstack_deployment_dependencies }}"
+        state: latest
+
+    - name: clone ansible openstack repo
+      git:
+        repo: "{{ openstack_ansible_url }}"
+        dest: "{{ openstack_ansible_root }}"
+        version: "{{ openstack_ansible_version }}"
+      notify: bootstrap ansible
+
+  handlers:
+
+    - name: bootstrap ansible
+      command: "{{ openstack_ansible_root }}/scripts/bootstrap-ansible.sh"
+
+
+
 - name: Configure openstack networking
 
   hosts: openstack
@@ -7,8 +53,6 @@
 
   vars:
 
-    openstack_ansible_root: /opt/openstack-ansible
-    openstack_ansible_version: 16.0.10
     openstack_management_net:
       router: "{{ nets.management.router }}"
       netmask: "{{ nets.management.netmask }}"
@@ -53,19 +97,9 @@
         storage_ip: "{{ storage_host }}"
         storage_gw: "{{ openstack_storage_net.router }}"
         storage_mask: "{{ openstack_storage_net.netmask }}"
-        openstack_vlan: 4
       notify: restart networking
 
     - meta: flush_handlers
-
-    - name: clone ansible openstack repo
-      git:
-        repo: https://git.openstack.org/openstack/openstack-ansible
-        dest: "{{ openstack_ansible_root }}"
-        version: "{{ openstack_ansible_version }}"
-      delegate_to: localhost
-      run_once: yes
-      notify: bootstrap ansible
 
     - name: configure os
       package:
@@ -90,18 +124,9 @@
         path: /etc/modules
         line: bonding
 
-    - name: create configuration directory
-      file:
-        path: /etc/
-
   handlers:
 
     - name: restart networking
       service:
         name: networking
         state: restarted
-
-    - name: bootstrap ansible
-      command: "{{ openstack_ansible_root }}/scripts/bootstrap-ansible.sh"
-      delegate_to: localhost
-      run_once: yes

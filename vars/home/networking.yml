@@ -42,7 +42,7 @@ nets:
     netmask: 255.255.255.0
     router: 192.168.4.1
     zone: 4.168.192.in-addr.arpa
-    vlan: 2
+    vlan: 4
     pools: []
     reservations: {}
   storage:
