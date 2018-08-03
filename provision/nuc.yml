@@ -32,7 +32,8 @@
         - "{{ centos_target_dir | dirname }}"
         - "{{ centos_target_dir }}"
 
-    - include_role:
+    - name: create centos iso installer
+      include_role:
         name: nephelaiio.centos-installer
       vars:
         centos_installer_image_url: "{{ archive_url }}/{{ archive_mirror_dir }}/CentOS-7-x86_64-Minimal-1708.iso"
@@ -89,7 +90,8 @@
         - "{{ ubuntu_target_dir | dirname }}"
         - "{{ ubuntu_target_dir }}"
 
-    - include_role:
+    - name: create ubuntu iso installer
+      include_role:
         name: nephelaiio.ubuntu-installer
       vars:
         ubuntu_installer_image_url: "{{ archive_url }}/{{ archive_mirror_dir }}/ubuntu-16.04.4-server-amd64.iso"
