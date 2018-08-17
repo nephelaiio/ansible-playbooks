@@ -17,7 +17,7 @@
     graylog_install_mongodb: yes
     graylog_web_endpoint_uri: "{{ graylog_url }}/api"
     es_major_version: "5.x"
-    es_version: "5.6.9"
+    es_version: "5.6.10"
     es_instance_name: "graylog"
     es_scripts: no
     es_templates: no
