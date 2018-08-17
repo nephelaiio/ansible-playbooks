@@ -131,6 +131,14 @@ awx_organizations:
         vault_credential: home.vault
         credential: home.ssh
         host_config_key: "{{ awx_host_key }}"
+      - name: graylog.home
+        job_type: run
+        project: nephelai.io
+        inventory: home
+        playbook: graylog.yml
+        vault_credential: home.vault
+        credential: home.ssh
+        host_config_key: "{{ awx_host_key }}"
 
     schedules:
       - name: upgrade.home
@@ -149,6 +157,10 @@ awx_organizations:
         job_template: librenms.home
         enabled: true
         rrule: "DTSTART:20180401T002000Z RRULE:FREQ=DAILY;INTERVAL=1"
+      - name: graylog.home
+        job_template: graylog.home
+        enabled: true
+        rrule: "DTSTART:20180401T002500Z RRULE:FREQ=WEEKLY;INTERVAL=1"
       - name: dhcp.home
         job_template: dhcp.home
         enabled: true
