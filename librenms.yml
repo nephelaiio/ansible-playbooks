@@ -521,8 +521,8 @@
       lineinfile:
         path: /etc/default/snmpd
         backrefs: yes
-        regexp: "^SNMPDOPTS='-Lsd(.*)$"
-        line: "SNMPDOPTS='-Ls6d\\1"
+        regexp: "^SNMPDOPTS='-L(s|S[0-7!acewnid]d)(.*)$"
+        line: "SNMPDOPTS='-LSed\\2"
       when: ansible_os_family == 'Debian'
       notify: restart snmpd
 
