@@ -1,5 +1,5 @@
 ---
-awx_version: 1.0.6
+awx_version: 1.0.7
 
 awx_organizations:
   - name: Default
