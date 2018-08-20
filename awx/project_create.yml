@@ -19,7 +19,4 @@
     project_source_create_args: "{{ name }} {{ description }} {{ scm_type }} {{ scm_url }} {{ scm_branch }} {{ scm_credential }} {{ scm_clean }} {{ scm_delete_on_update }} {{ scm_update_on_launch }} {{ job_timeout }}"
 
 - name: create project
-  command: "awx-cli project create {{ project_org }} {{ scm_update_cache_timeout }} {{ project_source_create_args }}"
-
-- name: update project
-  command: "awx-cli project modify {{ project_source_create_args }}"
+  command: "awx-cli project create --monitor {{ project_org }} {{ scm_update_cache_timeout }} {{ project_source_create_args }}"
