@@ -6,16 +6,20 @@ auto {{ base_interface }}.{{ storage_vlan }}
 iface {{ base_interface }}.{{ storage_vlan }} inet manual
   vlan-raw-device {{ base_interface }}
 
+auto {{ base_interface }}.{{ vxlan_vlan }}
+iface {{ base_interface }}.{{ vxlan_vlan }} inet manual
+  vlan-raw-device {{ base_interface }}
+
 auto br-mgmt
 iface br-mgmt inet static
   bridge_ports {{ base_interface }}.{{ management_vlan }}
   address {{ management_ip }}
   netmask {{ management_mask }} 
-  gateway {{ management_gw }} 
 
 auto br-storage
-iface br-storage inet static
+iface br-storage inet manual
   bridge_ports {{ base_interface }}.{{ storage_vlan }}
-  address {{ storage_ip }}
-  netmask {{ storage_mask }} 
-  gateway {{ storage_gw }} 
+
+auto br-vxlan
+iface br-vxlan inet manual
+  bridge_ports {{ base_interface }}.{{ vxlan_vlan }}

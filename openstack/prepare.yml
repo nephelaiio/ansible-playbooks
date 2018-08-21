@@ -1,7 +1,7 @@
 ---
-- name: Configure deployment hosts
+- name: Configure infrastructure hosts
 
-  hosts: awx
+  hosts: openstack_infra
 
   become: yes
 
@@ -19,6 +19,18 @@
       - openssh-server
       - python-dev
       - sudo
+    openstack_management_net:
+      router: "{{ nets.management.router }}"
+      netmask: "{{ nets.management.netmask }}"
+      vlan: "{{ nets.management.vlan }}"
+    openstack_storage_net:
+      router: "{{ nets.storage.router }}"
+      netmask: "{{ nets.storage.netmask }}"
+      vlan: "{{ nets.storage.vlan }}"
+    openstack_vxlan_net:
+      router: "{{ nets.vxlan.router }}"
+      netmask: "{{ nets.vxlan.netmask }}"
+      vlan: "{{ nets.vxlan.vlan }}"
 
   tasks:
 
@@ -31,6 +43,65 @@
         name: "{{ openstack_deployment_dependencies }}"
         state: latest
 
+    - name: install bridge utils
+      package:
+        name: bridge-utils
+        state: latest
+
+    - name: install 802.1q module
+      modprobe:
+        name: 8021q
+        state: present
+
+    - name: load 802.1q module at boot time
+      lineinfile:
+        path: /etc/modules
+        line: 8021q
+
+    - name: add interfaces
+      template:
+        src: interfaces.infra.j2
+        dest: /etc/network/interfaces.d/openstack
+      vars:
+        base_interface: "{{ ansible_default_ipv4.alias }}"
+        management_vlan: "{{ openstack_management_net.vlan }}"
+        management_ip: "{{ management_host }}"
+        management_gw: "{{ openstack_management_net.router }}"
+        management_mask: "{{ openstack_management_net.netmask }}"
+        storage_vlan: "{{ openstack_storage_net.vlan }}"
+        storage_ip: "{{ storage_host }}"
+        storage_gw: "{{ openstack_storage_net.router }}"
+        storage_mask: "{{ openstack_storage_net.netmask }}"
+        vxlan_vlan: "{{ openstack_vxlan_net.vlan }}"
+        vxlan_ip: "{{ vxlan_host }}"
+        vxlan_gw: "{{ openstack_vxlan_net.router }}"
+        vxlan_mask: "{{ openstack_vxlan_net.netmask }}"
+      notify: restart networking
+
+    - meta: flush_handlers
+
+    - name: configure os
+      package:
+        name:
+          - debootstrap
+          - ifenslave
+          - lsof
+          - lvm2
+          - tcpdump
+          - vlan
+          - ntp
+        state: latest
+
+    - service:
+        name: ntp
+        state: started
+        enabled: yes
+
+    - name: load bonding module at boot time
+      lineinfile:
+        path: /etc/modules
+        line: bonding
+
     - name: clone ansible openstack repo
       git:
         repo: "{{ openstack_ansible_url }}"
@@ -40,14 +111,18 @@
 
   handlers:
 
+    - name: restart networking
+      service:
+        name: networking
+        state: restarted
+
     - name: bootstrap ansible
       command: "{{ openstack_ansible_root }}/scripts/bootstrap-ansible.sh"
 
 
-
 - name: Configure openstack networking
 
-  hosts: openstack
+  hosts: openstack_compute
 
   become: yes
 
@@ -61,6 +136,10 @@
       router: "{{ nets.storage.router }}"
       netmask: "{{ nets.storage.netmask }}"
       vlan: "{{ nets.storage.vlan }}"
+    openstack_vxlan_net:
+      router: "{{ nets.vxlan.router }}"
+      netmask: "{{ nets.vxlan.netmask }}"
+      vlan: "{{ nets.vxlan.vlan }}"
 
   tasks:
 
@@ -85,7 +164,7 @@
 
     - name: add interfaces
       template:
-        src: interfaces.j2
+        src: interfaces.compute.j2
         dest: /etc/network/interfaces.d/openstack
       vars:
         base_interface: "{{ ansible_default_ipv4.alias }}"
@@ -97,6 +176,10 @@
         storage_ip: "{{ storage_host }}"
         storage_gw: "{{ openstack_storage_net.router }}"
         storage_mask: "{{ openstack_storage_net.netmask }}"
+        vxlan_vlan: "{{ openstack_vxlan_net.vlan }}"
+        vxlan_ip: "{{ vxlan_host }}"
+        vxlan_gw: "{{ openstack_vxlan_net.router }}"
+        vxlan_mask: "{{ openstack_vxlan_net.netmask }}"
       notify: restart networking
 
     - meta: flush_handlers
@@ -106,7 +189,6 @@
         name:
           - debootstrap
           - ifenslave
-          - ifenslave-2.6
           - lsof
           - lvm2
           - tcpdump
