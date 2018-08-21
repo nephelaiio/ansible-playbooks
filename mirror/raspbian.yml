@@ -78,8 +78,6 @@
         arches:
           - armhf
         mirrors:
-          - "http://{{ raspbian_mirror_host }}/raspbian jessie main contrib non-free"
-          - "http://{{ raspbian_mirror_host }}/raspbian jessie main firmware rpi ui"
           - "http://{{ raspbian_mirror_host }}/raspbian stretch main contrib non-free"
           - "http://{{ raspbian_mirror_host }}/raspbian stretch main firmware rpi ui"
         threads: "{{ raspbian_mirror_thread_num }}"
