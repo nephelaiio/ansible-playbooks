@@ -53,6 +53,14 @@ nets:
     zone: 5.168.192.in-addr.arpa
     pools: []
     reservations: {}
+  vxlan:
+    network: 192.168.4.0
+    netmask: 255.255.255.0
+    router: 192.168.4.1
+    vlan: 4
+    zone: 4.168.192.in-addr.arpa
+    pools: []
+    reservations: {}
   kvm:
     network: 192.168.254.0
     netmask: 255.255.255.0
