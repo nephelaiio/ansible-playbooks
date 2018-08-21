@@ -78,9 +78,12 @@
         arches:
           - amd64
         mirrors:
-          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial main restricted universe multiverse"
-          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial-security main restricted universe multiverse"
-          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial-updates main restricted universe multiverse"
+          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial main restricted universe"
+          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial-security main restricted universe"
+          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial-updates main restricted universe"
+          - "http://{{ ubuntu_mirror_host }}/ubuntu bionic main restricted universe"
+          - "http://{{ ubuntu_mirror_host }}/ubuntu bionic-security main restricted universe"
+          - "http://{{ ubuntu_mirror_host }}/ubuntu bionic-updates main restricted universe"
         threads: "{{ ubuntu_mirror_thread_num }}"
         thread_speed: "{{ ubuntu_mirror_thread_speed }}"
 
@@ -141,7 +144,7 @@
         apt_mirror_security: "{{ ubuntu_url | urlsplit('hostname') }}"
         apt_distribution: "{{ ansible_lsb.id | lower }}"
         apt_release: "{{ ansible_lsb.codename | lower }}"
-        apt_repositories: main restricted universe multiverse
+        apt_repositories: main restricted universe
 
     - name: remove i386 architecture
       command: dpkg --remove-architecture i386
