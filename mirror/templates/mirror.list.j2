@@ -13,7 +13,7 @@ set limit_speed       {{ thread_speed | default('10k') }}
 
 {% for arch in arches %}
 {% for mirror in mirrors %}
-deb [ arch={{ arch }} ] {{ mirror }}
+deb-{{ arch }} {{ mirror }}
 {% endfor %}
 {% endfor %}
 
