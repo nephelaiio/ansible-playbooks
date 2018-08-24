@@ -5,7 +5,7 @@ awx_organizations:
   - name: Default
     state: absent
 
-  - name: global
+  - name: home
     state: present
 
     credentials:
@@ -139,6 +139,32 @@ awx_organizations:
         vault_credential: home.vault
         credential: home.ssh
         host_config_key: "{{ awx_host_key }}"
+      - name: openvpn.home
+        job_type: run
+        project: nephelai.io
+        inventory: home
+        playbook: openvpn.yml
+        vault_credential: home.vault
+        credential: home.ssh
+        host_config_key: "{{ awx_host_key }}"
+      - name: grafana.home
+        job_type: run
+        project: nephelai.io
+        inventory: home
+        playbook: grafana.yml
+        vault_credential: home.vault
+        credential: home.ssh
+        host_config_key: "{{ awx_host_key }}"
+
+    workflows:
+      - name: home
+        nodes:
+          - name: ping
+            template: ping.home
+          - name: dns
+            template: dns.home
+          - name: dhcp
+            template: dhcp.home
 
     schedules:
       - name: upgrade.home
@@ -165,10 +191,18 @@ awx_organizations:
         job_template: dhcp.home
         enabled: true
         rrule: "DTSTART:20180401T003000Z RRULE:FREQ=DAILY;INTERVAL=1"
+      - name: openvpn.home
+        job_template: openvpn.home
+        enabled: true
+        rrule: "DTSTART:20180401T003500Z RRULE:FREQ=DAILY;INTERVAL=1"
       - name: dns.home
         job_template: dns.home
         enabled: true
         rrule: "DTSTART:20180401T004000Z RRULE:FREQ=DAILY;INTERVAL=1"
+      - name: grafana.home
+        job_template: grafana.home
+        enabled: true
+        rrule: "DTSTART:20180401T004500Z RRULE:FREQ=DAILY;INTERVAL=1"
       - name: unifi.home
         job_template: unifi.home
         enabled: true
