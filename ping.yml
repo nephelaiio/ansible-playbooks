@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: all:!offline
 
   gather_facts: no
 
