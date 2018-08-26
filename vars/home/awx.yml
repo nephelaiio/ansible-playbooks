@@ -163,8 +163,10 @@ awx_organizations:
             template: ping.home
           - name: dns
             template: dns.home
+            parent: ping
           - name: dhcp
             template: dhcp.home
+            parent: dns
 
     schedules:
       - name: upgrade.home

@@ -197,6 +197,8 @@
     - name: include private variables
       include_vars:
         dir: "{{ variables }}"
+      tags:
+        - always
 
     - name: install postgresql
       include_role:
@@ -295,11 +297,10 @@
       vars:
         awx_url_host: "{{ awx_url | urlsplit('hostname') }}."
         awx_url_zone: "{{ awx_url_host | split_with('.') | tail | join('.') }}"
-      register: pdns_zones_query
 
     - name: wait for awx container startup
-      pause:
-        seconds: 60
+      wait_for:
+        port: "{{ awx_port }}"
 
     - name: verify awx container startup
       uri:
@@ -321,6 +322,19 @@
         - schedules
       when: item.0.state | default('present') == 'absent' or item.1.state | default('present') == 'absent'
       no_log: "{{ awx_nolog }}"
+
+    - name: destroy awx workflows
+      include_tasks: awx/workflow_destroy.yml
+      vars:
+        organization: "{{ item.0.name }}"
+        workflow: "{{ item.1 }}"
+      with_subelements:
+        - "{{ awx_organizations | selectattr('projects', 'defined') | list }}"
+        - workflows
+      when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
+      no_log: "{{ awx_nolog }}"
+      tags:
+        - workflows
 
     - name: destroy awx job templates
       include_tasks: awx/template_destroy.yml
@@ -420,6 +434,19 @@
         - templates
       when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
       no_log: "{{ awx_nolog }}"
+
+    - name: create awx workflows
+      include_tasks: awx/workflow_create.yml
+      vars:
+        organization: "{{ item.0.name }}"
+        workflow: "{{ item.1 }}"
+      with_subelements:
+        - "{{ awx_organizations | selectattr('projects', 'defined') | list }}"
+        - workflows
+      when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
+      no_log: "{{ awx_nolog }}"
+      tags:
+        - workflows
 
     - name: create awx job schedules
       include_tasks: awx/schedule_create.yml
