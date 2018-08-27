@@ -1,5 +1,5 @@
 ---
-awx_version: 1.0.7
+awx_version: 1.0.6
 
 awx_organizations:
   - name: Default
@@ -46,7 +46,7 @@ awx_organizations:
         source_path: inventory
         overwrite: true
         overwrite_vars: true
-        update_on_launch: true
+        update_on_launch: false
         update_on_project_update: false
 
     templates:
@@ -161,14 +161,43 @@ awx_organizations:
         nodes:
           - name: ping
             template: ping.home
+          - name: os
+            template: os.home
+            parent: ping
+          - name: upgrade
+            template: upgrade.home
+            parent: os
+          - name: mirror
+            template: mirror.home
+            parent: upgrade
           - name: dns
             template: dns.home
-            parent: ping
+            parent: mirror
           - name: dhcp
             template: dhcp.home
             parent: dns
+          - name: librenms
+            template: librenms.home
+            parent: dhcp
+          - name: graylog
+            template: graylog.home
+            parent: dhcp
+          - name: openvpn
+            template: openvpn.home
+            parent: dhcp
+          - name: grafana
+            template: grafana.home
+            parent: dhcp
+          - name: unifi
+            template: unifi.home
+            parent: dhcp
 
     schedules:
+      - name: home
+        job_template: home
+        enabled: true
+        rrule: "DTSTART:20180826T000000Z RRULE:FREQ=DAILY;INTERVAL=1"
+        state: absent
       - name: upgrade.home
         job_template: upgrade.home
         enabled: true
