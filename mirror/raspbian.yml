@@ -1,7 +1,7 @@
 ---
 - name: Configure raspbian package mirrors
 
-  hosts: raspbian_mirror
+  hosts: raspbian_mirror:!offline
 
   environment: "{{ proxy_env | default({}) }}"
 

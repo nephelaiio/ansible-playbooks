@@ -1,7 +1,7 @@
 ---
 - name: Configure archive package mirror
 
-  hosts: archive_mirror
+  hosts: archive_mirror:!offline
 
   environment: "{{ proxy_env | default({}) }}"
 

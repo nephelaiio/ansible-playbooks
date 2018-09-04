@@ -1,7 +1,7 @@
 ---
 - name: Configure ubuntu package mirrors
 
-  hosts: ubuntu_mirror
+  hosts: ubuntu_mirror:!offline
 
   environment: "{{ proxy_env | default({}) }}"
 
