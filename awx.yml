@@ -227,14 +227,17 @@
         mode: 0600
         content: "{{ awx_pg_hostname }}:{{ awx_pg_port }}:{{ awx_pg_db }}:{{ awx_pg_user }}:{{ awx_pg_pass }}\n"
 
+    - name: remove legacy docker pip packages
+      pip:
+        name: docker-py
+        state: absent
+
     - name: install docker
       include_role:
         name: nephelaiio.docker
       vars:
-        pip_packages: pip
-        pip_packages_helpers:
-          - python-setuptools
-          - ca-certificates
+        docker_pip_helpers:
+          - docker
 
     - name: define awx installer variables
       set_fact:
@@ -301,6 +304,7 @@
     - name: wait for awx container startup
       wait_for:
         port: "{{ awx_port }}"
+        delay: 30
 
     - name: verify awx container startup
       uri:
@@ -400,8 +404,8 @@
       with_subelements:
         - "{{ awx_organizations | selectattr('credentials', 'defined') | list }}"
         - credentials
-      when: item.0.state == 'present' and item.1.state == 'present'
-      no_log: "{{ awx_nolog }}"
+      when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
+      no_log: false
 
     - name: create awx projects
       include_tasks: awx/project_create.yml
