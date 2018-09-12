@@ -7,10 +7,6 @@
   vars:
     ntp_hosts: home
 
-- import_playbook: site/papertrail.yml
-  vars:
-    papertrail_hosts: home
-
 - import_playbook: site/raspbian.yml
   vars:
     raspbian_hosts: raspberry
