@@ -1,7 +1,9 @@
 ---
 - name: Configure ntp
 
-  hosts: "{{ ntp_hosts }}"
+  hosts:
+    - "{{ ntp_hosts }}"
+    - !offline
 
   become: yes
 

@@ -487,6 +487,7 @@
   hosts:
     - nuc
     - raspberry
+    - !offline
 
   become: yes
 
