@@ -484,10 +484,7 @@
 
 - name: Configure Librenms devices
 
-  hosts:
-    - nuc
-    - raspberry
-    - !offline
+  hosts: nuc:raspberry:!offline
 
   become: yes
 

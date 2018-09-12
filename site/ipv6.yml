@@ -1,9 +1,7 @@
 ---
 - name: Disable ipv6
 
-  hosts:
-    - "{{ ipv6_hosts }}"
-    - !offline
+  hosts: "{{ ipv6_hosts }}:!offline"
 
   become: yes
 

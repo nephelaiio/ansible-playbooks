@@ -1,10 +1,8 @@
 ---
 - name: Configure raspbian
 
-  hosts:
-    - "{{ raspbian_hosts }}"
-    - !offline
-
+  hosts: "{{ raspbian_hosts }}:!offline"
+ 
   become: yes
 
   tasks:
