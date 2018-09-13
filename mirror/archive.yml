@@ -88,6 +88,12 @@
         state: link
         force: yes
 
+    - name: download kvm images
+      get_url:
+        url: "{{ item.src }}"
+        dest: "{{ archive_mirror_root }}/{{ item.url | basename }}"
+      with_items: "{{ kvm_images }}"
+
     - name: create archive mirror link
       file:
         path: "{{ web_root }}/{{ kvm_mirror_dir }}"
