@@ -113,7 +113,7 @@
 
 - name: Configure Raspbian mirror clients
 
-  hosts: raspberry
+  hosts: raspberry:!offline
 
   environment: "{{ proxy_env | default({}) }}"
 
