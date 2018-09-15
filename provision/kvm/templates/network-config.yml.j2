@@ -1,0 +1,13 @@
+version: 2
+ethernets:
+  {{ iface['name'] }}:
+    match:
+      mac_address: "{{ iface['hw-address'] }}"
+{% if 'method' in iface and iface['method'] == 'static' %}
+    addresses:
+      - {{ iface['ip-address'] }}/{{ iface['prefix'] }}
+    gateway4: {{ iface['gateway'] }}
+{% else %}
+    dhcp4: true
+{% endif %}
+ 

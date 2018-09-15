@@ -1,0 +1,56 @@
+---
+- name: Create kvm guests
+
+  hosts: kvm_guests
+
+  become: yes
+
+  gather_facts: no
+
+  vars:
+
+    ansible_kvm_user: teddyphreak
+    kvm_nolog: no
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include variable definitions
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: include os variable overrides
+      include_vars: "{{ item }}"
+      with_first_found:
+        - files:
+            - "vars/{{ ansible_distribution | lower }}-{{ ansible_distribution_major_version }}.yml"
+            - "vars/{{ ansible_distrubition | lower }}.yml"
+            - "vars/{{ ansible_os_family | lower }}.yml"
+          skip: true
+
+    - name: create image target directory
+      file:
+        path: /tmp/kvm
+        state: directory
+      delegate_to: localhost
+      run_once: yes
+
+    - name: debug ansible connection user
+      debug:
+        var: ansible_user
+      delegate_to: localhost
+      run_once: yes
+
+    - name: manage vms
+      import_tasks: kvm/vm_manage.yml
+      vars:
+        name: "{{ inventory_hostname }}"
+        ansible_guest_user: "{{ users[ansible_kvm_user] }}"
+        ansible_guest_username: "{{ ansible_guest_user.username }}"
+        ansible_guest_password: "{{ ansible_guest_user.password }}"
+        ansible_guest_ssh_key: "{{ ansible_guest_user.pubkey }}"
+        img_dir: "{{ playbook_dir }}/../files/kvm"
+      no_log: "{{ kvm_nolog }}"

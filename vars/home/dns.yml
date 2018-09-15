@@ -24,12 +24,6 @@ dns:
       ns: "{{ groups['pdns'] }}"
       records: "{{ nets.home.reservations.values() | map('reverse_record') | list }}"
       cnames: []
-    mvk:
-      name: "{{ nets.kvm.zone }}"
-      hostmaster: master@home.nephelai.io
-      ns: "{{ groups['pdns'] }}"
-      records: "{{ nets.kvm.reservations.values() | map('reverse_record') | list }}"
-      cnames: []
 
 pdns:
   config:

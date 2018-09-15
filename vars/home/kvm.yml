@@ -1,0 +1,60 @@
+---
+kvm_images:
+  bionic:
+    src: https://cloud-images.ubuntu.com/bionic/current/bionic-server-cloudimg-amd64.img
+    url: "{{ archive_url }}/{{ kvm_mirror_dir }}/bionic-server-cloudimg-amd64.img"
+    pool: default
+    format: qcow2
+    checksum: sha256:ba081faaf5128d2855803128bbdce0c137e310d1725c6bcc3d5aaa2daa96f224
+  xenial:
+    src: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
+    url: "{{ archive_url }}/{{ kvm_mirror_dir }}/xenial-server-cloudimg-amd64.img"
+    pool: default
+    format: qcow2
+    checksum: sha256:7bb741d90f56a42bbde01633d1f6e9204693c6ae357edd42a0b363945a76812f
+  centos:
+    src: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2.xz
+    url: "{{ archive_url }}/{{ kvm_mirror_dir }}/CentOS-7-x86_64-GenericCloud.qcow2.xz"
+    pool: default
+    format: qcow2
+    checksum: sha256:b34859272e29ddcc3a1f27a214cef75ba661ec2a28d956cad46cd132b54b00c2
+
+kvm_default_profile: small
+
+kvm_profiles:
+  small:
+    state: present  # | recreate | absent
+    memory: 2048
+    cpu: 2
+    image: xenial
+    autostart: True
+    size: 10G
+    pool: default
+    nic:
+      name: enp0s3
+      type: bridge
+      net: br0
+      prefix: "{{ nets.home.netmask }}"
+      gateway: "{{ nets.home.router | ipaddr('address') }}"
+      nameservers: "{{ servers.recursors }}"
+  medium:
+    state: present  # | recreate | absent
+    memory: 4096
+    cpu: 4
+    image: xenial
+    autostart: True
+    size: 20G
+    pool: default
+    nic:
+      name: enp0s3
+      type: bridge
+      net: br0
+      prefix: "{{ nets.home.netmask }}"
+      gateway: "{{ nets.home.router | ipaddr('address') }}"
+      nameservers: "{{ servers.recursors }}"
+
+kvm_pools:
+  default:
+    path: /var/lib/libvirt/images
+    state: present
+    autostart: True

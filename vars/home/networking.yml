@@ -61,12 +61,3 @@ nets:
     zone: 4.168.192.in-addr.arpa
     pools: []
     reservations: {}
-  kvm:
-    network: 192.168.254.0
-    netmask: 255.255.255.0
-    router: 192.168.254.1
-    zone: 254.168.192.in-addr.arpa
-    ns: "{{ servers.recursors }}"
-    pools:
-      - range: '192.168.254.65 192.168.254.127'
-    reservations: {}
