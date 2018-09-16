@@ -7,7 +7,7 @@ package_upgrade: true
 package_reboot_if_required: true
 users:
   - name: {{ ssh_user }}
-    passwd: {{ ssh_pass | password_hash('sha512') }}
+    passwd: {{ ssh_pass }}
     groups: sudo,admin
     lock_passwd: false
     system: false
@@ -15,6 +15,7 @@ users:
     sudo: ALL=(ALL) NOPASSWD:ALL
     ssh-authorized-keys:
       - {{ ssh_key }}
+{% if apt_mirror is defined %}
 apt:
   disable_suites:
     - backports
@@ -24,11 +25,12 @@ apt:
       uri: http://{{ apt_mirror }}/ubuntu/
   disable_suites:
     - backports
-{% if apt_proxy_http_uri is defined %}
+{%   if apt_proxy_http_uri is defined %}
   http_proxy: "{{ apt_proxy_http_uri }}"
-{% endif %}
-{% if apt_proxy_https_uri is defined %}
+{%   endif %}
+{%   if apt_proxy_https_uri is defined %}
   https_proxy: "{{ apt_proxy_https_uri }}"
+{%   endif %}
 {% endif %}
 runcmd:
   - [ sh, -c, "echo 127.0.1.1 {{ fqdn }} {{ fqdn | split_with('.') | first }} >> /etc/hosts" ] 
@@ -41,6 +43,8 @@ runcmd:
   - [ sh, -c, "echo '    dns-search {{ iface.namesearch | join(' ') }}' >> /etc/network/interfaces.d/50-cloud-init.cfg" ]
 {%   endif %}
 {% endif %}
+{% if apt_mirror is defined %}
   - [ sh, -c, "sed -i -e '/deb-src/d' /etc/apt/sources.list" ]
   - [ sh, -c, "for arch in $(dpkg --print-foreign-architectures); do dpkg --remove-architecture $arch ; done" ]
+{% endif %}
   - [ sh, -c, "echo 'ARRAY <ignore> devices=/dev/sda' >> /etc/mdadm/mdadm.conf" ]

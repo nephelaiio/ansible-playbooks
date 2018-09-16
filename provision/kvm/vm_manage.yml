@@ -14,11 +14,9 @@
         custom_profile:
           name: "{{ name }}"
           nic:
-            method: static
+            method: dhcp4
             host: "{{ hostvars[name]['inventory_hostname'] }}"
-            ip-address: "{{ hostvars[name]['ansible_host'] }}"
             hw-address: "{{ hostvars[name]['hw_address'] }}"
-            nameservers: "{{ servers.recursors }}"
         inventory_profile: "{{ hostvars[name] }}"
 
     - name: build vm {{ name }} definition
@@ -100,6 +98,16 @@
             dest: "{{ vm_img }}"
             mode: 0666
 
+        - name: extract vm {{ name }} image
+          command: "xz -k -d {{ vm_img }}"
+          changed_when: false
+          when: vm_img is match(".*\.xz")
+
+        - name: register vm {{ name }} image path
+          command: basename {{ vm_img }} .xz
+          register: img_filename
+          changed_when: false
+
         - name: uncompress vm {{ name }} image
           command: "qemu-img convert -O {{ format }} {{ source }} {{ target }}"
           args:
@@ -107,7 +115,7 @@
             creates: "{{ target }}"
           vars:
             format: "{{ img.format }}"
-            source: "{{ vm_img }}"
+            source: "{{ vm_img | dirname }}/{{ img_filename.stdout }}"
             target: "{{ vm_disk }}"
           register: diskcopy
 
@@ -117,18 +125,23 @@
             disk: "{{ vm_disk }}"
           when: diskcopy.changed
 
+        - name: regsiter password salt
+          set_fact:
+            pass_salt: salt
+
         - name: create vm {{ name }} cloud image user data
           template:
             src: user-data.yml.j2
             dest: "{{ tmpdir.path }}/user-data"
           vars:
             ssh_user: "{{ ansible_guest_username }}"
-            ssh_pass: "{{ ansible_guest_password }}"
+            ssh_pass: "{{ ansible_guest_password | password_hash('sha512') }}"
             ssh_key: "{{ ansible_guest_ssh_key }}"
             hostname: "{{ vm.name }}"
             fqdn: "{{ vm.nic.host }}"
             iface: "{{ vm.nic }}"
             apt_mirror: "{{ ubuntu_url | urlsplit('hostname') }}"
+            image: "{{ vm.image }}"
           when: diskcopy.changed
           become: no
 

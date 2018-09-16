@@ -10,7 +10,7 @@
   vars:
 
     ansible_kvm_user: teddyphreak
-    kvm_nolog: no
+    kvm_nolog: yes
 
   roles:
 
@@ -53,4 +53,3 @@
         ansible_guest_password: "{{ ansible_guest_user.password }}"
         ansible_guest_ssh_key: "{{ ansible_guest_user.pubkey }}"
         img_dir: "{{ playbook_dir }}/../files/kvm"
-      no_log: "{{ kvm_nolog }}"

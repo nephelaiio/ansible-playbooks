@@ -12,7 +12,7 @@ kvm_images:
     pool: default
     format: qcow2
     checksum: sha256:7bb741d90f56a42bbde01633d1f6e9204693c6ae357edd42a0b363945a76812f
-  centos:
+  centos7:
     src: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud.qcow2.xz
     url: "{{ archive_url }}/{{ kvm_mirror_dir }}/CentOS-7-x86_64-GenericCloud.qcow2.xz"
     pool: default
