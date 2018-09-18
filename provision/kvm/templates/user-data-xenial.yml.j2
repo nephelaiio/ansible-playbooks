@@ -1,0 +1,36 @@
+#cloud-config
+packages:
+  - python-minimal
+  - nfs-client
+package_update: true
+package_upgrade: true
+package_reboot_if_required: true
+disable_root: true
+users:
+  - default
+system_info:
+  distro: ubuntu
+  default_user:
+    name: {{ ssh_user }}
+    passwd: {{ ssh_pass }}
+    groups: sudo,admin
+    lock_passwd: false
+    system: false
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh-authorized-keys:
+      - {{ ssh_key }}
+apt:
+  disable_suites:
+    - backports
+  primary:
+    - arches:
+        - amd64
+{% if apt_mirror is defined %}
+      uri: http://{{ apt_mirror }}/ubuntu/
+{% endif %}
+runcmd:
+  - [ sh, -c, "echo 127.0.1.1 {{ fqdn }} {{ fqdn | split_with('.') | first }} >> /etc/hosts" ] 
+  - [ sh, -c, "sed -i -e '/deb-src/d' /etc/apt/sources.list" ]
+  - [ sh, -c, "for arch in $(dpkg --print-foreign-architectures); do dpkg --remove-architecture $arch ; done" ]
+  - [ sh, -c, "echo 'ARRAY <ignore> devices=/dev/sda' >> /etc/mdadm/mdadm.conf" ]

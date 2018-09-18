@@ -131,7 +131,7 @@
 
         - name: create vm {{ name }} cloud image user data
           template:
-            src: user-data.yml.j2
+            src: "user-data-{{ vm.image }}.yml.j2"
             dest: "{{ tmpdir.path }}/user-data"
           vars:
             ssh_user: "{{ ansible_guest_username }}"
@@ -141,6 +141,8 @@
             fqdn: "{{ vm.nic.host }}"
             iface: "{{ vm.nic }}"
             apt_mirror: "{{ ubuntu_url | urlsplit('hostname') }}"
+            yum_mirror: "{{ centos_url | urlsplit('hostname') }}"
+            epel_mirror: "{{ epel_url | urlsplit('hostname') }}"
             image: "{{ vm.image }}"
           when: diskcopy.changed
           become: no

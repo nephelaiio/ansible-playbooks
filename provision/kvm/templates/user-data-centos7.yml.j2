@@ -1,0 +1,56 @@
+#cloud-config
+packages:
+  - python-minimal
+  - nfs-client
+package_update: true
+package_upgrade: true
+package_reboot_if_required: true
+disable_root: true
+users:
+  - default
+system_info:
+  distro: centos
+  default_user:
+    name: {{ ssh_user }}
+    passwd: {{ ssh_pass }}
+    groups: sudo,admin
+    lock_passwd: false
+    system: false
+    shell: /bin/bash
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh-authorized-keys:
+      - {{ ssh_key }}
+{% if apt_mirror is defined %}
+write_files:
+  - path: /etc/yum.repos.d/CentOS-Base.repo
+    owner: root:root
+    permissions: '0444'
+    content: |
+      # installed by cloud-init
+      [base]
+      name=CentOS-$releasever - Base
+      baseurl=http://{{ yum_mirror }}/centos/$releasever/os/$basearch/
+      gpgcheck=1
+      gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+      #released updates 
+      [updates]
+      name=CentOS-$releasever - Updates
+      baseurl=http://{{ yum_mirror }}/centos/$releasever/updates/$basearch/
+      gpgcheck=1
+      gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+      #additional packages that may be useful
+      [extras]
+      name=CentOS-$releasever - Extras
+      baseurl=http://{{ yum_mirror }}/centos/$releasever/extras/$basearch/
+      gpgcheck=1
+      gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
+{% endif %}
+yum_repos:
+    # The name of the repository
+    epel:
+        baseurl: http://{{ epel_mirror }}/pub/epel/$releasever/$basearch
+        enabled: false
+        failovermethod: priority
+        gpgcheck: true
+        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL
+        name: Extra Packages for Enterprise Linux 5 - Testing

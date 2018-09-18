@@ -1,0 +1,141 @@
+---
+- name: Configure centos package mirror
+
+  hosts: centos_mirror
+
+  environment: "{{ proxy_env | default({}) }}"
+
+  become: yes
+
+  vars:
+
+    centos_mirror_root: "{{ mirror_root }}/{{ centos_mirror_dir }}"
+    centos_mirror_url: rsync://mirror.sfo12.us.leaseweb.net/centos/
+    centos_vhost_path: "{{ web_root }}/{{ centos_mirror_dir }}"
+    epel_mirror_url: rsync://mirror.nodesdirect.com/epel/
+    epel_mirror_root: "{{ mirror_root }}/epel"
+    epel_vhost_path: "{{ web_root }}/epel"
+    centos_rsync_options: "-arvzSHP --include '*/' --include filelist.gz --include 'RPM-GPG-KEY-CentOS-7' --include '7*/' --include '7*/os/' --include '7*/os/x86_64/' --include '7*/os/x86_64/***' --include '7*/cloud/' --include '7*/cloud/x86_64/' --include '7*/cloud/x86_64/***' --include '7*/extras/' --include '7*/extras/***' --include '7*/updates/' --include '7*/updates/***' --exclude '*'"
+    epel_rsync_options: "-arvzKSHP --prune-empty-dirs --delete --exclude '**/debug/**' --exclude 'testing/' --include '*/' --include '7*/' --include '7*/x86_64/' --include '7*/x86_64/***' --include RPM-GPG-KEY-EPEL-7 --include fullfilelist --include fullfiletimelist-epel --include imagelist-epel --exclude '*'"
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: create mirror root
+      file:
+        path: "{{ web_root }}"
+        state: directory
+
+    - name: install yum mirror packages
+      package:
+        name:
+          - rsync
+
+    - name: create centos mirror path
+      file:
+        path: "{{ centos_mirror_root }}"
+        state: directory
+
+    - name: add centos mirror cronjob
+      cron:
+        name: 'update centos mirror cache'
+        job: "flock -n /tmp/centos-mirror /usr/bin/rsync {{ centos_rsync_options }} {{ centos_mirror_url }} {{ centos_mirror_root }}"
+        special_time: daily
+
+    - name: add epel mirror cronjob
+      cron:
+        name: 'update epel mirror cache'
+        job: "flock -n /tmp/epel-mirror /usr/bin/rsync {{ epel_rsync_options }} {{ epel_mirror_url }} {{ epel_mirror_root }}"
+        special_time: daily
+
+    - name: create centos mirror link
+      file:
+        path: "{{ web_root }}/{{ centos_mirror_root | basename }}"
+        src: "{{ centos_mirror_root }}"
+        state: link
+        force: yes
+
+    - name: create epel mirror link
+      file:
+        path: "{{ web_root }}/{{ epel_mirror_root | basename }}"
+        src: "{{ epel_mirror_root }}"
+        state: link
+        force: yes
+
+    - name: configure nginx
+      include_role:
+        name: geerlingguy.nginx
+      vars:
+        nginx_remove_default_vhost: true
+        nginx_vhosts:
+          - listen: "80"
+            root: "{{ web_root }}"
+            server_name: "{{ centos_url | urlsplit('hostname') }}"
+            access_log: "/var/log/nginx/{{ centos_url | urlsplit('hostname') }}.access.log"
+            error_log: "/var/log/nginx/{{ centos_url | urlsplit('hostname') }}.error.log"
+            extra_parameters: |
+              autoindex on;
+          - listen: "80"
+            root: "{{ web_root }}"
+            server_name: "{{ epel_url | urlsplit('hostname') }}"
+            access_log: "/var/log/nginx/{{ epel_url | urlsplit('hostname') }}.access.log"
+            error_log: "/var/log/nginx/{{ epel_url | urlsplit('hostname') }}.error.log"
+            extra_parameters: |
+              autoindex on;
+
+    - name: update centos pdns record
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ centos_url_zone }}"
+        method: PATCH
+        return_content: yes
+        body_format: json
+        body:
+          rrsets:
+            - name: "{{ centos_url_host }}"
+              type: A
+              ttl: 3600
+              changetype: REPLACE
+              records:
+                - content: "{{ ansible_default_ipv4.address }}"
+                  disabled: no
+                  set-ptr: no
+                  comments: []
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        centos_url_host: "{{ centos_url | urlsplit('hostname') }}."
+        centos_url_zone: "{{ centos_url_host | split_with('.') | tail | join('.') }}"
+      register: pdns_zones_query
+
+    - name: update epel pdns record
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ epel_url_zone }}"
+        method: PATCH
+        return_content: yes
+        body_format: json
+        body:
+          rrsets:
+            - name: "{{ epel_url_host }}"
+              type: A
+              ttl: 3600
+              changetype: REPLACE
+              records:
+                - content: "{{ ansible_default_ipv4.address }}"
+                  disabled: no
+                  set-ptr: no
+                  comments: []
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        epel_url_host: "{{ epel_url | urlsplit('hostname') }}."
+        epel_url_zone: "{{ epel_url_host | split_with('.') | tail | join('.') }}"
+      register: pdns_zones_query
