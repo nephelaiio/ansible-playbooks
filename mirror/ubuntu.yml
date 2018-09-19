@@ -77,13 +77,14 @@
         base_path: "{{ ubuntu_mirror_root }}"
         arches:
           - amd64
+          - i386
         mirrors:
-          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial main restricted universe"
-          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial-security main restricted universe"
-          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial-updates main restricted universe"
-          - "http://{{ ubuntu_mirror_host }}/ubuntu bionic main restricted universe"
-          - "http://{{ ubuntu_mirror_host }}/ubuntu bionic-security main restricted universe"
-          - "http://{{ ubuntu_mirror_host }}/ubuntu bionic-updates main restricted universe"
+          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial main restricted universe multiverse"
+          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial-security main restricted universe multiverse"
+          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial-updates main restricted universe multiverse"
+          - "http://{{ ubuntu_mirror_host }}/ubuntu bionic main restricted universe multiverse"
+          - "http://{{ ubuntu_mirror_host }}/ubuntu bionic-security main restricted universe multiverse"
+          - "http://{{ ubuntu_mirror_host }}/ubuntu bionic-updates main restricted universe multiverse"
         threads: "{{ ubuntu_mirror_thread_num }}"
         thread_speed: "{{ ubuntu_mirror_thread_speed }}"
 
@@ -145,10 +146,6 @@
         apt_distribution: "{{ ansible_lsb.id | lower }}"
         apt_release: "{{ ansible_lsb.codename | lower }}"
         apt_repositories: main restricted universe
-
-    - name: remove i386 architecture
-      command: dpkg --remove-architecture i386
-      changed_when: false
 
     - name: update apt
       apt:
