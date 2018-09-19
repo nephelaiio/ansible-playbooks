@@ -5,6 +5,6 @@ ethernets:
     renderer: networkd
 {% endif %}
     match:
-      mac_address: "{{ iface['hw-address'] }}"
+      macaddress: "{{ iface['hw-address'] }}"
     dhcp4: true
  

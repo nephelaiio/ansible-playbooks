@@ -18,7 +18,7 @@ system_info:
     system: false
     shell: /bin/bash
     sudo: ALL=(ALL) NOPASSWD:ALL
-    ssh-authorized-keys:
+    ssh_authorized_keys:
       - {{ ssh_key }}
 apt:
   disable_suites:
@@ -33,6 +33,4 @@ apt:
 {% endif %}
 runcmd:
   - [ sh, -c, "echo 127.0.1.1 {{ fqdn }} {{ fqdn | split_with('.') | first }} >> /etc/hosts" ] 
-  - [ sh, -c, "sed -i -e '/deb-src/d' /etc/apt/sources.list" ]
-  - [ sh, -c, "for arch in $(dpkg --print-foreign-architectures); do dpkg --remove-architecture $arch ; done" ]
   - [ sh, -c, "echo 'ARRAY <ignore> devices=/dev/sda' >> /etc/mdadm/mdadm.conf" ]

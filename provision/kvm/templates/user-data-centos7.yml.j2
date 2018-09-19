@@ -18,7 +18,7 @@ system_info:
     system: false
     shell: /bin/bash
     sudo: ALL=(ALL) NOPASSWD:ALL
-    ssh-authorized-keys:
+    ssh_authorized_keys:
       - {{ ssh_key }}
 {% if apt_mirror is defined %}
 write_files:
