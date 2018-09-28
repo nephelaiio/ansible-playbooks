@@ -3,8 +3,6 @@
   version: v1.2
 - src: alekseyp.papertrail
   version: v0.3
-- src: franklinkim.users
-  version: 1.9.1
 - src: geerlingguy.apache
   version: 3.0.0
 - src: geerlingguy.nginx
@@ -70,10 +68,10 @@
   version: 1.0.1
 - src: https://github.com/nephelaiio/ansible-role-ubuntu-installer.git
   name: nephelaiio.ubuntu-installer
-  version: 2.1.8
+  version: 2.2.1
 - src: https://github.com/nephelaiio/ansible-role-centos-installer.git
   name: nephelaiio.centos-installer
-  version: 1.0.3
+  version: 2.0.2
 - src: https://github.com/Graylog2/graylog-ansible-role.git
   name: graylog2.graylog
   version: 2.4.0
