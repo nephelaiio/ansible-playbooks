@@ -3,6 +3,8 @@
 
   hosts: localhost
 
+  become: yes
+
   vars:
 
     raspbian_inventory_group: raspberry
