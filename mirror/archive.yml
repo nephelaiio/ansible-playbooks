@@ -14,8 +14,8 @@
     archive_mirror_targets:
       - url: http://releases.ubuntu.com/16.04/ubuntu-16.04.5-server-amd64.iso
         checksum: sha256:c94de1cc2e10160f325eb54638a5b5aa38f181d60ee33dae9578d96d932ee5f8
-      - url: http://isoredirect.centos.org/centos/7/isos/x86_64/CentOS-7-x86_64-Minimal-1804.iso
-        checksum: sha256:d4fc1b609eaf76b842f4b1bdae70b865b285968b808acc09ce34b337e3c86cb8
+      - url: http://mirrors.ucr.ac.cr/centos/7.5.1804/isos/x86_64/CentOS-7-x86_64-Minimal-1804.iso
+        checksum: sha256:714acc0aefb32b7d51b515e25546835e55a90da9fb00417fbee2d03a62801efd
 
   roles:
 
