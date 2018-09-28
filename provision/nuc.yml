@@ -36,7 +36,7 @@
       include_role:
         name: nephelaiio.centos-installer
       vars:
-        centos_installer_image_url: "{{ archive_url }}/{{ archive_mirror_dir }}/CentOS-7-x86_64-Minimal-1708.iso"
+        centos_installer_image_url: "{{ archive_url }}/{{ archive_mirror_dir }}/CentOS-7-x86_64-Minimal-1804.iso"
         centos_installer_hostname: "{{ hostitem }}"
         centos_installer_interface:
           static: false
