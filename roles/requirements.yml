@@ -41,7 +41,7 @@
   version: 1.0.10
 - src: https://github.com/nephelaiio/ansible-role-tmux.git
   name: nephelaiio.tmux
-  version: 2.0.1
+  version: 2.0.2
 - src: https://github.com/nephelaiio/ansible-role-vagrant.git
   name: nephelaiio.vagrant
   version: 2.0.0
@@ -53,7 +53,7 @@
   version: 2.0.2
 - src: https://github.com/nephelaiio/ansible-role-docker.git
   name: nephelaiio.docker
-  version: 1.0.3
+  version: 2.1.0
 - src: https://github.com/nephelaiio/ansible-role-bind.git
   name: nephelaiio.bind
   version: 2.0.0
