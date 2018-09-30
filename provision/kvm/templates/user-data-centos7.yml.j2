@@ -1,7 +1,8 @@
 #cloud-config
 packages:
-  - python-minimal
-  - nfs-client
+  - python
+  - nfs-utils
+  - python-pip
 package_update: true
 package_upgrade: true
 package_reboot_if_required: true
@@ -20,8 +21,10 @@ system_info:
     sudo: ALL=(ALL) NOPASSWD:ALL
     ssh_authorized_keys:
       - {{ ssh_key }}
-{% if apt_mirror is defined %}
+{% if (yum_mirror is defined) or (epel_mirror is defined) %}
 write_files:
+{% endif %}
+{% if yum_mirror is defined %}
   - path: /etc/yum.repos.d/CentOS-Base.repo
     owner: root:root
     permissions: '0444'
@@ -45,12 +48,18 @@ write_files:
       gpgcheck=1
       gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
 {% endif %}
+{% if epel_mirror is defined %}
 yum_repos:
     # The name of the repository
     epel:
         baseurl: http://{{ epel_mirror }}/pub/epel/$releasever/$basearch
-        enabled: false
+        enabled: true
         failovermethod: priority
         gpgcheck: true
         gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL
-        name: Extra Packages for Enterprise Linux 5 - Testing
+        name: Extra Packages for Enterprise Linux
+{% endif %}
+runcmd:
+  - rm -f /etc/sysconfig/network-scripts/ifcfg-eth0
+power_state:
+  mode: reboot

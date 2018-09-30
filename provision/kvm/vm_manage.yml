@@ -8,7 +8,7 @@
 
 - block:
 
-    - name: build vm {{ name }} profile definitions
+    - name: build vm profile definitions
       set_fact:
         kvm_profile: "{{ kvm_profiles[hostvars[name].kvm_profile | default(kvm_default_profile)] }}"
         custom_profile:
@@ -19,48 +19,48 @@
             hw-address: "{{ hostvars[name]['hw_address'] }}"
         inventory_profile: "{{ hostvars[name] }}"
 
-    - name: build vm {{ name }} definition
+    - name: build vm definition
       set_fact:
         vm: "{{ kvm_profile | combine(custom_profile, inventory_profile, recursive=true) }}"
 
-    - name: build vm {{ name }} pool definition
+    - name: build vm pool definition
       set_fact:
         pool: "{{ kvm_pools[vm.pool].path }}"
 
-    - name: build vm {{ name }} img and iso definitions
+    - name: build vm img and iso definitions
       set_fact:
         iso: "{{ pool }}/cloud_init_{{ name }}.iso"
         img: "{{ kvm_images[vm.image] }}"
 
     - block:
 
-        - name: destroy vm {{ name }}
+        - name: destroy vm
           virt:
             name: "{{ vm.name }}"
             command: destroy
           failed_when: false
 
-        - name: undefine vm {{ name }}
+        - name: undefine vm
           virt:
             name: "{{ vm.name }}"
             command: undefine
           failed_when: false
 
-        - name: delete vm {{ name }} disk
+        - name: delete vm disk
           file:
             path: "{{ pool }}/{{ vm.name }}.img"
             state: absent
           become: yes
           when: pool is defined
 
-        - name: delete vm {{ name }} cloud image disk
+        - name: delete vm cloud image disk
           file:
             path: "{{ iso }}"
             state: absent
           become: yes
           when: iso is defined
 
-        - name: delete vm {{ name }} qemu definitions
+        - name: delete vm qemu definitions
           file:
             path: "{{ qemudefitem }}"
             state: absent
@@ -87,28 +87,30 @@
           changed_when: False
           become: no
 
-        - name: set vm {{ name }} target disk path var
+        - name: set vm target disk path var
           set_fact:
             vm_img: "{{ tmpdir.path }}/{{ img.url | basename }}"
             vm_disk: "{{ pool }}/{{ vm.name }}.img"
 
-        - name: fetch vm {{ name }} image
+        - name: fetch vm image
           get_url:
             url: "{{ img.url }}"
             dest: "{{ vm_img }}"
             mode: 0666
+          register: fetch_image
+          retries: 5
 
-        - name: extract vm {{ name }} image
+        - name: extract vm image
           command: "xz -k -d {{ vm_img }}"
           changed_when: false
           when: vm_img is match(".*\.xz")
 
-        - name: register vm {{ name }} image path
+        - name: register vm image path
           command: basename {{ vm_img }} .xz
           register: img_filename
           changed_when: false
 
-        - name: uncompress vm {{ name }} image
+        - name: uncompress vm image
           command: "qemu-img convert -O {{ format }} {{ source }} {{ target }}"
           args:
             chdir: "{{ img_dir.path }}"
@@ -119,7 +121,7 @@
             target: "{{ vm_disk }}"
           register: diskcopy
 
-        - name: resize vm {{ name }} disk
+        - name: resize vm disk
           command: "qemu-img resize {{ disk }} {{ vm.size }}"
           vars:
             disk: "{{ vm_disk }}"
@@ -129,7 +131,7 @@
           set_fact:
             pass_salt: salt
 
-        - name: create vm {{ name }} cloud image user data
+        - name: create vm cloud image user data
           template:
             src: "user-data-{{ vm.image }}.yml.j2"
             dest: "{{ tmpdir.path }}/user-data"
@@ -147,16 +149,20 @@
           when: diskcopy.changed
           become: no
 
-        - name: create vm {{ name }} cloud image network config
+        - name: create vm cloud image network config
           template:
-            src: network-config.yml.j2
+            src: "network-config-{{ vm.image }}.yml.j2"
             dest: "{{ tmpdir.path }}/network-config"
           vars:
             iface: "{{ vm.nic }}"
           when: diskcopy.changed
           become: no
 
-        - name: create vm {{ name }} cloud image meta data
+        - debug:
+            msg: "{{ lookup('file', tmpdir.path + '/network-config') }}"
+          when: diskcopy.changed
+
+        - name: create vm cloud image meta data
           template:
             src: meta-data.yml.j2
             dest: "{{ tmpdir.path }}/meta-data"
@@ -167,17 +173,17 @@
           when: diskcopy.changed
           become: no
 
-        - name: create vm {{ name }} cloud image iso
+        - name: create vm cloud image iso
           command: genisoimage -output {{ iso }} -volid cidata -joliet -r meta-data user-data network-config
           args:
             chdir: "{{ tmpdir.path }}"
           when: diskcopy.changed
 
-        - name: set vm {{ name }} definition path
+        - name: set vm definition path
           set_fact:
             domain_def: "{{ tmpdir.path }}/vm_{{ vm.name }}.xml"
 
-        - name: create vm {{ name }} template
+        - name: create vm template
           template:
             src: vm.xml.j2
             dest: "{{ domain_def }}"
@@ -185,25 +191,25 @@
             disk: "{{ vm_disk }}"
           become: no
 
-        - name: get vm {{ name }} template contents
+        - name: get vm template contents
           slurp:
             src: "{{ domain_def }}"
           register: domain
 
-        - name: create vm {{ name }}
+        - name: create vm
           virt:
             name: "{{ vm.name }}"
             command: define
             xml: "{{ domain['content'] | b64decode }}"
           when: diskcopy.changed
 
-        - name: manage vm {{ name }}
+        - name: manage vm
           virt:
             name: "{{ vm.name }}"
             state: "{{ vm.state | regex_replace('recreate', 'running') | regex_replace('present', 'running') }}"
             xml: "{{ domain['content'] | b64encode }}"
 
-        - name: autostart vm {{ name }}
+        - name: autostart vm
           command: "virsh -c qemu:///system autostart {{ vm.name }}"
           changed_when: false
           when: vm.autostart

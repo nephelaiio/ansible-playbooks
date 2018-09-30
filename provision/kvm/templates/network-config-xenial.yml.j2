@@ -1,0 +1,6 @@
+version: 2
+ethernets:
+  {{ iface['name'] }}:
+    match:
+      macaddress: "{{ iface['hw-address'] }}"
+    dhcp4: true

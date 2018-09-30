@@ -1,10 +1,7 @@
 version: 2
 ethernets:
   {{ iface['name'] }}:
-{% if vm.image == 'bionic' %}
     renderer: networkd
-{% endif %}
     match:
       macaddress: "{{ iface['hw-address'] }}"
     dhcp4: true
- 
