@@ -13,6 +13,11 @@
         upgrade: safe
       when: ansible_os_family == 'Debian'
 
+    - name: remove apt orphans
+      command: apt autoremove -y
+      changed_when: false
+      when: ansible_os_family == 'Debian'
+
     - name: upgrade pacman
       pacman:
         upgrade: yes
