@@ -144,7 +144,6 @@
             iface: "{{ vm.nic }}"
             apt_mirror: "{{ ubuntu_url | urlsplit('hostname') }}"
             yum_mirror: "{{ centos_url | urlsplit('hostname') }}"
-            epel_mirror: "{{ epel_url | urlsplit('hostname') }}"
             image: "{{ vm.image }}"
           when: diskcopy.changed
           become: no

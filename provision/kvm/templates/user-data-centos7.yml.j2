@@ -2,6 +2,7 @@
 packages:
   - python
   - nfs-utils
+  - epel-release
   - python-pip
 package_update: true
 package_upgrade: true
@@ -47,17 +48,6 @@ write_files:
       baseurl=http://{{ yum_mirror }}/centos/$releasever/extras/$basearch/
       gpgcheck=1
       gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7
-{% endif %}
-{% if epel_mirror is defined %}
-yum_repos:
-    # The name of the repository
-    epel:
-        baseurl: http://{{ epel_mirror }}/pub/epel/$releasever/$basearch
-        enabled: true
-        failovermethod: priority
-        gpgcheck: true
-        gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL
-        name: Extra Packages for Enterprise Linux
 {% endif %}
 runcmd:
   - rm -f /etc/sysconfig/network-scripts/ifcfg-eth0
