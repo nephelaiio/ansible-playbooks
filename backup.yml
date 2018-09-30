@@ -1,0 +1,60 @@
+---
+- name: Configure backup destination
+
+  hosts: backup
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.plugins
+
+  vars:
+
+    nfs_export_root: /opt/exports
+    nfs_export_dirs:
+      - "{{ nfs_export_root }}/backups *(rw,no_subtree_check,no_root_squash)"
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "{{ variables }}"
+
+    - name: create backup target
+      become: yes
+      file:
+        path: "{{ nfs_export_root }}"
+        mode: 0666
+        state: directory
+
+    - name: install and configure nfs
+      become: yes
+      include_role:
+        name: geerlingguy.nfs
+      vars:
+        nfs_exports: "{{ nfs_export_dirs }}"
+
+    - name: update backup pdns record
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ raspbian_url_zone }}"
+        method: PATCH
+        return_content: yes
+        body_format: json
+        body:
+          rrsets:
+            - name: "{{ backup_host }}."
+              type: A
+              ttl: 3600
+              changetype: REPLACE
+              records:
+                - content: "{{ ansible_default_ipv4.address }}"
+                  disabled: no
+                  comments: []
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        raspbian_url_host: "{{ raspbian_url | urlsplit('hostname') }}."
+        raspbian_url_zone: "{{ raspbian_url_host | split_with('.') | tail | join('.') }}"
+      register: pdns_zones_query

@@ -13,6 +13,8 @@
   version: 1.6.0
 - src: geerlingguy.mysql
   version: 2.9.0
+- src: geerlingguy.nfs
+  version: 1.5.0
 - src: geerlingguy.php
   version: 3.6.0
 - src: geerlingguy.composer
@@ -62,9 +64,6 @@
 - src: https://github.com/nephelaiio/ansible-role-nfs.git
   name: nephelaiio.unifi-controller
   version: 2.0.0
-- src: https://github.com/nephelaiio/ansible-role-nfs.git
-  name: nephelaiio.nfs
-  version: 1.0.1
 - src: https://github.com/nephelaiio/ansible-role-golang.git
   name: nephelaiio.golang
   version: 1.0.1
