@@ -1,7 +1,7 @@
 ---
 - name: Upgrade hosts
 
-  hosts: all:!workstations:!offline
+  hosts: all:!offline
 
   become: yes
 
@@ -18,18 +18,19 @@
         upgrade: yes
       when: ansible_os_family == 'Archlinux'
 
-    - name: check pacaur
+    - name: check yay
       changed_when: false
       stat:
-        path: /usr/bin/pacaur
-      register: pacaur
+        path: /usr/bin/yay
+      register: yay
 
-    - name: upgrade pacaur
-      command: pacaur -Syu --noconfirm --noedit
+    - name: upgrade yay
+      command: yay -Syu --noconfirm --noedit
       when:
         - ansible_os_family == 'Archlinux'
-        - pacaur.stat.executable
+        - yay.stat.executable
         - false
+      changed_when: false
 
     - name: find pacman orphans
       changed_when: false
