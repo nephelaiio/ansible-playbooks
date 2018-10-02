@@ -3,4 +3,4 @@
 # {{ ansible_managed }}
 
 influxd backup -portable {{ backup_path}}/{{ backup_identifier }}.$(date +%Y%m%d)
-find {{ backup_path }} -name "{{ backup_identifier }}.*" -mtime +{{ retention_days }} -delete
+find {{ backup_path }} -maxdepth 1 -name "{{ backup_identifier }}.*" -type d -mtime +{{ retention_days }} -exec rm -r {} \;
