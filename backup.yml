@@ -11,9 +11,8 @@
 
   vars:
 
-    nfs_export_root: /opt/exports
     nfs_export_dirs:
-      - "{{ nfs_export_root }}/backups *(rw,no_subtree_check,no_root_squash)"
+      - "{{ backup_export_root }} *(rw,no_subtree_check,no_root_squash)"
 
   tasks:
 
@@ -22,18 +21,20 @@
         dir: "{{ variables }}"
 
     - name: create backup target
-      become: yes
       file:
         path: "{{ nfs_export_root }}"
         mode: 0666
         state: directory
 
     - name: install and configure nfs
-      become: yes
       include_role:
         name: geerlingguy.nfs
       vars:
         nfs_exports: "{{ nfs_export_dirs }}"
+
+    - name: export filesystems
+      command: exportfs -a
+      change_when: false
 
     - name: update backup pdns record
       uri:

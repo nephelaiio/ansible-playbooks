@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# {{ ansible_managed }}
+
+influxd backup -portable {{ backup_path}}/{{ backup_identifier }}.$(date +%Y%m%d)
+find {{ backup_path }} -name "{{ backup_identifier }}.*" -mtime +{{ retention_days }} -delete
