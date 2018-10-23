@@ -22,7 +22,6 @@
   roles:
 
     - nephelaiio.plugins
-    - nephelaiio.pip
 
   tasks:
 
@@ -181,7 +180,7 @@
   vars:
 
     awx_cli_conf: /root/.tower_cli.cfg
-    awx_pg_hostname: "{{ ansible_host }}"
+    awx_pg_hostname: localhost
     awx_pg_db: "awx_{{ awx_version | regex_replace('\\.', '') }}"
     awx_pg_port: 5432
     awx_settings:
@@ -234,10 +233,11 @@
 
     - name: install docker
       include_role:
-        name: nephelaiio.docker
-      vars:
-        docker_pip_helpers:
-          - docker
+        name: geerlingguy.docker
+
+    - name: install docker pip
+      pip:
+        name: docker
 
     - name: define awx installer variables
       set_fact:
