@@ -487,8 +487,8 @@
         content: |
           #!/usr/bin/env bash
           echo
-          echo run {{ libenms_backup_bin | basename }} to manually force librenms backup creation
-          echo run {{ libenms_restore_bin | basename }} to manually restore latest librenms backup
+          echo run {{ librenms_backup_bin | basename }} to manually force librenms backup creation
+          echo run {{ librenms_restore_bin | basename }} to manually restore latest librenms backup
           echo
         mode: 0755
 
