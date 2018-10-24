@@ -157,10 +157,6 @@
           when: diskcopy.changed
           become: no
 
-        - debug:
-            msg: "{{ lookup('file', tmpdir.path + '/network-config') }}"
-          when: diskcopy.changed
-
         - name: create vm cloud image meta data
           template:
             src: meta-data.yml.j2

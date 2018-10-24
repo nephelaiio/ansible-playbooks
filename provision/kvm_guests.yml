@@ -38,12 +38,6 @@
       delegate_to: localhost
       run_once: yes
 
-    - name: debug ansible connection user
-      debug:
-        var: ansible_user
-      delegate_to: localhost
-      run_once: yes
-
     - name: manage vms
       import_tasks: kvm/vm_manage.yml
       vars:

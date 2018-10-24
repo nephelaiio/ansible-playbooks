@@ -69,10 +69,10 @@
   version: 1.0.1
 - src: https://github.com/nephelaiio/ansible-role-ubuntu-installer.git
   name: nephelaiio.ubuntu-installer
-  version: 2.2.1
+  version: 2.2.0
 - src: https://github.com/nephelaiio/ansible-role-centos-installer.git
   name: nephelaiio.centos-installer
-  version: 2.0.2
+  version: 2.0.1
 - src: https://github.com/Graylog2/graylog-ansible-role.git
   name: graylog2.graylog
   version: 2.4.0
