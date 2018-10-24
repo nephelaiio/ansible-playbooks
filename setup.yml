@@ -1,9 +1,19 @@
 ---
-- name: Install profile prerequisites
+- name: Install project prerequisites
 
   hosts: localhost
 
   tasks:
 
-    - name: Run ansible galaxy
+    - name: include private variables
+      include_vars:
+        dir: "{{ variables }}"
+
+    - name: run ansible galaxy
       command: ansible-galaxy install -r roles/requirements.yml -p galaxy/ --force
+
+    - name: clone kubespray repository
+      git:
+        repo: https://github.com/kubernetes-incubator/kubespray.git
+        version: "{{ kubespray_version }}"
+        dest: ./kubespray

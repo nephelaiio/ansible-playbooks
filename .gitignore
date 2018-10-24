@@ -15,3 +15,4 @@ files/images/**
 resources/**
 **/*.pyc
 .python-version
+kubespray/
