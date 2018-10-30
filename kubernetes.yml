@@ -1,2 +1,2 @@
 ---
-- import_playbook: kubernetes/etcd.yml
+- import_playbook: kubespray/cluster.yml

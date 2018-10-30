@@ -3,7 +3,14 @@
 
   hosts: localhost
 
+  vars:
+
+    kubespray_root: ./kubespray
+
   tasks:
+
+    - name: install requirements
+      command: pip install -r requirements.txt
 
     - name: include private variables
       include_vars:
@@ -16,4 +23,7 @@
       git:
         repo: https://github.com/kubernetes-incubator/kubespray.git
         version: "{{ kubespray_version }}"
-        dest: ./kubespray
+        dest: "{{ kubespray_root }}"
+
+    - name: install kubespray requirements
+      command: "pip install -r {{ kubespray_root }}/requirements.txt"
