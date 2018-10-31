@@ -1,4 +1,6 @@
 ---
+kube_url: https://kubernetes.{{ base_domain }}
+kube_host: "{{ kube_url | urlsplit('hostname') }}."
 # Kubernetes configuration dirs and system namespace.
 # Those are where all the additional config stuff goes
 # the kubernetes normally puts in /srv/kubernetes.
