@@ -10,6 +10,9 @@ nets:
     zone: 1.168.192.in-addr.arpa
     vlan: 1
     ns: "{{ servers.recursors }}"
+    lb:
+      name: home
+      range: '192.168.1.65 192.168.1.128'
     pools:
       - range: '192.168.1.129 192.168.1.254'
     reservations:
