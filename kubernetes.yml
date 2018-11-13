@@ -1,4 +1,8 @@
 ---
 - import_playbook: kubespray/cluster.yml
 
+- import_playbook: kubernetes/kubectl.yml
+
 - import_playbook: kubernetes/metallb.yml
+
+- import_playbook: kubernetes/dns.yml

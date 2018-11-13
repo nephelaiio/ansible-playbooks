@@ -1,0 +1,54 @@
+---
+- name: Deploy external-dns
+
+  hosts: localhost
+
+  vars:
+
+    metallb_release: v0.7.3
+    metallb_manifest_url: "https://raw.githubusercontent.com/google/metallb/{{ metallb_release }}/manifests/metallb.yaml"
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: create external-dns namespace
+      k8s:
+        name: external-dns
+        kind: Namespace
+        state: present
+
+    - name: configure external-dns
+      k8s:
+        state: present
+        definition:
+          apiVersion: extensions/v1beta1
+          kind: Deployment
+          metadata:
+            namespace: external-dns
+            name: external-dns
+          spec:
+            strategy:
+              type: Recreate
+            template:
+              metadata:
+                labels:
+                  app: external-dns
+              spec:
+                containers:
+                  - name: external-dns
+                    image: registry.opensource.zalan.do/teapot/external-dns:latest
+                    args:
+                      - "--source=ingress"
+                      - "--provider=pdns"
+                      - "--pdns-server={{ pdns_url }}"
+                      - "--pdns-api-key={{ pdns_api_key }}"
+                      - "--txt-owner-id={{ pdns_kube_id }}"
+                      - "--log-level=debug"
+                      - "--interval=30s"
