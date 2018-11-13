@@ -20,14 +20,15 @@
 
     - name: upgrade pacman
       pacman:
+        update_cache: yes
         upgrade: yes
       when: ansible_os_family == 'Archlinux'
 
     - name: check yay
-      changed_when: false
       stat:
         path: /usr/bin/yay
       register: yay
+      changed_when: false
 
     - name: upgrade yay
       command: yay -Syu --noconfirm --noedit
