@@ -1,5 +1,5 @@
 awscli>=1.11.76
-ansible<=2.6.0
+ansible>=2.6.0
 libvirt-python>=3.5.0
 jmespath>=0.9.3
 lxml>=3.8.0
