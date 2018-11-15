@@ -6,3 +6,5 @@
 - import_playbook: kubernetes/metallb.yml
 
 - import_playbook: kubernetes/dns.yml
+
+- import_playbook: kubernetes/ingress.yml

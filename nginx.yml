@@ -1,0 +1,97 @@
+- name: Deploy nginx ingress
+
+  hosts: localhost
+
+  vars:
+
+    nginx_namespace: nginx
+    nginx_release: 1.15.4
+    nginx_container_port: 8080
+    nginx_service_port: 80
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "{{ variables }}"
+
+    - name: create nginx namespace
+      k8s:
+        state: "{{ kube_state | default('present') }}"
+        definition: 
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ nginx_namespace }}"
+            labels:
+              name: "{{ nginx_namespace }}"
+
+    - name: create nginx deployment
+      k8s:
+        state: "{{ kube_state | default('present') }}"
+        namespace: "{{ nginx_namespace }}"
+        definition: 
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: nginx
+            labels:
+              app: nginx
+          spec:
+            replicas: 2
+            selector:
+              matchLabels:
+                app: nginx
+            template:
+              metadata:
+                labels:
+                  app: nginx
+              spec:
+                containers:
+                - name: nginx
+                  image: "nginx:{{ nginx_release }}"
+                  ports:
+                  - containerPort: "{{ nginx_container_port }}"
+
+    - name: create nginx service
+      k8s:
+        state: "{{ kube_state | default('present') }}"
+        namespace: "{{ nginx_namespace }}"
+        definition: 
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: nginx
+            labels:
+              app: nginx
+          spec:
+            ports:
+              - port: "{{ nginx_service_port }}"
+                protocol: TCP
+            selector:
+              app: nginx
+
+    - name: create nginx ingress
+      k8s:
+        state: "{{ kube_state | default('present') }}"
+        namespace: "{{ nginx_namespace }}"
+        definition: 
+          apiVersion: extensions/v1beta1
+          kind: Ingress
+          metadata:
+            name: nginx
+            annotations:
+              kubernetes.io/ingress.class: traefik
+          spec:
+            rules:
+              - http:
+                  paths:
+                  - path: /
+                    backend:
+                      serviceName: nginx
+                      servicePort: "{{ nginx_service_port }}"
+

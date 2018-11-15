@@ -18,7 +18,7 @@
       include_vars:
         dir: "../{{ variables }}"
 
-    - name: deploy mtallb manifest
+    - name: deploy metallb manifest
       command: "kubectl apply -f {{ metallb_manifest_url }}"
 
     - name: configure metallb
