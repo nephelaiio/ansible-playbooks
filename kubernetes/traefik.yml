@@ -1,0 +1,265 @@
+---
+- name: Deploy traefik
+
+  hosts: localhost
+
+  vars:
+
+    traefik_namespace: traefik
+    traefik_app: traefik-ingress-controller
+    traefik_service_account: "{{ traefik_app }}"
+    traefik_cluster_role: "{{ traefik_app }}"
+    traefik_cluster_role_binding: "{{ traefik_app }}"
+    traefik_deployment: "{{ traefik_app }}"
+    traefik_service: "{{ traefik_app }}"
+    traefik_ui: traefik-web-ui
+    traefik_k8s_app: traefik-ingress-lb
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+      tags:
+        - always
+
+    - name: create traefik namespace
+      k8s:
+        state: "{{ kube_state | default('present') }}"
+        force: "{{ traefik_force | default(True) }}"
+        definition: 
+          apiVersion: v1
+          kind: Namespace
+          metadata:
+            name: "{{ traefik_namespace }}"
+            labels:
+              name: "{{ traefik_namespace }}"
+
+
+    - name: create traefik service account
+      k8s:
+        state: "{{ kube_state | default('present') }}"
+        namespace: "{{ traefik_namespace }}"
+        force: "{{ traefik_force | default(True) }}"
+        definition:
+          apiVersion: v1
+          kind: ServiceAccount
+          metadata:
+            name: "{{ traefik_service_account }}"
+            namespace: "{{ traefik_namespace }}"
+
+    - name: create traefik cluster role
+      k8s:
+        state: "{{ kube_state | default('present') }}"
+        namespace: "{{ traefik_namespace }}"
+        force: "{{ traefik_force | default(True) }}"
+        definition:
+          kind: ClusterRole
+          apiVersion: rbac.authorization.k8s.io/v1beta1
+          metadata:
+            name: "{{ traefik_cluster_role }}"
+          rules:
+            - apiGroups:
+                - ""
+              resources:
+                - services
+                - endpoints
+                - secrets
+              verbs:
+                - get
+                - list
+                - watch
+            - apiGroups:
+                - extensions
+              resources:
+                - ingresses
+              verbs:
+                - get
+                - list
+                - watch
+
+    - name: create traefik cluster role binding
+      k8s:
+        state: "{{ kube_state | default('present') }}"
+        namespace: "{{ traefik_namespace }}"
+        force: "{{ traefik_force | default(True) }}"
+        definition:
+          kind: ClusterRoleBinding
+          apiVersion: rbac.authorization.k8s.io/v1beta1
+          metadata:
+            name: "{{ traefik_cluster_role_binding }}"
+          roleRef:
+            apiGroup: rbac.authorization.k8s.io
+            kind: ClusterRole
+            name: "{{ traefik_cluster_role }}"
+          subjects:
+          - kind: ServiceAccount
+            name: "{{ traefik_service_account }}"
+            namespace: "{{ traefik_namespace }}"
+
+    - name: create traefik daemonset
+      k8s:
+        state: "{{ kube_state | default('present') }}"
+        namespace: "{{ traefik_namespace }}"
+        force: "{{ traefik_force | default(True) }}"
+        definition:
+          kind: DaemonSet
+          apiVersion: extensions/v1beta1
+          metadata:
+            name: "{{ traefik_deployment }}"
+            labels:
+              k8s-app: "{{ traefik_k8s_app }}"
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                k8s-app: "{{ traefik_k8s_app }}"
+            template:
+              metadata:
+                labels:
+                  k8s-app: "{{ traefik_k8s_app }}"
+              spec:
+                serviceAccountName: "{{ traefik_service_account }}"
+                terminationGracePeriodSeconds: 60
+                containers:
+                - image: traefik
+                  name: "{{ traefik_k8s_app }}"
+                  ports:
+                  - name: http
+                    containerPort: 80
+                    hostPort: 80
+                  securityContext:
+                    capabilities:
+                      drop:
+                      - ALL
+                      add:
+                      - NET_BIND_SERVICE
+                  args:
+                  - --api
+                  - --kubernetes
+                  - --logLevel=INFO
+
+    - name: query existing service object
+      k8s_facts:
+        namespace: "{{ traefik_namespace }}"
+        kind: Service
+        name: "{{ traefik_service }}"
+      register:
+        traefik_service_query
+
+    - name: create traefik service
+      k8s:
+        state: "{{ kube_state | default('present') }}"
+        namespace: "{{ traefik_namespace }}"
+        force: "{{ traefik_force | default(True) }}"
+        definition:
+          kind: Service
+          apiVersion: v1
+          metadata:
+            name: "{{ traefik_service }}"
+          spec:
+            selector:
+              k8s-app: "{{ traefik_k8s_app }}"
+            ports:
+            - protocol: TCP
+              port: 80
+              name: web
+            type: LoadBalancer
+      when: traefik_service_query.resources | length == 0
+
+    - name: update traefik service
+      k8s:
+        state: "{{ kube_state | default('present') }}"
+        namespace: "{{ traefik_namespace }}"
+        force: "{{ traefik_force | default(True) }}"
+        definition:
+          kind: Service
+          apiVersion: v1
+          metadata:
+            name: "{{ traefik_service }}"
+            resourceVersion: "{{ traefik_service_query.resources[0].metadata.resourceVersion }}"
+          spec:
+            clusterIP: "{{ traefik_service_query.resources[0].spec.clusterIP }}"
+            selector:
+              k8s-app: "{{ traefik_k8s_app }}"
+            ports:
+            - protocol: TCP
+              port: 80
+              name: web
+            type: LoadBalancer
+      when: traefik_service_query.resources | length > 0
+
+    - name: query existing ui service object
+      k8s_facts:
+        namespace: "{{ traefik_namespace }}"
+        kind: Service
+        name: "{{ traefik_ui }}"
+      register:
+        traefik_ui_query
+
+    - name: create traefik ui service
+      k8s:
+        state: "{{ kube_state | default('present') }}"
+        namespace: "{{ traefik_namespace }}"
+        force: "{{ traefik_force | default(True) }}"
+        definition:
+          kind: Service
+          apiVersion: v1
+          metadata:
+            name: "{{ traefik_ui }}"
+            namespace: "{{ traefik_namespace }}"
+          spec:
+            selector:
+              k8s-app: "{{ traefik_k8s_app }}"
+            ports:
+            - name: admin
+              port: 80
+              targetPort: 8080
+      when: traefik_ui_query.resources | length == 0
+
+    - name: update traefik ui service
+      k8s:
+        state: "{{ kube_state | default('present') }}"
+        namespace: "{{ traefik_namespace }}"
+        force: "{{ traefik_force | default(True) }}"
+        definition:
+          kind: Service
+          apiVersion: v1
+          metadata:
+            name: "{{ traefik_ui }}"
+            namespace: "{{ traefik_namespace }}"
+            resourceVersion: "{{ traefik_ui_query.resources[0].metadata.resourceVersion }}"
+          spec:
+            clusterIP: "{{ traefik_ui_query.resources[0].spec.clusterIP }}"
+            selector:
+              k8s-app: "{{ traefik_k8s_app }}"
+            ports:
+            - name: admin
+              port: 80
+              targetPort: 8080
+      when: traefik_ui_query.resources | length > 0
+
+    - name: create traefik ui ingress
+      k8s:
+        state: "{{ kube_state | default('present') }}"
+        namespace: "{{ traefik_namespace }}"
+        force: "{{ traefik_force | default(True) }}"
+        definition:
+          kind: Ingress
+          apiVersion: extensions/v1beta1
+          metadata:
+            name: "{{ traefik_ui }}"
+            namespace: "{{ traefik_namespace }}"
+          spec:
+            rules:
+            - host: traefik.home.nephelai.io
+              http:
+                paths:
+                - path: /
+                  backend:
+                    serviceName: "{{ traefik_ui }}"
+                    servicePort: admin
