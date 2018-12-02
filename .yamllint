@@ -3,6 +3,7 @@ extends: default
 ignore: |
   galaxy/
   resources/
+  kubespray/
   **/vault.yml
   **/vault/
 

@@ -3,6 +3,8 @@
 
   hosts: localhost
 
+  become: no
+
   vars:
 
     dns_namespace: external-dns

@@ -5,7 +5,7 @@
 peer_with_router: false
 
 # Enables Internet connectivity from containers
- nat_outgoing: true
+nat_outgoing: true
 
 # add default ippool name
 calico_pool_name: "default-pool"

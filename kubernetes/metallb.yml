@@ -3,6 +3,8 @@
 
   hosts: localhost
 
+  become: no
+
   vars:
 
     metallb_namespace: metallb
@@ -69,27 +71,27 @@
               app: "{{ metallb_app }}"
           rules:
             - apiGroups:
-              - ""
+                - ""
               resources:
-              - services
+                - services
               verbs:
-              - get
-              - list
-              - watch
-              - update
+                - get
+                - list
+                - watch
+                - update
             - apiGroups:
-              - ""
+                - ""
               resources:
-              - services/status
+                - services/status
               verbs:
-              - update
+                - update
             - apiGroups:
-              - ""
+                - ""
               resources:
-              - events
+                - events
               verbs:
-              - create
-              - patch
+                - create
+                - patch
 
     - name: create metallb controller role binding
       k8s:
@@ -107,9 +109,9 @@
             kind: ClusterRole
             name: "{{ metallb_controller_role }}"
           subjects:
-          - kind: ServiceAccount
-            name: "{{ metallb_controller_name }}"
-            namespace: "{{ metallb_namespace }}"
+            - kind: ServiceAccount
+              name: "{{ metallb_controller_name }}"
+              namespace: "{{ metallb_namespace }}"
 
     - name: create metallb speaker role
       k8s:
@@ -124,15 +126,15 @@
               app: "{{ metallb_app }}"
           rules:
             - apiGroups:
-              - ""
+                - ""
               resources:
-              - services
-              - endpoints
-              - nodes
+                - services
+                - endpoints
+                - nodes
               verbs:
-              - get
-              - list
-              - watch
+                - get
+                - list
+                - watch
 
     - name: create metallb speaker role binding
       k8s:
@@ -150,9 +152,9 @@
             kind: ClusterRole
             name: "{{ metallb_speaker_role }}"
           subjects:
-          - kind: ServiceAccount
-            name: "{{ metallb_speaker_name }}"
-            namespace: "{{ metallb_namespace }}"
+            - kind: ServiceAccount
+              name: "{{ metallb_speaker_name }}"
+              namespace: "{{ metallb_namespace }}"
 
     - name: create metallb watcher role
       k8s:
@@ -168,19 +170,19 @@
               app: "{{ metallb_app }}"
           rules:
             - apiGroups:
-              - ""
+                - ""
               resources:
-              - configmaps
+                - configmaps
               verbs:
-              - get
-              - list
-              - watch
+                - get
+                - list
+                - watch
             - apiGroups:
-              - ""
+                - ""
               resources:
-              - events
+                - events
               verbs:
-              - create
+                - create
 
     - name: create metallb watcher role binding
       k8s:
@@ -195,12 +197,12 @@
             labels:
               app: "{{ metallb_app }}"
           subjects:
-          - kind: ServiceAccount
-            name: "{{ metallb_controller_name }}"
-            namespace: "{{ metallb_namespace }}"
-          - kind: ServiceAccount
-            name: "{{ metallb_speaker_name }}"
-            namespace: "{{ metallb_namespace }}"
+            - kind: ServiceAccount
+              name: "{{ metallb_controller_name }}"
+              namespace: "{{ metallb_namespace }}"
+            - kind: ServiceAccount
+              name: "{{ metallb_speaker_name }}"
+              namespace: "{{ metallb_namespace }}"
           roleRef:
             apiGroup: rbac.authorization.k8s.io
             kind: Role
@@ -237,32 +239,32 @@
                 terminationGracePeriodSeconds: 0
                 hostNetwork: true
                 containers:
-                - name: speaker
-                  image: "metallb/speaker:{{ metallb_release }}"
-                  imagePullPolicy: IfNotPresent
-                  args:
-                  - "--port=7472"
-                  - "--config={{ metallb_configmap_name }}"
-                  env:
-                  - name: METALLB_NODE_NAME
-                    valueFrom:
-                      fieldRef:
-                        fieldPath: spec.nodeName
-                  ports:
-                  - name: monitoring
-                    containerPort: 7472
-                  resources:
-                    limits:
-                      cpu: 100m
-                      memory: 100Mi
-                  securityContext:
-                    allowPrivilegeEscalation: false
-                    readOnlyRootFilesystem: true
-                    capabilities:
-                      drop:
-                      - all
-                      add:
-                      - net_raw
+                  - name: speaker
+                    image: "metallb/speaker:{{ metallb_release }}"
+                    imagePullPolicy: IfNotPresent
+                    args:
+                      - "--port=7472"
+                      - "--config={{ metallb_configmap_name }}"
+                    env:
+                      - name: METALLB_NODE_NAME
+                        valueFrom:
+                          fieldRef:
+                            fieldPath: spec.nodeName
+                    ports:
+                      - name: monitoring
+                        containerPort: 7472
+                    resources:
+                      limits:
+                        cpu: 100m
+                        memory: 100Mi
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      readOnlyRootFilesystem: true
+                      capabilities:
+                        drop:
+                          - all
+                        add:
+                          - net_raw
 
     - name: create metallb controller deployment
       k8s:
@@ -296,27 +298,27 @@
                 terminationGracePeriodSeconds: 0
                 securityContext:
                   runAsNonRoot: true
-                  runAsUser: 65534 # nobody
+                  runAsUser: 65534  # nobody
                 containers:
-                - name: controller
-                  image: "metallb/controller:{{ metallb_release }}"
-                  imagePullPolicy: IfNotPresent
-                  args:
-                  - "--port=7472"
-                  - "--config={{ metallb_configmap_name }}"
-                  ports:
-                  - name: monitoring
-                    containerPort: 7472
-                  resources:
-                    limits:
-                      cpu: 100m
-                      memory: 100Mi
-                  securityContext:
-                    allowPrivilegeEscalation: false
-                    capabilities:
-                      drop:
-                      - all
-                    readOnlyRootFilesystem: true
+                  - name: controller
+                    image: "metallb/controller:{{ metallb_release }}"
+                    imagePullPolicy: IfNotPresent
+                    args:
+                      - "--port=7472"
+                      - "--config={{ metallb_configmap_name }}"
+                    ports:
+                      - name: monitoring
+                        containerPort: 7472
+                    resources:
+                      limits:
+                        cpu: 100m
+                        memory: 100Mi
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                        drop:
+                          - all
+                      readOnlyRootFilesystem: true
 
     - name: create metallb configmap
       k8s:
@@ -338,4 +340,3 @@
                   - "{{ nets.home.lb.range | regex_replace(' ', '-') }}"
       tags:
         - config
-

@@ -3,19 +3,22 @@
 
   hosts: localhost
 
+  become: no
+
   vars:
 
     traefik_namespace: traefik
-    traefik_app: traefik-ingress-controller
+    traefik_app: traefik-ingress
     traefik_service_account: "{{ traefik_app }}"
     traefik_cluster_role: "{{ traefik_app }}"
     traefik_cluster_role_binding: "{{ traefik_app }}"
     traefik_deployment: "{{ traefik_app }}"
-    traefik_service: traefik-ingress-service
-    traefik_configmap: traefik-ingress-config
-    traefik_ui: traefik-web-ui
-    traefik_k8s_app: traefik-ingress-lb
+    traefik_service: "{{  traefik_app }}-service"
+    traefik_configmap: "{{  traefik_app }}-config"
+    traefik_ui: "{{ traefik_app }}-ui"
+    traefik_k8s_app: "{{ traefik_app }}-lb"
     traefik_lb_fqdn: "{{ k8s_lb_url }}"
+    traefik_release: "1.7"
 
   roles:
 
@@ -33,7 +36,7 @@
       k8s:
         state: "{{ kube_state | default('present') }}"
         force: "{{ traefik_force | default(True) }}"
-        definition: 
+        definition:
           apiVersion: v1
           kind: Namespace
           metadata:
@@ -51,7 +54,6 @@
           kind: ServiceAccount
           metadata:
             name: "{{ traefik_service_account }}"
-            namespace: "{{ traefik_namespace }}"
 
     - name: create traefik cluster role
       k8s:
@@ -98,9 +100,9 @@
             kind: ClusterRole
             name: "{{ traefik_cluster_role }}"
           subjects:
-          - kind: ServiceAccount
-            name: "{{ traefik_service_account }}"
-            namespace: "{{ traefik_namespace }}"
+            - kind: ServiceAccount
+              name: "{{ traefik_service_account }}"
+              namespace: "{{ traefik_namespace }}"
 
     - name: create traefik configmap
       k8s:
@@ -147,26 +149,26 @@
                     configMap:
                       name: "{{ traefik_configmap }}"
                 containers:
-                - image: traefik
-                  name: "{{ traefik_k8s_app }}"
-                  volumeMounts:
-                    - mountPath: /config
-                      name: config
-                  ports:
-                  - name: http
-                    containerPort: 80
-                    hostPort: 80
-                  securityContext:
-                    capabilities:
-                      drop:
-                      - ALL
-                      add:
-                      - NET_BIND_SERVICE
-                  args:
-                  - --configfile=/config/traefik.toml
-                  - --api
-                  - --kubernetes
-                  - --logLevel=INFO
+                  - image: "traefik:{{ traefik_release }}"
+                    name: "{{ traefik_k8s_app }}"
+                    volumeMounts:
+                      - mountPath: /config
+                        name: config
+                    ports:
+                      - name: http
+                        containerPort: 80
+                        hostPort: 80
+                    securityContext:
+                      capabilities:
+                        drop:
+                          - ALL
+                        add:
+                          - NET_BIND_SERVICE
+                    args:
+                      - --configfile=/config/traefik.toml
+                      - --api
+                      - --kubernetes
+                      - --logLevel=INFO
 
     - name: query existing service object
       k8s_facts:
@@ -186,13 +188,15 @@
           apiVersion: v1
           metadata:
             name: "{{ traefik_service }}"
+            annotations:
+              external-dns.alpha.kubernetes.io/hostname: "{{ traefik_lb_fqdn }}"
           spec:
             selector:
               k8s-app: "{{ traefik_k8s_app }}"
             ports:
-            - protocol: TCP
-              port: 80
-              name: web
+              - protocol: TCP
+                port: 80
+                name: web
             type: LoadBalancer
       when: traefik_service_query.resources | length == 0
 
@@ -214,9 +218,9 @@
             selector:
               k8s-app: "{{ traefik_k8s_app }}"
             ports:
-            - protocol: TCP
-              port: 80
-              name: web
+              - protocol: TCP
+                port: 80
+                name: web
             type: LoadBalancer
       when: traefik_service_query.resources | length > 0
 
@@ -243,9 +247,9 @@
             selector:
               k8s-app: "{{ traefik_k8s_app }}"
             ports:
-            - name: admin
-              port: 80
-              targetPort: 8080
+              - name: admin
+                port: 80
+                targetPort: 8080
       when: traefik_ui_query.resources | length == 0
 
     - name: update traefik ui service
@@ -258,16 +262,15 @@
           apiVersion: v1
           metadata:
             name: "{{ traefik_ui }}"
-            namespace: "{{ traefik_namespace }}"
             resourceVersion: "{{ traefik_ui_query.resources[0].metadata.resourceVersion }}"
           spec:
             clusterIP: "{{ traefik_ui_query.resources[0].spec.clusterIP }}"
             selector:
               k8s-app: "{{ traefik_k8s_app }}"
             ports:
-            - name: admin
-              port: 80
-              targetPort: 8080
+              - name: admin
+                port: 80
+                targetPort: 8080
       when: traefik_ui_query.resources | length > 0
 
     - name: create traefik ui ingress
@@ -285,10 +288,10 @@
               external-dns.alpha.kubernetes.io/target: "{{ traefik_lb_fqdn }}"
           spec:
             rules:
-            - host: traefik.home.nephelai.io
-              http:
-                paths:
-                - path: /
-                  backend:
-                    serviceName: "{{ traefik_ui }}"
-                    servicePort: admin
+              - host: traefik.home.nephelai.io
+                http:
+                  paths:
+                    - path: /
+                      backend:
+                        serviceName: "{{ traefik_ui }}"
+                        servicePort: admin

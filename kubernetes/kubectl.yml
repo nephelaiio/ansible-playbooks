@@ -5,6 +5,8 @@
 
   connection: local
 
+  become: no
+
   vars:
 
     kubectl_config: ~/.kube/config

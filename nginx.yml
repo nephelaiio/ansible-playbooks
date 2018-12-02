@@ -1,13 +1,19 @@
+---
 - name: Deploy nginx ingress
 
   hosts: localhost
 
   vars:
 
-    nginx_namespace: nginx
+    nginx_url: "nginx.{{ base_domain }}"
     nginx_release: 1.15.4
-    nginx_container_port: 8080
-    nginx_service_port: 80
+    nginx_containerport: 80
+    nginx_app: nginx
+    nginx_namespace: "{{ nginx_app }}"
+    nginx_service_account: "{{ nginx_app }}"
+    nginx_deployment: "{{ nginx_app }}"
+    nginx_service: "{{ nginx_app }}-service"
+    nginx_ingress: "{{ nginx_app }}-ingress"
 
   roles:
 
@@ -22,6 +28,7 @@
     - name: create nginx namespace
       k8s:
         state: "{{ kube_state | default('present') }}"
+        force: "{{ nginx_force | default(True) }}"
         definition: 
           apiVersion: v1
           kind: Namespace
@@ -34,18 +41,19 @@
       k8s:
         state: "{{ kube_state | default('present') }}"
         namespace: "{{ nginx_namespace }}"
+        force: "{{ nginx_force | default(True) }}"
         definition: 
           apiVersion: apps/v1
           kind: Deployment
           metadata:
-            name: nginx
+            name: "{{ nginx_deployment }}"
             labels:
-              app: nginx
+              app: "{{ nginx_app }}"
           spec:
             replicas: 2
             selector:
               matchLabels:
-                app: nginx
+                app: "{{ nginx_app }}"
             template:
               metadata:
                 labels:
@@ -55,43 +63,82 @@
                 - name: nginx
                   image: "nginx:{{ nginx_release }}"
                   ports:
-                  - containerPort: "{{ nginx_container_port }}"
+                  - name: http
+                    containerPort: "{{ nginx_containerport }}"
+
+    - name: query existing nginx service object
+      k8s_facts:
+        namespace: "{{ nginx_namespace }}"
+        kind: Service
+        name: "{{ nginx_service }}"
+      register:
+        nginx_service_query
 
     - name: create nginx service
       k8s:
         state: "{{ kube_state | default('present') }}"
         namespace: "{{ nginx_namespace }}"
+        force: "{{ nginx_force | default(True) }}"
         definition: 
           apiVersion: v1
           kind: Service
           metadata:
-            name: nginx
+            name: "{{ nginx_service }}"
             labels:
-              app: nginx
+              app: "{{ nginx_app }}"
           spec:
             ports:
-              - port: "{{ nginx_service_port }}"
-                protocol: TCP
+            - name: http
+              port: 80
+              targetPort: "{{ nginx_containerport }}"
+              protocol: TCP
             selector:
               app: nginx
+      when: nginx_service_query.resources | length == 0
+
+    - name: update nginx service
+      k8s:
+        state: "{{ kube_state | default('present') }}"
+        namespace: "{{ nginx_namespace }}"
+        force: "{{ nginx_force | default(True) }}"
+        definition: 
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: "{{ nginx_service }}"
+            resourceVersion: "{{ nginx_service_query.resources[0].metadata.resourceVersion }}"
+            labels:
+              app: "{{ nginx_app }}"
+          spec:
+            clusterIP: "{{ nginx_service_query.resources[0].spec.clusterIP }}"
+            selector:
+              app: "{{ nginx_app }}"
+            ports:
+            - name: http
+              port: 80
+              targetPort: "{{ nginx_containerport }}"
+              protocol: TCP
+      when: nginx_service_query.resources | length > 0
 
     - name: create nginx ingress
       k8s:
         state: "{{ kube_state | default('present') }}"
         namespace: "{{ nginx_namespace }}"
-        definition: 
-          apiVersion: extensions/v1beta1
+        force: "{{ nginx_force | default(True) }}"
+        definition:
           kind: Ingress
+          apiVersion: extensions/v1beta1
           metadata:
-            name: nginx
+            name: "{{ nginx_ingress }}"
             annotations:
               kubernetes.io/ingress.class: traefik
+              external-dns.alpha.kubernetes.io/target: "{{ k8s_lb_url }}"
           spec:
             rules:
-              - http:
-                  paths:
-                  - path: /
-                    backend:
-                      serviceName: nginx
-                      servicePort: "{{ nginx_service_port }}"
-
+            - host: "{{ nginx_url }}"
+              http:
+                paths:
+                - path: /
+                  backend:
+                    serviceName: "{{ nginx_service }}"
+                    servicePort: "{{ nginx_containerport }}"
