@@ -1,7 +1,9 @@
 ---
+- import_playbook: kubernetes/prepare.yml
+
 - import_playbook: kubespray/cluster.yml
 
-- import_playbook: kubernetes/kubectl.yml
+- import_playbook: kubernetes/cleanup.yml
 
 - import_playbook: kubernetes/metallb.yml
 
