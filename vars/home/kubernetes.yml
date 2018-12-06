@@ -1,3 +1,2 @@
 ---
-kubespray_version: v2.7.0
-k8s_lb_url: "lb.{{ base_domain }}"
+kubespray_version: v2.8.0

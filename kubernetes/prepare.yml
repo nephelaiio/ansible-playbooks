@@ -1,0 +1,26 @@
+---
+- name: Install project prerequisites
+
+  hosts: localhost
+
+  connection: local
+
+  vars:
+
+    kubespray_root: ./kubespray
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: clone kubespray repository
+      git:
+        repo: https://github.com/kubernetes-incubator/kubespray.git
+        version: "{{ kubespray_version }}"
+        dest: "{{ kubespray_root }}"
+        force: yes
+
+    - name: install kubespray requirements
+      command: "pip install -r {{ kubespray_root }}/requirements.txt"

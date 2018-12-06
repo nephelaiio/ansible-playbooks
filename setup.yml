@@ -3,10 +3,6 @@
 
   hosts: localhost
 
-  vars:
-
-    kubespray_root: ./kubespray
-
   tasks:
 
     - name: install requirements
@@ -19,11 +15,13 @@
     - name: run ansible galaxy
       command: ansible-galaxy install -r roles/requirements.yml -p galaxy/ --force
 
-    - name: clone kubespray repository
-      git:
-        repo: https://github.com/kubernetes-incubator/kubespray.git
-        version: "{{ kubespray_version }}"
-        dest: "{{ kubespray_root }}"
+    - name: create local module directory
+      file:
+        state: directory
+        path: ./library/
 
-    - name: install kubespray requirements
-      command: "pip install -r {{ kubespray_root }}/requirements.txt"
+    - name: install aur module
+      git:
+        repo: https://github.com/kewlfft/ansible-aur.git
+        version: v0.23
+        dest: ./library/aur
