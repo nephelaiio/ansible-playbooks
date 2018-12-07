@@ -7,336 +7,72 @@
 
   vars:
 
-    metallb_namespace: metallb
-    metallb_app: "{{ metallb_namespace }}"
-    metallb_configmap_name: config
-    metallb_controller_name: controller
-    metallb_controller_account: "{{ metallb_controller_name }}"
-    metallb_controller_role: "{{ metallb_namespace }}:{{ metallb_controller_name }}"
-    metallb_speaker_name: speaker
-    metallb_speaker_account: "{{ metallb_speaker_name }}"
-    metallb_speaker_role: "{{ metallb_namespace }}:{{ metallb_speaker_name }}"
-    metallb_watcher_role: "config-watcher"
-    metallb_release: v0.7.3
+    metallb_chart_name: metallb
+    metallb_chart_release: stable/metallb
+    metallb_chart_ips: "{{ nets.home.lb.range | regex_replace(' ', '-') }}"
 
   roles:
 
     - nephelaiio.plugins
 
-  tasks:
+
+  pre_tasks:
 
     - name: include private variables
       include_vars:
         dir: "../{{ variables }}"
+
+  tasks:
+
+    - name: create helm temp dir
+      tempfile:
+        state: directory
+        suffix: metallb
+      register: helm_dir
+
+    - name: query existing chart
+      shell: "helm get {{ metallb_chart_name }}"
+      register: chart_query
+      failed_when: false
       tags:
-        - always
+        - skip_ansible_lint
 
-    - name: create metallb namespace
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ metallb_namespace }}"
-        force: "{{ metallb_force | default(True) }}"
-        definition:
-          apiVersion: v1
-          kind: Namespace
-          metadata:
-            name: "{{ metallb_namespace }}"
-            labels:
-              name: "{{ metallb_namespace }}"
+    - block:
 
-    - name: create metallb service accounts
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ metallb_namespace }}"
-        force: "{{ metallb_force | default(True) }}"
-        definition:
-          apiVersion: v1
-          kind: ServiceAccount
-          metadata:
-            name: "{{ item }}"
-      with_items:
-        - "{{ metallb_controller_account }}"
-        - "{{ metallb_speaker_account }}"
+        - name: create configuration file
+          copy:
+            dest: "{{ helm_dir.path }}/config.yml"
+            content: "{{ metallb_config }}"
+          vars:
+            metallb_config: |
+              configInline:
+                address-pools:
+                - name: "{{ nets.home.lb.name }}"
+                  protocol: layer2
+                  addresses:
+                  - "{{ metallb_chart_ips }}"
 
-    - name: create metallb controller role
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        force: "{{ metallb_force | default(True) }}"
-        definition:
-          apiVersion: rbac.authorization.k8s.io/v1beta1
-          kind: ClusterRole
-          metadata:
-            name: "{{ metallb_controller_role }}"
-            labels:
-              app: "{{ metallb_app }}"
-          rules:
-            - apiGroups:
-                - ""
-              resources:
-                - services
-              verbs:
-                - get
-                - list
-                - watch
-                - update
-            - apiGroups:
-                - ""
-              resources:
-                - services/status
-              verbs:
-                - update
-            - apiGroups:
-                - ""
-              resources:
-                - events
-              verbs:
-                - create
-                - patch
+        - name: include private variables
+          include_vars:
+            dir: "../{{ variables }}"
+          tags:
+            - always
 
-    - name: create metallb controller role binding
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        force: "{{ metallb_force | default(True) }}"
-        definition:
-          apiVersion: rbac.authorization.k8s.io/v1
-          kind: ClusterRoleBinding
-          metadata:
-            name: "{{ metallb_controller_role }}"
-            labels:
-              app: "{{ metallb_app }}"
-          roleRef:
-            apiGroup: rbac.authorization.k8s.io
-            kind: ClusterRole
-            name: "{{ metallb_controller_role }}"
-          subjects:
-            - kind: ServiceAccount
-              name: "{{ metallb_controller_name }}"
-              namespace: "{{ metallb_namespace }}"
+        - name: create metallb helm chart
+          command: "helm install --name {{ metallb_chart_name }} -f config.yml {{ metallb_chart_release }}"
+          args: 
+            chdir: "{{ helm_dir.path }}"
+          when: chart_query.rc != 0
 
-    - name: create metallb speaker role
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        force: "{{ metallb_force | default(True) }}"
-        definition:
-          apiVersion: rbac.authorization.k8s.io/v1
-          kind: ClusterRole
-          metadata:
-            name: "{{ metallb_speaker_role }}"
-            labels:
-              app: "{{ metallb_app }}"
-          rules:
-            - apiGroups:
-                - ""
-              resources:
-                - services
-                - endpoints
-                - nodes
-              verbs:
-                - get
-                - list
-                - watch
+        - name: update metallb helm chart
+          command: "helm upgrade -f config.yml {{ metallb_chart_name }} {{ metallb_chart_release }}"
+          args: 
+            chdir: "{{ helm_dir.path }}"
+          when: chart_query.rc == 0
 
-    - name: create metallb speaker role binding
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        force: "{{ metallb_force | default(True) }}"
-        definition:
-          apiVersion: rbac.authorization.k8s.io/v1
-          kind: ClusterRoleBinding
-          metadata:
-            name: "{{ metallb_speaker_role }}"
-            labels:
-              app: "{{ metallb_app }}"
-          roleRef:
-            apiGroup: rbac.authorization.k8s.io
-            kind: ClusterRole
-            name: "{{ metallb_speaker_role }}"
-          subjects:
-            - kind: ServiceAccount
-              name: "{{ metallb_speaker_name }}"
-              namespace: "{{ metallb_namespace }}"
+      always:
 
-    - name: create metallb watcher role
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ metallb_namespace }}"
-        force: "{{ metallb_force | default(True) }}"
-        definition:
-          apiVersion: rbac.authorization.k8s.io/v1
-          kind: Role
-          metadata:
-            name: "{{ metallb_watcher_role }}"
-            labels:
-              app: "{{ metallb_app }}"
-          rules:
-            - apiGroups:
-                - ""
-              resources:
-                - configmaps
-              verbs:
-                - get
-                - list
-                - watch
-            - apiGroups:
-                - ""
-              resources:
-                - events
-              verbs:
-                - create
-
-    - name: create metallb watcher role binding
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ metallb_namespace }}"
-        force: "{{ metallb_force | default(True) }}"
-        definition:
-          apiVersion: rbac.authorization.k8s.io/v1
-          kind: RoleBinding
-          metadata:
-            name: "{{ metallb_watcher_role }}"
-            labels:
-              app: "{{ metallb_app }}"
-          subjects:
-            - kind: ServiceAccount
-              name: "{{ metallb_controller_name }}"
-              namespace: "{{ metallb_namespace }}"
-            - kind: ServiceAccount
-              name: "{{ metallb_speaker_name }}"
-              namespace: "{{ metallb_namespace }}"
-          roleRef:
-            apiGroup: rbac.authorization.k8s.io
-            kind: Role
-            name: "{{ metallb_watcher_role }}"
-
-    - name: create metallb speaker daemonset
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ metallb_namespace }}"
-        force: "{{ metallb_force | default(True) }}"
-        definition:
-          apiVersion: apps/v1beta2
-          kind: DaemonSet
-          metadata:
-            name: "{{ metallb_speaker_name }}"
-            labels:
-              app: "{{ metallb_app }}"
-              component: "{{ metallb_speaker_name }}"
-          spec:
-            selector:
-              matchLabels:
-                app: "{{ metallb_app }}"
-                component: "{{ metallb_speaker_name }}"
-            template:
-              metadata:
-                labels:
-                  app: "{{ metallb_app }}"
-                  component: "{{ metallb_speaker_name }}"
-                annotations:
-                  prometheus.io/scrape: "true"
-                  prometheus.io/port: "7472"
-              spec:
-                serviceAccountName: "{{ metallb_speaker_name }}"
-                terminationGracePeriodSeconds: 0
-                hostNetwork: true
-                containers:
-                  - name: speaker
-                    image: "metallb/speaker:{{ metallb_release }}"
-                    imagePullPolicy: IfNotPresent
-                    args:
-                      - "--port=7472"
-                      - "--config={{ metallb_configmap_name }}"
-                    env:
-                      - name: METALLB_NODE_NAME
-                        valueFrom:
-                          fieldRef:
-                            fieldPath: spec.nodeName
-                    ports:
-                      - name: monitoring
-                        containerPort: 7472
-                    resources:
-                      limits:
-                        cpu: 100m
-                        memory: 100Mi
-                    securityContext:
-                      allowPrivilegeEscalation: false
-                      readOnlyRootFilesystem: true
-                      capabilities:
-                        drop:
-                          - all
-                        add:
-                          - net_raw
-
-    - name: create metallb controller deployment
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ metallb_namespace }}"
-        force: "{{ metallb_force | default(True) }}"
-        definition:
-          apiVersion: apps/v1beta2
-          kind: Deployment
-          metadata:
-            name: "{{ metallb_controller_name }}"
-            labels:
-              app: "{{ metallb_app }}"
-              component: "{{ metallb_controller_name }}"
-          spec:
-            revisionHistoryLimit: 3
-            selector:
-              matchLabels:
-                app: "{{ metallb_app }}"
-                component: "{{ metallb_controller_name }}"
-            template:
-              metadata:
-                labels:
-                  app: "{{ metallb_app }}"
-                  component: "{{ metallb_controller_name }}"
-                annotations:
-                  prometheus.io/scrape: "true"
-                  prometheus.io/port: "7472"
-              spec:
-                serviceAccountName: "{{ metallb_controller_name }}"
-                terminationGracePeriodSeconds: 0
-                securityContext:
-                  runAsNonRoot: true
-                  runAsUser: 65534  # nobody
-                containers:
-                  - name: controller
-                    image: "metallb/controller:{{ metallb_release }}"
-                    imagePullPolicy: IfNotPresent
-                    args:
-                      - "--port=7472"
-                      - "--config={{ metallb_configmap_name }}"
-                    ports:
-                      - name: monitoring
-                        containerPort: 7472
-                    resources:
-                      limits:
-                        cpu: 100m
-                        memory: 100Mi
-                    securityContext:
-                      allowPrivilegeEscalation: false
-                      capabilities:
-                        drop:
-                          - all
-                      readOnlyRootFilesystem: true
-
-    - name: create metallb configmap
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ metallb_namespace }}"
-        force: "{{ metallb_force | default(True) }}"
-        definition:
-          apiVersion: v1
-          kind: ConfigMap
-          metadata:
-            namespace: "{{ metallb_namespace }}"
-            name: "{{ metallb_configmap_name }}"
-          data:
-            config: |
-              address-pools:
-              - name: "{{ nets.home.lb.name }}"
-                protocol: layer2
-                addresses:
-                  - "{{ nets.home.lb.range | regex_replace(' ', '-') }}"
-      tags:
-        - config
+        - name: destroy helm temp dir
+          file:
+            state: absent
+            path: "{{ helm_dir.path }}"

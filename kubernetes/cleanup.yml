@@ -59,7 +59,7 @@
         - name: create helm temp dir
           tempfile:
             state: directory
-            suffix: images
+            suffix: helm
           register: helm_dir
 
         - name: fetch helm bin

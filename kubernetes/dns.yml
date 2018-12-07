@@ -7,125 +7,78 @@
 
   vars:
 
-    dns_namespace: external-dns
-    dns_app: external-dns
-    dns_service_account: "{{ dns_app }}"
-    dns_cluster_role: "{{ dns_app }}"
-    dns_cluster_role_binding: "{{ dns_app }}"
-    dns_service: "{{ dns_app }}"
-    dns_zone: "{{ dns.zones.home.name }}"
+    externaldns_chart_name: externaldns
+    externaldns_chart_release: stable/external-dns
+    externaldns_chart_ips: "{{ nets.home.lb.range | regex_replace(' ', '-') }}"
 
   roles:
 
     - nephelaiio.plugins
 
-  tasks:
+
+  pre_tasks:
 
     - name: include private variables
       include_vars:
         dir: "../{{ variables }}"
+
+  tasks:
+
+    - name: create helm temp dir
+      tempfile:
+        state: directory
+        suffix: externaldns
+      register: helm_dir
+
+    - name: query existing chart
+      shell: "helm get {{ externaldns_chart_name }}"
+      register: chart_query
+      failed_when: false
       tags:
-        - always
+        - skip_ansible_lint
 
-    - name: create dns namespace
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        force: "{{ dns_force | default(True) }}"
-        definition:
-          apiVersion: v1
-          kind: Namespace
-          metadata:
-            name: "{{ dns_namespace }}"
-            labels:
-              name: "{{ dns_namespace }}"
+    - block:
 
-    - name: create dns service account
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ dns_namespace }}"
-        force: "{{ dns_force | default(True) }}"
-        definition:
-          apiVersion: v1
-          kind: ServiceAccount
-          metadata:
-            name: "{{ dns_service_account }}"
-            namespace: "{{ dns_namespace }}"
+        - name: create configuration file
+          copy:
+            dest: "{{ helm_dir.path }}/config.yml"
+            content: "{{ externaldns_config }}"
+          vars:
+            externaldns_config: |
+              logLevel: debug
+              rbac:
+                create: true
+              sources:
+                - service
+                - ingress
+              txtOwnerId: externaldns
+              provider: pdns
+              extraArgs:
+                pdns-server: {{ pdns_url }}
+                pdns-api-key: {{ pdns.config['api-key'] }}
+                interval: 30s
 
-    - name: create dns cluster role
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ dns_namespace }}"
-        force: "{{ dns_force | default(True) }}"
-        definition:
-          kind: ClusterRole
-          apiVersion: rbac.authorization.k8s.io/v1beta1
-          metadata:
-            name: "{{ dns_cluster_role }}"
-          rules:
-            - apiGroups: [""]
-              resources: ["services"]
-              verbs: ["get","watch","list"]
-            - apiGroups: [""]
-              resources: ["pods"]
-              verbs: ["get","watch","list"]
-            - apiGroups: ["extensions"]
-              resources: ["ingresses"]
-              verbs: ["get","watch","list"]
-            - apiGroups: [""]
-              resources: ["nodes"]
-              verbs: ["list"]
+        - name: include private variables
+          include_vars:
+            dir: "../{{ variables }}"
+          tags:
+            - always
 
-    - name: create dns cluster role binding
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ dns_namespace }}"
-        force: "{{ dns_force | default(True) }}"
-        definition:
-          kind: ClusterRoleBinding
-          apiVersion: rbac.authorization.k8s.io/v1beta1
-          metadata:
-            name: "{{ dns_cluster_role_binding }}"
-          roleRef:
-            apiGroup: rbac.authorization.k8s.io
-            kind: ClusterRole
-            name: "{{ dns_cluster_role }}"
-          subjects:
-          - kind: ServiceAccount
-            name: "{{ dns_service_account }}"
-            namespace: "{{ dns_namespace }}"
+        - name: create externaldns helm chart
+          command: "helm install --name {{ externaldns_chart_name }} -f config.yml {{ externaldns_chart_release }}"
+          args: 
+            chdir: "{{ helm_dir.path }}"
+          when: chart_query.rc != 0
 
-    - name: create dns deployment
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ dns_namespace }}"
-        force: "{{ dns_force | default(True) }}"
-        definition:
-          kind: Deployment
-          apiVersion: v1
-          metadata:
-            name: "{{ dns_service }}"
-          spec:
-            replicas: 1
-            selector:
-              matchLabels:
-                k8s-app: "{{ dns_app }}"
-            template:
-              metadata:
-                labels:
-                  k8s-app: "{{ dns_app }}"
-              spec:
-                # Only use if you're also using RBAC
-                serviceAccountName: "{{ dns_service }}"
-                containers:
-                - name: external-dns
-                  image: bitnami/external-dns:latest
-                  args:
-                  - --source=ingress
-                  - --source=service
-                  - --provider=pdns
-                  - --pdns-server={{ pdns_url }}
-                  - --pdns-api-key={{ pdns.config['api-key'] }}
-                  - --txt-owner-id={{ dns_app }}
-                  - --domain-filter={{ dns_zone }} # will make ExternalDNS see only the zones matching provided domain; omit to process all available zones in PowerDNS
-                  - --log-level=debug
-                  - --interval=30s
+        - name: update externaldns helm chart
+          command: "helm upgrade -f config.yml {{ externaldns_chart_name }} {{ externaldns_chart_release }}"
+          args: 
+            chdir: "{{ helm_dir.path }}"
+          when: chart_query.rc == 0
+
+      always:
+
+        - name: destroy helm temp dir
+          file:
+            state: absent
+            path: "{{ helm_dir.path }}"
