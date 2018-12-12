@@ -1,5 +1,5 @@
 ---
-- name: Deploy metallb helm chart
+- name: Deploy nginx helm chart
 
   hosts: localhost
 
@@ -7,9 +7,11 @@
 
   vars:
 
-    metallb_chart_name: metallb
-    metallb_chart_release: stable/metallb
-    metallb_chart_ips: "{{ nets.home.lb.range | regex_replace(' ', '-') }}"
+    nginx_chart_repo: 
+      name: bitnami
+      url: https://charts.bitnami.com/bitnami
+    nginx_chart_name: nginx
+    nginx_chart_release: bitnami/nginx
 
   roles:
 
@@ -27,11 +29,12 @@
     - name: create helm temp dir
       tempfile:
         state: directory
-        suffix: metallb
+        suffix: nginx
       register: helm_dir
+      changed_when: false
 
     - name: query existing chart
-      command: "helm list {{ metallb_chart_name }} -q"
+      command: "helm list {{ nginx_chart_name }} -q"
       register: chart_query
       failed_when: false
       changed_when: false
@@ -43,15 +46,10 @@
         - name: create configuration file
           copy:
             dest: "{{ helm_dir.path }}/config.yml"
-            content: "{{ metallb_config }}"
+            content: "{{ nginx_config }}"
           vars:
-            metallb_config: |
-              configInline:
-                address-pools:
-                - name: "{{ nets.home.lb.name }}"
-                  protocol: layer2
-                  addresses:
-                  - "{{ metallb_chart_ips }}"
+            nginx_config: ""
+          changed_when: false
 
         - name: include private variables
           include_vars:
@@ -59,14 +57,18 @@
           tags:
             - always
 
-        - name: create metallb helm chart
-          command: "helm install --name {{ metallb_chart_name }} -f config.yml {{ metallb_chart_release }}"
+        - name: include nginx helm repository
+          command: "helm repo add {{ nginx_chart_repo.name }} {{ nginx_chart_repo.url }}"
+          changed_when: false
+
+        - name: create nginx helm chart
+          command: "helm install --name {{ nginx_chart_name }} -f config.yml {{ nginx_chart_release }}"
           args: 
             chdir: "{{ helm_dir.path }}"
           when: chart_query.stdout_lines | length == 0
 
-        - name: update metallb helm chart
-          command: "helm upgrade -f config.yml {{ metallb_chart_name }} {{ metallb_chart_release }}"
+        - name: update nginx helm chart
+          command: "helm upgrade -f config.yml {{ nginx_chart_name }} {{ nginx_chart_release }}"
           args: 
             chdir: "{{ helm_dir.path }}"
           when: chart_query.stdout_lines | length > 0
@@ -77,3 +79,4 @@
           file:
             state: absent
             path: "{{ helm_dir.path }}"
+          changed_when: false

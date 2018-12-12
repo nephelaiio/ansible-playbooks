@@ -1,0 +1,134 @@
+---
+- name: Deploy rook opertor helm chart
+
+  hosts: localhost
+
+  become: no
+
+  vars:
+
+    rook_namespace: root-ceph-system
+    rook_release: alpha
+    rook_fstype: xfs
+    rook_reclaimpolicy: Delete
+    ceph_release: v13.2
+    rookop_chart_name: rook
+    rookop_chart_release: "rook-{{ rook_release }}/rook-ceph"
+
+  roles:
+
+    - nephelaiio.plugins
+
+
+  pre_tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+  tasks:
+
+    - name: add rook helm repository
+      command: "helm repo add rook-alpha https://charts.rook.io/{{ rook_release }}"
+      changed_when: false
+
+    - name: create helm temp dir
+      tempfile:
+        state: directory
+        suffix: rookop
+      register: helm_dir
+
+    - name: query existing chart
+      command: "helm list {{ rookop_chart_name }} -q"
+      register: chart_query
+      failed_when: false
+      changed_when: false
+      tags:
+        - skip_ansible_lint
+
+    - block:
+
+        - name: create configuration file
+          copy:
+            dest: "{{ helm_dir.path }}/config.yml"
+            content: "{{ rookop_config }}"
+          vars:
+            rookop_config: ""
+
+        - name: include private variables
+          include_vars:
+            dir: "../{{ variables }}"
+          tags:
+            - always
+
+        - name: create rook operator helm chart
+          command: "helm install --namespace {{ rook_namespace }} --name {{ rookop_chart_name }} -f config.yml {{ rookop_chart_release }}"
+          args: 
+            chdir: "{{ helm_dir.path }}"
+          when: chart_query.stdout_lines | length == 0
+
+        - name: update rook operator helm chart
+          command: "helm upgrade --namespace {{ rook_namespace }} -f config.yml {{ rookop_chart_name }} {{ rookop_chart_release }}"
+          args: 
+            chdir: "{{ helm_dir.path }}"
+          when: chart_query.stdout_lines | length > 0
+
+        - name: deploy rook ceph crd
+          k8s:
+            state: "{{ kube_state | default('present') }}"
+            force: yes
+            namespace: "{{ rook_namespace }}"
+            definition:
+              kind: CephCluster
+              metadata:
+                name: rook-ceph
+              spec:
+                cephVersion:
+                  image: "ceph/ceph:{{ ceph_release }}"
+                dataDirHostPath: /var/lib/rook
+                dashboard:
+                  enabled: true
+                storage:
+                  useAllNodes: true
+                  useAllDevices: false
+                  deviceFilter: "^sda$"
+                mon:
+                  count: 3
+                  allowMultiplePrNode: true
+
+        - name: create rook ceph block pool
+          k8s:
+            state: "{{ kube_state | default('present') }}"
+            force: yes
+            namespace: "{{ rook_namespace }}"
+            definition:
+              kind: CephBlockPool
+              metadata:
+                name: replicapool
+              spec:
+                failureDomain: host
+                replicated:
+                  size: 2
+
+        - name: create rook ceph storage class
+          k8s:
+            state: "{{ kube_state | default('present') }}"
+            force: yes
+            namespace: "{{ rook_namespace }}"
+            definition:
+              kind: StorageClass
+              metadata:
+                name: rook-ceph-block
+              provisioner: ceph.rook.io/block
+              parameters:
+                blockPool: replicapool
+                clusterNamespace: "{{ rook_namespace }}"
+                fstype: "{{ rook_fstype }}"
+              reclaimPolicy: "{{ rook_reclaimpolicy }}"
+
+      always:
+
+        - name: destroy helm temp dir
+          file:
+            state: absent
+            path: "{{ helm_dir.path }}"

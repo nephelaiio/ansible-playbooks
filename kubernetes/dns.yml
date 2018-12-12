@@ -1,5 +1,5 @@
 ---
-- name: Deploy external-dns
+- name: Deploy external-dns helm chart
 
   hosts: localhost
 
@@ -31,9 +31,10 @@
       register: helm_dir
 
     - name: query existing chart
-      shell: "helm get {{ externaldns_chart_name }}"
+      command: "helm list {{ nginx_chart_name }} -q"
       register: chart_query
       failed_when: false
+      changed_when: false
       tags:
         - skip_ansible_lint
 
@@ -66,15 +67,15 @@
 
         - name: create externaldns helm chart
           command: "helm install --name {{ externaldns_chart_name }} -f config.yml {{ externaldns_chart_release }}"
-          args: 
+          args:
             chdir: "{{ helm_dir.path }}"
-          when: chart_query.rc != 0
+          when: chart_query.stdout_lines | length == 0
 
         - name: update externaldns helm chart
           command: "helm upgrade -f config.yml {{ externaldns_chart_name }} {{ externaldns_chart_release }}"
-          args: 
+          args:
             chdir: "{{ helm_dir.path }}"
-          when: chart_query.rc == 0
+          when: chart_query.stdout_lines | length > 0
 
       always:
 

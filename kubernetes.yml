@@ -8,3 +8,7 @@
 - import_playbook: kubernetes/metallb.yml
 
 - import_playbook: kubernetes/dns.yml
+
+- import_playbook: kubernetes/rook.yml
+
+- import_playbook: kubernetes/traefik.yml

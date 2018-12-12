@@ -1,5 +1,5 @@
 ---
-- name: Deploy traefik
+- name: Deploy traefik helm chart
 
   hosts: localhost
 
@@ -7,291 +7,85 @@
 
   vars:
 
-    traefik_namespace: traefik
-    traefik_app: traefik-ingress
-    traefik_service_account: "{{ traefik_app }}"
-    traefik_cluster_role: "{{ traefik_app }}"
-    traefik_cluster_role_binding: "{{ traefik_app }}"
-    traefik_deployment: "{{ traefik_app }}"
-    traefik_service: "{{  traefik_app }}-service"
-    traefik_configmap: "{{  traefik_app }}-config"
-    traefik_ui: "{{ traefik_app }}-ui"
-    traefik_k8s_app: "{{ traefik_app }}-lb"
-    traefik_lb_fqdn: "{{ k8s_lb_url }}"
-    traefik_release: "1.7"
+    traefik_chart_name: traefik
+    traefik_chart_release: stable/traefik
 
   roles:
 
     - nephelaiio.plugins
 
-  tasks:
+
+  pre_tasks:
 
     - name: include private variables
       include_vars:
         dir: "../{{ variables }}"
+
+  tasks:
+
+    - name: create helm temp dir
+      tempfile:
+        state: directory
+        suffix: traefik
+      register: helm_dir
+      changed_when: false
+
+    - name: query existing chart
+      command: "helm list {{ traefik_chart_name }} -q"
+      register: chart_query
+      failed_when: false
+      changed_when: false
       tags:
-        - always
+        - skip_ansible_lint
 
-    - name: create traefik namespace
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        force: "{{ traefik_force | default(True) }}"
-        definition:
-          apiVersion: v1
-          kind: Namespace
-          metadata:
-            name: "{{ traefik_namespace }}"
-            labels:
-              name: "{{ traefik_namespace }}"
+    - block:
 
-    - name: create traefik service account
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ traefik_namespace }}"
-        force: "{{ traefik_force | default(True) }}"
-        definition:
-          apiVersion: v1
-          kind: ServiceAccount
-          metadata:
-            name: "{{ traefik_service_account }}"
+        - name: create configuration file
+          copy:
+            dest: "{{ helm_dir.path }}/config.yml"
+            content: "{{ traefik_config }}"
+          vars:
+            traefik_config: |
+              dashboard:
+                enabled: true
+                domain: traefik.{{ base_domain }}
+              acme:
+                enabled: true
+                challengeType: dns-01
+                domains:
+                  enabled: true
+                  domainsList:
+                    - main: "*.{{ base_domain }}"
+                dnsProvider:
+                  name: route53
+                  route53:
+                    AWS_ACCESS_KEY_ID: {{ aws_access_key_id }}
+                    AWS_SECRET_ACCESS_KEY: {{ aws_secret_access_key }}
+                    AWS_REGION: us-east-1
+          changed_when: false
 
-    - name: create traefik cluster role
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ traefik_namespace }}"
-        force: "{{ traefik_force | default(True) }}"
-        definition:
-          kind: ClusterRole
-          apiVersion: rbac.authorization.k8s.io/v1beta1
-          metadata:
-            name: "{{ traefik_cluster_role }}"
-          rules:
-            - apiGroups:
-                - ""
-              resources:
-                - services
-                - endpoints
-                - secrets
-              verbs:
-                - get
-                - list
-                - watch
-            - apiGroups:
-                - extensions
-              resources:
-                - ingresses
-              verbs:
-                - get
-                - list
-                - watch
+        - name: include private variables
+          include_vars:
+            dir: "../{{ variables }}"
+          tags:
+            - always
 
-    - name: create traefik cluster role binding
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ traefik_namespace }}"
-        force: "{{ traefik_force | default(True) }}"
-        definition:
-          kind: ClusterRoleBinding
-          apiVersion: rbac.authorization.k8s.io/v1beta1
-          metadata:
-            name: "{{ traefik_cluster_role_binding }}"
-          roleRef:
-            apiGroup: rbac.authorization.k8s.io
-            kind: ClusterRole
-            name: "{{ traefik_cluster_role }}"
-          subjects:
-            - kind: ServiceAccount
-              name: "{{ traefik_service_account }}"
-              namespace: "{{ traefik_namespace }}"
+        - name: create traefik helm chart
+          command: "helm install --name {{ traefik_chart_name }} -f config.yml {{ traefik_chart_release }}"
+          args:
+            chdir: "{{ helm_dir.path }}"
+          when: chart_query.stdout_lines | length == 0
 
-    - name: create traefik configmap
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ traefik_namespace }}"
-        force: "{{ traefik_force | default(True) }}"
-        definition:
-          kind: ConfigMap
-          apiVersion: v1
-          metadata:
-            name: "{{ traefik_configmap }}"
-          data:
-            traefik.toml: |
-              [kubernetes]
-              [kubernetes.ingressEndpoint]
-              publishedService = "{{ traefik_namespace }}/{{ traefik_deployment }}"
+        - name: update traefik helm chart
+          command: "helm upgrade -f config.yml {{ traefik_chart_name }} {{ traefik_chart_release }}"
+          args:
+            chdir: "{{ helm_dir.path }}"
+          when: chart_query.stdout_lines | length > 0
 
-    - name: create traefik daemonset
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ traefik_namespace }}"
-        force: "{{ traefik_force | default(True) }}"
-        definition:
-          kind: DaemonSet
-          apiVersion: extensions/v1beta1
-          metadata:
-            name: "{{ traefik_deployment }}"
-            labels:
-              k8s-app: "{{ traefik_k8s_app }}"
-          spec:
-            replicas: 1
-            selector:
-              matchLabels:
-                k8s-app: "{{ traefik_k8s_app }}"
-            template:
-              metadata:
-                labels:
-                  k8s-app: "{{ traefik_k8s_app }}"
-              spec:
-                serviceAccountName: "{{ traefik_service_account }}"
-                terminationGracePeriodSeconds: 60
-                volumes:
-                  - name: config
-                    configMap:
-                      name: "{{ traefik_configmap }}"
-                containers:
-                  - image: "traefik:{{ traefik_release }}"
-                    name: "{{ traefik_k8s_app }}"
-                    volumeMounts:
-                      - mountPath: /config
-                        name: config
-                    ports:
-                      - name: http
-                        containerPort: 80
-                        hostPort: 80
-                    securityContext:
-                      capabilities:
-                        drop:
-                          - ALL
-                        add:
-                          - NET_BIND_SERVICE
-                    args:
-                      - --configfile=/config/traefik.toml
-                      - --api
-                      - --kubernetes
-                      - --logLevel=INFO
+      always:
 
-    - name: query existing service object
-      k8s_facts:
-        namespace: "{{ traefik_namespace }}"
-        kind: Service
-        name: "{{ traefik_service }}"
-      register:
-        traefik_service_query
-
-    - name: create traefik service
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ traefik_namespace }}"
-        force: "{{ traefik_force | default(True) }}"
-        definition:
-          kind: Service
-          apiVersion: v1
-          metadata:
-            name: "{{ traefik_service }}"
-            annotations:
-              external-dns.alpha.kubernetes.io/hostname: "{{ traefik_lb_fqdn }}"
-          spec:
-            selector:
-              k8s-app: "{{ traefik_k8s_app }}"
-            ports:
-              - protocol: TCP
-                port: 80
-                name: web
-            type: LoadBalancer
-      when: traefik_service_query.resources | length == 0
-
-    - name: update traefik service
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ traefik_namespace }}"
-        force: "{{ traefik_force | default(True) }}"
-        definition:
-          kind: Service
-          apiVersion: v1
-          metadata:
-            name: "{{ traefik_service }}"
-            resourceVersion: "{{ traefik_service_query.resources[0].metadata.resourceVersion }}"
-            annotations:
-              external-dns.alpha.kubernetes.io/hostname: "{{ traefik_lb_fqdn }}"
-          spec:
-            clusterIP: "{{ traefik_service_query.resources[0].spec.clusterIP }}"
-            selector:
-              k8s-app: "{{ traefik_k8s_app }}"
-            ports:
-              - protocol: TCP
-                port: 80
-                name: web
-            type: LoadBalancer
-      when: traefik_service_query.resources | length > 0
-
-    - name: query existing ui service object
-      k8s_facts:
-        namespace: "{{ traefik_namespace }}"
-        kind: Service
-        name: "{{ traefik_ui }}"
-      register:
-        traefik_ui_query
-
-    - name: create traefik ui service
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ traefik_namespace }}"
-        force: "{{ traefik_force | default(True) }}"
-        definition:
-          kind: Service
-          apiVersion: v1
-          metadata:
-            name: "{{ traefik_ui }}"
-            namespace: "{{ traefik_namespace }}"
-          spec:
-            selector:
-              k8s-app: "{{ traefik_k8s_app }}"
-            ports:
-              - name: admin
-                port: 80
-                targetPort: 8080
-      when: traefik_ui_query.resources | length == 0
-
-    - name: update traefik ui service
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ traefik_namespace }}"
-        force: "{{ traefik_force | default(True) }}"
-        definition:
-          kind: Service
-          apiVersion: v1
-          metadata:
-            name: "{{ traefik_ui }}"
-            resourceVersion: "{{ traefik_ui_query.resources[0].metadata.resourceVersion }}"
-          spec:
-            clusterIP: "{{ traefik_ui_query.resources[0].spec.clusterIP }}"
-            selector:
-              k8s-app: "{{ traefik_k8s_app }}"
-            ports:
-              - name: admin
-                port: 80
-                targetPort: 8080
-      when: traefik_ui_query.resources | length > 0
-
-    - name: create traefik ui ingress
-      k8s:
-        state: "{{ kube_state | default('present') }}"
-        namespace: "{{ traefik_namespace }}"
-        force: "{{ traefik_force | default(True) }}"
-        definition:
-          kind: Ingress
-          apiVersion: extensions/v1beta1
-          metadata:
-            name: "{{ traefik_ui }}"
-            annotations:
-              kubernetes.io/ingress.class: traefik
-              external-dns.alpha.kubernetes.io/target: "{{ traefik_lb_fqdn }}"
-          spec:
-            rules:
-              - host: traefik.home.nephelai.io
-                http:
-                  paths:
-                    - path: /
-                      backend:
-                        serviceName: "{{ traefik_ui }}"
-                        servicePort: admin
+        - name: destroy helm temp dir
+          file:
+            state: absent
+            path: "{{ helm_dir.path }}"
+          changed_when: false
