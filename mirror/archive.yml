@@ -12,12 +12,12 @@
     archive_mirror_root: "{{ mirror_root }}/{{ archive_mirror_dir }}"
     kvm_mirror_root: "{{ mirror_root }}/{{ kvm_mirror_dir }}"
     archive_mirror_targets:
+      - url: http://releases.ubuntu.com/18.04/ubuntu-18.04.1-live-server-amd64.iso
+        checksum: sha256:7b37dfcd082726303528e47c82f88f29c1dc9232f8fd39120d13749ae83cc463
       - url: http://releases.ubuntu.com/16.04/ubuntu-16.04.5-server-amd64.iso
         checksum: sha256:c94de1cc2e10160f325eb54638a5b5aa38f181d60ee33dae9578d96d932ee5f8
       - url: http://mirrors.ucr.ac.cr/centos/7.5.1804/isos/x86_64/CentOS-7-x86_64-Minimal-1804.iso
         checksum: sha256:714acc0aefb32b7d51b515e25546835e55a90da9fb00417fbee2d03a62801efd
-      - url: https://mirrors.ucr.ac.cr/centos/7/atomic/images/CentOS-Atomic-Host-7.1808-GenericCloud.qcow2.xz
-        checksum: sha256:10a13b1fa3b81a0f54adc68530e482a279eae4f6bc43db377e610192af758e03
 
   roles:
 
