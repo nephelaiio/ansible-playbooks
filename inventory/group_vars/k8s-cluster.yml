@@ -202,7 +202,7 @@ dashboard_enabled: false
 helm_enabled: true
 
 # Registry deployment
-registry_enabled: true
+registry_enabled: false
 # registry_namespace: kube-system
 # registry_storage_class: ""
 registry_disk_size: "10G"
