@@ -36,7 +36,7 @@
       include_role:
         name: nephelaiio.centos-installer
       vars:
-        centos_installer_image_url: "{{ archive_url }}/{{ archive_mirror_dir }}/CentOS-7-x86_64-Minimal-1804.iso"
+        centos_installer_image_url: "{{ archive_url }}/{{ archive_mirror_dir }}/CentOS-7-x86_64-Minimal-1810.iso"
         centos_installer_hostname: "{{ hostitem }}"
         centos_installer_interface:
           static: false
@@ -95,7 +95,7 @@
         name: nephelaiio.ubuntu-installer
       vars:
         ubuntu_installer_release: 18.04.1
-        ubuntu_installer_image_url: "{{ archive_url }}/{{ archive_mirror_dir }}/ubuntu-{{ ubuntu_installer_release }}-live-server-amd64.iso"
+        ubuntu_installer_image_url: "{{ archive_url }}/{{ archive_mirror_dir }}/ubuntu-{{ ubuntu_installer_release }}-server-amd64.iso"
         ubuntu_installer_hostname: "{{ hostitem }}"
         ubuntu_installer_interface:
           static: false
