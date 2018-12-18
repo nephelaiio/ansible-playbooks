@@ -5,10 +5,6 @@
 
   connection: local
 
-  vars:
-
-    kubespray_root: ./kubespray
-
   tasks:
 
     - name: include private variables
@@ -20,6 +16,13 @@
         repo: https://github.com/kubernetes-incubator/kubespray.git
         version: "{{ kubespray_version }}"
         dest: "{{ kubespray_root }}"
+        force: yes
+
+    - name: clone rook repository
+      git:
+        repo: https://github.com/rook/rook.git
+        version: "{{ rook_version }}"
+        dest: "{{ rook_root }}"
         force: yes
 
     - name: install kubespray requirements

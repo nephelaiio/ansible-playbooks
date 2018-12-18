@@ -7,13 +7,17 @@
 
   vars:
 
-    rook_namespace: root-ceph-system
+    rookop_namespace: rook-ceph-system
+    rookop_chart_name: rook
+    rookop_chart_release: "rook-{{ rook_release }}/rook-ceph"
+    rook_namespace: "{{ rookop_namespace }}"
     rook_release: alpha
     rook_fstype: xfs
     rook_reclaimpolicy: Delete
+    rook_block_class: rook-ceph-block
+    rook_replica_pool: replicapool
+    rook_ceph_cluster: "{{ rook_namespace }}"
     ceph_release: v13.2
-    rookop_chart_name: rook
-    rookop_chart_release: "rook-{{ rook_release }}/rook-ceph"
 
   roles:
 
@@ -35,7 +39,7 @@
     - name: create helm temp dir
       tempfile:
         state: directory
-        suffix: rookop
+        suffix: rook
       register: helm_dir
 
     - name: query existing chart
@@ -51,9 +55,9 @@
         - name: create configuration file
           copy:
             dest: "{{ helm_dir.path }}/config.yml"
-            content: "{{ rookop_config }}"
+            content: "{{ rook_config }}"
           vars:
-            rookop_config: ""
+            rook_config: ""
 
         - name: include private variables
           include_vars:
@@ -61,70 +65,309 @@
           tags:
             - always
 
+        - name: create rook namespace
+          k8s:
+            api_version: v1
+            state: "{{ kube_state | default('present') }}"
+            force: yes
+            definition:
+                kind: Namespace
+                metadata:
+                  name: "{{ rook_namespace }}"
+
         - name: create rook operator helm chart
-          command: "helm install --namespace {{ rook_namespace }} --name {{ rookop_chart_name }} -f config.yml {{ rookop_chart_release }}"
+          command: "helm install --namespace {{ rookop_namespace }} --name {{ rookop_chart_name }} -f config.yml {{ rookop_chart_release }}"
           args: 
             chdir: "{{ helm_dir.path }}"
           when: chart_query.stdout_lines | length == 0
 
         - name: update rook operator helm chart
-          command: "helm upgrade --namespace {{ rook_namespace }} -f config.yml {{ rookop_chart_name }} {{ rookop_chart_release }}"
+          command: "helm upgrade --namespace {{ rookop_namespace }} -f config.yml {{ rookop_chart_name }} {{ rookop_chart_release }}"
           args: 
             chdir: "{{ helm_dir.path }}"
           when: chart_query.stdout_lines | length > 0
 
-        - name: deploy rook ceph crd
-          k8s:
-            state: "{{ kube_state | default('present') }}"
-            force: yes
-            namespace: "{{ rook_namespace }}"
-            definition:
-              kind: CephCluster
-              metadata:
-                name: rook-ceph
-              spec:
-                cephVersion:
-                  image: "ceph/ceph:{{ ceph_release }}"
-                dataDirHostPath: /var/lib/rook
-                dashboard:
-                  enabled: true
-                storage:
-                  useAllNodes: true
-                  useAllDevices: false
-                  deviceFilter: "^sda$"
-                mon:
-                  count: 3
-                  allowMultiplePrNode: true
+        - include_tasks: ./resource.yml
+          loop_control:
+            loop_var: k8s_resource
+          with_items:
 
-        - name: create rook ceph block pool
-          k8s:
-            state: "{{ kube_state | default('present') }}"
-            force: yes
-            namespace: "{{ rook_namespace }}"
-            definition:
-              kind: CephBlockPool
-              metadata:
-                name: replicapool
-              spec:
-                failureDomain: host
-                replicated:
-                  size: 2
+            - description: rook osd service account
+              definition:
+                apiVersion: v1
+                kind: ServiceAccount
+                metadata:
+                  name: rook-ceph-osd
+                  namespace: "{{ rook_namespace }}"
 
-        - name: create rook ceph storage class
-          k8s:
-            state: "{{ kube_state | default('present') }}"
-            force: yes
-            namespace: "{{ rook_namespace }}"
-            definition:
-              kind: StorageClass
-              metadata:
-                name: rook-ceph-block
-              provisioner: ceph.rook.io/block
-              parameters:
-                blockPool: replicapool
-                clusterNamespace: "{{ rook_namespace }}"
-                fstype: "{{ rook_fstype }}"
-              reclaimPolicy: "{{ rook_reclaimpolicy }}"
+            - description: rook mgr service account
+              definition:
+                apiVersion: v1
+                kind: ServiceAccount
+                metadata:
+                  name: rook-ceph-mgr
+                  namespace: "{{ rook_namespace }}"
+
+            - description: rook osd role
+              definition:
+                kind: Role
+                apiVersion: rbac.authorization.k8s.io/v1beta1
+                metadata:
+                  name: rook-ceph-osd
+                  namespace: "{{ rook_namespace }}"
+                rules:
+                - apiGroups: [""]
+                  resources: ["configmaps"]
+                  verbs: [ "get", "list", "watch", "create", "update", "delete" ]
+
+            - description: rook mgr system role
+              definition:
+                kind: Role
+                apiVersion: rbac.authorization.k8s.io/v1beta1
+                metadata:
+                  name: rook-ceph-mgr-system
+                  namespace: "{{ rook_namespace }}"
+                rules:
+                - apiGroups:
+                  - ""
+                  resources:
+                  - configmaps
+                  verbs:
+                  - get
+                  - list
+                  - watch
+
+            - description: rook mgr role
+              definition:
+                kind: Role
+                apiVersion: rbac.authorization.k8s.io/v1beta1
+                metadata:
+                  name: rook-ceph-mgr
+                  namespace: "{{ rook_namespace }}"
+                rules:
+                - apiGroups:
+                  - ""
+                  resources:
+                  - pods
+                  - services
+                  verbs:
+                  - get
+                  - list
+                  - watch
+                - apiGroups:
+                  - batch
+                  resources:
+                  - jobs
+                  verbs:
+                  - get
+                  - list
+                  - watch
+                  - create
+                  - update
+                  - delete
+                - apiGroups:
+                  - ceph.rook.io
+                  resources:
+                  - "*"
+                  verbs:
+                  - "*"
+
+            - description: rook ceph cluster role binding
+              definition:
+                kind: RoleBinding
+                apiVersion: rbac.authorization.k8s.io/v1beta1
+                metadata:
+                  name: rook-ceph-cluster-mgmt
+                  namespace: "{{ rook_namespace }}"
+                roleRef:
+                  apiGroup: rbac.authorization.k8s.io
+                  kind: ClusterRole
+                  name: rook-ceph-cluster-mgmt
+                subjects:
+                - kind: ServiceAccount
+                  name: "{{ rookop_namespace }}"
+                  namespace: "{{ rook_namespace }}"
+
+            - description: rook osd role binding
+              definition:
+                kind: RoleBinding
+                apiVersion: rbac.authorization.k8s.io/v1beta1
+                metadata:
+                  name: rook-ceph-osd
+                  namespace: "{{ rook_namespace }}"
+                roleRef:
+                  apiGroup: rbac.authorization.k8s.io
+                  kind: Role
+                  name: rook-ceph-osd
+                subjects:
+                - kind: ServiceAccount
+                  name: rook-ceph-osd
+                  namespace: "{{ rook_namespace }}"
+
+            - description: rook mgr role binding
+              definition:
+                kind: RoleBinding
+                apiVersion: rbac.authorization.k8s.io/v1beta1
+                metadata:
+                  name: rook-ceph-mgr
+                  namespace: "{{ rook_namespace }}"
+                roleRef:
+                  apiGroup: rbac.authorization.k8s.io
+                  kind: Role
+                  name: rook-ceph-mgr
+                subjects:
+                - kind: ServiceAccount
+                  name: rook-ceph-mgr
+                  namespace: "{{ rook_namespace }}"
+
+            - description: rook mgr system role binding
+              definition:
+                kind: RoleBinding
+                apiVersion: rbac.authorization.k8s.io/v1beta1
+                metadata:
+                  name: rook-ceph-mgr-system
+                  namespace: "{{ rookop_namespace }}"
+                roleRef:
+                  apiGroup: rbac.authorization.k8s.io
+                  kind: Role
+                  name: rook-ceph-mgr-system
+                subjects:
+                - kind: ServiceAccount
+                  name: rook-ceph-mgr
+                  namespace: "{{ rook_namespace }}"
+
+            - description: rook mgr cluster role binding
+              definition:
+                kind: RoleBinding
+                apiVersion: rbac.authorization.k8s.io/v1beta1
+                metadata:
+                  name: rook-ceph-mgr-cluster
+                  namespace: "{{ rook_namespace }}"
+                roleRef:
+                  apiGroup: rbac.authorization.k8s.io
+                  kind: ClusterRole
+                  name: rook-ceph-mgr-cluster
+                subjects:
+                - kind: ServiceAccount
+                  name: rook-ceph-mgr
+                  namespace: "{{ rook_namespace }}"
+
+            - description: rook ceph crd
+              definition:
+                apiVersion: ceph.rook.io/v1
+                kind: CephCluster
+                metadata:
+                  name: "{{ rook_ceph_cluster }}"
+                  namespace: "{{ rook_namespace }}"
+                spec:
+                  cephVersion:
+                    image: "ceph/ceph:{{ ceph_release }}"
+                  dataDirHostPath: /var/lib/rook
+                  dashboard:
+                    enabled: true
+                  storage:
+                    useAllNodes: true
+                    useAllDevices: false
+                    deviceFilter: "^sda$"
+                  mon:
+                    count: 3
+                    allowMultiplePrNode: true
+
+            - description: rook ceph block pool
+              definition:
+                apiVersion: ceph.rook.io/v1
+                kind: CephBlockPool
+                metadata:
+                  name: "{{ rook_replica_pool }}"
+                  namespace: "{{ rook_namespace }}"
+                spec:
+                  failureDomain: host
+                  replicated:
+                    size: 2
+
+            - description: rook ceph storage class
+              update_definition: no
+              definition:
+                apiVersion: storage.k8s.io/v1
+                kind: StorageClass
+                metadata:
+                  name: "{{ rook_block_class }}"
+                  namespace: "{{ rook_namespace }}"
+                  annotations:
+                    storageclass.kubernetes.io/is-default-class: "true"
+                provisioner: ceph.rook.io/block
+                parameters:
+                  blockPool: "{{ rook_replica_pool }}"
+                  clusterNamespace: "{{ rook_namespace }}"
+                  fstype: "{{ rook_fstype }}"
+                reclaimPolicy: "{{ rook_reclaimpolicy }}"
+
+        - include_tasks: ./resource.yml
+          loop_control:
+            loop_var: k8s_resource
+          with_items:
+
+            - description: rook toolbox
+              definition:
+                apiVersion: apps/v1
+                kind: Deployment
+                metadata:
+                  name: rook-ceph-tools
+                  namespace: "{{ rook_namespace }}"
+                  labels:
+                    app: rook-ceph-tools
+                spec:
+                  replicas: 1
+                  selector:
+                    matchLabels:
+                      app: rook-ceph-tools
+                  template:
+                    metadata:
+                      labels:
+                        app: rook-ceph-tools
+                    spec:
+                      dnsPolicy: ClusterFirstWithHostNet
+                      containers:
+                      - name: rook-ceph-tools
+                        image: rook/ceph:master
+                        command: ["/tini"]
+                        args: ["-g", "--", "/usr/local/bin/toolbox.sh"]
+                        imagePullPolicy: IfNotPresent
+                        env:
+                          - name: ROOK_ADMIN_SECRET
+                            valueFrom:
+                              secretKeyRef:
+                                name: rook-ceph-mon
+                                key: admin-secret
+                        securityContext:
+                          privileged: true
+                        volumeMounts:
+                          - mountPath: /dev
+                            name: dev
+                          - mountPath: /sys/bus
+                            name: sysbus
+                          - mountPath: /lib/modules
+                            name: libmodules
+                          - name: mon-endpoint-volume
+                            mountPath: /etc/rook
+                      # if hostNetwork: false, the "rbd map" command hangs, see https://github.com/rook/rook/issues/2021
+                      hostNetwork: true
+                      volumes:
+                        - name: dev
+                          hostPath:
+                            path: /dev
+                        - name: sysbus
+                          hostPath:
+                            path: /sys/bus
+                        - name: libmodules
+                          hostPath:
+                            path: /lib/modules
+                        - name: mon-endpoint-volume
+                          configMap:
+                            name: rook-ceph-mon-endpoints
+                            items:
+                            - key: data
+                              path: mon-endpoints
 
       always:
 
