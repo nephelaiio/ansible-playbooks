@@ -9,6 +9,7 @@
 
     traefik_chart_name: traefik
     traefik_chart_release: stable/traefik
+    traefik_pvc: acme
 
   roles:
 
@@ -40,6 +41,28 @@
 
     - block:
 
+        - include_tasks: ./resource.yml
+          loop_control:
+            loop_var: k8s_resource
+          with_items:
+
+             -  description: traefik pvc
+                definition:
+                  kind: PersistentVolumeClaim
+                  metadata:
+                    name: "{{ traefik_pvc }}"
+                    namespace: default
+                  spec:
+                    accessModes:
+                      - ReadWriteOnce
+                    resources:
+                      requests:
+                        storage: 1Gi
+
+        - name: wait for pvc claim to be bound
+          pause:
+            seconds: 10
+
         - name: create configuration file
           copy:
             dest: "{{ helm_dir.path }}/config.yml"
@@ -50,6 +73,9 @@
                 enabled: true
                 domain: traefik.{{ base_domain }}
               acme:
+                persistence:
+                  enabled: true
+                  existingClaim: {{ traefik_pvc }}
                 enabled: true
                 challengeType: dns-01
                 domains:

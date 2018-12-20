@@ -255,3 +255,11 @@ ingress_nginx_enabled: false
 # Cert manager deployment
 cert_manager_enabled: false
 # cert_manager_namespace: "cert-manager"
+
+#
+feature_gate_v1_12:
+  - "AttachVolumeLimit=false"
+
+# this must match rook agent.flexvolumedirpath setting in kubernetes/rook.yml
+# see https://github.com/rook/rook/issues/1790
+kubelet_flexvolumes_plugins_dir: /var/lib/kubelet/volume-plugins

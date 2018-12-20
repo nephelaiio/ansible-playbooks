@@ -19,3 +19,5 @@ kubespray/
 inventory/artifacts/
 inventory/credentials/
 rook/
+kubernetes/kubespray/
+kubernetes/rook/

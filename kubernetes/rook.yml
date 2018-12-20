@@ -52,12 +52,16 @@
 
     - block:
 
+        # agent.flexvolumedirpath must match kubelet_flexvolumes_plugins_dir setting in inventory/group_vars/k8s-cluster.yml
+        # see https://github.com/rook/rook/issues/1790
         - name: create configuration file
           copy:
             dest: "{{ helm_dir.path }}/config.yml"
             content: "{{ rook_config }}"
           vars:
-            rook_config: ""
+            rook_config: |
+              agent:
+                flexVolumeDirPath: /var/lib/kubelet/volume-plugins
 
         - name: include private variables
           include_vars:
