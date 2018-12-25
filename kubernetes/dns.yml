@@ -54,6 +54,8 @@
                 - ingress
               txtOwnerId: externaldns
               provider: pdns
+              domainFilters:
+                - "{{ base_domain }}"
               extraArgs:
                 pdns-server: {{ pdns_url }}
                 pdns-api-key: {{ pdns.config['api-key'] }}
