@@ -17,5 +17,5 @@ jupyter:
   client_token: "{{ 'test04' | to_uuid }}"
   ami_id: ami-e9038d89
   ami_user: ubuntu
-  key: teodoro.cook@gmail.com
+  key: "{{ users.teddyphreak.email }}"
   pause_seconds: 30

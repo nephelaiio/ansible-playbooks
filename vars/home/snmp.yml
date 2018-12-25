@@ -1,4 +1,4 @@
 ---
 snmp_community: nephelaiio
-snmp_contact: teodoro.cook@gmail.com
+snmp_contact: "{{ users.teddyphreak.email }}"
 snmp_version: 2c
