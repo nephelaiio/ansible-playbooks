@@ -61,7 +61,7 @@
           vars:
             rook_config: |
               agent:
-                flexVolumeDirPath: /var/lib/kubelet/volume-plugins
+                flexVolumeDirPath: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/
 
         - name: include private variables
           include_vars:

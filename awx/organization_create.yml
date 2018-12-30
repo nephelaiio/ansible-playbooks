@@ -1,3 +1,0 @@
----
-- name: create organization
-  command: "awx-cli organization create -n {{ name | string | quote }}"

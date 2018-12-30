@@ -3,3 +3,5 @@ timezone: America/Costa_Rica
 inventory: home
 variables: "vars/{{ inventory }}"
 base_domain: home.nephelai.io
+kubeadm_enabled: yes
+k8s_cluster_name: kube.home.nephelai.io

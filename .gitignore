@@ -15,9 +15,8 @@ files/images/**
 resources/**
 **/*.pyc
 .python-version
-kubespray/
 inventory/artifacts/
 inventory/credentials/
-rook/
 kubernetes/kubespray/
 kubernetes/rook/
+kubernetes/awx/

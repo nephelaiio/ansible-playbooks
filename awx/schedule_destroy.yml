@@ -1,3 +1,0 @@
----
-- name: destroy job schedule
-  command: "awx-cli schedule delete -n {{ schedule.name | string | quote }}"

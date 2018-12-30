@@ -1,4 +1,5 @@
 ---
+bin_dir: /usr/local/bin
 # Kubernetes configuration dirs and system namespace.
 # Those are where all the additional config stuff goes
 # the kubernetes normally puts in /srv/kubernetes.
@@ -108,11 +109,11 @@ kube_encrypt_secret_data: false
 
 # DNS configuration.
 # Kubernetes cluster name, also will be used as DNS domain
-cluster_name: kube.home.nephelai.io
+cluster_name: "{{ k8s_cluster_name }}"
 # Subdomains of DNS domain to be resolved via /etc/resolv.conf for hostnet pods
 ndots: 2
 # Can be dnsmasq_kubedns, kubedns, coredns, coredns_dual, manual or none
-dns_mode: kubedns
+dns_mode: coredns
 # Set manual server if using a custom cluster DNS server
 #manual_dns_server: 10.x.x.x
 
@@ -262,4 +263,4 @@ feature_gate_v1_12:
 
 # this must match rook agent.flexvolumedirpath setting in kubernetes/rook.yml
 # see https://github.com/rook/rook/issues/1790
-kubelet_flexvolumes_plugins_dir: /var/lib/kubelet/volume-plugins
+kubelet_flexvolumes_plugins_dir: /usr/libexec/kubernetes/kubelet-plugins/volume/exec/

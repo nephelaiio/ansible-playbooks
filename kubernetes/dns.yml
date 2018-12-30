@@ -15,7 +15,6 @@
 
     - nephelaiio.plugins
 
-
   pre_tasks:
 
     - name: include private variables

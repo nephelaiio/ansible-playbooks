@@ -58,10 +58,10 @@
                 ingress:
                   annotations:
                     kubernetes.io/ingress.class: traefik
-                    external-dns.alpha.kubernetes.io/target: lb.{{ base_domain }}.
+                    external-dns.alpha.kubernetes.io/target: {{ traefik_target }}.
               service:
                 annotations:
-                  external-dns.alpha.kubernetes.io/hostname: lb.{{ base_domain }}.
+                  external-dns.alpha.kubernetes.io/hostname: {{ traefik_target }}.
               ssl:
                 enabled: true
                 enforced: yes

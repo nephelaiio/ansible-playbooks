@@ -6,13 +6,23 @@
     namespace: "{{ k8s_resource.definition.metadata.namespace }}"
   register: k8s_resource_query
 
+- name: set resource metadata
+  set_fact:
+    k8s_ver:
+      metadata: "{{ { 'resourceVersion': k8s_resource_query.resources[0].metadata.resourceVersion } if (k8s_resource_query.resources | length > 0) else {} }}"
+    k8s_def: "{{ k8s_resource.definition }}"
+
+- name: "destroy {{ k8s_resource.description | default('resource') }}"
+  k8s:
+    state: absent
+    force: yes
+    definition: "{{ k8s_def | combine(k8s_ver, recursive=True) }}"
+  when: k8s_resource.recreate | default(false)
+
 - name: "deploy {{ k8s_resource.description | default('resource') }}"
   k8s:
     state: "{{ kube_state | default('present') }}"
     force: yes
     definition: "{{ k8s_def | combine(k8s_ver, recursive=True) }}"
   vars:
-    k8s_ver:
-      metadata: "{{ { 'resourceVersion': k8s_resource_query.resources[0].metadata.resourceVersion } if (k8s_resource_query.resources | length > 0) else {} }}"
-    k8s_def: "{{ k8s_resource.definition }}"
   when: (k8s_resource.update_definition | default(true)) or (k8s_resource_query.resources | length == 0)
