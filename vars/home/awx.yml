@@ -60,27 +60,18 @@ awx_organizations:
         playbook: ping.yml
         vault_credential: home.vault
         credential: home.ssh
-      - name: mirror.home
-        job_type: run
-        project: nephelai.io
-        inventory: home
-        playbook: mirror.yml
-        vault_credential: home.vault
-        credential: home.ssh
-        host_config_key: "{{ awx_host_key }}"
       - name: upgrade.home
         job_type: run
         project: nephelai.io
         inventory: home
         playbook: upgrade.yml
+        vault_credential: home.vault
         credential: home.ssh
-        host_config_key: "{{ awx_host_key }}"
-      - name: papertrail.home
-        state: absent
+      - name: mirror.home
         job_type: run
         project: nephelai.io
         inventory: home
-        playbook: papertrail.yml
+        playbook: mirror.yml
         vault_credential: home.vault
         credential: home.ssh
         host_config_key: "{{ awx_host_key }}"
@@ -108,35 +99,11 @@ awx_organizations:
         vault_credential: home.vault
         credential: home.ssh
         host_config_key: "{{ awx_host_key }}"
-      - name: kubernetes.home
-        job_type: run
-        project: nephelai.io
-        inventory: home
-        playbook: kubernetes.yml
-        vault_credential: home.vault
-        credential: home.ssh
-        host_config_key: "{{ awx_host_key }}"
       - name: os.home
         job_type: run
         project: nephelai.io
         inventory: home
         playbook: home.yml
-        vault_credential: home.vault
-        credential: home.ssh
-        host_config_key: "{{ awx_host_key }}"
-      - name: librenms.home
-        job_type: run
-        project: nephelai.io
-        inventory: home
-        playbook: librenms.yml
-        vault_credential: home.vault
-        credential: home.ssh
-        host_config_key: "{{ awx_host_key }}"
-      - name: graylog.home
-        job_type: run
-        project: nephelai.io
-        inventory: home
-        playbook: graylog.yml
         vault_credential: home.vault
         credential: home.ssh
         host_config_key: "{{ awx_host_key }}"
@@ -148,23 +115,12 @@ awx_organizations:
         vault_credential: home.vault
         credential: home.ssh
         host_config_key: "{{ awx_host_key }}"
-      - name: grafana.home
-        job_type: run
-        project: nephelai.io
-        inventory: home
-        playbook: grafana.yml
-        vault_credential: home.vault
-        credential: home.ssh
-        host_config_key: "{{ awx_host_key }}"
 
     workflows:
       - name: home
         nodes:
-          - name: ping
-            template: ping.home
           - name: os
             template: os.home
-            parent: ping
           - name: upgrade
             template: upgrade.home
             parent: os
@@ -177,18 +133,6 @@ awx_organizations:
           - name: dhcp
             template: dhcp.home
             parent: dns
-          - name: librenms
-            template: librenms.home
-            parent: dhcp
-          - name: graylog
-            template: graylog.home
-            parent: dhcp
-          - name: openvpn
-            template: openvpn.home
-            parent: dhcp
-          - name: grafana
-            template: grafana.home
-            parent: dhcp
           - name: unifi
             template: unifi.home
             parent: dhcp
@@ -211,14 +155,6 @@ awx_organizations:
         job_template: os.home
         enabled: true
         rrule: "DTSTART:20180401T001500Z RRULE:FREQ=DAILY;INTERVAL=1"
-      - name: librenms.home
-        job_template: librenms.home
-        enabled: true
-        rrule: "DTSTART:20180401T002000Z RRULE:FREQ=DAILY;INTERVAL=1"
-      - name: graylog.home
-        job_template: graylog.home
-        enabled: true
-        rrule: "DTSTART:20180401T002500Z RRULE:FREQ=WEEKLY;INTERVAL=1"
       - name: dhcp.home
         job_template: dhcp.home
         enabled: true
@@ -231,10 +167,6 @@ awx_organizations:
         job_template: dns.home
         enabled: true
         rrule: "DTSTART:20180401T004000Z RRULE:FREQ=DAILY;INTERVAL=1"
-      - name: grafana.home
-        job_template: grafana.home
-        enabled: true
-        rrule: "DTSTART:20180401T004500Z RRULE:FREQ=DAILY;INTERVAL=1"
       - name: unifi.home
         job_template: unifi.home
         enabled: true

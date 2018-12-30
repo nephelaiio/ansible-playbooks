@@ -49,6 +49,10 @@
           vars:
             traefik_config: |
               imageTag: {{ traefik_release }}
+              cpuRequest: 1000m
+              cpuLimit: 2000m
+              memoryRequest: 2Gi
+              memoryLimit: 4Gi
               rbac:
                 enabled: true
               publishedService: {{ traefik_namespace }}/traefik

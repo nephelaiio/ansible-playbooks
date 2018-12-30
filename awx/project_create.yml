@@ -1,0 +1,22 @@
+---
+- name: build project configuration options
+  set_fact:
+    name: "-n {{ project.name | string | quote }}"
+    description: "{{ ('--description ' + project.description | string | quote) if 'description' in project else '' }}"
+    project_org: "{{ '--organization ' + organization | string | quote }}"
+    scm_type: "--scm-type {{ project.scm_type | string | quote }}"
+    scm_url: "{{ ('--scm-url ' + project.scm_url | string | quote) if 'scm_url' in project else '' }}"
+    scm_branch: "{{ ('--scm-branch ' + project.scm_branch | string | quote) if 'scm_branch' in project else '' }}"
+    scm_credential: "{{ ('--scm-credential ' + project.scm_credential | string | quote) if 'scm_credential' in project else '' }}"
+    scm_clean: "{{ ('--scm-clean ' + project.scm_clean | string | quote) if 'scm_clean' in project else '' }}"
+    scm_delete_on_update: "{{ ('--scm-delete-on-update ' + project.scm_delete_on_update | string | quote) if 'scm_delete_on_update' in project else '' }}"
+    scm_update_on_launch: "{{ ('--scm-update-on-launch ' + project.scm_update_on_launch | string | quote) if 'scm_update_on_launch' in project else '' }}"
+    scm_update_cache_timeout: "{{ ('--scm-update-cache-timeout ' + project.scm_update_cache_timeout | string | quote) if 'scm_update_cache_timeout' in project else '' }}"
+    job_timeout: "{{ ('--job-timeout ' + (project.job_timeout | string | quote) ) if 'job_timeout' in project else '' }}"
+
+- name: build project creation command
+  set_fact:
+    project_source_create_args: "{{ name }} {{ description }} {{ scm_type }} {{ scm_url }} {{ scm_branch }} {{ scm_credential }} {{ scm_clean }} {{ scm_delete_on_update }} {{ scm_update_on_launch }} {{ job_timeout }}"
+
+- name: create project
+  command: "awx-cli project create --monitor {{ project_org }} {{ scm_update_cache_timeout }} {{ project_source_create_args }}"
