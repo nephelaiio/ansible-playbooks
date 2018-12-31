@@ -47,7 +47,7 @@ awx_organizations:
         source_path: inventory
         overwrite: true
         overwrite_vars: true
-        update_on_launch: false
+        update_on_launch: true
         update_on_project_update: false
 
     templates:
