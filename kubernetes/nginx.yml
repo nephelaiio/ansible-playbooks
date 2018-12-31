@@ -7,7 +7,7 @@
 
   vars:
 
-    nginx_chart_repo: 
+    nginx_chart_repo:
       name: bitnami
       url: https://charts.bitnami.com/bitnami
     nginx_chart_name: nginx
@@ -63,13 +63,13 @@
 
         - name: create nginx helm chart
           command: "helm install --name {{ nginx_chart_name }} -f config.yml {{ nginx_chart_release }}"
-          args: 
+          args:
             chdir: "{{ helm_dir.path }}"
           when: chart_query.stdout_lines | length == 0
 
         - name: update nginx helm chart
           command: "helm upgrade -f config.yml {{ nginx_chart_name }} {{ nginx_chart_release }}"
-          args: 
+          args:
             chdir: "{{ helm_dir.path }}"
           when: chart_query.stdout_lines | length > 0
 

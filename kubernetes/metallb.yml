@@ -61,13 +61,13 @@
 
         - name: create metallb helm chart
           command: "helm install --name {{ metallb_chart_name }} -f config.yml {{ metallb_chart_release }}"
-          args: 
+          args:
             chdir: "{{ helm_dir.path }}"
           when: chart_query.stdout_lines | length == 0
 
         - name: update metallb helm chart
           command: "helm upgrade -f config.yml {{ metallb_chart_name }} {{ metallb_chart_release }}"
-          args: 
+          args:
             chdir: "{{ helm_dir.path }}"
           when: chart_query.stdout_lines | length > 0
 

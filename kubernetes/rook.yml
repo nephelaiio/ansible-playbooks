@@ -75,19 +75,19 @@
             state: "{{ kube_state | default('present') }}"
             force: yes
             definition:
-                kind: Namespace
-                metadata:
-                  name: "{{ rook_namespace }}"
+              kind: Namespace
+              metadata:
+                name: "{{ rook_namespace }}"
 
         - name: create rook operator helm chart
           command: "helm install --namespace {{ rookop_namespace }} --name {{ rookop_chart_name }} -f config.yml {{ rookop_chart_release }}"
-          args: 
+          args:
             chdir: "{{ helm_dir.path }}"
           when: chart_query.stdout_lines | length == 0
 
         - name: update rook operator helm chart
           command: "helm upgrade --namespace {{ rookop_namespace }} -f config.yml {{ rookop_chart_name }} {{ rookop_chart_release }}"
-          args: 
+          args:
             chdir: "{{ helm_dir.path }}"
           when: chart_query.stdout_lines | length > 0
 
@@ -120,9 +120,9 @@
                   name: rook-ceph-osd
                   namespace: "{{ rook_namespace }}"
                 rules:
-                - apiGroups: [""]
-                  resources: ["configmaps"]
-                  verbs: [ "get", "list", "watch", "create", "update", "delete" ]
+                  - apiGroups: [""]
+                    resources: ["configmaps"]
+                    verbs: [ "get", "list", "watch", "create", "update", "delete" ]
 
             - description: rook mgr system role
               definition:
@@ -132,14 +132,14 @@
                   name: rook-ceph-mgr-system
                   namespace: "{{ rook_namespace }}"
                 rules:
-                - apiGroups:
-                  - ""
-                  resources:
-                  - configmaps
-                  verbs:
-                  - get
-                  - list
-                  - watch
+                  - apiGroups:
+                      - ""
+                    resources:
+                      - configmaps
+                    verbs:
+                      - get
+                      - list
+                      - watch
 
             - description: rook mgr role
               definition:
@@ -149,32 +149,32 @@
                   name: rook-ceph-mgr
                   namespace: "{{ rook_namespace }}"
                 rules:
-                - apiGroups:
-                  - ""
-                  resources:
-                  - pods
-                  - services
-                  verbs:
-                  - get
-                  - list
-                  - watch
-                - apiGroups:
-                  - batch
-                  resources:
-                  - jobs
-                  verbs:
-                  - get
-                  - list
-                  - watch
-                  - create
-                  - update
-                  - delete
-                - apiGroups:
-                  - ceph.rook.io
-                  resources:
-                  - "*"
-                  verbs:
-                  - "*"
+                  - apiGroups:
+                      - ""
+                    resources:
+                      - pods
+                      - services
+                    verbs:
+                      - get
+                      - list
+                      - watch
+                  - apiGroups:
+                      - batch
+                    resources:
+                      - jobs
+                    verbs:
+                      - get
+                      - list
+                      - watch
+                      - create
+                      - update
+                      - delete
+                  - apiGroups:
+                      - ceph.rook.io
+                    resources:
+                      - "*"
+                    verbs:
+                      - "*"
 
             - description: rook ceph cluster role binding
               definition:
@@ -188,9 +188,9 @@
                   kind: ClusterRole
                   name: rook-ceph-cluster-mgmt
                 subjects:
-                - kind: ServiceAccount
-                  name: "{{ rookop_namespace }}"
-                  namespace: "{{ rook_namespace }}"
+                  - kind: ServiceAccount
+                    name: "{{ rookop_namespace }}"
+                    namespace: "{{ rook_namespace }}"
 
             - description: rook osd role binding
               definition:
@@ -204,9 +204,9 @@
                   kind: Role
                   name: rook-ceph-osd
                 subjects:
-                - kind: ServiceAccount
-                  name: rook-ceph-osd
-                  namespace: "{{ rook_namespace }}"
+                  - kind: ServiceAccount
+                    name: rook-ceph-osd
+                    namespace: "{{ rook_namespace }}"
 
             - description: rook mgr role binding
               definition:
@@ -220,9 +220,9 @@
                   kind: Role
                   name: rook-ceph-mgr
                 subjects:
-                - kind: ServiceAccount
-                  name: rook-ceph-mgr
-                  namespace: "{{ rook_namespace }}"
+                  - kind: ServiceAccount
+                    name: rook-ceph-mgr
+                    namespace: "{{ rook_namespace }}"
 
             - description: rook mgr system role binding
               definition:
@@ -236,9 +236,9 @@
                   kind: Role
                   name: rook-ceph-mgr-system
                 subjects:
-                - kind: ServiceAccount
-                  name: rook-ceph-mgr
-                  namespace: "{{ rook_namespace }}"
+                  - kind: ServiceAccount
+                    name: rook-ceph-mgr
+                    namespace: "{{ rook_namespace }}"
 
             - description: rook mgr cluster role binding
               definition:
@@ -252,9 +252,9 @@
                   kind: ClusterRole
                   name: rook-ceph-mgr-cluster
                 subjects:
-                - kind: ServiceAccount
-                  name: rook-ceph-mgr
-                  namespace: "{{ rook_namespace }}"
+                  - kind: ServiceAccount
+                    name: rook-ceph-mgr
+                    namespace: "{{ rook_namespace }}"
 
             - description: rook ceph crd
               definition:
@@ -332,28 +332,28 @@
                     spec:
                       dnsPolicy: ClusterFirstWithHostNet
                       containers:
-                      - name: rook-ceph-tools
-                        image: rook/ceph:master
-                        command: ["/tini"]
-                        args: ["-g", "--", "/usr/local/bin/toolbox.sh"]
-                        imagePullPolicy: IfNotPresent
-                        env:
-                          - name: ROOK_ADMIN_SECRET
-                            valueFrom:
-                              secretKeyRef:
-                                name: rook-ceph-mon
-                                key: admin-secret
-                        securityContext:
-                          privileged: true
-                        volumeMounts:
-                          - mountPath: /dev
-                            name: dev
-                          - mountPath: /sys/bus
-                            name: sysbus
-                          - mountPath: /lib/modules
-                            name: libmodules
-                          - name: mon-endpoint-volume
-                            mountPath: /etc/rook
+                        - name: rook-ceph-tools
+                          image: rook/ceph:master
+                          command: ["/tini"]
+                          args: ["-g", "--", "/usr/local/bin/toolbox.sh"]
+                          imagePullPolicy: IfNotPresent
+                          env:
+                            - name: ROOK_ADMIN_SECRET
+                              valueFrom:
+                                secretKeyRef:
+                                  name: rook-ceph-mon
+                                  key: admin-secret
+                          securityContext:
+                            privileged: true
+                          volumeMounts:
+                            - mountPath: /dev
+                              name: dev
+                            - mountPath: /sys/bus
+                              name: sysbus
+                            - mountPath: /lib/modules
+                              name: libmodules
+                            - name: mon-endpoint-volume
+                              mountPath: /etc/rook
                       # if hostNetwork: false, the "rbd map" command hangs, see https://github.com/rook/rook/issues/2021
                       hostNetwork: true
                       volumes:
@@ -370,8 +370,8 @@
                           configMap:
                             name: rook-ceph-mon-endpoints
                             items:
-                            - key: data
-                              path: mon-endpoints
+                              - key: data
+                                path: mon-endpoints
 
       always:
 

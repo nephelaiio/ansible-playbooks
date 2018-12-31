@@ -101,7 +101,7 @@
 
     - name: mount backup target
       mount:
-        path: "{{ backup_root }}" 
+        path: "{{ backup_root }}"
         src: "{{ backup_host }}:{{ backup_export_root }}"
         fstype: nfs
         state: mounted
