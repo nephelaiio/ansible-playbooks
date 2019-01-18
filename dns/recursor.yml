@@ -1,0 +1,49 @@
+---
+- name: Configure dns recursors
+
+  hosts: recursors
+
+  become: yes
+
+  serial: 1
+
+  vars:
+
+    fwd_zones: "{{ dns.zones.values() | map(attribute='name') | list }}"
+    pdns_ips: "{{ groups['pdns'] | map('extract', hostvars, 'ansible_host') | join(';') }}"
+    pdns_fwd: "{{ fwd_zones | map('map_format', '%s=' + pdns_ips) | join(', ') }}"
+
+  roles:
+
+    - nephelaiio.plugins
+
+  pre_tasks:
+
+    - name: gather authoritative facts
+      setup:
+      delegate_to: "{{ item }}"
+      delegate_facts: yes
+      with_items: "{{ groups['pdns'] }}"
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: remove bind recursor
+      apt:
+        package: bind9
+        state: absent
+        purge: yes
+
+    - name: install pdns recursor
+      include_role:
+        name: PowerDNS.pdns_recursor
+      vars:
+        pdns_rec_config:
+          local-address: "{{ ansible_default_ipv4.address }}"
+          forward-zones: "{{ pdns_fwd }}"
+          max-cache-ttl: 15
+          max-negative-ttl: 15
+
