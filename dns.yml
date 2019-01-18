@@ -1,1 +1,6 @@
 ---
+- import_playbook: dns/recursor.yml
+
+- import_playbook: dns/authoritative.yml
+
+- import_playbook: dns/register.yml
