@@ -75,6 +75,11 @@
 
     - meta: flush_handlers
 
+    - name: allow iptables forward chain
+      iptables:
+        chain: FORWARD
+        policy: ACCEPT
+
     - name: save iptables configuration
       shell: "iptables-save > {{ iptables_savefile }}"
 

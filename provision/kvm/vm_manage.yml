@@ -97,6 +97,7 @@
             url: "{{ img.url }}"
             dest: "{{ vm_img }}"
             mode: 0666
+            timeout: 60
           register: fetch_image
           retries: 5
 
