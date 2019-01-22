@@ -23,6 +23,8 @@
   version: 2.5.1
 - src: PowerDNS.pdns_recursor
   version: v1.1.0
+- src: PowerDNS.pdns
+  version: v1.4.0
 - src: Stouts.openvpn
   version: 2.4.0
 - src: https://github.com/nephelaiio/ansible-role-plugins.git
