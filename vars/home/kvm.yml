@@ -52,6 +52,21 @@ kvm_profiles:
       prefix: "{{ nets.home.netmask }}"
       gateway: "{{ nets.home.router | ipaddr('address') }}"
       nameservers: "{{ servers.recursors }}"
+  large:
+    state: present  # | recreate | absent
+    memory: 8192
+    cpu: 4
+    image: xenial
+    autostart: True
+    size: 20G
+    pool: default
+    nic:
+      name: enp0s3
+      type: bridge
+      net: br0
+      prefix: "{{ nets.home.netmask }}"
+      gateway: "{{ nets.home.router | ipaddr('address') }}"
+      nameservers: "{{ servers.recursors }}"
 
 kvm_pools:
   default:
