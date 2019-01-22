@@ -83,10 +83,8 @@
     - name: include global variables
       include_vars:
         dir: "{{ variables }}"
-
-    - name: gather_facts
-      setup:
-      when: inventory_hostname not in groups.offline
+      delegate_to: localhost
+      run_once: yes
 
     - name: add reservation
       lineinfile:
