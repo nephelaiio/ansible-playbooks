@@ -29,6 +29,7 @@
     openvpn_client_recursors: "{{ ['script security 2' ] + (servers.recursors | map('map_format', 'dhcp-option DNS %s') | list) }}"
     openvpn_client_options: "{{ openvpn_client_routes + openvpn_client_recursors }}"
     openvpn_use_system_easyrsa: yes
+    openvpn_auth_pam: /usr/lib/openvpn/openvpn-auth-pam.so
 
   tasks:
 
@@ -51,6 +52,30 @@
     - name: install openvpn
       include_role:
         name: Stouts.openvpn
+
+    - name: query openvpn-auth-pam location
+      shell: "dpkg -L openvpn | grep openvpn-plugin-auth-pam.so"
+      register: pam_query
+      changed_when: false
+      tags:
+        - skip_ansible_lint
+
+    - name: create openvpn-auth-pam directory
+      file:
+        dest: "{{ openvpn_auth_pam | dirname }}"
+        state: directory
+
+    - name: start openvpn server
+      service:
+        name: openvpn@server
+        state: started
+        enabled: yes
+
+    - name: link openvpn-auth-pam
+      file:
+        src: "{{ pam_query.stdout }}"
+        dest: "{{ openvpn_auth_pam }}"
+        state: link
 
     - name: create dynamic dns updater
       copy:
@@ -75,6 +100,11 @@
           - RELATED
           - ESTABLISHED
         jump: ACCEPT
+
+    - name: install boto
+      pip:
+        name: boto
+        state: latest
 
     - name: create route53 cname record
       route53:
