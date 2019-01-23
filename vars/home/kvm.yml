@@ -5,13 +5,13 @@ kvm_images:
     url: "{{ archive_url }}/{{ kvm_mirror_dir }}/bionic-server-cloudimg-amd64.img"
     pool: default
     format: qcow2
-    checksum: sha256:ba081faaf5128d2855803128bbdce0c137e310d1725c6bcc3d5aaa2daa96f224
+    checksum: sha256:5e8979890ab8d596452bd18cd5c5176432d217618cdb6e576b16fa8de6f20a98
   xenial:
     src: https://cloud-images.ubuntu.com/xenial/current/xenial-server-cloudimg-amd64-disk1.img
     url: "{{ archive_url }}/{{ kvm_mirror_dir }}/xenial-server-cloudimg-amd64.img"
     pool: default
     format: qcow2
-    checksum: sha256:7bb741d90f56a42bbde01633d1f6e9204693c6ae357edd42a0b363945a76812f
+    checksum: sha256:8d73957579370848c800c1c087caac745128a9456a95e15d00955edc073947f7
   centos7:
     src: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud-1808.qcow2.xz
     url: "{{ archive_url }}/{{ kvm_mirror_dir }}/CentOS-7-x86_64-GenericCloud.qcow2.xz"
