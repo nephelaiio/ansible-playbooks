@@ -80,7 +80,7 @@
     - name: create dynamic dns updater
       copy:
         dest: "{{ openvpn_conf_root }}/duck.sh"
-        content: 'echo url="https://www.duckdns.org/update?domains={{ duckdns_record_openvpn }}&token={{ duckdns_token }}&ip=" | curl -k -o /var/log/duckdns.log -K -'
+        content: 'echo url="https://www.duckdns.org/update?domains={{ duckdns_record_openvpn }}&token={{ duckdns_token }}&ip=" | curl -k -o /var/log/duckdns.log -sK -'
         mode: 0700
 
     - name: create dynamic dns update cronjob
