@@ -14,6 +14,7 @@
     openvpn_conf_root: /etc/openvpn
     openvpn_host: "{{ openvpn_hostname }}"
     openvpn_net: 10.8.0.0/24
+    openvpn_proto: tcp
     openvpn_port: 24
     openvpn_server: "{{ openvpn_net | ipaddr('network') }} {{ openvpn_net | ipaddr('netmask') }}"
     openvpn_key_country: CR
