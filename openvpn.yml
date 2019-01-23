@@ -28,12 +28,25 @@
     openvpn_client_routes: "{{ nets.values() | json_query('[].[network, netmask]') | map('join_with', '/') | ipaddr('net') | map('map_format', 'route %s') | list }}"
     openvpn_client_recursors: "{{ ['script security 2' ] + (servers.recursors | map('map_format', 'dhcp-option DNS %s') | list) }}"
     openvpn_client_options: "{{ openvpn_client_routes + openvpn_client_recursors }}"
+    openvpn_use_system_easyrsa: yes
 
   tasks:
 
     - name: include private variables
       include_vars:
         dir: "{{ variables }}"
+
+    - name: preinstall openvpn packages
+      package:
+        name:
+          - openvpn
+          - easy-rsa
+
+    - name: link easy-rsa configuration
+      file:
+        src: /usr/share/easy-rsa/openssl-1.0.0.cnf
+        dest: /usr/share/easy-rsa/openssl.cnf
+        state: link
 
     - name: install openvpn
       include_role:
