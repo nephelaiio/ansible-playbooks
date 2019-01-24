@@ -553,9 +553,13 @@
 
 - name: Configure Librenms devices
 
-  hosts: nuc:raspberry:kvm_guests:!offline
+  hosts: all:!offline
 
   become: yes
+
+  vars:
+
+    snmpd_conf_path: /etc/snmp/snmpd.conf
 
   roles:
 
@@ -573,11 +577,23 @@
       package:
         name: snmpd
         state: latest
+      when: ansible_os_family == 'Debian'
+
+    - name: install snmpd
+      package:
+        name: net-snmp
+        state: latest
+      when: ansible_os_family != 'Debian'
+
+    - name: create snmpd config dir
+      file:
+        path: "{{ snmpd_conf_path | dirname }}"
+        state: directory
 
     - name: configure snmpd
       template:
         src: librenms/snmpd.conf.j2
-        dest: /etc/snmp/snmpd.conf
+        dest: "{{ snmpd_conf_path }}"
       vars:
         snmpd_location: home
         snmpd_contact: "{{ snmp_contact }}"
