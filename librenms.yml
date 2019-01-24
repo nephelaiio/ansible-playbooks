@@ -553,7 +553,7 @@
 
 - name: Configure Librenms devices
 
-  hosts: nuc:raspberry:!offline
+  hosts: nuc:raspberry:kvm_guests:!offline
 
   become: yes
 
