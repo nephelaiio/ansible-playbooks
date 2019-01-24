@@ -228,7 +228,6 @@
         dest: /etc/update-motd.d/99-openvpn
         content: |
           #!/usr/bin/env bash
-          echo
           echo run {{ openvpn_backup_bin | basename }} to manually force openvpn backup creation
           echo run {{ openvpn_restore_bin | basename }} to manually restore latest openvpn backup
           echo
