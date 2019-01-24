@@ -342,6 +342,11 @@
         - /opt/librenms/storage/
       notify: restart nginx
 
+    - name: run daily job
+      command: "{{ librenms_root }}/daily.sh"
+      become: yes
+      become_user: "{{ librenms_user }}"
+
     - name: manage librenms cron job
       copy:
         src: "{{ librenms_root }}/librenms.nonroot.cron"
@@ -486,7 +491,6 @@
         dest: /etc/update-motd.d/99-librenms
         content: |
           #!/usr/bin/env bash
-          echo
           echo run {{ librenms_backup_bin | basename }} to manually force librenms backup creation
           echo run {{ librenms_restore_bin | basename }} to manually restore latest librenms backup
           echo
