@@ -1,3 +1,4 @@
+
 ---
 - name: Set up openvpn server
 
@@ -31,6 +32,7 @@
     openvpn_client_options: "{{ openvpn_client_routes + openvpn_client_recursors }}"
     openvpn_use_system_easyrsa: yes
     openvpn_auth_pam: /usr/lib/openvpn/openvpn-auth-pam.so
+    openvpn_easyrsa_cnf: /usr/share/easy-rsa/openssl-1.0.0.cnf
 
   tasks:
 
@@ -46,8 +48,8 @@
 
     - name: link easy-rsa configuration
       file:
-        src: /usr/share/easy-rsa/openssl-1.0.0.cnf
-        dest: /usr/share/easy-rsa/openssl.cnf
+        src: "{{ openvpn_easyrsa_cnf | dirname }}/openssl-1.0.0.cnf"
+        dest: "{{ openvpn_easyrsa_cnf | dirname }}/openssl.cnf"
         state: link
 
     - name: install openvpn
@@ -172,3 +174,62 @@
         value: 1
         state: present
         reload: True
+
+    - name: install nfs client utilities
+      include_role:
+        name: nephelaiio.nfs
+      vars:
+        nfs_server: no
+
+    - name: mount backup target
+      mount:
+        path: "{{ backup_root }}"
+        src: "{{ backup_host }}:{{ backup_export_root }}"
+        fstype: nfs
+        state: mounted
+
+    - name: register backup binary locations
+      set_fact:
+        openvpn_backup_bin: "{{ backup_bin_root }}/openvpn-backup"
+        openvpn_restore_bin: "{{ backup_bin_root }}/openvpn-restore"
+
+    - name: create influxdb backup script
+      template:
+        src: openvpn/openvpn-backup.sh.j2
+        dest: "{{ openvpn_backup_bin }}"
+        group: root
+        owner: root
+        mode: 0750
+      vars:
+        backup_identifier: openvpn
+        backup_path: "{{ backup_root }}"
+        backup_source: "{{ openvpn_conf_root }} {{ openvpn_easyrsa_cnf | dirname }} {{ openvpn_easyrsa_cnf | dirname }}"
+        retention_days: 3
+
+    - name: create openvpn restore script
+      template:
+        src: openvpn/openvpn-restore.sh.j2
+        dest: "{{ openvpn_restore_bin }}"
+        group: root
+        owner: root
+        mode: 0750
+      vars:
+        backup_identifier: openvpn
+        backup_path: "{{ backup_root }}"
+
+    - name: manage openvpn backup cronjob
+      cron:
+        name: openvpn-conf-backup
+        job: "{{ openvpn_backup_bin }}"
+        special_time: daily
+
+    - name: create openvpn backup motd pointers
+      copy:
+        dest: /etc/update-motd.d/99-openvpn
+        content: |
+          #!/usr/bin/env bash
+          echo
+          echo run {{ openvpn_backup_bin | basename }} to manually force openvpn backup creation
+          echo run {{ openvpn_restore_bin | basename }} to manually restore latest openvpn backup
+          echo
+        mode: 0755
