@@ -1,0 +1,30 @@
+---
+- name: Install Foreman
+
+  hosts: foreman
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "{{ variables }}"
+
+    - name: install foreman repository
+      yum_repository:
+        name: theforeman
+        description: theforeman yum repo
+        baseurl: "{{ theforeman_url }}/releases/latest/el7/$basearch"
+        file: theforeman
+
+    - name: install centos scl
+      yum:
+        name: "{{ item }}"
+        update_cache: yes
+      with_items:
+        - centos-release-scl-rh
