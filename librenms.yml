@@ -560,6 +560,10 @@
   vars:
 
     snmpd_conf_path: /etc/snmp/snmpd.conf
+    extra_librenms_targets:
+      - "fw01.{{ base_domain }}"
+      - "sw01.{{ base_domain }}"
+      - "sw02.{{ base_domain }}"
 
   roles:
 
@@ -644,6 +648,26 @@
         headers:
           X-Auth-Token: "{{ librenms_api_token }}"
         return_content: yes
+
+    - name: create extra librenms devices by hostname
+      uri:
+        url: "{{ librenms_url }}/api/v0/devices"
+        method: POST
+        body_format: json
+        body:
+          hostname: "{{ item }}"
+          version: v2c
+          community: "{{ snmp_community }}"
+        headers:
+          X-Auth-Token: "{{ librenms_api_token }}"
+        return_content: yes
+      register: librenms_hostname_registration
+      when: not item in librenms_hostnames
+      with_items: "{{ extra_librenms_targets | default([]) }}"
+      delegate_to: localhost
+      run_once: yes
+      tags:
+        - always
 
   handlers:
 
