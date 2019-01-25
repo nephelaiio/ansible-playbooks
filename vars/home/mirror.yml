@@ -4,6 +4,7 @@ ubuntu_url: "http://ubuntu.{{ base_domain }}"
 raspbian_url: "http://raspbian.{{ base_domain }}"
 centos_url: "http://centos.{{ base_domain }}"
 epel_url: "http://epel.{{ base_domain }}"
+theforeman_url: "http://theforeman.{{ base_domain }}"
 
 web_root: /var/www/html/mirror
 mirror_root: /opt/mirror

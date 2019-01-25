@@ -15,8 +15,15 @@
     epel_mirror_url: rsync://mirror.nodesdirect.com/epel/
     epel_mirror_root: "{{ mirror_root }}/epel"
     epel_vhost_path: "{{ web_root }}/epel"
+    theforeman_mirror_url: rsync://rsync.theforeman.org/yum
+    theforeman_mirror_root: "{{ mirror_root }}/foreman"
+    theforeman_vhost_path: "{{ web_root }}/foreman"
     centos_rsync_options: "-arvzSHP --include '*/' --include filelist.gz --include 'RPM-GPG-KEY-CentOS-7' --include '7*/' --include '7*/os/' --include '7*/os/x86_64/' --include '7*/os/x86_64/***' --include '7*/cloud/' --include '7*/cloud/x86_64/' --include '7*/cloud/x86_64/***' --include '7*/extras/' --include '7*/extras/***' --include '7*/updates/' --include '7*/updates/***' --exclude '*'"
     epel_rsync_options: "-arvzKSHP --prune-empty-dirs --delete --exclude '**/debug/**' --exclude 'testing/' --include '*/' --include '7*/' --include '7*/x86_64/' --include '7*/x86_64/***' --include RPM-GPG-KEY-EPEL-7 --include fullfilelist --include fullfiletimelist-epel --include imagelist-epel --exclude '*'"
+    theforeman_rsync_options: "-arvzSHPL --prune-empty-dirs --delete --include 'releases/' --include 'releases/latest/' --include 'releases/latest/**' --include 'RPM-GPG-KEY-*' --exclude '*'"
+    centos_update_bin: /usr/local/bin/centos-update
+    epel_update_bin: /usr/local/bin/epel-update
+    theforeman_update_bin: /usr/local/bin/foreman-update
 
   roles:
 
@@ -38,22 +45,89 @@
         name:
           - rsync
 
-    - name: create centos mirror path
+    - name: create mirror paths
       file:
-        path: "{{ centos_mirror_root }}"
+        path: "{{ item }}"
         state: directory
+      with_items:
+        - "{{ centos_mirror_root }}"
+        - "{{ epel_mirror_root }}"
+        - "{{ theforeman_mirror_root }}"
+
+    - name: create centos mirror update script
+      copy:
+        content: |
+          #!/usr/bin/env bash
+
+          flock -n /tmp/centos-mirror /usr/bin/rsync \
+          {{ centos_rsync_options }} \
+          {{ centos_mirror_url }} \
+          {{ centos_mirror_root }}
+        dest: "{{ centos_update_bin }}"
+        owner: root
+        group: root
+        mode: 0750
+
+    - name: create epel mirror update script
+      copy:
+        content: |
+          #!/usr/bin/env bash
+
+          flock -n /tmp/epel-mirror /usr/bin/rsync \
+          {{ epel_rsync_options }} \
+          {{ epel_mirror_url }} \
+          {{ epel_mirror_root }}
+        dest: "{{ epel_update_bin }}"
+        owner: root
+        group: root
+        mode: 0750
+
+    - name: create foreman mirror update script
+      copy:
+        content: |
+          #!/usr/bin/env bash
+
+          flock -n /tmp/foreman-mirror /usr/bin/rsync \
+          {{ theforeman_rsync_options }} \
+          {{ theforeman_mirror_url }} \
+          {{ theforeman_mirror_root }}
+        dest: "{{ theforeman_update_bin }}"
+        owner: root
+        group: root
+        mode: 0750
+
+
+    - name: create mirror update motd pointers
+      copy:
+        dest: /etc/update-motd.d/99-centos-mirror
+        content: |
+          #!/usr/bin/env bash
+          echo run sudo {{ centos_update_bin }} to update centos mirror manually
+          echo run sudo {{ epel_update_bin }} to update epel mirror manually
+          echo run sudo {{ theforeman_update_bin }} to update epel mirror manually
+          echo
+        mode: 0755
+
+    - name: delete stale motd pointers
+      file:
+        dest: "{{ item }}"
+        state: absent
+      with_items:
+        - /etc/update-motd.d/99-epel-mirror
 
     - name: add centos mirror cronjob
       cron:
         name: 'update centos mirror cache'
-        job: "flock -n /tmp/centos-mirror /usr/bin/rsync {{ centos_rsync_options }} {{ centos_mirror_url }} {{ centos_mirror_root }}"
+        job: "flock -n /tmp/mirror-centos.lock {{ centos_update_bin }}"
         special_time: daily
+        state: present
 
     - name: add epel mirror cronjob
       cron:
         name: 'update epel mirror cache'
-        job: "flock -n /tmp/epel-mirror /usr/bin/rsync {{ epel_rsync_options }} {{ epel_mirror_url }} {{ epel_mirror_root }}"
+        job: "flock -n /tmp/mirror-epel.lock {{ epel_update_bin }}"
         special_time: daily
+        state: present
 
     - name: create centos mirror link
       file:
@@ -66,6 +140,13 @@
       file:
         path: "{{ web_root }}/{{ epel_mirror_root | basename }}"
         src: "{{ epel_mirror_root }}"
+        state: link
+        force: yes
+
+    - name: create foreman mirror link
+      file:
+        path: "{{ web_root }}/{{ theforeman_mirror_root | basename }}"
+        src: "{{ theforeman_mirror_root }}"
         state: link
         force: yes
 
@@ -89,16 +170,23 @@
             error_log: "/var/log/nginx/{{ epel_url | urlsplit('hostname') }}.error.log"
             extra_parameters: |
               autoindex on;
+          - listen: "80"
+            root: "{{ theforeman_vhost_path }}"
+            server_name: "{{ theforeman_url | urlsplit('hostname') }}"
+            access_log: "/var/log/nginx/{{ theforeman_url | urlsplit('hostname') }}.access.log"
+            error_log: "/var/log/nginx/{{ theforeman_url | urlsplit('hostname') }}.error.log"
+            extra_parameters: |
+              autoindex on;
 
-    - name: update centos pdns record
+    - name: update pdns records
       uri:
-        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ centos_url_zone }}"
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ url_zone }}"
         method: PATCH
         return_content: yes
         body_format: json
         body:
           rrsets:
-            - name: "{{ centos_url_host }}"
+            - name: "{{ url_host }}"
               type: A
               ttl: 3600
               changetype: REPLACE
@@ -111,31 +199,9 @@
           X-API-Key: "{{ pdns_api_key }}"
         status_code: 204
       vars:
-        centos_url_host: "{{ centos_url | urlsplit('hostname') }}."
-        centos_url_zone: "{{ centos_url_host | split_with('.') | tail | join('.') }}"
-      register: pdns_zones_query
-
-    - name: update epel pdns record
-      uri:
-        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ epel_url_zone }}"
-        method: PATCH
-        return_content: yes
-        body_format: json
-        body:
-          rrsets:
-            - name: "{{ epel_url_host }}"
-              type: A
-              ttl: 3600
-              changetype: REPLACE
-              records:
-                - content: "{{ ansible_default_ipv4.address }}"
-                  disabled: no
-                  set-ptr: no
-                  comments: []
-        headers:
-          X-API-Key: "{{ pdns_api_key }}"
-        status_code: 204
-      vars:
-        epel_url_host: "{{ epel_url | urlsplit('hostname') }}."
-        epel_url_zone: "{{ epel_url_host | split_with('.') | tail | join('.') }}"
-      register: pdns_zones_query
+        url_host: "{{ item | urlsplit('hostname') }}."
+        url_zone: "{{ url_host | split_with('.') | tail | join('.') }}"
+      with_items: 
+        - "{{ centos_url }}"
+        - "{{ epel_url }}" 
+        - "{{ theforeman_url }}" 

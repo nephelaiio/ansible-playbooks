@@ -15,13 +15,14 @@
     ubuntu_mirror_host: archive.ubuntu.com
     ubuntu_mirror_list: /etc/apt/mirror.ubuntu.list
     ubuntu_vhost_path: "{{ web_root }}/{{ ubuntu_mirror_dir }}"
+    ubuntu_update_bin: /usr/local/bin/ubuntu-update
 
   roles:
 
     - nephelaiio.plugins
 
   tasks:
-
+    
     - name: include private variables
       include_vars:
         dir: "../{{ variables }}"
@@ -95,10 +96,37 @@
         state: link
         force: yes
 
+    - name: create ubuntu mirror update script
+      copy:
+        content: |
+          #!/usr/bin/env bash
+
+          flock -n /tmp/ubuntu-mirror apt-mirror {{ ubuntu_mirror_list }}
+        dest: "{{ ubuntu_update_bin }}"
+        owner: root
+        group: root
+        mode: 0750
+
+    - name: create mirror update motd pointers
+      copy:
+        dest: /etc/update-motd.d/97-ubuntu-mirror
+        content: |
+          #!/usr/bin/env bash
+          echo
+          echo run sudo {{ ubuntu_update_bin }} to update centos mirror manually
+        mode: 0755
+
+    - name: delete stale motd pointers
+      file:
+        dest: "{{ item }}"
+        state: absent
+      with_items:
+        - /etc/update-motd.d/99-ubuntu-mirror
+
     - name: add ubuntu mirror update cronjob
       cron:
         name: 'update ubuntu apt-mirror cache'
-        job: "flock -n /tmp/ubuntu-mirror apt-mirror {{ ubuntu_mirror_list }}"
+        job: "{{ ubuntu_update_bin }}"
         special_time: daily
 
     - name: configure nginx
