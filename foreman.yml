@@ -9,22 +9,85 @@
 
     - nephelaiio.plugins
 
+  vars:
+
+    foreman_db_host: 127.0.0.1
+    foreman_url: "https://foreman.{{ base_domain }}"
+    foreman_user: foreman
+    foreman_group: foreman
+
   tasks:
 
     - name: include private variables
       include_vars:
         dir: "{{ variables }}"
 
-    - name: install foreman repository
-      yum_repository:
-        name: theforeman
-        description: theforeman yum repo
-        baseurl: "{{ theforeman_url }}/releases/latest/el7/$basearch"
-        file: theforeman
+    - name: install foreman apt key
+      apt_key:
+        url: https://deb.theforeman.org/pubkey.gpg
+        id: 6F8600B9563278F6
 
-    - name: install centos scl
-      yum:
-        name: "{{ item }}"
+    - name: install foreman apt repository
+      apt_repository:
+        repo: deb http://deb.theforeman.org/ bionic 1.20
+        state: present
         update_cache: yes
-      with_items:
-        - centos-release-scl-rh
+
+    - name: install foreman packages
+      package:
+        name:
+          - foreman
+          - foreman-cli
+          - foreman-ec2
+          - foreman-console
+          - foreman-mysql2
+          - ruby-hammer-cli
+          - ruby-hammer-cli-foreman
+
+    - name: install mysql
+      include_role:
+        name: geerlingguy.mysql
+      vars:
+        mysql_packages:
+          - mariadb-client
+          - mariadb-server
+          - python-mysqldb
+        mysql_databases:
+          - name: "{{ foreman_db_name }}"
+        mysql_users:
+          - name: "{{ foreman_db_user }}"
+            password: "{{ foreman_db_pass }}"
+            priv: "{{ foreman_db_name }}.*:ALL"
+        mysql_bind_address: "{{ foreman_db_host }}"
+
+    - name: configure database
+      copy:
+        dest: /etc/foreman/database.yml
+        content: "{{ database_yaml | to_nice_yaml(indent=2) }}"
+        mode: 0640
+        owner: "{{ foreman_user }}"
+        group: "{{ foreman_group }}"
+      vars:
+        database_yaml:
+          production:
+            adapter: mysql2
+            database: "{{ foreman_db_name }}"
+            username: "{{ foreman_db_user }}"
+            password: "{{ foreman_db_pass }}"
+            host: "{{ foreman_db_host }}"
+      notify: rake
+
+  handlers:
+
+    - name: restart nginx
+      service:
+        name: nginx
+        state: restarted
+
+    - name: rake migrate
+      command: foreman-rake db:migrate
+      listen: rake
+
+    - name: rake seed
+      command: foreman-rake db:seed
+      listen: rake
