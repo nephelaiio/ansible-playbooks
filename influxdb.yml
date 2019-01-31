@@ -151,7 +151,6 @@
           echo
         mode: 0755
 
-
   handlers:
 
     - name: restart influxdb
