@@ -21,6 +21,8 @@
   version: 1.4.3
 - src: geerlingguy.docker
   version: 2.5.1
+- src: geerlingguy.passenger
+  version: 1.2.0
 - src: PowerDNS.pdns_recursor
   version: v1.1.0
 - src: PowerDNS.pdns

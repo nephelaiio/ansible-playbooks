@@ -11,6 +11,7 @@
 
   vars:
 
+    nginx_user: www-data
     foreman_db_host: 127.0.0.1
     foreman_url: "https://foreman.{{ base_domain }}"
     foreman_user: foreman
@@ -48,10 +49,6 @@
       include_role:
         name: geerlingguy.mysql
       vars:
-        mysql_packages:
-          - mariadb-client
-          - mariadb-server
-          - python-mysqldb
         mysql_databases:
           - name: "{{ foreman_db_name }}"
         mysql_users:
@@ -76,6 +73,45 @@
             password: "{{ foreman_db_pass }}"
             host: "{{ foreman_db_host }}"
       notify: rake
+
+    - name: install nginx / passenger
+      include_role:
+        name: geerlingguy.passenger
+      vars:
+        passenger_server_name: "{{ foreman_url | urlsplit('hostname') }}"
+        passenger_app_env: production
+        passenger_app_root: /usr/share/foreman/public
+
+    - name: add nginx user to foreman group
+      user:
+        name: "{{ nginx_user }}"
+        group: "{{ foreman_group }}"
+        append: yes
+      notify: restart nginx
+
+    - name: update foreman pdns record
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ foreman_url_zone }}"
+        method: PATCH
+        return_content: yes
+        body_format: json
+        body:
+          rrsets:
+            - name: "{{ foreman_url_host }}"
+              type: A
+              ttl: 3600
+              changetype: REPLACE
+              records:
+                - content: "{{ ansible_default_ipv4.address }}"
+                  disabled: no
+                  set-ptr: no
+                  comments: []
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        foreman_url_host: "{{ foreman_url | urlsplit('hostname') }}."
+        foreman_url_zone: "{{ foreman_url_host | split_with('.') | tail | join('.') }}"
 
   handlers:
 
