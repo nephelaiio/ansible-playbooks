@@ -44,7 +44,7 @@
         lease_time: 1800
         networks: "{{ nets.values() }}"
         zones: "{{ dhcp_zones }}"
-        failover: "{{ dhcp_failover }}"
+        failover: "{{ dhcp_failover | default([]) }}"
         domain_name: "{{ dns.zones.home.name }}"
       notify: restart dhcpd
 
@@ -68,7 +68,7 @@
 
 - name: Configure dhcp reservations
 
-  hosts: all
+  hosts: all:!foreman_managed
 
   gather_facts: no
 

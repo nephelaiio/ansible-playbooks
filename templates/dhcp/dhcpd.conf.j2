@@ -11,7 +11,7 @@ key {{ omapikey.name }} {
 }
 {% endif %}
 
-{% if failover is defined %}
+{% if failover != [] %}
 failover peer "failover-partner" {
 {%   for setting in failover %}
   {{ setting }};
@@ -43,7 +43,7 @@ log-facility local7;
 subnet {{ n.network }} netmask {{ n.netmask }} {
 {%   for p in n.pools %}
   pool {
-{%     if failover is defined %}
+{%     if failover != [] %}
     failover peer "failover-partner";
 {%     endif %}
     range {{ p.range }};
