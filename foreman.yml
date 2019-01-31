@@ -11,11 +11,17 @@
 
   vars:
 
+    # external variables
+    route53_access_key_id: "{{ aws_access_key_id }}"
+    route53_secret_key: "{{ aws_secret_access_key }}"
+    letsencrypt_domain: "{{ foreman_hostname }}"
+    letsencrypt_domain_email: "{{ letsencrypt_email }}"
+    # local variables
     nginx_user: www-data
     foreman_db_host: 127.0.0.1
     foreman_user: foreman
     foreman_group: foreman
-    letsencrypt_domain: "{{ foreman_hostname }}"
+    # letsencrypt derived variables
     letsencrypt_basedir: /etc/letsencrypt
     letsencrypt_certdir: "{{ letsencrypt_basedir }}/live"
     letsencrypt_keydir: "{{ letsencrypt_basedir }}/keys"
@@ -143,12 +149,12 @@
         - "{{ letsencrypt_keydir }}"
 
     - name: create key
-      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_email }}" -f {{ letsencrypt_account_keyfile }} -q -N ""'
+      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_domain_email }}" -f {{ letsencrypt_account_keyfile }} -q -N ""'
       args:
         creates: "{{ letsencrypt_account_keyfile }}"
 
     - name: create domain key
-      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_email }}" -f {{ letsencrypt_domain_keyfile }} -q -N ""'
+      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_domain_email }}" -f {{ letsencrypt_domain_keyfile }} -q -N ""'
       args:
         creates: "{{ letsencrypt_domain_keyfile }}"
 
@@ -178,8 +184,8 @@
     - name: create route53 txt record for certificate validation
       route53:
         command: create
-        aws_access_key: "{{ aws_access_key_id }}"
-        aws_secret_key: "{{ aws_secret_access_key }}"
+        aws_access_key: "{{ route53_access_key_id }}"
+        aws_secret_key: "{{ route53_secret_access_key }}"
         zone: "{{ letsencrypt_zone }}"
         record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_domain }}"
         retry_interval: 300
@@ -211,8 +217,8 @@
     - name: delete route53 txt record for certificate validation
       route53:
         command: delete
-        aws_access_key: "{{ aws_access_key_id }}"
-        aws_secret_key: "{{ aws_secret_access_key }}"
+        aws_access_key: "{{ route53_access_key_id }}"
+        aws_secret_key: "{{ route53_secret_access_key }}"
         zone: "{{ letsencrypt_zone }}"
         record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_zone }}"
         retry_interval: 300
