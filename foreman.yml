@@ -13,8 +13,6 @@
 
     nginx_user: www-data
     foreman_db_host: 127.0.0.1
-    foreman_url: "https://foreman.{{ base_domain }}"
-    foreman_hostname: "{{ foreman_url | urlsplit('hostname') }}"
     foreman_user: foreman
     foreman_group: foreman
     letsencrypt_domain: "{{ foreman_hostname }}"
@@ -85,6 +83,17 @@
             host: "{{ foreman_db_host }}"
       notify: rake
 
+    - name: configure settings
+      copy:
+        dest: /etc/foreman/settings.yaml
+        content: "{{ settings_yaml | to_nice_yaml(indent=2) }}"
+        mode: 0640
+        owner: "{{ foreman_user }}"
+        group: "{{ foreman_group }}"
+      vars:
+        settings_yaml: "{{ foreman_settings }}"
+      notify: restart nginx
+
     - name: install nginx / passenger
       include_role:
         name: geerlingguy.passenger
@@ -122,7 +131,7 @@
         status_code: 204
       vars:
         foreman_url_host: "{{ foreman_hostname }}."
-        foreman_url_zone: "{{ foreman_url_host | split_with('.') | tail | join('.') }}"
+        foreman_url_zone: "{{ foreman_domain }}"
 
     - name: create letsencrypt folders
       file:
@@ -264,4 +273,8 @@
 
     - name: rake seed
       command: foreman-rake db:seed
+      listen: rake
+
+    - name: rake apipie
+      command: foreman-rake apipie:cache
       listen: rake
