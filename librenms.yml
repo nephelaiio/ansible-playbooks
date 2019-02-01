@@ -626,6 +626,7 @@
         headers:
           X-Auth-Token: "{{ librenms_api_token }}"
         return_content: yes
+      run_once: yes
       register: librenms_devices
       tags:
         - devices
@@ -633,6 +634,7 @@
     - name: map librenms registrations
       set_fact:
         librenms_hostnames: "{{ librenms_devices.json.devices | map(attribute='hostname') | list }}"
+      run_once: yes
       tags:
         - devices
 
@@ -648,6 +650,7 @@
         headers:
           X-Auth-Token: "{{ librenms_api_token }}"
         return_content: yes
+      when: not inventory_hostname in librenms_hostnames
 
     - name: create extra librenms devices by hostname
       uri:
