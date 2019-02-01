@@ -1,0 +1,2 @@
+---
+foreman_url: "https://foreman.{{ base_domain }}"

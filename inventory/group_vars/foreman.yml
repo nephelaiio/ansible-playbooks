@@ -1,5 +1,4 @@
 ---
-foreman_url: "https://foreman.{{ base_domain }}"
 foreman_hostname: "{{ foreman_url | urlsplit('hostname') }}"
 foreman_domain: "{{ foreman_url | split_with('.') | tail | join('.') }}"
 foreman_settings:
