@@ -1,4 +1,6 @@
 ---
 - import_playbook: foreman/install.yml
 
+- import_playbook: foreman/proxy.yml
+
 - import_playbook: foreman/configure.yml

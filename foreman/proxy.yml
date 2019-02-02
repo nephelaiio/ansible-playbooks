@@ -1,0 +1,63 @@
+---
+- name: Install foreman-proxy
+
+  hosts: foreman_proxy
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.plugins
+
+  vars:
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: install foreman apt key
+      apt_key:
+        url: https://deb.theforeman.org/pubkey.gpg
+        id: 6F8600B9563278F6
+
+    - name: install foreman apt repository
+      apt_repository:
+        repo: deb http://deb.theforeman.org/ bionic 1.20
+        state: present
+        update_cache: yes
+
+    - name: install foreman packages
+      package:
+        name:
+          - foreman-proxy
+
+    - name: manage foreman proxy configuration
+      copy:
+        dest: /etc/foreman-proxy/settings.yml
+        content: |
+          ---
+          {{ settings_yaml | to_nice_yaml(indent=2) }}
+        mode: 0640
+        owner: "{{ foreman_user }}"
+        group: "{{ foreman_group }}"
+      vars:
+        settings_yaml:
+          :trusted_hosts: "{{ ['127.0.0.1'] + groups['foreman'] }}"
+      notify: restart foreman proxy
+
+    - pause:
+
+    - name: start foreman proxy
+      service:
+        name: foreman-proxy
+        state: started
+        enabled: yes
+
+  handlers:
+
+    - name: restart foreman proxy
+      service:
+        name: foreman-proxy
+        state: restarted
