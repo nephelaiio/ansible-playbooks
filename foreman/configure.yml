@@ -1,0 +1,58 @@
+---
+- name: Configure Foreman
+
+  hosts: localhost
+
+  connection: local
+
+  roles:
+
+    - nephelaiio.plugins
+
+  vars:
+
+    foreman_api_allpages: 9999999999
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: query foreman domains
+      uri:
+        url: "{{ foreman_url }}/api/domains"
+        method: GET
+        body_format: json
+        body:
+          per_page: "{{ foreman_api_allpages }}"
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+      register: foreman_domain_query
+
+    - name: query local domains
+      set_fact:
+        foreman_cur_domains: "{{ foreman_domain_query.json.results | map(attribute='name') | list }}"
+        foreman_all_domains: "{{ dns.zones.values() | map(attribute='name') | list }}"
+
+    - debug:
+        msg: "{{ item }}"
+      with_items:
+        - "foreman_domain_query: {{ foreman_cur_domains }}"
+        - "foreman_domains: {{ foreman_all_domains }}"
+
+    - name: create foreman domains
+      uri:
+        url: "{{ foreman_url }}/api/domains"
+        method: POST
+        body_format: json
+        body:
+          domain:
+            name: "{{ item }}"
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 201
+      with_items: "{{ foreman_all_domains }}"
+      when: item not in foreman_cur_domains
