@@ -1,0 +1,234 @@
+
+---
+- name: Set up local openvpn server
+
+  hosts: openvpn
+
+  roles:
+
+    - nephelaiio.plugins
+
+  become: yes
+
+  vars:
+
+    openvpn_conf_root: /etc/openvpn
+    openvpn_host: "{{ openvpn_hostname }}"
+    openvpn_net: 10.8.0.0/24
+    openvpn_proto: tcp
+    openvpn_port: 24
+    openvpn_server: "{{ openvpn_net | ipaddr('network') }} {{ openvpn_net | ipaddr('netmask') }}"
+    openvpn_key_country: CR
+    openvpn_key_province: SJO
+    openvpn_key_city: San Jose
+    openvpn_key_org: nephelai.io
+    openvpn_key_key_email: pki@nephelai.io
+    openvpn_clients:
+      - teddyphreak
+    openvpn_tls_auth: yes
+    openvpn_unified_client_profiles: yes
+    openvpn_client_routes: "{{ nets.values() | json_query('[].[network, netmask]') | map('join_with', '/') | ipaddr('net') | map('map_format', 'route %s') | list }}"
+    openvpn_client_recursors: "{{ ['script security 2', 'block-outside-dns'] + (servers.recursors | map('map_format', 'dhcp-option DNS %s') | list) }}"
+    openvpn_client_options: "{{ openvpn_client_routes + openvpn_client_recursors }}"
+    openvpn_use_system_easyrsa: yes
+    openvpn_auth_pam: /usr/lib/openvpn/openvpn-auth-pam.so
+    openvpn_easyrsa_cnf: /usr/share/easy-rsa/openssl-1.0.0.cnf
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: preinstall openvpn packages
+      package:
+        name:
+          - openvpn
+          - easy-rsa
+
+    - name: link easy-rsa configuration
+      file:
+        src: "{{ openvpn_easyrsa_cnf | dirname }}/openssl-1.0.0.cnf"
+        dest: "{{ openvpn_easyrsa_cnf | dirname }}/openssl.cnf"
+        state: link
+
+    - name: install openvpn
+      include_role:
+        name: Stouts.openvpn
+
+    - name: query openvpn-auth-pam location
+      shell: "dpkg -L openvpn | grep openvpn-plugin-auth-pam.so"
+      register: pam_query
+      changed_when: false
+      tags:
+        - skip_ansible_lint
+
+    - name: create openvpn-auth-pam directory
+      file:
+        dest: "{{ openvpn_auth_pam | dirname }}"
+        state: directory
+
+    - name: start openvpn server
+      service:
+        name: openvpn@server
+        state: started
+        enabled: yes
+
+    - name: link openvpn-auth-pam
+      file:
+        src: "{{ pam_query.stdout }}"
+        dest: "{{ openvpn_auth_pam }}"
+        state: link
+
+    - name: create dynamic dns updater
+      copy:
+        dest: "{{ openvpn_conf_root }}/duck.sh"
+        content: 'echo url="https://www.duckdns.org/update?domains={{ duckdns_record_openvpn }}&token={{ duckdns_token }}&ip=" | curl -k -o /var/log/duckdns.log -sK -'
+        mode: 0700
+
+    - name: create dynamic dns update cronjob
+      cron:
+        name: duckdns updater
+        minute: "*/5"
+        job: "{{ openvpn_conf_root }}/duck.sh"
+
+    - name: configure iptables forwarding
+      iptables:
+        chain: FORWARD
+        in_interface: tun+
+        out_interface: "{{ ansible_default_ipv4.interface }}"
+        match:
+          - state
+        ctstate:
+          - RELATED
+          - ESTABLISHED
+        jump: ACCEPT
+
+    - name: install boto
+      pip:
+        name: boto
+        state: latest
+
+    - name: create route53 cname record
+      route53:
+        command: create
+        aws_access_key: "{{ aws_access_key_id }}"
+        aws_secret_key: "{{ aws_secret_access_key }}"
+        zone: "{{ openvpn_host | split_with('.') | tail | join('.') }}"
+        record: "{{ openvpn_host }}"
+        retry_interval: 300
+        type: CNAME
+        ttl: 7200
+        value: "{{ duckdns_record_openvpn }}.duckdns.org."
+        wait: yes
+        overwrite: yes
+      ignore_errors: yes
+
+    - name: configure iptables input
+      iptables:
+        chain: INPUT
+        in_interface: tun+
+        jump: ACCEPT
+
+    - name: configure iptables forwarding
+      iptables:
+        chain: FORWARD
+        in_interface: tun+
+        jump: ACCEPT
+
+    - name: configure iptables forwarding
+      iptables:
+        chain: FORWARD
+        in_interface: tun+
+        out_interface: "{{ ansible_default_ipv4.interface }}"
+        match:
+          - state
+        ctstate:
+          - RELATED
+          - ESTABLISHED
+        jump: ACCEPT
+
+    - name: configure iptables forwarding
+      iptables:
+        chain: FORWARD
+        out_interface: tun+
+        in_interface: "{{ ansible_default_ipv4.interface }}"
+        match:
+          - state
+        ctstate:
+          - RELATED
+          - ESTABLISHED
+        jump: ACCEPT
+
+    - name: configure iptables nat
+      iptables:
+        table: nat
+        chain: POSTROUTING
+        out_interface: "{{ ansible_default_ipv4.interface }}"
+        jump: MASQUERADE
+        protocol: all
+
+    - name: enable ipv4 forwarding
+      sysctl:
+        name: net.ipv4.ip_forward
+        value: 1
+        state: present
+        reload: True
+
+    - name: install nfs client utilities
+      include_role:
+        name: nephelaiio.nfs
+      vars:
+        nfs_server: no
+
+    - name: mount backup target
+      mount:
+        path: "{{ backup_root }}"
+        src: "{{ backup_host }}:{{ backup_export_root }}"
+        fstype: nfs
+        state: mounted
+
+    - name: register backup binary locations
+      set_fact:
+        openvpn_backup_bin: "{{ backup_bin_root }}/openvpn-backup"
+        openvpn_restore_bin: "{{ backup_bin_root }}/openvpn-restore"
+
+    - name: create influxdb backup script
+      template:
+        src: openvpn-backup.sh.j2
+        dest: "{{ openvpn_backup_bin }}"
+        group: root
+        owner: root
+        mode: 0750
+      vars:
+        backup_identifier: openvpn
+        backup_path: "{{ backup_root }}"
+        backup_source: "{{ openvpn_conf_root }} {{ openvpn_easyrsa_cnf | dirname }} {{ openvpn_easyrsa_cnf | dirname }}"
+        retention_days: 3
+
+    - name: create openvpn restore script
+      template:
+        src: openvpn-restore.sh.j2
+        dest: "{{ openvpn_restore_bin }}"
+        group: root
+        owner: root
+        mode: 0750
+      vars:
+        backup_identifier: openvpn
+        backup_path: "{{ backup_root }}"
+
+    - name: manage openvpn backup cronjob
+      cron:
+        name: openvpn-conf-backup
+        job: "{{ openvpn_backup_bin }}"
+        special_time: daily
+
+    - name: create openvpn backup motd pointers
+      copy:
+        dest: /etc/update-motd.d/99-openvpn
+        content: |
+          #!/usr/bin/env bash
+          echo run {{ openvpn_backup_bin | basename }} to manually force openvpn backup creation
+          echo run {{ openvpn_restore_bin | basename }} to manually restore latest openvpn backup
+          echo
+        mode: 0755
