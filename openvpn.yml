@@ -1,4 +1,0 @@
----
-- import_playbook: openvpn/local.yml
-
-#- import_playbook: openvpn/aws.yml
