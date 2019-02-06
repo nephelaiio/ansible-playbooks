@@ -1,0 +1,89 @@
+---
+- name: Create lightsail images
+
+  hosts: lightsail
+
+  gather_facts: no
+
+  roles:
+
+    - nephelaiio.plugins
+
+  vars:
+
+    aws_state: present
+    aws_proxy_host: "{{ inventory_hostname }}"
+    aws_proxy_zone: "{{ aws_proxy_host| split_with('.') | tail | join('.') }}"
+
+  tasks:
+
+    - block:
+
+        - name: include private variables
+          include_vars:
+            dir: "../{{ variables }}"
+          run_once: yes
+
+        - name: install aws requirements
+          pip:
+            name:
+              - boto3
+              - boto
+          run_once: yes
+
+        - name: manage lightsail instance
+          lightsail:
+            state: "{{ aws_state }}"
+            name: "{{ aws_name }}"
+            region: "{{ aws_region }}"
+            zone: "{{ aws_zone }}"
+            blueprint_id: "{{ aws_blueprint_id }}"
+            bundle_id: "{{ aws_bundle_id }}"
+            key_pair_name: "{{ aws_key_pair }}"
+            aws_access_key: "{{ aws_access_key_id }}"
+            aws_secret_key: "{{ aws_secret_access_key }}"
+            wait: yes
+          register: lightsail_instance
+
+        - name: create host route53 record
+          route53:
+            command: create
+            aws_access_key: "{{ aws_access_key_id }}"
+            aws_secret_key: "{{ aws_secret_access_key }}"
+            zone: "{{ aws_proxy_zone }}"
+            record: "{{ aws_proxy_host }}"
+            type: A
+            ttl: 600 
+            value: "{{ lightsail_instance.instance.public_ip_address }}"
+            wait: yes
+            overwrite: yes
+
+        - name: create host pdns record
+          uri:
+            url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ pdns_zone }}"
+            method: PATCH
+            return_content: yes
+            body_format: json
+            body:
+              rrsets:
+                - name: "{{ pdns_host }}"
+                  type: A
+                  ttl: 600
+                  changetype: REPLACE
+                  records:
+                    - content: "{{ lightsail_instance.instance.public_ip_address }}"
+                      disabled: no
+                      set-ptr: no
+                      comments: []
+            headers:
+              X-API-Key: "{{ pdns_api_key }}"
+            status_code: 204
+          vars:
+            pdns_host: "{{ aws_proxy_host }}."
+            pdns_zone: "{{ aws_proxy_zone }}"
+
+      delegate_to: localhost
+
+    - name: bootstrap python
+      raw: apt-get install -y python-minimal
+      become: yes
