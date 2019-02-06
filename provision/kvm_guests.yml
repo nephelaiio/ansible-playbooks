@@ -41,7 +41,7 @@
     - name: manage vms
       import_tasks: kvm/vm_manage.yml
       vars:
-        name: "{{ inventory_hostname }}"
+        guest_name: "{{ inventory_hostname }}"
         ansible_guest_user: "{{ users[ansible_kvm_user] }}"
         ansible_guest_username: "{{ ansible_guest_user.username }}"
         ansible_guest_password: "{{ ansible_guest_user.password }}"

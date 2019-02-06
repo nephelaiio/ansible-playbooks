@@ -1,8 +1,6 @@
-network:
-  version: 1
-  config:
-    - type: physical
-      name: {{ iface['name'] }}:
-      mac_address: "{{ iface['hw-address'] }}"
-      subnets:
-        - type: dhcp
+version: 2
+ethernets:
+  {{ iface['name'] }}:
+    match:
+      macaddress: "{{ iface['hw-address'] }}"
+    dhcp4: true

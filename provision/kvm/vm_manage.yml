@@ -10,45 +10,40 @@
 
     - name: build vm profile definitions
       set_fact:
-        kvm_profile: "{{ kvm_profiles[hostvars[name].kvm_profile | default(kvm_default_profile)] }}"
+        kvm_profile: "{{ kvm_profiles[kvm_profile | default(kvm_default_profile)] }}"
         custom_profile:
-          name: "{{ name }}"
+          name: "{{ guest_name }}"
           nic:
-            method: dhcp4
-            host: "{{ hostvars[name]['inventory_hostname'] }}"
-            hw-address: "{{ hostvars[name]['hw_address'] }}"
-        inventory_profile: "{{ hostvars[name] }}"
-
-    - name: build vm definition
-      set_fact:
-        vm: "{{ kvm_profile | combine(custom_profile, inventory_profile, recursive=true) }}"
+            host: "{{ inventory_hostname }}"
+            hw-address: "{{ hw_address }}"
+            ip-address: "{{ ansible_host }}"
 
     - name: build vm pool definition
       set_fact:
-        pool: "{{ kvm_pools[vm.pool].path }}"
+        pool: "{{ kvm_pools[pool | default(kvm_profile.pool)].path }}"
 
     - name: build vm img and iso definitions
       set_fact:
-        iso: "{{ pool }}/cloud_init_{{ name }}.iso"
-        img: "{{ kvm_images[vm.image] }}"
+        iso: "{{ pool | default(kvm_profile.pool) }}/cloud_init_{{ guest_name }}.iso"
+        img: "{{ kvm_images[image | default(kvm_profile.image)] }}"
 
     - block:
 
         - name: destroy vm
           virt:
-            name: "{{ vm.name }}"
+            name: "{{ guest_name }}"
             command: destroy
           failed_when: false
 
         - name: undefine vm
           virt:
-            name: "{{ vm.name }}"
+            name: "{{ guest_name }}"
             command: undefine
           failed_when: false
 
         - name: delete vm disk
           file:
-            path: "{{ pool }}/{{ vm.name }}.img"
+            path: "{{ pool | default(kvm_profile.pool) }}/{{ guest_name }}.img"
             state: absent
           become: yes
           when: pool is defined
@@ -67,22 +62,22 @@
           loop_control:
             loop_var: qemudefitem
           with_items:
-            - "/etc/libvirt/qemu/{{ vm.name }}.xml"
-            - "/etc/libvirt/qemu/autostart/{{ vm.name }}.xml"
-            - "/var/lib/libvirt/images/cloud_init_{{ vm.name }}.xml"
-            - "/var/lib/libvirt/images/cloud_init_{{ vm.name }}.iso"
-            - "/var/lib/libvirt/images/{{ vm.name }}.img"
+            - "/etc/libvirt/qemu/{{ guest_name }}.xml"
+            - "/etc/libvirt/qemu/autostart/{{ guest_name }}.xml"
+            - "/var/lib/libvirt/images/cloud_init_{{ guest_name }}.xml"
+            - "/var/lib/libvirt/images/cloud_init_{{ guest_name }}.iso"
+            - "/var/lib/libvirt/images/{{ guest_name }}.img"
           become: yes
 
       when:
-        - vm.state in ['absent', 'recreate']
+        - state | default(kvm_profile.state) in ['absent', 'recreate']
 
     - block:
 
         - name: create temporary directory
           tempfile:
             state: directory
-            prefix: kvm_{{ vm.name }}_
+            prefix: kvm_{{ guest_name }}_
           register: tmpdir
           changed_when: False
           become: no
@@ -90,7 +85,7 @@
         - name: set vm target disk path var
           set_fact:
             vm_img: "{{ tmpdir.path }}/{{ img.url | basename }}"
-            vm_disk: "{{ pool }}/{{ vm.name }}.img"
+            vm_disk: "{{ pool | default(kvm_profile.pool) }}/{{ guest_name }}.img"
 
         - name: fetch vm image
           get_url:
@@ -123,7 +118,7 @@
           register: diskcopy
 
         - name: resize vm disk
-          command: "qemu-img resize {{ disk }} {{ vm.size }}"
+          command: "qemu-img resize {{ disk }} {{ size | default(kvm_profile.size) }}"
           vars:
             disk: "{{ vm_disk }}"
           when: diskcopy.changed
@@ -134,28 +129,28 @@
 
         - name: create vm cloud image user data
           template:
-            src: "user-data-{{ vm.image }}.yml.j2"
+            src: "user-data-{{ image }}.yml.j2"
             dest: "{{ tmpdir.path }}/user-data"
           vars:
             ssh_user: "{{ ansible_guest_username }}"
             ssh_pass: "{{ ansible_guest_password | password_hash('sha512') }}"
             ssh_key: "{{ ansible_guest_ssh_key }}"
-            hostname: "{{ vm.name }}"
-            fqdn: "{{ vm.nic.host }}"
-            iface: "{{ vm.nic }}"
+            hostname: "{{ guest_name }}"
+            fqdn: "{{ nic.host }}"
+            iface: "{{ nic }}"
             apt_mirror: "{{ ubuntu_url | urlsplit('hostname') }}"
             yum_mirror: "{{ centos_url | urlsplit('hostname') }}"
             epel_mirror: "{{ epel_url | urlsplit('hostname') }}"
-            image: "{{ vm.image }}"
+            image: "{{ image | default(kvm_profile.image) }}"
           when: diskcopy.changed
           become: no
 
         - name: create vm cloud image network config
           template:
-            src: "network-config-{{ vm.image }}.yml.j2"
+            src: "network-config-{{ image | default(kvm_profile.image) }}.yml.j2"
             dest: "{{ tmpdir.path }}/network-config"
           vars:
-            iface: "{{ vm.nic }}"
+            iface: "{{ nic }}"
           when: diskcopy.changed
           become: no
 
@@ -164,9 +159,9 @@
             src: meta-data.yml.j2
             dest: "{{ tmpdir.path }}/meta-data"
           vars:
-            instance_id: "{{ vm.name }}"
-            hostname: "{{ vm.name }}"
-            fqdn: "{{ vm.nic.host }}"
+            instance_id: "{{ guest_name }}"
+            hostname: "{{ guest_name }}"
+            fqdn: "{{ nic.host }}"
           when: diskcopy.changed
           become: no
 
@@ -178,7 +173,7 @@
 
         - name: set vm definition path
           set_fact:
-            domain_def: "{{ tmpdir.path }}/vm_{{ vm.name }}.xml"
+            domain_def: "{{ tmpdir.path }}/vm_{{ guest_name }}.xml"
 
         - name: create vm template
           template:
@@ -195,21 +190,21 @@
 
         - name: create vm
           virt:
-            name: "{{ vm.name }}"
+            name: "{{ guest_name }}"
             command: define
             xml: "{{ domain['content'] | b64decode }}"
           when: diskcopy.changed
 
         - name: manage vm
           virt:
-            name: "{{ vm.name }}"
-            state: "{{ vm.state | regex_replace('recreate', 'running') | regex_replace('present', 'running') }}"
+            name: "{{ guest_name }}"
+            state: "{{ state | default(kvm_profile.state) | regex_replace('recreate', 'running') | regex_replace('present', 'running') }}"
             xml: "{{ domain['content'] | b64encode }}"
 
         - name: autostart vm
-          command: "virsh -c qemu:///system autostart {{ vm.name }}"
+          command: "virsh -c qemu:///system autostart {{ guest_name }}"
           changed_when: false
-          when: vm.autostart
+          when: autostart | default(kvm_profile.autostart)
 
         - name: remove temporary directory
           file:
@@ -219,11 +214,11 @@
           become: no
 
       when:
-        - vm.state in ['present', 'recreate', 'running']
+        - state | default(kvm_profile.state) in ['present', 'recreate', 'running']
 
   when:
-    - "'inventory_hostname' in hostvars[name]"
-    - "'ansible_host' in hostvars[name]"
+    - inventory_hostname is defined
+    - ansible_host is defined
   delegate_to: localhost
 
 - name: delete image temp directory
