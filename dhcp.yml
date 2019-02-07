@@ -65,7 +65,7 @@
 
 - name: Configure dhcp reservations
 
-  hosts: all:!foreman_managed
+  hosts: all:!foreman_guests
 
   gather_facts: no
 
