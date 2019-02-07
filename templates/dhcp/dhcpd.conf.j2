@@ -23,7 +23,7 @@ failover peer "failover-partner" {
 # attempt to do a DNS update when a lease is confirmed. We default to the
 # behavior of the version 2 packages ('none', since DHCP v2 didn't
 # have support for DDNS.)
-ddns-update-style interim;
+ddns-update-style none;
 
 # Option definitions common to all supported networks...
 option domain-name-servers {{ recursors | default(servers.recursors) | join(', ') }};
@@ -57,11 +57,6 @@ subnet {{ n.network }} netmask {{ n.netmask }} {
   option domain-name-servers {{ n.ns | list | join(',') }};
 {%   endif %}
 }
-{%   if 'zone' in n %}
-zone {{ n.zone }} {
-  primary {{ servers.dns | first }};
-}
-{%   endif %}
 {%   for r in n.reservations.values() %}
 {%     if 'hw_address' in r %}
 host {{ r['host'] }} {
@@ -72,10 +67,4 @@ host {{ r['host'] }} {
 }
 {%     endif %}
 {%   endfor %}
-{% endfor %}
-
-{% for z in zones %}
-zone {{ z.name }} {
-  primary {{ servers.dns | first }};
-}
 {% endfor %}

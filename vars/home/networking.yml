@@ -1,7 +1,4 @@
 ---
-nets_dns:
-  - home
-
 nets:
   home:
     network: 192.168.1.0

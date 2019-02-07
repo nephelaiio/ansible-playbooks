@@ -8,8 +8,6 @@
   vars:
 
     dhcp_nets: "{{ nets.home }}"
-    dhcp_zones: "{{ dns.zones.values() }}"
-    local_fwd_zones: "{{ dns.zones.values() | map(attribute='name') | list }}"
 
   roles:
 
@@ -43,7 +41,6 @@
         omapikey: "{{ tsigkeys.omapi }}"
         lease_time: 1800
         networks: "{{ nets.values() }}"
-        zones: "{{ dhcp_zones }}"
         failover: "{{ dhcp_failover | default([]) }}"
         domain_name: "{{ dns.zones.home.name }}"
       notify: restart dhcpd
