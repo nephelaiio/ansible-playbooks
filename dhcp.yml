@@ -5,10 +5,6 @@
 
   become: yes
 
-  vars:
-
-    dhcp_nets: "{{ nets.home }}"
-
   roles:
 
     - nephelaiio.plugins

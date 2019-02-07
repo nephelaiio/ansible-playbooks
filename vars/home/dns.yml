@@ -33,8 +33,7 @@ pdns:
     webserver-address: 127.0.0.1
     webserver-port: "{{ pdns_api_port }}"
     webserver-allow-from: 127.0.0.1
-    dnsupdate: yes
-    allow-dnsupdate-from: "{{ (nets.home.network + '/' + nets.home.netmask) | ipaddr('net') }}"
+    dnsupdate: no
     master: yes
     setuid: pdns
     setgid: pdns

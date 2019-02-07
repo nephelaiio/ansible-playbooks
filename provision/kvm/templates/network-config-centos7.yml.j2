@@ -1,6 +1,7 @@
 version: 2
 ethernets:
-  {{ iface['name'] }}:
+  {{ nic }}:
     match:
-      macaddress: "{{ iface['hw-address'] }}"
-    dhcp4: true
+      macaddress: "{{ hw_address }}"
+    dhcp4: {{ dhcp }}
+    addresses: [{{ ansible_host }}]

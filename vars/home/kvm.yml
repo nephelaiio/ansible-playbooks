@@ -30,13 +30,9 @@ kvm_profiles:
     autostart: True
     size: 10G
     pool: default
-    nic:
-      name: enp0s3
-      type: bridge
-      net: br0
-      prefix: "{{ nets.home.netmask }}"
-      gateway: "{{ nets.home.router | ipaddr('address') }}"
-      nameservers: "{{ servers.recursors }}"
+    dhcp: true
+    network: home
+    nic: enp0s3
   medium:
     state: present  # | recreate | absent
     memory: 4096
@@ -45,13 +41,9 @@ kvm_profiles:
     autostart: True
     size: 20G
     pool: default
-    nic:
-      name: enp0s3
-      type: bridge
-      net: br0
-      prefix: "{{ nets.home.netmask }}"
-      gateway: "{{ nets.home.router | ipaddr('address') }}"
-      nameservers: "{{ servers.recursors }}"
+    dhcp: true
+    network: home
+    nic: enp0s3
   large:
     state: present  # | recreate | absent
     memory: 8192
@@ -60,13 +52,9 @@ kvm_profiles:
     autostart: True
     size: 20G
     pool: default
-    nic:
-      name: enp0s3
-      type: bridge
-      net: br0
-      prefix: "{{ nets.home.netmask }}"
-      gateway: "{{ nets.home.router | ipaddr('address') }}"
-      nameservers: "{{ servers.recursors }}"
+    dhcp: true
+    network: home
+    nic: enp0s3
 
 kvm_pools:
   default:

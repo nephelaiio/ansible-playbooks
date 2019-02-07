@@ -5,7 +5,7 @@ nets:
     netmask: 255.255.255.0
     router: 192.168.1.1
     zone: 1.168.192.in-addr.arpa
-    vlan: 1
+    bridge: br0
     ns: "{{ servers.recursors }}"
     lb:
       name: home
@@ -38,26 +38,15 @@ nets:
         hw_address: b8:27:eb:21:04:68
         ip-address: 192.168.1.4
   management:
-    network: 192.168.4.0
-    netmask: 255.255.255.0
-    router: 192.168.4.1
-    zone: 4.168.192.in-addr.arpa
-    vlan: 4
-    pools: []
-    reservations: {}
-  storage:
     network: 192.168.5.0
     netmask: 255.255.255.0
-    router: 192.168.5.1
-    vlan: 5
-    zone: 5.168.192.in-addr.arpa
-    pools: []
-    reservations: {}
-  vxlan:
-    network: 192.168.4.0
-    netmask: 255.255.255.0
     router: 192.168.4.1
-    vlan: 4
     zone: 4.168.192.in-addr.arpa
-    pools: []
+    ns: "{{ servers.recursors }}"
+    lb:
+      name: management
+      range: '192.168.5.65 192.168.5.128'
+    pools:
+      - range: '192.168.5.129 192.168.5.254'
     reservations: {}
+    bridge: br1

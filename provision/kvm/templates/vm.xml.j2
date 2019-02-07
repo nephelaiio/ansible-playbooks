@@ -1,7 +1,7 @@
 <domain type='kvm'>
-  <name>{{ vm.name }}</name>
-  <memory unit='MiB'>{{ vm.memory }}</memory>
-  <vcpu>{{ vm.cpu }}</vcpu>
+  <name>{{ profile.inventory_hostname }}</name>
+  <memory unit='MiB'>{{ profile.memory }}</memory>
+  <vcpu>{{ profile.cpu }}</vcpu>
   <os>
     <type arch='x86_64' machine='pc-1.0'>hvm</type>
     <boot dev='hd'/>
@@ -13,7 +13,7 @@
   <devices>
     <emulator>/usr/bin/qemu-system-x86_64</emulator>
     <disk type='file' device='disk'>
-      <driver name='qemu' type='{{ kvm_images[vm.image].format }}'/>
+      <driver name='qemu' type='{{ kvm_images[profile.image].format }}'/>
       <source file='{{ disk }}'/>
       <target dev='hda' bus='ide'/>
       <address type='drive' controller='0' bus='0' unit='0'/>
@@ -44,10 +44,10 @@
     <memballoon model='virtio'>
       <address type='pci' domain='0x0000' bus='0x00' slot='0x06' function='0x0'/>
     </memballoon>
-    <interface type='{{ vm.nic.type }}'>
-      <source bridge='{{ vm.nic.net }}'/>
+    <interface type='bridge'>
+      <source bridge='{{ bridge }}'/>
       <address type='pci' domain='0x000' bus='0x00' slot='0x03' function='0x0'/>
-      <mac address='{{ vm.nic['hw-address'] }}'/>
+      <mac address='{{ profile.hw_address }}'/>
     </interface>
   </devices>
 </domain>

@@ -10,13 +10,7 @@
 
     - name: build vm profile definitions
       set_fact:
-        kvm_profile: "{{ kvm_profiles[kvm_profile | default(kvm_default_profile)] }}"
-        custom_profile:
-          name: "{{ guest_name }}"
-          nic:
-            host: "{{ inventory_hostname }}"
-            hw-address: "{{ hw_address }}"
-            ip-address: "{{ ansible_host }}"
+        kvm_profile: "{{ kvm_profiles[kvm_profile | default(kvm_default_profile)] | combine(dict(hostvars[inventory_hostname]), recursive=true) }}"
 
     - name: build vm pool definition
       set_fact:
@@ -24,8 +18,8 @@
 
     - name: build vm img and iso definitions
       set_fact:
-        iso: "{{ pool | default(kvm_profile.pool) }}/cloud_init_{{ guest_name }}.iso"
-        img: "{{ kvm_images[image | default(kvm_profile.image)] }}"
+        iso: "{{ kvm_pools[kvm_profile.pool].path }}/cloud_init_{{ guest_name }}.iso"
+        img: "{{ kvm_images[kvm_profile.image] }}"
 
     - block:
 
@@ -43,7 +37,7 @@
 
         - name: delete vm disk
           file:
-            path: "{{ pool | default(kvm_profile.pool) }}/{{ guest_name }}.img"
+            path: "{{ kvm_profile.pool }}/{{ guest_name }}.img"
             state: absent
           become: yes
           when: pool is defined
@@ -136,21 +130,22 @@
             ssh_pass: "{{ ansible_guest_password | password_hash('sha512') }}"
             ssh_key: "{{ ansible_guest_ssh_key }}"
             hostname: "{{ guest_name }}"
-            fqdn: "{{ nic.host }}"
-            iface: "{{ nic }}"
+            fqdn: "{{ inventory_hostname }}"
             apt_mirror: "{{ ubuntu_url | urlsplit('hostname') }}"
             yum_mirror: "{{ centos_url | urlsplit('hostname') }}"
             epel_mirror: "{{ epel_url | urlsplit('hostname') }}"
-            image: "{{ image | default(kvm_profile.image) }}"
+            image: "{{ kvm_profile.image }}"
           when: diskcopy.changed
           become: no
 
         - name: create vm cloud image network config
           template:
-            src: "network-config-{{ image | default(kvm_profile.image) }}.yml.j2"
+            src: "network-config-{{ kvm_profile.image }}.yml.j2"
             dest: "{{ tmpdir.path }}/network-config"
           vars:
-            iface: "{{ nic }}"
+            nic: "{{ kvm_profile.nic }}"
+            hw_address: "{{ kvm_profile.hw_address }}"
+            dhcp: "{{ kvm_profile.dhcp }}"
           when: diskcopy.changed
           become: no
 
@@ -161,7 +156,7 @@
           vars:
             instance_id: "{{ guest_name }}"
             hostname: "{{ guest_name }}"
-            fqdn: "{{ nic.host }}"
+            fqdn: "{{ inventory_hostname }}"
           when: diskcopy.changed
           become: no
 
@@ -181,6 +176,8 @@
             dest: "{{ domain_def }}"
           vars:
             disk: "{{ vm_disk }}"
+            profile: "{{ kvm_profile }}"
+            bridge: "{{ nets[kvm_profile.network].bridge }}"
           become: no
 
         - name: get vm template contents
