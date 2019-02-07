@@ -22,7 +22,7 @@ dns:
       name: "{{ nets.home.zone }}"
       hostmaster: master@home.nephelai.io
       ns: "{{ groups['pdns'] }}"
-      records: "{{ nets.home.reservations.values() | map('reverse_record') | list }}"
+      records: []
       cnames: []
 
 pdns:
