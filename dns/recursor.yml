@@ -12,6 +12,7 @@
     fwd_zones: "{{ dns.zones.values() | map(attribute='name') | list }}"
     pdns_ips: "{{ groups['pdns'] | map('extract', hostvars, 'ansible_host') | join(';') }}"
     pdns_fwd: "{{ fwd_zones | map('map_format', '%s=' + pdns_ips) | join(', ') }}"
+    listen_address: "{{ ansible_default_ipv4.address }}"
 
   roles:
 
@@ -42,8 +43,16 @@
         name: PowerDNS.pdns_recursor
       vars:
         pdns_rec_config:
-          local-address: "{{ ansible_default_ipv4.address }}"
+          local-address: "{{ listen_address }}"
           forward-zones: "{{ pdns_fwd }}"
           max-cache-ttl: 15
           max-negative-ttl: 15
+
+    - name: configure resolver
+      include_role:
+        name: ahuffman.resolv
+      vars:
+        resolv_nameservers:
+          - "{{ listen_address }}"
+        resolv_domain: "{{ base_domain }}"
 
