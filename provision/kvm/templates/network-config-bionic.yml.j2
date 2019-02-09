@@ -1,7 +1,0 @@
-version: 2
-ethernets:
-  {{ nic }}:
-    renderer: networkd
-    match:
-      macaddress: "{{ hw_address }}"
-    dhcp4: {{ dhcp }}
