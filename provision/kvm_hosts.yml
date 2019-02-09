@@ -8,8 +8,6 @@
   vars:
 
     kvm_provisioning_group: kvm_guests
-    nat_out:
-      - br0
     iptables_savefile: /etc/iptables/iptables.rules
     kvm_requirement_packages:
       - qemu

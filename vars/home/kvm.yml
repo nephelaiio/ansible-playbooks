@@ -30,7 +30,7 @@ kvm_profiles:
     autostart: True
     size: 10G
     pool: default
-    dhcp: true
+    dhcp: false
     network: home
     nic: enp0s3
   medium:
@@ -41,7 +41,7 @@ kvm_profiles:
     autostart: True
     size: 20G
     pool: default
-    dhcp: true
+    dhcp: false
     network: home
     nic: enp0s3
   large:
@@ -52,7 +52,7 @@ kvm_profiles:
     autostart: True
     size: 20G
     pool: default
-    dhcp: true
+    dhcp: false
     network: home
     nic: enp0s3
 
