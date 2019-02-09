@@ -4,3 +4,5 @@
 - import_playbook: dns/authoritative.yml
 
 - import_playbook: dns/register.yml
+
+- import_playbook: dns/resolver.yml

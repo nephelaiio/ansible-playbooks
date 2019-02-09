@@ -55,4 +55,3 @@
         resolv_nameservers:
           - "{{ listen_address }}"
         resolv_domain: "{{ base_domain }}"
-

@@ -1,0 +1,36 @@
+---
+- name: Configure dns resolvers
+
+  hosts: all:!recursors
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.plugins
+
+  pre_tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: gather authoritative facts
+      setup:
+      delegate_to: "{{ item }}"
+      delegate_facts: yes
+      with_items: "{{ groups['pdns'] }}"
+
+    - name: gather recursor facts
+      setup:
+      with_items: "{{ groups['recursors'] }}"
+      delegate_to: "{{ item }}"
+
+  tasks:
+
+    - name: configure resolver
+      include_role:
+        name: ahuffman.resolv
+      vars:
+        resolv_nameservers: "{{ groups['recursors'] | map('extract', hostvars, 'ansible_host') | first }}"
+        resolv_domain: "{{ base_domain }}"
