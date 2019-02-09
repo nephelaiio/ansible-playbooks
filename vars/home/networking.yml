@@ -40,8 +40,8 @@ nets:
   management:
     network: 192.168.5.0
     netmask: 255.255.255.0
-    router: 192.168.4.1
-    zone: 4.168.192.in-addr.arpa
+    router: 192.168.5.1
+    zone: 5.168.192.in-addr.arpa
     ns: "{{ servers.recursors }}"
     lb:
       name: management
