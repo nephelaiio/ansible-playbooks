@@ -24,6 +24,12 @@ dns:
       ns: "{{ groups['pdns'] }}"
       records: []
       cnames: []
+    tnemeganam:
+      name: "{{ nets.management.zone }}"
+      hostmaster: master@home.nephelai.io
+      ns: "{{ groups['pdns'] }}"
+      records: []
+      cnames: []
 
 pdns:
   config:
