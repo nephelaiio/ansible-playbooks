@@ -1,6 +1,11 @@
 ---
 foreman_hostname: "{{ foreman_url | urlsplit('hostname') }}"
 foreman_domain: "{{ foreman_url | split_with('.') | tail | join('.') }}"
+foreman_user: foreman
+foreman_group: foreman
+foreman_proxy_user: foreman-proxy
+foreman_proxy_group: foreman-proxy
+foreman_tftp_root: /tftpboot
 foreman_settings:
   :locations_enabled: false
   :organizations_enabled: false

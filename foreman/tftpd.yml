@@ -1,0 +1,67 @@
+---
+- name: Install tftpd
+
+  hosts: foreman
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.plugins
+
+  vars:
+
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: install tftp packages
+      package:
+        name:
+          - xinetd
+          - tftpd
+          - tftp
+        state: latest
+
+    - name: create tftp root
+      file:
+        dest: "{{ foreman_tftp_root }}"
+        state: directory
+        owner: "{{ foreman_proxy_user }}"
+        group: "{{ foreman_proxy_group }}"
+        mode: 0640
+
+    - name: configure tftp xinetd daemon
+      copy:
+        dest: /etc/xinetd.d/tftp
+        content: |
+          {
+          protocol        = udp
+          port            = 69
+          socket_type     = dgram
+          wait            = yes
+          user            = "{{ foreman_proxy_user }}"
+          group           = "{{ foreman_proxy_group }}"
+          server          = /usr/sbin/in.tftpd
+          server_args     = "{{ foreman_tftp_root }}"
+          disable         = no
+          }
+        mode: 0640
+      notify: restart tftpd
+
+    - name: start tftpd
+      service:
+        name: xinetd
+        state: started
+        enabled: yes
+
+  handlers:
+
+    - name: restart tftpd
+      service:
+        name: xinetd
+        state: restarted
+

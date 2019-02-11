@@ -9,8 +9,6 @@
 
     - nephelaiio.plugins
 
-  vars:
-
   tasks:
 
     - name: include private variables
@@ -37,17 +35,19 @@
       copy:
         dest: /etc/foreman-proxy/settings.yml
         content: |
-          ---
           {{ settings_yaml | to_nice_yaml(indent=2) }}
         mode: 0640
-        owner: "{{ foreman_user }}"
-        group: "{{ foreman_group }}"
+        owner: "{{ foreman_proxy_user }}"
+        group: "{{ foreman_proxy_group }}"
       vars:
         settings_yaml:
           :trusted_hosts: "{{ ['127.0.0.1'] + groups['foreman'] }}"
+          :daemon: true
+          :http_port: "{{ foreman_proxy_port }}"
+          :tftp: true
+          :tftproot: "{{ foreman_tftp_root }}"
+          :tftp_servername: "{{ groups['foreman'] | first }}"
       notify: restart foreman proxy
-
-    - pause:
 
     - name: start foreman proxy
       service:

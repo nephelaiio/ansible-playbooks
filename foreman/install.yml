@@ -13,7 +13,7 @@
 
     # external variables
     route53_access_key_id: "{{ aws_access_key_id }}"
-    route53_secret_key: "{{ aws_secret_access_key }}"
+    route53_secret_access_key: "{{ aws_secret_access_key }}"
     letsencrypt_domain: "{{ foreman_hostname }}"
     letsencrypt_domain_email: "{{ letsencrypt_email }}"
     # local variables
@@ -29,6 +29,9 @@
     letsencrypt_domain_csrfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.csr"
     letsencrypt_domain_crtfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.crt"
     letsencrypt_domain_chainfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.chain.crt"
+    # foreman app variables
+    foreman_permissions_reset: no
+    foreman_api_allpages: 9999999999
 
   tasks:
 
@@ -74,8 +77,7 @@
       copy:
         dest: /etc/foreman/database.yml
         content: |
-          ___
-          {{ database_yaml | to_nice_yaml(indent=2) }}"
+          {{ database_yaml | to_nice_yaml(indent=2) }}
         mode: 0640
         owner: "{{ foreman_user }}"
         group: "{{ foreman_group }}"
@@ -89,12 +91,13 @@
             host: "{{ foreman_db_host }}"
       notify: rake
 
+    - meta: flush_handlers
+
     - name: configure settings
       copy:
         dest: /etc/foreman/settings.yaml
         content: |
-          ---
-          {{ settings_yaml | to_nice_yaml(indent=2) }}"
+          {{ settings_yaml | to_nice_yaml(indent=2) }}
         mode: 0640
         owner: "{{ foreman_user }}"
         group: "{{ foreman_group }}"
@@ -267,6 +270,107 @@
             }
           }
       notify: restart nginx
+
+    - name: query foreman users
+      uri:
+        url: "{{ foreman_url }}/api/users"
+        method: GET
+        body_format: json
+        body:
+          per_page: "{{ foreman_api_allpages }}"
+        force_basic_auth: yes
+        user: "{{ foreman_admin_user }}"
+        password: "{{ foreman_admin_pass }}"
+      register: foreman_user_query
+      ignore_errors: yes
+
+    - name: rake permissions:reset
+      command: foreman-rake permissions:reset
+      register: handler_permissions_reset
+      when: foreman_user_query is failed
+
+    - name: override admin credentials
+      set_fact:
+        foreman_permissions_reset: true
+        reset_admin_user: "{{ ((handler_permissions_reset.stdout | split_with(' '))[3])[0:-1] }}"
+        reset_admin_pass: "{{ (handler_permissions_reset.stdout | split_with(' '))[5] }}"
+      when: foreman_user_query is failed
+
+    - name: query foreman users
+      uri:
+        url: "{{ foreman_url }}/api/users"
+        method: GET
+        body_format: json
+        body:
+          per_page: "{{ foreman_api_allpages }}"
+        force_basic_auth: yes
+        user: "{{ reset_admin_user }}"
+        password: "{{ reset_admin_pass }}"
+      register: foreman_reset_query
+      when: foreman_user_query is failed
+
+    - name: set admin user facts
+      set_fact:
+        foreman_admin: "{{ foreman_reset_query.json.results | selectattr('login', 'equalto', foreman_admin_user) |  first }}"
+        foreman_reset:
+          password: "{{ foreman_admin_pass }}"
+      when: foreman_user_query is failed
+
+    - name: set admin foreman password
+      uri:
+        url: "{{ foreman_url }}/api/users/{{ foreman_admin.id }}"
+        method: PUT
+        body_format: json
+        body:
+          user:
+            current_password: "{{ reset_admin_pass }}"
+            password: "{{ foreman_admin_pass }}"
+            password_confirmation: "{{ foreman_admin_pass }}"
+        force_basic_auth: yes
+        user: "{{ reset_admin_user }}"
+        password: "{{ reset_admin_pass }}"
+      when: foreman_user_query is failed
+
+    - block:
+
+        - name: query foreman domains
+          uri:
+            url: "{{ foreman_url }}/api/domains"
+            method: GET
+            body_format: json
+            body:
+              per_page: "{{ foreman_api_allpages }}"
+            force_basic_auth: yes
+            user: "{{ foreman_admin_user }}"
+            password: "{{ foreman_admin_pass }}"
+          register: foreman_domain_query
+
+        - name: query local domains
+          set_fact:
+            foreman_cur_domains: "{{ foreman_domain_query.json.results | map(attribute='name') | list }}"
+            foreman_all_domains: "{{ dns.zones.values() | map(attribute='name') | list }}"
+
+        - name: create foreman domains
+          uri:
+            url: "{{ foreman_url }}/api/domains"
+            method: POST
+            body_format: json
+            body:
+              domain:
+                name: "{{ item }}"
+            user: "{{ foreman_api_user }}"
+            password: "{{ foreman_api_pass }}"
+            force_basic_auth: yes
+            status_code: 201
+          with_items: "{{ foreman_all_domains }}"
+          when: item not in foreman_cur_domains
+
+      delegate_to: localhost
+
+    - name: notify of credential changes
+      debug:
+        msg: "{{ handler_permissions_reset.stdout }}"
+      when: foreman_permissions_reset
 
   handlers:
 

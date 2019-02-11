@@ -3,4 +3,4 @@
 
 - import_playbook: foreman/proxy.yml
 
-- import_playbook: foreman/configure.yml
+- import_playbook: foreman/tftpd.yml

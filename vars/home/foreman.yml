@@ -2,3 +2,4 @@
 foreman_url: "https://foreman.{{ base_domain }}"
 foreman_user: foreman
 foreman_group: foreman
+foreman_proxy_port: 8443
