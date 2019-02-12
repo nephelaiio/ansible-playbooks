@@ -40,14 +40,9 @@
         owner: "{{ foreman_proxy_user }}"
         group: "{{ foreman_proxy_group }}"
       vars:
-        settings_yaml:
-          :trusted_hosts: "{{ ['127.0.0.1'] + groups['foreman'] }}"
-          :daemon: true
-          :http_port: "{{ foreman_proxy_port }}"
-          :tftp: true
-          :tftproot: "{{ foreman_tftp_root }}"
-          :tftp_servername: "{{ groups['foreman'] | first }}"
-      notify: restart foreman proxy
+        settings_yaml: "{{ foreman_proxy_settings }}"
+      notify:
+        - restart foreman proxy
 
     - name: start foreman proxy
       service:
@@ -61,3 +56,6 @@
       service:
         name: foreman-proxy
         state: restarted
+      delegate_to: "{{ item }}"
+      with_items: "{{ groups['foreman'] }}"
+
