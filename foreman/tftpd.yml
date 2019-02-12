@@ -92,9 +92,6 @@
         foreman_proxy_urls: "{{ foreman_proxy_query.json.results | map(attribute='url') }}"
         foreman_proxy_url: "http://{{ ansible_fqdn }}:{{ foreman_proxy_port }}"
 
-    - debug:
-        var: foreman_proxy_urls
-
     - name: register foreman proxy
       uri:
         url: "{{ foreman_url }}/api/smart_proxies"
