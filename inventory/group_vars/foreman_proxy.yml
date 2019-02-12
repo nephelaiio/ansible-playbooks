@@ -1,0 +1,6 @@
+---
+foreman_proxy_settings:
+  :bind_host: '*'
+  :trusted_hosts: "{{ (['localhost', ansible_fqdn] + groups['foreman']) | unique }}"
+  :daemon: true
+  :http_port: "{{ foreman_proxy_port }}"
