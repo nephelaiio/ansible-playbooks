@@ -53,7 +53,7 @@
             zone: "{{ aws_proxy_zone }}"
             record: "{{ aws_proxy_host }}"
             type: A
-            ttl: 600 
+            ttl: 600
             value: "{{ lightsail_instance.instance.public_ip_address }}"
             wait: yes
             overwrite: yes

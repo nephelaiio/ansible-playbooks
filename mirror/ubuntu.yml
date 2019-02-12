@@ -22,7 +22,7 @@
     - nephelaiio.plugins
 
   tasks:
-    
+
     - name: include private variables
       include_vars:
         dir: "../{{ variables }}"

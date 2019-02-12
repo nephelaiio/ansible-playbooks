@@ -409,4 +409,3 @@
         wait: yes
       ignore_errors: yes
       listen: generate certificate
-

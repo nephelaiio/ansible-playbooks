@@ -201,7 +201,7 @@
       vars:
         url_host: "{{ item | urlsplit('hostname') }}."
         url_zone: "{{ url_host | split_with('.') | tail | join('.') }}"
-      with_items: 
+      with_items:
         - "{{ centos_url }}"
-        - "{{ epel_url }}" 
-        - "{{ theforeman_url }}" 
+        - "{{ epel_url }}"
+        - "{{ theforeman_url }}"

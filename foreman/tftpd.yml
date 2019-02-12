@@ -64,4 +64,3 @@
       service:
         name: xinetd
         state: restarted
-
