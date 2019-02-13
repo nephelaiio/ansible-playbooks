@@ -41,6 +41,15 @@
         domain_name: "{{ dns.zones.home.name }}"
       notify: restart dhcpd
 
+    - name: configure dhcp leases permissions
+      file:
+        dest: /var/lib/dhcp/dhcpd.leases
+        owner: dhcpd
+        group: dhcpd
+        mode: 0660
+        state: touch
+      notify: restart dhcpd
+
     - name: manage services
       service:
         name: "{{ item }}"
