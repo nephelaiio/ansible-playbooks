@@ -62,6 +62,7 @@
       copy:
         dest: /etc/foreman-proxy/settings.d/tftp.yml
         content: |
+          ---
           {{ settings_yaml | to_nice_yaml(indent=2) }}
         mode: 0640
         owner: "{{ foreman_proxy_user }}"
@@ -73,6 +74,7 @@
           :tftp_servername: "{{ ansible_fqdn }}"
       notify:
         - restart foreman proxy
+        - refresh foreman proxy
 
     - meta: flush_handlers
 
@@ -89,7 +91,7 @@
 
     - name: set proxy facts
       set_fact:
-        foreman_proxy_urls: "{{ foreman_proxy_query.json.results | map(attribute='url') }}"
+        foreman_proxy_urls: "{{ foreman_proxy_query.json.results | map(attribute='url') | list }}"
         foreman_proxy_url: "http://{{ ansible_fqdn }}:{{ foreman_proxy_port }}"
 
     - name: register foreman proxy
@@ -105,7 +107,7 @@
         password: "{{ foreman_api_pass }}"
         force_basic_auth: yes
         status_code: 201
-      when: foreman_proxy_urls not in foreman_proxy_urls
+      when: foreman_proxy_url not in foreman_proxy_urls
 
     - block:
 
@@ -126,18 +128,10 @@
             password: "{{ foreman_api_pass }}"
             force_basic_auth: yes
             status_code: 200
+          notify:
+            - refresh foreman proxy
 
-        - name: refresh foreman proxy
-          uri:
-            url: "{{ foreman_url }}/api/smart_proxies/{{ foreman_proxy_id }}/refresh"
-            method: PUT
-            body_format: json
-            user: "{{ foreman_api_user }}"
-            password: "{{ foreman_api_pass }}"
-            force_basic_auth: yes
-            status_code: 200
-
-      when: foreman_proxy_urls in foreman_proxy_urls
+      when: foreman_proxy_url in foreman_proxy_urls
 
   handlers:
 
@@ -150,3 +144,13 @@
       service:
         name: foreman-proxy
         state: restarted
+
+    - name: refresh foreman proxy
+      uri:
+        url: "{{ foreman_url }}/api/smart_proxies/{{ foreman_proxy_id }}/refresh"
+        method: PUT
+        body_format: json
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
