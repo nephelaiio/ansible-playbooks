@@ -1,0 +1,59 @@
+---
+- name: Configure dhcp servers
+
+  hosts: "{{ dhcp_hosts | default('dhcp') }}"
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include global variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: install dhcpd
+      apt:
+        name: isc-dhcp-server
+        state: latest
+      notify: restart dhcpd
+
+    - name: configure dhcp interfaces
+      template:
+        src: defaults.conf.j2
+        dest: /etc/default/isc-dhcp-server
+      vars:
+        iface: "{{ ansible_default_ipv4.interface }}"
+      notify: restart dhcpd
+
+    - name: configure dhcp daemon
+      template:
+        src: dhcpd.conf.j2
+        dest: /etc/dhcp/dhcpd.conf
+      vars:
+        omapikey: "{{ tsigkeys.omapi }}"
+        lease_time: 1800
+        networks: "{{ nets.values() }}"
+        failover: "{{ dhcp_failover | default([]) }}"
+        domain_name: "{{ dns.zones.home.name }}"
+      notify: restart dhcpd
+
+    - name: manage services
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      with_items:
+        - isc-dhcp-server
+
+  handlers:
+
+    - name: restart dhcpd
+      service:
+        name: "{{ item }}"
+        state: restarted
+      with_items:
+        - isc-dhcp-server
