@@ -76,8 +76,6 @@
         - restart foreman proxy
         - refresh foreman proxy
 
-    - meta: flush_handlers
-
     - name: query foreman proxies
       uri:
         url: "{{ foreman_url }}/api/smart_proxies"
@@ -93,6 +91,12 @@
       set_fact:
         foreman_proxy_urls: "{{ foreman_proxy_query.json.results | map(attribute='url') | list }}"
         foreman_proxy_url: "http://{{ ansible_fqdn }}:{{ foreman_proxy_port }}"
+
+    - name: set proxy facts
+      set_fact:
+        foreman_proxy_id: "{{ foreman_proxy_query.json.results | selectattr('url', 'equalto', foreman_proxy_url) | map(attribute='id') | first }}"
+
+    - meta: flush_handlers
 
     - name: register foreman proxy
       uri:
@@ -110,10 +114,6 @@
       when: foreman_proxy_url not in foreman_proxy_urls
 
     - block:
-
-        - name: set proxy facts
-          set_fact:
-            foreman_proxy_id: "{{ foreman_proxy_query.json.results | selectattr('url', 'equalto', foreman_proxy_url) | map(attribute='id') | first }}"
 
         - name: update foreman proxy
           uri:
