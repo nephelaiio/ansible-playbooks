@@ -25,6 +25,10 @@ nets:
         host: sw02.home.nephelai.io
         hw_address: f0:9f:c2:c2:57:ac
         ip-address: 192.168.1.96
+      sw03:
+        host: sw03.home.nephelai.io
+        hw_address: b4:fb:e4:d3:87:df
+        ip-address: 192.168.1.97
       ap01:
         host: ap01.home.nephelai.io
         hw_address: f0:9f:c2:80:cd:a0
