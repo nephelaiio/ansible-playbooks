@@ -44,8 +44,8 @@
     - name: configure dhcp leases permissions
       file:
         dest: /var/lib/dhcp/dhcpd.leases
-        owner: dhcpd
-        group: dhcpd
+        owner: "{{ dhcp_user }}"
+        group: "{{ dhcp_group }}"
         mode: 0660
         state: touch
       notify: restart dhcpd
