@@ -1,7 +1,7 @@
 ---
 - name: Configure ubuntu package mirrors
 
-  hosts: ubuntu_mirror:!offline
+  hosts: ubuntu_mirror
 
   environment: "{{ proxy_env | default({}) }}"
 
@@ -142,40 +142,3 @@
             error_log: "/var/log/nginx/{{ ubuntu_url | urlsplit('hostname') }}.error.log"
             extra_parameters: |
               autoindex on;
-
-
-- name: Configure Ubuntu mirror clients
-
-  hosts: nuc
-
-  environment: "{{ proxy_env | default({}) }}"
-
-  become: yes
-
-  roles:
-
-    - nephelaiio.plugins
-
-  tasks:
-
-    - name: include private variables
-      include_vars:
-        dir: "../{{ variables }}"
-
-    - name: manage apt repositories
-      template:
-        src: ../templates/apt/sources.list.j2
-        dest: /etc/apt/sources.list
-      vars:
-        apt_mirror_main: "{{ ubuntu_url | urlsplit('hostname') }}"
-        apt_mirror_updates: "{{ ubuntu_url | urlsplit('hostname') }}"
-        apt_mirror_backports: "{{ ubuntu_url | urlsplit('hostname') }}"
-        apt_mirror_security: "{{ ubuntu_url | urlsplit('hostname') }}"
-        apt_distribution: "{{ ansible_lsb.id | lower }}"
-        apt_release: "{{ ansible_lsb.codename | lower }}"
-        apt_repositories: main restricted universe
-
-    - name: update apt
-      apt:
-        force_apt_get: yes
-        update_cache: yes

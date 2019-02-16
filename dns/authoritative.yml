@@ -22,7 +22,7 @@
 
   roles:
 
-    - nephelaiio.pip
+    - nephelaiio.plugins
 
   tasks:
 
@@ -31,6 +31,19 @@
         dir: "../{{ variables }}"
       tags:
         - always
+
+    - name: bootstrap host file entries
+      lineinfile:
+        dest: /etc/hosts
+        line: "{{ item }}"
+      with_items:
+        - "{{ hostvars[groups['mirror'] | first].ansible_host }} {{ ubuntu_url | urlsplit('hostname') }}"
+        - "{{ hostvars[groups['mirror'] | first].ansible_host }} {{ centos_url | urlsplit('hostname') }}"
+        - "{{ hostvars[groups['mirror'] | first].ansible_host }} {{ archive_url | urlsplit('hostname') }}"
+
+    - name: install python pip
+      package:
+        name: python-pip
 
     - name: install python dns modules
       pip:
@@ -102,6 +115,12 @@
         config: "{{ pdns.config }}"
         backends: "{{ pdns.backends }}"
       notify: restart pdns
+
+    - name: manage pdns service
+      service:
+        name: pdns
+        state: started
+        enabled: yes
 
     - meta: flush_handlers
 

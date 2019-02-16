@@ -19,7 +19,7 @@
     - name: build vm img and iso definitions
       set_fact:
         iso: "{{ kvm_pools[kvm_profile.pool].path }}/cloud_init_{{ guest_name }}.iso"
-        img: "{{ kvm_images[kvm_profile.image] }}"
+        img: "{{ kvm_image | default(kvm_images[kvm_profile.image]) }}"
 
     - block:
 
@@ -65,6 +65,11 @@
 
       when:
         - state | default(kvm_profile.state) in ['absent', 'recreate']
+
+    - name: list vms
+      virt:
+        command: list_vms
+      register: vmlist_query
 
     - block:
 
@@ -131,9 +136,9 @@
             ssh_key: "{{ ansible_guest_ssh_key }}"
             hostname: "{{ guest_name }}"
             fqdn: "{{ inventory_hostname }}"
-            apt_mirror: "{{ ubuntu_url | urlsplit('hostname') }}"
-            yum_mirror: "{{ centos_url | urlsplit('hostname') }}"
-            epel_mirror: "{{ epel_url | urlsplit('hostname') }}"
+            apt_mirror_host: "{{ apt_mirror | default(ubuntu_url | urlsplit('hostname')) }}"
+            yum_mirror_host: "{{ centos_mirror | default(centos_url | urlsplit('hostname')) }}"
+            epel_mirror_host: "{{ centos_url | default(epel_url | urlsplit('hostname')) }}"
             image: "{{ kvm_profile.image }}"
           when: diskcopy.changed
           become: no
@@ -145,20 +150,6 @@
           vars:
             network_profile: "{{ nets[kvm_profile.network] }}"
             network_prefix: "{{ (network_profile.network + '/' + network_profile.netmask) | ipaddr('prefix') | ipaddr('prefix') }}"
-            network_config: |
-              version: 2
-              ethernets:
-                {{ kvm_profile.nic }}:
-                  match:
-                    macaddress: {{ kvm_profile.hw_address }}
-                  dhcp4: {{ kvm_profile.dhcp }}
-                  addresses:
-                    - {{ kvm_profile.ansible_host }}/24
-                  gateway4: {{ network_profile.router }}
-                  nameservers:
-                    search:
-                      - {{ base_domain }}
-                    addresses: {{ network_profile.ns | to_yaml }}
           when: diskcopy.changed
           become: no
 
@@ -225,6 +216,7 @@
 
       when:
         - state | default(kvm_profile.state) in ['present', 'recreate', 'running']
+        - guest_name not in vmlist_query.list_vms
 
   when:
     - inventory_hostname is defined

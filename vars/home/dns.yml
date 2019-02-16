@@ -44,7 +44,7 @@ pdns:
     setuid: pdns
     setgid: pdns
     slave: no
-    local-address: "0.0.0.0:53"
+    local-address: "{{ ansible_host }}:53"
     security-poll-suffix: ''
     default-soa-name: "{{ groups['pdns'] | first | map(attribute='inventory_hostname') }}"
     default-soa-mail: "{{ dns_master }}"

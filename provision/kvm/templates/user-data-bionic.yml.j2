@@ -1,7 +1,7 @@
 #cloud-config
 packages:
   - python-minimal
-  - nfs-client
+  - nfs-common
 package_update: true
 package_upgrade: true
 package_reboot_if_required: true
@@ -26,8 +26,8 @@ apt:
   primary:
     - arches:
         - amd64
-{% if apt_mirror is defined %}
-      uri: http://{{ apt_mirror }}/ubuntu/
+{% if apt_mirror_host is defined %}
+      uri: http://{{ apt_mirror_host }}/ubuntu/
   disable_suites:
     - backports
 {% endif %}

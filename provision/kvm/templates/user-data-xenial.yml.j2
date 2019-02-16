@@ -26,8 +26,8 @@ apt:
   primary:
     - arches:
         - amd64
-{% if apt_mirror is defined %}
-      uri: http://{{ apt_mirror }}/ubuntu/
+{% if apt_mirror_host is defined %}
+      uri: http://{{ apt_mirror_host }}/ubuntu/
 {% endif %}
 runcmd:
   - [ sh, -c, "echo 127.0.1.1 {{ fqdn }} {{ fqdn | split_with('.') | first }} >> /etc/hosts" ] 
