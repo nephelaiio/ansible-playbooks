@@ -150,6 +150,20 @@
           vars:
             network_profile: "{{ nets[kvm_profile.network] }}"
             network_prefix: "{{ (network_profile.network + '/' + network_profile.netmask) | ipaddr('prefix') | ipaddr('prefix') }}"
+            network_config: |
+              version: 2
+              ethernets:
+                {{ kvm_profile.nic }}:
+                  match:
+                    macaddress: {{ kvm_profile.hw_address }}
+                  dhcp4: {{ kvm_profile.dhcp }}
+                  addresses:
+                    - {{ kvm_profile.ansible_host }}/24
+                  gateway4: {{ network_profile.router }}
+                  nameservers:
+                    search:
+                      - {{ base_domain }}
+                    addresses: {{ (nameservers | default(network_profile.ns)) | to_yaml }}
           when: diskcopy.changed
           become: no
 
