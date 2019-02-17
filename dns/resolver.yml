@@ -65,6 +65,18 @@
         - ansible_os_family == 'Debian'
         - ansible_distribution_release == 'bionic'
 
+    - block:
+
+        - name: link resolv conf
+          file:
+            src: /run/resolvconf/resolv.conf
+            dest: /etc/resolv.conf
+            state: link
+
+      when:
+        - ansible_os_family == 'Debian'
+        - ansible_distribution_release == 'xenial'
+
   handlers:
 
     - name: netplan apply
