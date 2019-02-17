@@ -34,7 +34,7 @@
 
     - name: export filesystems
       command: exportfs -a
-      change_when: false
+      changed_when: false
 
     - name: update backup pdns record
       uri:
