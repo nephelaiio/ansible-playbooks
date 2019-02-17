@@ -209,6 +209,11 @@
                 proxy_set_header   Connection         "upgrade";
               }
 
+    - name: reload nginx
+      service:
+        name: nginx
+        state: reloaded
+
     - name: query pdns zones
       uri:
         url: "{{ pdns_api_proto }}://localhost:{{ pdns_api_port }}/api/v1/servers/localhost/zones"
@@ -231,7 +236,7 @@
       vars:
         zone: "{{ dns.zones[item] }}"
         zone_name: "{{ zone.name }}."
-        zone_ns: "{{ zone.ns | map('map_format', '%s.') | list }}"
+        zone_ns: "{{ zone.ns | map('map_format', '%s.') | list | first | string }}"
       with_items: "{{ dns.zones.keys() }}"
       when: zone_name not in pdns_zones
       delegate_to: "{{ groups['pdns'][0] }}"
