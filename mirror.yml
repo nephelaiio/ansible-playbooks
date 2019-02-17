@@ -1,7 +1,7 @@
 ---
-- import_playbook: mirror/raspbian.yml
-
 - import_playbook: mirror/ubuntu.yml
+
+- import_playbook: mirror/raspbian.yml
 
 - import_playbook: mirror/archive.yml
 
