@@ -77,6 +77,22 @@
         - ansible_os_family == 'Debian'
         - ansible_distribution_release == 'xenial'
 
+    - block:
+
+        - name: manage resolv.conf
+          include_role:
+            name: ahuffman.resolv
+          vars:
+            resolv_nameservers: "{{ groups['recursors'] | map('extract', hostvars, 'ansible_host') | list }}"
+            resolv_domain: "{{ base_domain }}"
+            resolv_options:
+              - timeout:2
+              - rotate
+
+      when:
+        - ansible_os_family == 'Debian'
+        - ansible_distribution_release == 'stretch'
+
   handlers:
 
     - name: netplan apply
