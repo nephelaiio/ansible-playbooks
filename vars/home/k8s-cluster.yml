@@ -42,7 +42,7 @@ kube_cert_group: kube-cert
 kube_log_level: 2
 
 # Directory where credentials will be stored
-credentials_dir: "{{ inventory_dir }}/credentials"
+credentials_dir: "{{ inventory_dir }}/../credentials"
 
 # Users to create for basic auth in Kubernetes API via HTTP
 # Optionally add groups for user

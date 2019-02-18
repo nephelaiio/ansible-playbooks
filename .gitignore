@@ -16,7 +16,7 @@ resources/**
 **/*.pyc
 .python-version
 inventory/artifacts/
-inventory/credentials/
+./credentials/
 kubernetes/kubespray/
 kubernetes/rook/
 kubernetes/awx/
