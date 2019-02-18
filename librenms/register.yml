@@ -11,6 +11,7 @@
       - "fw01.{{ base_domain }}"
       - "sw01.{{ base_domain }}"
       - "sw02.{{ base_domain }}"
+      - "sw03.{{ base_domain }}"
 
   roles:
 
