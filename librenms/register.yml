@@ -1,0 +1,130 @@
+- name: Configure Librenms devices
+
+  hosts: all:!offline
+
+  become: yes
+
+  vars:
+
+    snmpd_conf_path: /etc/snmp/snmpd.conf
+    extra_librenms_targets:
+      - "fw01.{{ base_domain }}"
+      - "sw01.{{ base_domain }}"
+      - "sw02.{{ base_domain }}"
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+      tags:
+        - devices
+
+    - name: install snmpd
+      package:
+        name: snmpd
+        state: latest
+      when: ansible_os_family == 'Debian'
+
+    - name: install snmpd
+      package:
+        name: net-snmp
+        state: latest
+      when: ansible_os_family != 'Debian'
+
+    - name: create snmpd config dir
+      file:
+        path: "{{ snmpd_conf_path | dirname }}"
+        state: directory
+
+    - name: configure snmpd
+      template:
+        src: snmpd.conf.j2
+        dest: "{{ snmpd_conf_path }}"
+      vars:
+        snmpd_location: home
+        snmpd_contact: "{{ snmp_contact }}"
+        snmpd_community: "{{ snmp_community }}"
+      notify: restart snmpd
+
+    - name: configure snmp daemon options
+      lineinfile:
+        path: /etc/default/snmpd
+        backrefs: yes
+        regexp: "^SNMPDOPTS='-L(s|S[0-7!acewnid]d)(.*)$"
+        line: "SNMPDOPTS='-LSed\\2"
+      when: ansible_os_family == 'Debian'
+      notify: restart snmpd
+
+    - name: start snmpd
+      service:
+        name: snmpd
+        state: started
+        enabled: yes
+
+    - name: query librenms devices
+      uri:
+        url: "{{ librenms_url }}/api/v0/devices"
+        body_format: json
+        headers:
+          X-Auth-Token: "{{ librenms_api_token }}"
+        return_content: yes
+      run_once: yes
+      register: librenms_devices
+      tags:
+        - devices
+
+    - debug:
+        var: librenms_devices
+
+    - name: map librenms registrations
+      set_fact:
+        librenms_hostnames: "{{ librenms_devices.json.devices | map(attribute='hostname') | list }}"
+      run_once: yes
+      tags:
+        - devices
+
+    - name: create librenms devices
+      uri:
+        url: "{{ librenms_url }}/api/v0/devices"
+        method: POST
+        body_format: json
+        body:
+          hostname: "{{ inventory_hostname }}"
+          version: v2c
+          community: "{{ snmp_community }}"
+        headers:
+          X-Auth-Token: "{{ librenms_api_token }}"
+        return_content: yes
+      when: not inventory_hostname in librenms_hostnames
+
+    - name: create extra librenms devices by hostname
+      uri:
+        url: "{{ librenms_url }}/api/v0/devices"
+        method: POST
+        body_format: json
+        body:
+          hostname: "{{ item }}"
+          version: v2c
+          community: "{{ snmp_community }}"
+        headers:
+          X-Auth-Token: "{{ librenms_api_token }}"
+        return_content: yes
+      register: librenms_hostname_registration
+      when: not item in librenms_hostnames
+      with_items: "{{ extra_librenms_targets | default([]) }}"
+      delegate_to: localhost
+      run_once: yes
+      tags:
+        - always
+
+  handlers:
+
+    - name: restart snmpd
+      service:
+        name: snmpd
+        state: restarted
