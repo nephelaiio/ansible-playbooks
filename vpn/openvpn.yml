@@ -12,26 +12,8 @@
   vars:
 
     openvpn_conf_root: /etc/openvpn
-    openvpn_host: "{{ openvpn_hostname }}"
-    openvpn_net: 10.8.0.0/24
-    openvpn_proto: tcp
-    openvpn_port: 24
-    openvpn_server: "{{ openvpn_net | ipaddr('network') }} {{ openvpn_net | ipaddr('netmask') }}"
-    openvpn_key_country: CR
-    openvpn_key_province: SJO
-    openvpn_key_city: San Jose
-    openvpn_key_org: nephelai.io
-    openvpn_key_key_email: pki@nephelai.io
-    openvpn_clients:
-      - teddyphreak
-    openvpn_tls_auth: yes
-    openvpn_unified_client_profiles: yes
-    openvpn_client_routes: "{{ nets.values() | json_query('[].[network, netmask]') | map('join_with', '/') | ipaddr('net') | map('map_format', 'route %s') | list }}"
-    openvpn_client_recursors: "{{ ['script security 2', 'block-outside-dns'] + (servers.recursors | map('map_format', 'dhcp-option DNS %s') | list) }}"
-    openvpn_client_options: "{{ openvpn_client_routes + openvpn_client_recursors }}"
+    openvpn_credential_root: ../credentials
     openvpn_use_system_easyrsa: yes
-    openvpn_auth_pam: /usr/lib/openvpn/openvpn-auth-pam.so
-    openvpn_easyrsa_cnf: /usr/share/easy-rsa/openssl-1.0.0.cnf
 
   tasks:
 
@@ -39,11 +21,13 @@
       include_vars:
         dir: "../{{ variables }}"
 
-    - name: preinstall openvpn packages
+    - name: install openvpn packages
       package:
         name:
           - openvpn
           - easy-rsa
+          - python-setuptools
+          - python-pip
 
     - name: link easy-rsa configuration
       file:
@@ -67,17 +51,17 @@
         dest: "{{ openvpn_auth_pam | dirname }}"
         state: directory
 
-    - name: start openvpn server
-      service:
-        name: openvpn@server
-        state: started
-        enabled: yes
-
     - name: link openvpn-auth-pam
       file:
         src: "{{ pam_query.stdout }}"
         dest: "{{ openvpn_auth_pam }}"
         state: link
+
+    - name: start openvpn server
+      service:
+        name: openvpn@server
+        state: started
+        enabled: yes
 
     - name: create dynamic dns updater
       copy:
@@ -113,8 +97,8 @@
         command: create
         aws_access_key: "{{ aws_access_key_id }}"
         aws_secret_key: "{{ aws_secret_access_key }}"
-        zone: "{{ openvpn_host | split_with('.') | tail | join('.') }}"
-        record: "{{ openvpn_host }}"
+        zone: "{{ openvpn_hostname | split_with('.') | tail | join('.') }}"
+        record: "{{ openvpn_hostname }}"
         retry_interval: 300
         type: CNAME
         ttl: 7200
@@ -192,7 +176,7 @@
         openvpn_backup_bin: "{{ backup_bin_root }}/openvpn-backup"
         openvpn_restore_bin: "{{ backup_bin_root }}/openvpn-restore"
 
-    - name: create influxdb backup script
+    - name: create openvpn backup script
       template:
         src: openvpn-backup.sh.j2
         dest: "{{ openvpn_backup_bin }}"

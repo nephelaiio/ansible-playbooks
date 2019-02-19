@@ -1,3 +1,0 @@
----
-openvpn_hostname: "vpn.{{ base_domain }}"
-openvpn_private_subnets: "{{ nets.values() | json_query('[*].[network, netmask]') | to_json | from_json | json_query('[*].join(`/`, @)') | regex_replace('/', ' ') }}"

@@ -42,3 +42,12 @@ nets:
       - range: '192.168.5.129 192.168.5.254'
     reservations: {}
     bridge: br1
+
+openvpn_nets:
+  home:
+    network: 10.8.0.0
+    netmask: 255.255.255.0
+    ns: "{{ servers.recursors }}"
+    zone: 0.8.10.in-addr.arpa
+    pools: []
+    reservations: {}
