@@ -215,3 +215,11 @@
           echo run {{ openvpn_restore_bin | basename }} to manually restore latest openvpn backup
           echo
         mode: 0755
+
+    - name: fetch openvpn user configuration
+      fetch:
+        src: "/etc/openvpn/keys/{{ item }}.ovpn"
+        dest: "{{ openvpn_credential_root }}/{{ item }}.{{ ansible_fqdn }}.ovpn"
+        flat: yes
+      with_items: "{{ openvpn_clients }}"
+
