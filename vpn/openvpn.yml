@@ -170,11 +170,13 @@
         src: "{{ backup_host }}:{{ backup_export_root }}"
         fstype: nfs
         state: mounted
+      when: openvpn_backup
 
     - name: register backup binary locations
       set_fact:
         openvpn_backup_bin: "{{ backup_bin_root }}/openvpn-backup"
         openvpn_restore_bin: "{{ backup_bin_root }}/openvpn-restore"
+      when: openvpn_backup
 
     - name: create openvpn backup script
       template:
@@ -188,6 +190,7 @@
         backup_path: "{{ backup_root }}"
         backup_source: "{{ openvpn_conf_root }} {{ openvpn_easyrsa_cnf | dirname }} {{ openvpn_easyrsa_cnf | dirname }}"
         retention_days: 3
+      when: openvpn_backup
 
     - name: create openvpn restore script
       template:
@@ -199,12 +202,14 @@
       vars:
         backup_identifier: openvpn
         backup_path: "{{ backup_root }}"
+      when: openvpn_backup
 
     - name: manage openvpn backup cronjob
       cron:
         name: openvpn-conf-backup
         job: "{{ openvpn_backup_bin }}"
         special_time: daily
+      when: openvpn_backup
 
     - name: create openvpn backup motd pointers
       copy:
@@ -215,6 +220,7 @@
           echo run {{ openvpn_restore_bin | basename }} to manually restore latest openvpn backup
           echo
         mode: 0755
+      when: openvpn_backup
 
     - name: fetch openvpn user configuration
       fetch:

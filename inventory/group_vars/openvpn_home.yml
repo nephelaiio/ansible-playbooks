@@ -1,0 +1,13 @@
+---
+openvpn_hostname: "vpn.{{ base_domain }}"
+openvpn_port: 24
+openvpn_key_org: nephelai.io
+openvpn_key_key_email: pki@nephelai.io
+openvpn_key_country: CR
+openvpn_key_province: SJO
+openvpn_key_city: San Jose
+openvpn_net_name: home
+openvpn_client_routes: "{{ nets.values() | json_query('[].[network, netmask]') | map('join_with', '/') | ipaddr('net') | map('map_format', 'route %s') | list }}"
+openvpn_client_recursors: "{{ openvpn_nets[openvpn_net_name].ns | map('map_format', 'dhcp-option DNS %s') | list }}"
+openvpn_client_options: "{{ openvpn_client_routes + openvpn_client_recursors }}"
+openvpn_backup: yes

@@ -1,22 +1,10 @@
 ---
-openvpn_hostname: "vpn.{{ base_domain }}"
-openvpn_private_subnets: "{{ nets.values() | json_query('[*].[network, netmask]') | to_json | from_json | json_query('[*].join(`/`, @)') | regex_replace('/', ' ') }}"
-openvpn_key_country: CR
-openvpn_key_province: SJO
-openvpn_key_city: San Jose
-openvpn_key_org: nephelai.io
-openvpn_key_key_email: pki@nephelai.io
 openvpn_clients:
   - teddyphreak
 openvpn_tls_auth: yes
 openvpn_unified_client_profiles: yes
-openvpn_net_name: home
 openvpn_net: "{{ openvpn_nets[openvpn_net_name].network }}/{{ openvpn_nets[openvpn_net_name].netmask }}"
 openvpn_proto: tcp
-openvpn_port: 24
 openvpn_server: "{{ openvpn_net | ipaddr('network') }} {{ openvpn_net | ipaddr('netmask') }}"
-openvpn_client_routes: "{{ nets.values() | json_query('[].[network, netmask]') | map('join_with', '/') | ipaddr('net') | map('map_format', 'route %s') | list }}"
-openvpn_client_recursors: "{{ ['script security 2', 'block-outside-dns'] + (openvpn_nets[openvpn_net_name].ns | map('map_format', 'dhcp-option DNS %s') | list) }}"
-openvpn_client_options: "{{ openvpn_client_routes + openvpn_client_recursors }}"
 openvpn_auth_pam: /usr/lib/openvpn/openvpn-auth-pam.so
 openvpn_easyrsa_cnf: /usr/share/easy-rsa/openssl-1.0.0.cnf
