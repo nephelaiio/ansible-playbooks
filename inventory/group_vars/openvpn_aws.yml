@@ -12,3 +12,5 @@ openvpn_client_routes:
 openvpn_client_recursors: "{{ openvpn_nets[openvpn_net_name].ns | map('map_format', 'dhcp-option DNS %s') | list }}"
 openvpn_client_options: "{{ openvpn_client_routes + openvpn_client_recursors }}"
 openvpn_backup: no
+openvpn_clients:
+  - unifi

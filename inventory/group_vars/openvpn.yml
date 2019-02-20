@@ -1,6 +1,4 @@
 ---
-openvpn_clients:
-  - teddyphreak
 openvpn_tls_auth: yes
 openvpn_unified_client_profiles: yes
 openvpn_net: "{{ openvpn_nets[openvpn_net_name].network }}/{{ openvpn_nets[openvpn_net_name].netmask }}"
