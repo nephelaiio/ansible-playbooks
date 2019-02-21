@@ -1,6 +1,6 @@
 - name: Configure Librenms devices
 
-  hosts: all:!offline
+  hosts: all:!offline:!networking
 
   become: yes
 
