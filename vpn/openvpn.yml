@@ -14,6 +14,7 @@
     openvpn_conf_root: /etc/openvpn
     openvpn_credential_root: ../credentials
     openvpn_use_system_easyrsa: yes
+    openvpn_clients: "{{ openvpn_users | map(attribute='user') | list }}"
 
   tasks:
 
@@ -222,10 +223,19 @@
         mode: 0755
       when: openvpn_backup
 
+    - name: create openvpn users
+      user:
+        name: "{{ item.user }}"
+        password: "{{ item.pass | password_hash('sha512') }}"
+      with_items: "{{ openvpn_users }}"
+      when: "'pass' in item"
+      no_log: yes
+
+  post_tasks:
+
     - name: fetch openvpn user configuration
       fetch:
         src: "/etc/openvpn/keys/{{ item }}.ovpn"
-        dest: "{{ openvpn_credential_root }}/{{ item }}.{{ ansible_fqdn }}.ovpn"
+        dest: "{{ openvpn_credential_root }}/{{ item }}.{{ inventory_hostname }}.ovpn"
         flat: yes
       with_items: "{{ openvpn_clients }}"
-

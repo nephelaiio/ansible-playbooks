@@ -1,0 +1,64 @@
+---
+- name: Set up unifi openvpn client
+
+  hosts: fw01.home.nephelai.io
+
+  roles:
+
+    - nephelaiio.plugins
+
+  become: yes
+
+  vars:
+
+    openvpn_credential_root: ../credentials
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: copy openvpn ovpn client files
+      copy:
+        src: "{{ openvpn_credential_root }}/{{ openvpn_unifi_client_user }}.{{ groups['openvpn_aws'] | first }}.ovpn"
+        dest: "{{ openvpn_unifi_conf }}"
+      notify: configure unifi ovpn
+
+    - name: include ovpn client auth
+      lineinfile:
+        dest: "{{ openvpn_unifi_conf }}"
+        line: "auth-user-pass {{ openvpn_unifi_conf | dirname }}/auth"
+        mode: 0600
+
+    - name: configure ovpn client auth
+      copy:
+        content: |
+          {{ openvpn_unifi_client_user }}
+          {{ openvpn_unifi_client_pass }}
+        dest: "{{ openvpn_unifi_conf | dirname }}/auth"
+        mode: 0600
+
+  handlers:
+
+    - name: set ovpn interfaces
+      debug:
+        msg: "{{ item }}"
+      with_items:
+        - configure
+        - "set interfaces openvpn vtun0 config-file {{ openvpn_unifi_conf }}"
+        - "set firewall modify sourceroute rule 10 description openvpn"
+        - "set firewall modify sourceroute rule 10 action modify"
+        - "set firewall modify sourceroute rule 10 modify table 5"
+        - "set firewall modify sourceroute rule 10 source address 192.168.2.0/24"
+        - "set firewall source-validation disable"
+        - "set interfaces ethernet eth1 vif 2 firewall in modify sourceroute"
+        - "set interfaces ethernet eth1 vif 2 firewall in name LAN_IN"
+        - "set protocols static table 5 interface-route 0.0.0.0/0 next-hop-interface vtun0"
+        - "set service nat rule 5004 description 'vtun0 masq'"
+        - "set service nat rule 5004 destination address 0.0.0.0/0"
+        - "set service nat rule 5004 outbound-interface vtun0"
+        - "set service nat rule 5004 type masquerade"
+        - "commit"
+        - "save"
+      listen: configure unifi ovpn

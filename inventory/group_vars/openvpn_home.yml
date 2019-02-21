@@ -11,5 +11,5 @@ openvpn_client_routes: "{{ nets.values() | json_query('[].[network, netmask]') |
 openvpn_client_recursors: "{{ openvpn_nets[openvpn_net_name].ns | map('map_format', 'dhcp-option DNS %s') | list }}"
 openvpn_client_options: "{{ openvpn_client_routes + openvpn_client_recursors }}"
 openvpn_backup: yes
-openvpn_clients:
-  - teddyphreak
+openvpn_users:
+  - user: teddyphreak
