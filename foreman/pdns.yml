@@ -51,7 +51,6 @@
           :use_provider: dns_powerdns
       notify:
         - restart foreman proxy
-        - refresh foreman proxy
 
     - name: manage foreman proxy configuration
       copy:
@@ -69,7 +68,6 @@
           :powerdns_rest_api_key: "{{ pdns_api_key }}"
       notify:
         - restart foreman proxy
-        - refresh foreman proxy
 
     - name: query foreman proxies
       uri:
@@ -85,30 +83,38 @@
     - name: set proxy facts
       set_fact:
         foreman_proxy_urls: "{{ foreman_proxy_query.json.results | map(attribute='url') | list }}"
-        foreman_proxy_url: "http://{{ ansible_fqdn }}:{{ foreman_proxy_port }}"
-
-    - name: set proxy facts
-      set_fact:
-        foreman_proxy_id: "{{ foreman_proxy_query.json.results | selectattr('url', 'equalto', foreman_proxy_url) | map(attribute='id') | first }}"
+        foreman_proxy_url: "http://{{ ansible_hostname }}:{{ foreman_proxy_port }}"
 
     - meta: flush_handlers
 
-    - name: register foreman proxy
-      uri:
-        url: "{{ foreman_url }}/api/smart_proxies"
-        method: POST
-        body_format: json
-        body:
-          smart_proxy:
-            name: "{{ ansible_fqdn }}"
-            url: "{{ foreman_proxy_url }}"
-        user: "{{ foreman_api_user }}"
-        password: "{{ foreman_api_pass }}"
-        force_basic_auth: yes
-        status_code: 201
+    - block:
+
+        - name: register foreman proxy
+          uri:
+            url: "{{ foreman_url }}/api/smart_proxies"
+            method: POST
+            body_format: json
+            body:
+              smart_proxy:
+                name: "{{ ansible_hostname }}"
+                url: "{{ foreman_proxy_url }}"
+            user: "{{ foreman_api_user }}"
+            password: "{{ foreman_api_pass }}"
+            force_basic_auth: yes
+            status_code: 201
+          register: foreman_proxy_register
+
+        - name: set proxy facts
+          set_fact:
+            foreman_proxy_id: "{{ foreman_proxy_register.json.id }}"
+
       when: foreman_proxy_url not in foreman_proxy_urls
 
     - block:
+
+        - name: set proxy facts
+          set_fact:
+            foreman_proxy_id: "{{ foreman_proxy_query.json.results | selectattr('url', 'equalto', foreman_proxy_url) | map(attribute='id') | first }}"
 
         - name: update foreman proxy
           uri:
@@ -117,23 +123,14 @@
             body_format: json
             body:
               smart_proxy:
-                name: "{{ ansible_fqdn }}"
+                name: "{{ ansible_hostname }}"
                 url: "{{ foreman_proxy_url }}"
             user: "{{ foreman_api_user }}"
             password: "{{ foreman_api_pass }}"
             force_basic_auth: yes
             status_code: 200
-          notify:
-            - refresh foreman proxy
 
       when: foreman_proxy_url in foreman_proxy_urls
-
-  handlers:
-
-    - name: restart foreman proxy
-      service:
-        name: foreman-proxy
-        state: restarted
 
     - name: refresh foreman proxy
       uri:
@@ -144,3 +141,10 @@
         password: "{{ foreman_api_pass }}"
         force_basic_auth: yes
         status_code: 200
+
+  handlers:
+
+    - name: restart foreman proxy
+      service:
+        name: foreman-proxy
+        state: restarted
