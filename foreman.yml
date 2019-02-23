@@ -4,3 +4,5 @@
 - import_playbook: foreman/proxy.yml
 
 - import_playbook: foreman/tftpd.yml
+
+- import_playbook: foreman/dhcp.yml
