@@ -71,7 +71,7 @@
         settings_yaml:
           :enabled: true
           :tftproot: "{{ foreman_tftp_root }}"
-          :tftp_servername: "{{ ansible_hostname }}"
+          :tftp_servername: "{{ ansible_fqdn }}"
       notify:
         - restart foreman proxy
 
@@ -89,7 +89,7 @@
     - name: set proxy facts
       set_fact:
         foreman_proxy_urls: "{{ foreman_proxy_query.json.results | map(attribute='url') | list }}"
-        foreman_proxy_url: "http://{{ ansible_hostname }}:{{ foreman_proxy_port }}"
+        foreman_proxy_url: "http://{{ ansible_fqdn }}:{{ foreman_proxy_port }}"
 
     - meta: flush_handlers
 
@@ -102,7 +102,7 @@
             body_format: json
             body:
               smart_proxy:
-                name: "{{ ansible_hostname }}"
+                name: "{{ ansible_fqdn }}"
                 url: "{{ foreman_proxy_url }}"
             user: "{{ foreman_api_user }}"
             password: "{{ foreman_api_pass }}"
@@ -129,7 +129,7 @@
             body_format: json
             body:
               smart_proxy:
-                name: "{{ ansible_hostname }}"
+                name: "{{ ansible_fqdn }}"
                 url: "{{ foreman_proxy_url }}"
             user: "{{ foreman_api_user }}"
             password: "{{ foreman_api_pass }}"
