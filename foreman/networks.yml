@@ -1,0 +1,86 @@
+---
+- name: Configure foreman networks
+
+  hosts: foreman
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: query foreman proxies
+      uri:
+        url: "{{ foreman_url }}/api/smart_proxies"
+        method: GET
+        body_format: json
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
+      register: foreman_proxy_query
+
+    - name: query foreman subnets
+      uri:
+        url: "{{ foreman_url }}/api/subnets"
+        method: GET
+        body_format: json
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
+      register: foreman_subnet_query
+
+    - name: query foreman domains
+      uri:
+        url: "{{ foreman_url }}/api/domains"
+        method: GET
+        body_format: json
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
+      register: foreman_domain_query
+
+    - name: set subnet facts
+      set_fact:
+        foreman_networks: "{{ nets.values() | selectattr('foreman_proxy', 'defined') | list }}"
+        foreman_subnet_names: "{{ foreman_subnet_query.json.results | map(attribute='name') | list }}"
+
+    - name: create foreman subnets
+      uri:
+        url: "{{ foreman_url }}/api/subnets"
+        method: POST
+        body_format: json
+        body:
+          subnet: "{{ foreman_subnet }}"
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 201
+      vars:
+        foreman_subnet:
+          name: "{{ item.network }}/{{ item.netmask }}"
+          network: "{{ item.network }}"
+          mask: "{{ item.netmask }}"
+          gateway: "{{ item.router }}"
+          dns_primary: "{{ item.ns | first }}"
+          dns_secondary: "{{ item.ns | tail | first }}"
+          ipam: 'DHCP'
+          domain_ids:
+            - "{{ foreman_domain_query.json.results | selectattr('name', 'equalto', item.zone) | map(attribute='id') | first }}"
+            - "{{ foreman_domain_query.json.results | selectattr('name', 'equalto', item.foreman_proxy.zone) | map(attribute='id') | first }}"
+          dhcp_id: "{{ foreman_proxy_query.json.results | selectattr('name', 'equalto', item.foreman_proxy.dhcp) | map(attribute='id') | first }}"
+          tftp_id: "{{ foreman_proxy_query.json.results | selectattr('name', 'equalto', item.foreman_proxy.tftp) | map(attribute='id') | first }}"
+          dns_id: "{{ foreman_proxy_query.json.results | selectattr('name', 'equalto', item.foreman_proxy.dns) | map(attribute='id') | first }}"
+      loop_control:
+        label: "{{ item.network }}"
+      with_items: "{{ foreman_networks }}"
+      when: foreman_subnet.name not in foreman_subnet_names
+
