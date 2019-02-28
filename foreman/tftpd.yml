@@ -32,7 +32,7 @@
         state: directory
         owner: "{{ foreman_proxy_user }}"
         group: "{{ foreman_proxy_group }}"
-        mode: 0640
+        mode: 0770
 
     - name: configure tftp xinetd daemon
       copy:
