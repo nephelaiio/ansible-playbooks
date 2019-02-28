@@ -41,7 +41,7 @@
 
   handlers:
 
-    - name: crate temp file
+    - name: create temp file
       tempfile:
         suffix: ovpn
       register: ovpn_temp
@@ -55,18 +55,18 @@
 
           /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper begin
           /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set interfaces openvpn vtun0 config-file {{ openvpn_unifi_conf }}
-          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapperset firewall modify sourceroute rule 10 description openvpn
-          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapperset firewall modify sourceroute rule 10 action modify
-          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapperset firewall modify sourceroute rule 10 modify table 5
-          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapperset firewall modify sourceroute rule 10 source address 192.168.2.0/24
-          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapperset firewall source-validation disable
-          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapperset interfaces ethernet eth1 vif 2 firewall in modify sourceroute
-          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapperset interfaces ethernet eth1 vif 2 firewall in name LAN_IN
-          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapperset protocols static table 5 interface-route 0.0.0.0/0 next-hop-interface vtun0
-          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapperset service nat rule 5004 description 'vtun0 masq'
-          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapperset service nat rule 5004 destination address 0.0.0.0/0
-          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapperset service nat rule 5004 outbound-interface vtun0
-          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapperset service nat rule 5004 type masquerade
+          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set firewall modify sourceroute rule 10 description openvpn
+          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set firewall modify sourceroute rule 10 action modify
+          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set firewall modify sourceroute rule 10 modify table 5
+          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set firewall modify sourceroute rule 10 source address 192.168.2.0/24
+          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set firewall source-validation disable
+          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set interfaces ethernet eth1 vif 2 firewall in modify sourceroute
+          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set interfaces ethernet eth1 vif 2 firewall in name LAN_IN
+          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set protocols static table 5 interface-route 0.0.0.0/0 next-hop-interface vtun0
+          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set service nat rule 5004 description 'vtun0 masq'
+          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set service nat rule 5004 destination address 0.0.0.0/0
+          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set service nat rule 5004 outbound-interface vtun0
+          /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper set service nat rule 5004 type masquerade
           /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper commit
           /opt/vyatta/sbin/vyatta-cfg-cmd-wrapper save
         mode: 0750
