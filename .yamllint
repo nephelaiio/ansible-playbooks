@@ -6,6 +6,7 @@ ignore: |
   kubernetes/kubespray/
   kubernetes/awx/
   kubernetes/rook/
+  freeipa/
   **/vault.yml
   **/vault/
 

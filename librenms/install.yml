@@ -581,4 +581,3 @@
       service:
         name: rrdcached
         state: restarted
-

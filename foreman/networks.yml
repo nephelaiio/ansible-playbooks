@@ -83,4 +83,3 @@
         label: "{{ item.network }}"
       with_items: "{{ foreman_networks }}"
       when: foreman_subnet.name not in foreman_subnet_names
-

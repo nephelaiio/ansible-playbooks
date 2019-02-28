@@ -1,3 +1,4 @@
+---
 - name: Configure Librenms devices
 
   hosts: all:!offline:!networking
