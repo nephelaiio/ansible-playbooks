@@ -1,6 +1,6 @@
 ---
 awx_url: "https://awx.{{ base_domain }}"
-awx_release: "2.1.2"
+awx_release: "3.0.1"
 
 awx_organizations:
   - name: Default
