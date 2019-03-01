@@ -39,18 +39,6 @@
         verify_ssl: false
         verbose: false
 
-    - name: include private variables
-      include_vars:
-        dir: "{{ variables }}"
-      tags:
-        - always
-
-    - name: include private variables
-      include_vars:
-        dir: "{{ variables }}"
-      tags:
-        - always
-
     - name: manage awx settings
       command: "awx-cli setting modify {{ item.key }} \"{{ item.value }}\""
       with_dict: "{{ awx_settings }}"
