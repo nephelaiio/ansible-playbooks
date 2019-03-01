@@ -1,0 +1,73 @@
+---
+- name: Configure foreman media
+
+  hosts: foreman
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: query foreman media
+      uri:
+        url: "{{ foreman_url }}/api/media"
+        method: GET
+        body_format: json
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
+      register: foreman_media_query
+
+    - name: set media facts
+      set_fact:
+        foreman_media_results: "{{ foreman_media_query.json.results }}"
+        foreman_media_names: "{{ foreman_media_query.json.results | map(attribute='name') | list }}"
+
+    - name: create foreman media
+      uri:
+        url: "{{ foreman_url }}/api/media"
+        method: POST
+        body_format: json
+        body:
+          medium: "{{ foreman_medium }}"
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 201
+      vars:
+        foreman_medium:
+          name: "{{ item.name }}"
+          path: "{{ item.path }}"
+          os_family: "{{ item.os_family }}"
+      with_items: "{{ foreman_media.values() }}"
+      when: foreman_medium.name not in foreman_media_names
+
+    - name: update foreman media
+      uri:
+        url: "{{ foreman_url }}/api/media/{{ item.id }}"
+        method: PUT
+        body_format: json
+        body:
+          medium: "{{ foreman_medium }}"
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
+      vars:
+        inventory_medium: "{{ foreman_media.values() | selectattr('name', 'equalto', item.name) | first }}"
+        foreman_medium:
+          name: "{{ inventory_medium.name }}"
+          path: "{{ inventory_medium.path }}"
+          os_family: "{{ inventory_medium.os_family }}"
+      loop_control:
+        label: "{{ item.name }}"
+      with_items: "{{ foreman_media_results }}"
+      when: item.name in (foreman_media.values() | map(attribute='name') | list)

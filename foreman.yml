@@ -8,3 +8,5 @@
 - import_playbook: foreman/dhcp.yml
 
 - import_playbook: foreman/pdns.yml
+
+- import_playbook: foreman/media.yml
