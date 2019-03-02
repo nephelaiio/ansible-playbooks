@@ -28,7 +28,7 @@
 
     - name: install and configure nfs
       include_role:
-        name: geerlingguy.nfs
+        name: nephelaiio.nfs
       vars:
         nfs_exports: "{{ nfs_export_dirs }}"
 

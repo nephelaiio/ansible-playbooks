@@ -11,8 +11,6 @@
   version: 1.6.0
 - src: geerlingguy.mysql
   version: 2.9.0
-- src: geerlingguy.nfs
-  version: 1.5.0
 - src: geerlingguy.php
   version: 3.7.0
 - src: geerlingguy.composer
@@ -47,6 +45,9 @@
 - src: https://github.com/nephelaiio/ansible-role-pyenv.git
   name: nephelaiio.pyenv
   version: 1.0.10
+- src: https://github.com/nephelaiio/ansible-role-nfs.git
+  name: nephelaiio.nfs
+  version: 2.0.2
 - src: https://github.com/nephelaiio/ansible-role-tmux.git
   name: nephelaiio.tmux
   version: 2.0.2
