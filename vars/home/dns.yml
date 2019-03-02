@@ -14,7 +14,7 @@ dns:
       name: "{{ base_domain }}"
       hostmaster: "master@{{ base_domain }}"
       ns: "{{ groups['pdns'] }}"
-      records: "{{ nets.home.reservations.values() | map('merge_dicts', {'type': 'A'}) | list }}"
+      records: "{{ nets.home.reservations.values() | list | map('merge_dicts', {'type': 'A'}) | list }}"
       cnames:
         - host: "assistant.{{ base_domain }}"
           cname: rpig.home.nephelai.io
@@ -55,4 +55,4 @@ pdns:
       host: 127.0.0.1
       password: "{{ pdns_mysql_pass }}"
       dbname: pdns
-  domains: "{{ dns.zones.values() }}"
+  domains: "{{ dns.zones.values() | list }}"

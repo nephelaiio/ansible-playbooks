@@ -57,7 +57,7 @@ subnet {{ n.network }} netmask {{ n.netmask }} {
   option domain-name-servers {{ n.ns | list | join(',') }};
 {%   endif %}
 }
-{%   for r in n.reservations.values() %}
+{%   for r in (n.reservations.values() | list) %}
 {%     if 'hw_address' in r %}
 host {{ r['host'] }} {
   hardware ethernet {{ r['hw_address'] }};

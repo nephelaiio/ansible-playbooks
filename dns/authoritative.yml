@@ -237,7 +237,7 @@
         zone: "{{ dns.zones[item] }}"
         zone_name: "{{ zone.name }}."
         zone_ns: "{{ zone.ns | map('map_format', '%s.') | list | first | string }}"
-      with_items: "{{ dns.zones.keys() }}"
+      with_items: "{{ dns.zones.keys() | list }}"
       when: zone_name not in pdns_zones
       delegate_to: "{{ groups['pdns'][0] }}"
       tags:
@@ -252,7 +252,7 @@
       vars:
         zone_name: "{{ item }}."
       with_items:
-        - "{{ dns.zones.values() | map(attribute='name') | list }}"
+        - "{{ dns.zones.values() | list | map(attribute='name') | list }}"
       register: pdns_records_query
       tags:
         - records
@@ -293,7 +293,7 @@
               disabled: false
               set-ptr: true
       with_subelements:
-        - "{{ dns.zones.values() }}"
+        - "{{ dns.zones.values() | list }}"
         - records
       when:
         - not record_name in pdns_records
@@ -328,7 +328,7 @@
               disabled: false
               set-ptr: true
       with_subelements:
-        - "{{ dns.zones.values() }}"
+        - "{{ dns.zones.values() | list }}"
         - records
       when:
         - not record_name in pdns_records

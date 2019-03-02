@@ -9,7 +9,7 @@
 
   vars:
 
-    fwd_zones: "{{ dns.zones.values() | map(attribute='name') | list }}"
+    fwd_zones: "{{ dns.zones.values() | list | map(attribute='name') | list }}"
     pdns_ips: "{{ groups['pdns'] | map('extract', hostvars, 'ansible_host') | join(';') }}"
     pdns_fwd: "{{ fwd_zones | map('map_format', '%s=' + pdns_ips) | join(', ') }}"
     listen_address: "{{ ansible_host }}"

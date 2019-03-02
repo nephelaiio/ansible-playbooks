@@ -149,7 +149,7 @@
       file:
         state: directory
         path: "{{ item }}"
-      with_items: "{{ nginx.vhosts.values() | map(attribute='root') | list }}"
+      with_items: "{{ nginx.vhosts.values() | list | map(attribute='root') | list }}"
 
     - name: install nginx
       include_role:

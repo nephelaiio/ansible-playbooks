@@ -26,7 +26,7 @@
       vars:
         zone_name: "{{ item }}."
       with_items:
-        - "{{ dns.zones.values() | map(attribute='name') | list }}"
+        - "{{ dns.zones.values() | list | map(attribute='name') | list }}"
       register: pdns_records_query
       delegate_to: localhost
       run_once: yes
@@ -105,7 +105,7 @@
 
     - name: build list of reservation records
       set_fact:
-        inventory_reservations: "{{ dns.zones.values() | sum(attribute='records', start=[]) | list }}"
+        inventory_reservations: "{{ dns.zones.values() | list | sum(attribute='records', start=[]) | list }}"
       run_once: yes
 
     - name: create reservation records
@@ -170,7 +170,7 @@
 
     - name: build list of inventory cnames
       set_fact:
-        inventory_cnames: "{{ dns.zones.values() | sum(attribute='cnames', start=[]) | list }}"
+        inventory_cnames: "{{ dns.zones.values() | list | sum(attribute='cnames', start=[]) | list }}"
       run_once: yes
 
     - name: create cname records

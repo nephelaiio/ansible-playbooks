@@ -36,7 +36,7 @@
       vars:
         omapikey: "{{ tsigkeys.omapi }}"
         lease_time: 1800
-        networks: "{{ nets.values() }}"
+        networks: "{{ nets.values() | list }}"
         failover: "{{ dhcp_failover | default([]) }}"
         domain_name: "{{ dns.zones.home.name }}"
       notify: restart dhcpd
