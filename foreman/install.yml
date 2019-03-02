@@ -350,7 +350,7 @@
         - name: query local domains
           set_fact:
             foreman_cur_domains: "{{ foreman_domain_query.json.results | map(attribute='name') | list }}"
-            foreman_all_domains: "{{ dns.zones.values() | map(attribute='name') | list }}"
+            foreman_all_domains: "{{ dns.zones.values() | list | map(attribute='name') | list }}"
 
         - name: create foreman domains
           uri:

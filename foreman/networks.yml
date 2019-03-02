@@ -50,7 +50,7 @@
 
     - name: set subnet facts
       set_fact:
-        foreman_networks: "{{ nets.values() | selectattr('foreman_proxy', 'defined') | list }}"
+        foreman_networks: "{{ nets.values() | list | selectattr('foreman_proxy', 'defined') | list }}"
         foreman_subnet_names: "{{ foreman_subnet_query.json.results | map(attribute='name') | list }}"
 
     - name: create foreman subnets

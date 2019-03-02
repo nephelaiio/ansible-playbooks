@@ -47,7 +47,7 @@
           name: "{{ item.name }}"
           path: "{{ item.path }}"
           os_family: "{{ item.os_family }}"
-      with_items: "{{ foreman_media.values() }}"
+      with_items: "{{ foreman_media.values() | list }}"
       when: foreman_medium.name not in foreman_media_names
 
     - name: update foreman media
@@ -62,7 +62,7 @@
         force_basic_auth: yes
         status_code: 200
       vars:
-        inventory_medium: "{{ foreman_media.values() | selectattr('name', 'equalto', item.name) | first }}"
+        inventory_medium: "{{ foreman_media.values() | list | selectattr('name', 'equalto', item.name) | first }}"
         foreman_medium:
           name: "{{ inventory_medium.name }}"
           path: "{{ inventory_medium.path }}"
@@ -70,4 +70,4 @@
       loop_control:
         label: "{{ item.name }}"
       with_items: "{{ foreman_media_results }}"
-      when: item.name in (foreman_media.values() | map(attribute='name') | list)
+      when: item.name in (foreman_media.values() | list | map(attribute='name') | list)
