@@ -5,7 +5,9 @@ foreman_user: foreman
 foreman_group: foreman
 foreman_proxy_user: foreman-proxy
 foreman_proxy_group: foreman-proxy
+foreman_proxy_port: 8443
 foreman_tftp_root: /tftpboot
+foreman_url: "https://foreman.{{ base_domain }}"
 foreman_settings:
   :locations_enabled: false
   :organizations_enabled: false
@@ -30,3 +32,27 @@ foreman_settings:
     :logger:
       :enabled: false
       :level: 'DEBUG'
+foreman_media:
+  ubuntu:
+    name: Ubuntu home mirror
+    path: "{{ ubuntu_url }}/{{ ubuntu_mirror_dir }}"
+    os_family: Debian
+  centos:
+    name: CentOS home mirror
+    path: "{{ centos_url }}/{{ centos_mirror_dir }}/$version/os/$arch"
+    os_family: Redhat
+foreman_os:
+  centos7:
+    name: CentOS
+    architecture: x86_64
+    major: 7
+    config_template: "Kickstart default"
+    medium: "{{ foreman_media.centos.name }}"
+    password_hash: SHA512
+foreman_hostgroups:
+  nuc:
+    name: NUC
+    operatingsystem: "{{ foreman_os.centos7.name }}"
+    subnet: "{{ nets.home.network }}/{{ nets.home.netmask }}"
+    domain: "{{ base_domain }}"
+    root_pass: "{{ }}"
