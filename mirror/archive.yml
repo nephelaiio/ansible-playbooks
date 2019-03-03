@@ -97,7 +97,7 @@
         url: "{{ item.src }}"
         dest: "{{ kvm_mirror_root }}/{{ item.url | basename }}"
         checksum: "{{ item.checksum }}"
-      with_items: "{{ kvm_images.values() }}"
+      with_items: "{{ kvm_images.values() | list }}"
 
     - name: create archive mirror link
       file:
