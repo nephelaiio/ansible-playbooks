@@ -98,7 +98,7 @@
         body_format: json
         body:
           operatingsystem:
-            name: "{{ item.major }}"
+            name: "{{ item.name }}"
             major: "{{ item.major | default(omit) }}"
             minor: "{{ item.minor | default(omit) }}"
             description: "{{ item.description | default(omit) }}"
@@ -114,7 +114,7 @@
         password: "{{ foreman_api_pass }}"
         force_basic_auth: yes
         status_code: 201
-      with_items: "{{ foreman_os.values() }}"
+      with_items: "{{ foreman_os.values() | list }}"
       when: item.name not in foreman_os_names
 
     - name: update foreman os

@@ -8,7 +8,6 @@ foreman_proxy_user: foreman-proxy
 foreman_proxy_group: foreman-proxy
 foreman_proxy_port: 8443
 foreman_tftp_root: /tftpboot
-foreman_url: "https://foreman.{{ base_domain }}"
 foreman_settings:
   :locations_enabled: false
   :organizations_enabled: false
