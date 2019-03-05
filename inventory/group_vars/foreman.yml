@@ -55,4 +55,4 @@ foreman_hostgroups:
     operatingsystem: "{{ foreman_os.centos7.name }}"
     subnet: "{{ nets.home.network }}/{{ nets.home.netmask }}"
     domain: "{{ base_domain }}"
-    root_pass: "{{ }}"
+    root_pass: "{{ users.root.password  | password_hash(foreman_os.centos7.password_hash | lower) }}"
