@@ -17,7 +17,7 @@
       include_vars:
         dir: "../{{ variables }}"
 
-    - block: 
+    - block:
 
         - name: query foreman hosts
           uri:
@@ -61,14 +61,4 @@
         - debug:
             var: foreman_subnets
 
-        - name: select guest facts
-          set_fact:
-            foreman_subnet_id: "{{ foreman_subnets | selectattr('network_address', 'ipaddr'
-            foreman_domain_id: "{{ foreman_domains | selectattr('name', 'equalto', guest_domain) | map(attribute='id') | first }}"
-
-        - debug:
-            var: foreman_domain_id
-
       delegate_to: "{{ groups['foreman'] | first }}"
-
-      

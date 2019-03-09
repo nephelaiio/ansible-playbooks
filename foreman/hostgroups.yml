@@ -112,7 +112,7 @@
         status_code: 200
       vars:
         inventory_hostgroup: "{{ foreman_hostgroups.values() | list | selectattr('name', 'equalto', item.name) | first }}"
-        foreman_hostgroup: 
+        foreman_hostgroup:
           name: "{{ inventory_hostgroup.name }}"
           description: "{{ inventory_hostgroup.description | default(omit) }}"
           architecture_id: "{{ foreman_arch_results | selectattr('name', 'equalto', inventory_hostgroup.architecture) | map(attribute='id') | first }}"
