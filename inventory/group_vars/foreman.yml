@@ -52,6 +52,7 @@ foreman_os:
 foreman_hostgroups:
   nuc:
     name: NUC
+    architecture: x86_64
     operatingsystem: "{{ foreman_os.centos7.name }}"
     subnet: "{{ nets.home.network }}/{{ nets.home.netmask }}"
     domain: "{{ base_domain }}"

@@ -26,9 +26,22 @@
         status_code: 200
       register: foreman_arch_query
 
+    - name: query foreman architecture oss
+      uri:
+        url: "{{ foreman_url }}/api/architectures/{{ item }}"
+        method: GET
+        body_format: json
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
+      with_items: "{{ foreman_arch_query.json.results | map(attribute='id') | list }}"
+      register: foreman_archos_query
+
     - name: set architecture facts
       set_fact:
         foreman_arch_results: "{{ foreman_arch_query.json.results }}"
+        foreman_archos_results: "{{ foreman_archos_query.results | map(attribute='json') | list }}"
 
     - name: query foreman media
       uri:
@@ -75,7 +88,7 @@
       set_fact:
         foreman_ptable_results: "{{ foreman_ptable_query.json.results }}"
 
-    - name: query foreman operating system templates
+    - name: query foreman operating systems
       uri:
         url: "{{ foreman_url }}/api/operatingsystems"
         method: GET
@@ -86,12 +99,12 @@
         status_code: 200
       register: foreman_os_query
 
-    - name: set partition table facts
+    - name: set operating system facts
       set_fact:
         foreman_os_results: "{{ foreman_os_query.json.results }}"
         foreman_os_names: "{{ foreman_os_query.json.results | map(attribute='name') | list }}"
 
-    - name: create foreman os
+    - name: create foreman operating systems
       uri:
         url: "{{ foreman_url }}/api/operatingsystems"
         method: POST
@@ -105,19 +118,21 @@
             family: "{{ item.family | default(omit) }}"
             release_name: "{{ item.release_name | default(omit) }}"
             password_hash: "{{ item.password_hash | default(omit) }}"
-            architecture_ids: "{{ foreman_arch_results | selectattr('name', 'equals', item.architecture | default('')) | map(attribute='id') }}"
-            template_ids: "{{ foreman_template_results | selectattr('name', 'equals', item.template | default('')) | map(attribute='id') }}"
-            medium_ids: "{{ foreman_medium_results | selectattr('name', 'equals', item.medium | default('')) | map(attribute='id') }}"
-            ptable_ids: "{{ foreman_ptable_results | selectattr('name', 'equals', item.ptable | default('')) | map(attribute='id') }}"
+            architecture_ids: "{{ foreman_arch_results | selectattr('name', 'equalto', item.architecture) | map(attribute='id') }}"
+            template_ids: "{{ foreman_template_results | selectattr('name', 'equalto', item.template) | map(attribute='id') }}"
+            medium_ids: "{{ foreman_medium_results | selectattr('name', 'equalto', item.medium) | map(attribute='id') }}"
+            ptable_ids: "{{ foreman_ptable_results | selectattr('name', 'equalto', item.ptable) | map(attribute='id') }}"
             os_family: "{{ item.os_family | default(omit) }}"
         user: "{{ foreman_api_user }}"
         password: "{{ foreman_api_pass }}"
         force_basic_auth: yes
         status_code: 201
+      loop_control:
+        label: "{{ item.name }}"
       with_items: "{{ foreman_os.values() | list }}"
       when: item.name not in foreman_os_names
 
-    - name: update foreman os
+    - name: update foreman operating systems
       uri:
         url: "{{ foreman_url }}/api/operatingsystems/{{ item.id }}"
         method: PUT
@@ -131,16 +146,82 @@
             family: "{{ inventory_os.family | default(omit) }}"
             release_name: "{{ inventory_os.release_name | default(omit) }}"
             password_hash: "{{ inventory_os.password_hash | default(omit) }}"
-            architecture_ids: "{{ foreman_arch_results | selectattr('name', 'equals', inventory_os.architecture | default('')) | map(attribute='id') }}"
-            template_ids: "{{ foreman_template_results | selectattr('name', 'equals', inventory_os.template | default('')) | map(attribute='id') }}"
-            medium_ids: "{{ foreman_medium_results | selectattr('name', 'equals', inventory_os.medium | default('')) | map(attribute='id') }}"
-            ptable_ids: "{{ foreman_ptable_results | selectattr('name', 'equals', inventory_os.ptable | default('')) | map(attribute='id') }}"
+            architecture_ids: "{{ foreman_arch_results | selectattr('name', 'equalto', inventory_os.architecture) | map(attribute='id') }}"
+            template_ids: "{{ foreman_template_results | selectattr('name', 'equalto', inventory_os.template) | map(attribute='id') }}"
+            medium_ids: "{{ foreman_medium_results | selectattr('name', 'equalto', inventory_os.medium) | map(attribute='id') }}"
+            ptable_ids: "{{ foreman_ptable_results | selectattr('name', 'equalto', inventory_os.ptable) | map(attribute='id') }}"
             os_family: "{{ inventory_os.os_family | default(omit) }}"
         user: "{{ foreman_api_user }}"
         password: "{{ foreman_api_pass }}"
         force_basic_auth: yes
         status_code: 200
+      loop_control:
+        label: "{{ item.name }}"
       vars:
         inventory_os: "{{ foreman_os.values() | selectattr('name', 'equalto', item.name) | first }}"
       with_items: "{{ foreman_os_results }}"
       when: item.name in foreman_os_names
+
+    - name: list foreman operating systems
+      uri:
+        url: "{{ foreman_url }}/api/operatingsystems"
+        method: GET
+        body_format: json
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
+      register: foreman_os_list
+
+    - name: build operating systems map
+      set_fact:
+        foreman_os_pairs: "{{ (foreman_os_map | default([])) + [[item.name, item.id]] }}"
+      loop_control:
+        label: "{{ item.name }}"
+      with_items: "{{ foreman_os_list.json.results }}"
+
+    - name: list foreman architectures
+      uri:
+        url: "{{ foreman_url }}/api/architectures"
+        method: GET
+        body_format: json
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
+      register: foreman_archos_list
+
+    - name: query foreman architectures
+      uri:
+        url: "{{ foreman_url }}/api/architectures/{{ item.id }}"
+        method: GET
+        body_format: json
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
+      with_items: "{{ foreman_archos_list.json.results }}"
+      loop_control:
+        label: "{{ item.name }}"
+      register: foreman_archos_query
+
+    - name: update architecture os lists
+      uri:
+        url: "{{ foreman_url }}/api/architectures/{{ item.id }}"
+        method: PUT
+        body_format: json
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
+        body:
+          architecture:
+            name: "{{ item.name }}"
+            architecture_ids: "{{ archos_apiids + archos_inventoryids }}"
+      vars:
+        archos_inventorynames: "{{ foreman_os.values() | list | selectattr('architecture', 'equalto', item.name) | map(attribute='name') | list }}"
+        archos_inventoryids: "{{ archos_inventorynames | map('extract', dict(foreman_os_pairs)) | list }}"
+        archos_apiids: "{{ item.operatingsystems }}"
+      loop_control:
+        label: "{{ item.name }}"
+      with_items: "{{ foreman_archos_results }}"

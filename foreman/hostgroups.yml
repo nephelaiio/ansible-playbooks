@@ -15,6 +15,21 @@
       include_vars:
         dir: "../{{ variables }}"
 
+    - name: query foreman architectures
+      uri:
+        url: "{{ foreman_url }}/api/architectures"
+        method: GET
+        body_format: json
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
+      register: foreman_arch_query
+
+    - name: set architecture facts
+      set_fact:
+        foreman_arch_results: "{{ foreman_arch_query.json.results }}"
+
     - name: query foreman operating systems
       uri:
         url: "{{ foreman_url }}/api/operatingsystems"
@@ -100,7 +115,8 @@
         foreman_hostgroup: 
           name: "{{ inventory_hostgroup.name }}"
           description: "{{ inventory_hostgroup.description | default(omit) }}"
-          operating_system_id: "{{ foreman_os_results | selectattr('name', 'equalto', inventory_hostgroup.operatingsystem) | map(attribute='id') | first }}"
+          architecture_id: "{{ foreman_arch_results | selectattr('name', 'equalto', inventory_hostgroup.architecture) | map(attribute='id') | first }}"
+          operatingsystem_id: "{{ foreman_os_results | selectattr('name', 'equalto', inventory_hostgroup.operatingsystem) | map(attribute='id') | first }}"
           domain_id: "{{ foreman_domain_results | selectattr('name', 'equalto', inventory_hostgroup.domain) | map(attribute='id') | first }}"
           pxe_loader: "{{ inventory_hostgroup.pxe_loader | default(omit) }}"
           root_pass: "{{ inventory_hostgroup.root_pass | default(omit) }}"
