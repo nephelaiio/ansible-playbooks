@@ -47,7 +47,8 @@ foreman_os:
     name: CentOS
     architecture: x86_64
     major: 7
-    config_template: "Kickstart default"
+    provisioning_template: "Kickstart default"
+    ptable: "Kickstart default"
     medium: "{{ foreman_media.centos.name }}"
     password_hash: SHA512
 foreman_hostgroups:
@@ -55,6 +56,9 @@ foreman_hostgroups:
     name: NUC
     architecture: x86_64
     operatingsystem: "{{ foreman_os.centos7.name }}"
+    medium: "{{ foreman_os.centos7.medium }}"
+    ptable: "Kickstart default"
+    pxe_loader: Grub2 UEFI
     subnet: "{{ nets.home.network }}/{{ nets.home.netmask }}"
     domain: "{{ base_domain }}"
     root_pass: "{{ users.root.password  | password_hash(foreman_os.centos7.password_hash | lower) }}"

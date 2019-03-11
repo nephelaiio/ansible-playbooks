@@ -1,3 +1,4 @@
+
 ---
 - name: Configure foreman hostsostgroups
 
@@ -83,9 +84,9 @@
       set_fact:
         foreman_media_results: "{{ foreman_media_query.json.results }}"
 
-    - name: query foreman config templates
+    - name: query foreman partition tables
       uri:
-        url: "{{ foreman_url }}/api/config_templates"
+        url: "{{ foreman_url }}/api/ptables"
         method: GET
         body_format: json
         body:
@@ -94,25 +95,11 @@
         password: "{{ foreman_api_pass }}"
         force_basic_auth: yes
         status_code: 200
-      register: foreman_config_template_query
-
-    - name: query foreman provisioning config templates
-      uri:
-        url: "{{ foreman_url }}/api/provisioning_templates"
-        method: GET
-        body_format: json
-        body:
-          per_page: "{{ foreman_api_allpages }}"
-        user: "{{ foreman_api_user }}"
-        password: "{{ foreman_api_pass }}"
-        force_basic_auth: yes
-        status_code: 200
-      register: foreman_provisioning_template_query
+      register: foreman_ptable_query
 
     - name: set template facts
       set_fact:
-        foreman_config_template_results: "{{ foreman_config_template_query.json.results }}"
-        foreman_provisioning_template_results: "{{ foreman_provisioning_template_query.json.results }}"
+        foreman_ptable_results: "{{ foreman_ptable_query.json.results }}"
 
     - name: query foreman hostgroups
       uri:
@@ -141,19 +128,18 @@
           hostgroup:
             name: "{{ item.name }}"
             description: "{{ item.description | default(omit) }}"
-            operating_system_id: "{{ foreman_os_results | selectattr('name', 'equalto', item.operatingsystem) | map(attribute='id') | first }}"
+            architecture_id: "{{ foreman_arch_results | selectattr('name', 'equalto', inventory_hostgroup.architecture) | map(attribute='id') | first }}"
+            operatingsystem_id: "{{ foreman_os_results | selectattr('name', 'equalto', inventory_hostgroup.operatingsystem) | map(attribute='id') | first }}"
             medium_id: "{{ foreman_media_results | selectattr('name', 'equalto', inventory_hostgroup.medium | default('')) | map(attribute='id') | first }}"
-            config_template_ids: "{{ foreman_config_template_results | selectattr('name', 'equalto', inventory_hostgroup.config_template | default('')) | map(attribute='id') | first }}"
-            provisioning_template_ids: "{{ foreman_provisioning_template_results | selectattr('name', 'equalto', inventory_hostgroup.provisioning_template | default('')) | map(attribute='id') | first }}"
-            ptable_ids: "{{ foreman_ptable_results | selectattr('name', 'equalto', inventory_hostgroup.ptable | default('')) | map(attribute='id') | first }}"
-            subnet_id: "{{ foreman_subnet_results | selectattr('name', 'equalto', item.subnet) | map(attribute='id') | first }}"
-            domain_id: "{{ foreman_domain_results | selectattr('name', 'equalto', item.domain) | map(attribute='id') | first }}"
-            pxe_loader: "{{ item.pxe_loader | default(omit) }}"
-            root_pass: "{{ item.root_pass | default(omit) }}"
+            ptable_id: "{{ foreman_ptable_results | selectattr('name', 'equalto', inventory_hostgroup.ptable | default('')) | map(attribute='id') | first }}"
+            pxe_loader: "{{ inventory_hostgroup.pxe_loader | default(omit) }}"
+            root_pass: "{{ inventory_hostgroup.root_pass | default(omit) }}"
         user: "{{ foreman_api_user }}"
         password: "{{ foreman_api_pass }}"
         force_basic_auth: yes
         status_code: 201
+      vars:
+        inventory_hostgroup: "{{ foreman_hostgroups.values() | list | selectattr('name', 'equalto', item.name) | first }}"
       loop_control:
         label: "{{ item.name }}"
       with_items: "{{ foreman_hostgroups.values() | list }}"
@@ -178,13 +164,9 @@
           architecture_id: "{{ foreman_arch_results | selectattr('name', 'equalto', inventory_hostgroup.architecture) | map(attribute='id') | first }}"
           operatingsystem_id: "{{ foreman_os_results | selectattr('name', 'equalto', inventory_hostgroup.operatingsystem) | map(attribute='id') | first }}"
           medium_id: "{{ foreman_media_results | selectattr('name', 'equalto', inventory_hostgroup.medium | default('')) | map(attribute='id') | first }}"
-          config_template_ids: "{{ foreman_config_template_results | selectattr('name', 'equalto', inventory_hostgroup.config_template | default('')) | map(attribute='id') | first }}"
-          provisioning_template_ids: "{{ foreman_provisioning_template_results | selectattr('name', 'equalto', inventory_hostgroup.provisioning_template | default('')) | map(attribute='id') | first }}"
-          ptable_ids: "{{ foreman_ptable_results | selectattr('name', 'equalto', inventory_hostgroup.ptable | default('')) | map(attribute='id') | first }}"
-          domain_id: "{{ foreman_domain_results | selectattr('name', 'equalto', inventory_hostgroup.domain) | map(attribute='id') | first }}"
+          ptable_id: "{{ foreman_ptable_results | selectattr('name', 'equalto', inventory_hostgroup.ptable | default('')) | map(attribute='id') | first }}"
           pxe_loader: "{{ inventory_hostgroup.pxe_loader | default(omit) }}"
           root_pass: "{{ inventory_hostgroup.root_pass | default(omit) }}"
       loop_control:
         label: "{{ item.name }}"
       with_items: "{{ foreman_hostgroup_results }}"
-      when: item.name in foreman_hostgroup_names

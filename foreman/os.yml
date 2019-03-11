@@ -145,7 +145,6 @@
             release_name: "{{ item.release_name | default(omit) }}"
             password_hash: "{{ item.password_hash | default(omit) }}"
             architecture_ids: "{{ foreman_arch_results | selectattr('name', 'equalto', inventory_os.architecture | default('')) | map(attribute='id') | list }}"
-            provisioning_template_ids: "{{ foreman_provisioning_template_results | selectattr('name', 'equalto', inventory_os.provisioning_template | default('')) | map(attribute='id') | list }}"
             medium_ids: "{{ foreman_media_results | selectattr('name', 'equalto', inventory_os.medium | default('')) | map(attribute='id') | list }}"
             ptable_ids: "{{ foreman_ptable_results | selectattr('name', 'equalto', inventory_os.ptable | default('')) | map(attribute='id') | list }}"
             os_family: "{{ item.os_family | default(omit) }}"
@@ -189,15 +188,17 @@
         oss: "{{ os_details | selectattr('provisioning_template', 'defined') | selectattr('provisioning_template', 'equalto', item ) | map(attribute='id') | list }}"
       loop: "{{ foreman_os.values() | selectattr('provisioning_template', 'defined') | map(attribute='provisioning_template') | unique | list }}"
 
-    - name: build provisioning template map
+    - name: collect config templates
+      set_fact:
+        os_conficonfig_template_pairs: "{{ (os_config_template_pairs | default([])) + [[item, oss ]] }}"
+      vars:
+        oss: "{{ os_details | selectattr('config_template', 'defined') | selectattr('config_template', 'equalto', item ) | map(attribute='id') | list }}"
+      loop: "{{ foreman_os.values() | selectattr('config_template', 'defined') | map(attribute='config_template') | unique | list }}"
+
+    - name: build template maps
       set_fact:
         os_provisioning_templates: "{{ dict(os_provisioning_template_pairs | default([])) }}"
-
-    - debug:
-        var: foreman_config_template_results
-
-    - debug:
-        var: foreman_provisioning_template_results
+        os_config_templates: "{{ dict(os_config_template_pairs | default([])) }}"
 
     - name: update foreman provisioning templates
       uri:
@@ -220,6 +221,27 @@
         label: "{{ item.name }}"
       with_items: "{{ foreman_provisioning_template_results }}"
 
+    - name: update foreman config templates
+      uri:
+        url: "{{ foreman_url }}/api/config_templates/{{ item.id }}"
+        method: PUT
+        body_format: json
+        body:
+          config_template: "{{ config_template }}"
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
+      vars:
+        os_ids: "{{ os_config_templates[item.name] }}"
+        config_template:
+          id: "{{ item.id }}"
+          operatingsystem_ids: "{{ os_ids }}"
+      when: item.name in os_config_templates
+      loop_control:
+        label: "{{ item.name }}"
+      with_items: "{{ foreman_config_template_results }}"
+
     - name: update foreman operating systems
       uri:
         url: "{{ foreman_url }}/api/operatingsystems/{{ item.id }}"
@@ -235,6 +257,7 @@
             release_name: "{{ inventory_os.release_name | default(omit) }}"
             password_hash: "{{ inventory_os.password_hash | default(omit) }}"
             architecture_ids: "{{ foreman_arch_results | selectattr('name', 'equalto', inventory_os.architecture | default('')) | map(attribute='id') | list }}"
+            config_template_ids: "{{ foreman_config_template_results | selectattr('name', 'equalto', inventory_os.config_template | default('')) | map(attribute='id') | list }}"
             provisioning_template_ids: "{{ foreman_provisioning_template_results | selectattr('name', 'equalto', inventory_os.provisioning_template | default('')) | map(attribute='id') | list }}"
             medium_ids: "{{ foreman_media_results | selectattr('name', 'equalto', inventory_os.medium | default('')) | map(attribute='id') | list }}"
             ptable_ids: "{{ foreman_ptable_results | selectattr('name', 'equalto', inventory_os.ptable | default('')) | map(attribute='id') | list }}"
