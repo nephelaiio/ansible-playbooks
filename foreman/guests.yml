@@ -24,6 +24,8 @@
             url: "{{ foreman_url }}/api/hosts"
             method: GET
             body_format: json
+            body:
+              per_page: "{{ foreman_api_allpages }}"
             user: "{{ foreman_api_user }}"
             password: "{{ foreman_api_pass }}"
             force_basic_auth: yes
@@ -35,6 +37,8 @@
             url: "{{ foreman_url }}/api/subnets"
             method: GET
             body_format: json
+            body:
+              per_page: "{{ foreman_api_allpages }}"
             user: "{{ foreman_api_user }}"
             password: "{{ foreman_api_pass }}"
             force_basic_auth: yes
@@ -46,6 +50,8 @@
             url: "{{ foreman_url }}/api/domains"
             method: GET
             body_format: json
+            body:
+              per_page: "{{ foreman_api_allpages }}"
             user: "{{ foreman_api_user }}"
             password: "{{ foreman_api_pass }}"
             force_basic_auth: yes
@@ -59,6 +65,6 @@
             guest_domain: "{{ inventory_hostname | split_with('.') | tail | join('.') }}"
 
         - debug:
-            var: foreman_subnets
+            var: foreman_domain_id
 
       delegate_to: "{{ groups['foreman'] | first }}"

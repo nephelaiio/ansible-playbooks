@@ -2,6 +2,7 @@
 foreman_url: "https://foreman.{{ base_domain }}"
 foreman_hostname: "{{ foreman_url | urlsplit('hostname') }}"
 foreman_domain: "{{ foreman_url | split_with('.') | tail | join('.') }}"
+foreman_api_allpages: 9999999999
 foreman_user: foreman
 foreman_group: foreman
 foreman_proxy_user: foreman-proxy

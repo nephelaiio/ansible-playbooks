@@ -9,10 +9,6 @@
 
     - nephelaiio.plugins
 
-  vars:
-
-    foreman_api_allpages: 9999999999
-
   tasks:
 
     - name: include private variables

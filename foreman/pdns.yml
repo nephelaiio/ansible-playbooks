@@ -74,6 +74,8 @@
         url: "{{ foreman_url }}/api/smart_proxies"
         method: GET
         body_format: json
+        body:
+          per_page: "{{ foreman_api_allpages }}"
         user: "{{ foreman_api_user }}"
         password: "{{ foreman_api_pass }}"
         force_basic_auth: yes
