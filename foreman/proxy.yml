@@ -22,7 +22,7 @@
 
     - name: install foreman apt repository
       apt_repository:
-        repo: deb http://deb.theforeman.org/ bionic 1.20
+        repo: "deb http://deb.theforeman.org/ bionic {{ foreman_release }}"
         state: present
         update_cache: yes
 
