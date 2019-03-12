@@ -60,6 +60,6 @@ foreman_hostgroups:
     medium: "{{ foreman_os.centos7.medium }}"
     ptable: "Kickstart default"
     pxe_loader: Grub2 UEFI
-    subnet: "{{ nets.home.network }}/{{ nets.home.netmask }}"
+    subnet: "{{ nets.management.network }}/{{ nets.management.netmask }}"
     domain: "{{ base_domain }}"
     root_pass: "{{ users.root.password  | password_hash(foreman_os.centos7.password_hash | lower) }}"
