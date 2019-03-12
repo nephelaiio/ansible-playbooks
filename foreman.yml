@@ -12,3 +12,5 @@
 - import_playbook: foreman/media.yml
 
 - import_playbook: foreman/os.yml
+
+- import_playbook: foreman/hostgroups.yml
