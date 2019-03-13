@@ -1,66 +1,74 @@
 ---
 - name: Upgrade hosts
 
-  hosts: all:!offline:!networking:!no_upgrade
+  hosts: all:!no_upgrade
 
   become: yes
 
+  ignore_unreachable: yes
+
   tasks:
 
-    - name: upgrade apt
-      apt:
-        force_apt_get: yes
-        upgrade: safe
-      when: ansible_os_family == 'Debian'
+    - block:
 
-    - name: remove apt orphans
-      command: apt autoremove -y
-      changed_when: false
-      when: ansible_os_family == 'Debian'
+        - name: Upgrade Debian
+          block:
 
-    - name: upgrade pacman
-      pacman:
-        update_cache: yes
-        upgrade: yes
-      when: ansible_os_family == 'Archlinux'
+            - name: upgrade apt
+              apt:
+                force_apt_get: yes
+                upgrade: safe
 
-    - name: check yay
-      stat:
-        path: /usr/bin/yay
-      register: yay
-      changed_when: false
+            - name: remove apt orphans
+              command: apt autoremove -y
+              changed_when: false
 
-    - name: upgrade yay
-      command: yay -Syu --noconfirm --noedit
+          when:
+            - ansible_os_family is defined
+            - ansible_os_family == 'Debian'
+
+        - name: Upgrade Archlinux
+          block:
+
+            - name: upgrade pacman
+              pacman:
+                update_cache: yes
+                upgrade: yes
+
+            - name: find pacman orphans
+              changed_when: false
+              failed_when: false
+              command: pacman -Qtdq
+              register: orphans
+
+            - name: remove pacman orphans
+              command: pacman -Rns --noconfirm {{ orphans.stdout }}
+              when:
+                - orphans.stdout != ''
+
+          when:
+            - ansible_os_family is defined
+            - ansible_os_family == 'Archlinux'
+
+        - name: Upgrade RedHat
+          block:
+
+            - name: upgrade yum
+              yum:
+                name: '*'
+                state: latest
+              tags:
+                - skip_ansible_lint
+
+          when:
+            - ansible_os_family is defined
+            - ansible_os_family == 'RedHat'
+
+        - name: upgrade pip
+          package:
+            name: python-pip
+            state: latest
+          when: ansible_os_family is defined
+
       when:
-        - ansible_os_family == 'Archlinux'
-        - yay.stat.executable
-        - false
-      changed_when: false
-
-    - name: find pacman orphans
-      changed_when: false
-      failed_when: false
-      command: pacman -Qtdq
-      when:
-        - ansible_os_family == 'Archlinux'
-      register: orphans
-
-    - name: remove pacman orphans
-      command: pacman -Rns --noconfirm {{ orphans.stdout }}
-      when:
-        - ansible_os_family == 'Archlinux'
-        - orphans.stdout != ''
-
-    - name: upgrade yum
-      yum:
-        name: '*'
-        state: latest
-      when: ansible_os_family == 'RedHat'
-      tags:
-        - skip_ansible_lint
-
-    - name: upgrade pip
-      package:
-        name: python-pip
-        state: latest
+        - ! (unreachable | default('no'))
