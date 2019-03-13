@@ -1,19 +1,25 @@
 ---
 - name: Disable ipv6
 
-  hosts: "{{ ipv6_hosts }}:!offline"
+  hosts: "{{ ipv6_hosts }}"
+
+  ignore_unreachable: yes
 
   become: yes
 
   tasks:
 
-    - name: Disable ipv6
-      sysctl:
-        name: "{{ item }}"
-        state: present
-        value: 1
-      with_items:
-        - net.ipv6.conf.all.disable_ipv6
-        - net.ipv6.conf.default.disable_ipv6
-        - net.ipv6.conf.lo.disable_ipv6
-      register: disable_ipv6
+    - block:
+
+        - name: Disable ipv6
+          sysctl:
+            name: "{{ item }}"
+            state: present
+            value: 1
+          with_items:
+            - net.ipv6.conf.all.disable_ipv6
+            - net.ipv6.conf.default.disable_ipv6
+            - net.ipv6.conf.lo.disable_ipv6
+          register: disable_ipv6
+
+      when: ! (unreachable | default('no'))

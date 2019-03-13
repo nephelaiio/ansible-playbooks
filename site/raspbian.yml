@@ -1,26 +1,32 @@
 ---
 - name: Configure raspbian
 
-  hosts: "{{ raspbian_hosts }}:!offline"
+  hosts: "{{ raspbian_hosts }}"
+
+  ignore_unreachable: yes
 
   become: yes
 
   tasks:
 
-    - name: Install rpi-update
-      apt:
-        name: rpi-update
-        state: latest
-        update_cache: yes
+    - block:
 
-    - name: Fix rsyslog
-      template:
-        dest: /etc/rsyslog.conf
-        src: rsyslog.conf
-      register: configure_rsyslog
+        - name: Install rpi-update
+          apt:
+            name: rpi-update
+            state: latest
+            update_cache: yes
 
-    - name: Restart rsyslog
-      service:
-        name: rsyslog
-        state: restarted
-      when: configure_rsyslog.changed
+        - name: Fix rsyslog
+          template:
+            dest: /etc/rsyslog.conf
+            src: rsyslog.conf
+          register: configure_rsyslog
+
+        - name: Restart rsyslog
+          service:
+            name: rsyslog
+            state: restarted
+          when: configure_rsyslog.changed
+
+      when: ! (unreachable | default('no'))

@@ -1,9 +1,11 @@
 ---
 - name: Configure archive package mirror
 
-  hosts: archive_mirror:!offline
+  hosts: archive_mirror
 
   environment: "{{ proxy_env | default({}) }}"
+
+  ignore_unreachable: yes
 
   become: yes
 

@@ -1,15 +1,21 @@
 ---
 - name: Configure ntp
 
-  hosts: "{{ ntp_hosts }}:!offline"
+  hosts: "{{ ntp_hosts }}"
+
+  ignore_unreachable: yes
 
   become: yes
 
   tasks:
 
-    - name: Configure ntp
-      include_role:
-        name: geerlingguy.ntp
-      vars:
-        ntp_timezone: "{{ timezone }}"
-        ntp_manage_config: true
+    - block:
+
+        - name: Configure ntp
+          include_role:
+            name: geerlingguy.ntp
+          vars:
+            ntp_timezone: "{{ timezone }}"
+            ntp_manage_config: true
+
+      when: ! (unreachable | default('no'))

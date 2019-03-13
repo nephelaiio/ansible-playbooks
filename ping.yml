@@ -1,5 +1,5 @@
 ---
-- hosts: all:!offline:!networking
+- hosts: all:!networking
 
   gather_facts: no
 
@@ -7,3 +7,4 @@
 
     - name: ping
       ping:
+      delegate_to: localhost

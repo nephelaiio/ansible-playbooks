@@ -1,9 +1,11 @@
 ---
 - name: Configure dns resolvers
 
-  hosts: all:!offline:!recursors:!pdns:!lightsail:!networking
+  hosts: all:!recursors:!pdns:!lightsail:!networking
 
   become: yes
+
+  ignore_unreachable: yes
 
   roles:
 
@@ -62,6 +64,7 @@
           notify: restart networking
 
       when:
+        - ansible_os_family is defined
         - ansible_os_family == 'Debian'
         - ansible_distribution_release == 'bionic'
 
@@ -74,6 +77,7 @@
             state: link
 
       when:
+        - ansible_os_family is defined
         - ansible_os_family == 'Debian'
         - ansible_distribution_release == 'xenial'
 
@@ -90,6 +94,7 @@
               - rotate
 
       when:
+        - ansible_os_family is defined
         - ansible_os_family == 'Debian'
         - ansible_distribution_release == 'stretch'
 

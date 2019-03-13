@@ -1,9 +1,11 @@
 ---
 - name: Configure raspbian package mirrors
 
-  hosts: raspbian_mirror:!offline
+  hosts: raspbian_mirror
 
   environment: "{{ proxy_env | default({}) }}"
+
+  ignore_unreachable: yes
 
   become: yes
 
@@ -113,7 +115,7 @@
 
 - name: Configure Raspbian mirror clients
 
-  hosts: raspberry:!offline
+  hosts: raspberry
 
   environment: "{{ proxy_env | default({}) }}"
 
@@ -130,26 +132,30 @@
 
   tasks:
 
-    - name: include private variables
-      include_vars:
-        dir: "../{{ variables }}"
+    - block:
 
-    - name: remove stale apt definitions
-      file:
-        path: /etc/apt/sources.list.d/raspi.list
-        state: absent
+        - name: include private variables
+          include_vars:
+            dir: "../{{ variables }}"
 
-    - name: manage apt repositories
-      template:
-        src: ../templates/apt/sources.list.j2
-        dest: /etc/apt/sources.list
-      vars:
-        apt_mirror_main: "{{ apt_mirror_local }}"
-        apt_distribution: "{{ ansible_lsb.id | lower }}"
-        apt_release: "{{ ansible_lsb.codename | lower }}"
-        apt_repositories: main contrib non-free rpi
+        - name: remove stale apt definitions
+          file:
+            path: /etc/apt/sources.list.d/raspi.list
+            state: absent
 
-    - name: update apt
-      apt:
-        force_apt_get: yes
-        update_cache: yes
+        - name: manage apt repositories
+          template:
+            src: ../templates/apt/sources.list.j2
+            dest: /etc/apt/sources.list
+          vars:
+            apt_mirror_main: "{{ apt_mirror_local }}"
+            apt_distribution: "{{ ansible_lsb.id | lower }}"
+            apt_release: "{{ ansible_lsb.codename | lower }}"
+            apt_repositories: main contrib non-free rpi
+
+        - name: update apt
+          apt:
+            force_apt_get: yes
+            update_cache: yes
+
+      when: ! (unreachable | default('no'))

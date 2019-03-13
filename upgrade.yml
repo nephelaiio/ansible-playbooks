@@ -23,9 +23,7 @@
               command: apt autoremove -y
               changed_when: false
 
-          when:
-            - ansible_os_family is defined
-            - ansible_os_family == 'Debian'
+          when: ansible_os_family == 'Debian'
 
         - name: Upgrade Archlinux
           block:
@@ -46,9 +44,7 @@
               when:
                 - orphans.stdout != ''
 
-          when:
-            - ansible_os_family is defined
-            - ansible_os_family == 'Archlinux'
+          when: ansible_os_family == 'Archlinux'
 
         - name: Upgrade RedHat
           block:
@@ -60,15 +56,13 @@
               tags:
                 - skip_ansible_lint
 
-          when:
-            - ansible_os_family is defined
-            - ansible_os_family == 'RedHat'
+          when: ansible_os_family == 'RedHat'
 
         - name: upgrade pip
           package:
             name: python-pip
             state: latest
-          when: ansible_os_family is defined
 
       when:
         - ! (unreachable | default('no'))
+        - ansible_os_family is defined
