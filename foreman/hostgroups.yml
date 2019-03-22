@@ -1,7 +1,7 @@
 ---
-- name: Configure foreman hostsostgroups
+- name: Configure foreman hostgroups
 
-  hosts: foreman
+  hosts: foreman_app
 
   become: yes
 

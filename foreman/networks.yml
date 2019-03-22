@@ -1,7 +1,7 @@
 ---
 - name: Configure foreman networks
 
-  hosts: foreman
+  hosts: foreman_app
 
   become: yes
 
