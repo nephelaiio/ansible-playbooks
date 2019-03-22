@@ -434,6 +434,8 @@
         path: /var/lib/rrdcached/journal
       notify: restart rrdcached
 
+    - meta: flush_handlers
+
     - name: query librenms status
       uri:
         url: "{{ librenms_url }}/api/v0/system"
