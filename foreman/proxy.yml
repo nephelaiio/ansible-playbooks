@@ -57,4 +57,4 @@
         name: foreman-proxy
         state: restarted
       delegate_to: "{{ item }}"
-      with_items: "{{ groups['foreman'] }}"
+      with_items: "{{ groups['foreman_proxy'] }}"
