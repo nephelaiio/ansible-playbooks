@@ -11,7 +11,7 @@ kvm_images:
     url: "{{ archive_url }}/{{ kvm_mirror_dir }}/xenial-server-cloudimg-amd64.img"
     pool: default
     format: qcow2
-    checksum: sha256:8d73957579370848c800c1c087caac745128a9456a95e15d00955edc073947f7
+    checksum: sha256:4c8dcc84954d96d68c265d1decc11352cfd159e356b770bea5e1f70636d70a25
   centos7:
     src: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud-1808.qcow2.xz
     url: "{{ archive_url }}/{{ kvm_mirror_dir }}/CentOS-7-x86_64-GenericCloud.qcow2.xz"
