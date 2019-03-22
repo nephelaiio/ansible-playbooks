@@ -152,6 +152,8 @@
         password: "{{ foreman_api_pass }}"
         force_basic_auth: yes
         status_code: 201
+      vars:
+        inventory_os: "{{ foreman_os.values() | selectattr('name', 'equalto', item.name) | first }}"
       loop_control:
         label: "{{ item.name }}"
       with_items: "{{ foreman_os.values() | list }}"
