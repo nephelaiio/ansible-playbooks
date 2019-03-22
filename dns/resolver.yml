@@ -13,11 +13,17 @@
 
   tasks:
 
+    - name: wait for connection
+      wait_for_connection:
+
+    - name: gather facts
+      setup:
+
     - block:
 
         - name: set netplan facts
           set_fact:
-            netplan_config_file: "/etc/netplan/{{ ansible_default_ipv4.alias }}.yml"
+            netplan_config_file: "/etc/netplan/{{ ansible_default_ipv4.alias }}.yaml"
             netplan_iface: "{{ ansible_default_ipv4 }}"
             netplan_ipaddr: "{{ (ansible_default_ipv4.address + '/' + ansible_default_ipv4.netmask) | ipv4 }}"
             netplan_nameservers: "{{ groups['recursors'] | map('extract', hostvars, 'ansible_host') | list }}"
