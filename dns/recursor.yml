@@ -9,10 +9,10 @@
 
   vars:
 
-    fwd_zones: "{{ dns.zones.values() | list | map(attribute='name') | list }}"
+    fwd_zones: "{{ (dns.zones.values() | list | map(attribute='name') | list) }}"
     pdns_ips: "{{ groups['pdns'] | map('extract', hostvars, 'ansible_host') | join(';') }}"
-    pdns_fwd: "{{ fwd_zones | map('map_format', '%s=' + pdns_ips) | join(', ') }}"
-    listen_address: "{{ ansible_host }}"
+    pdns_fwd: "{{ ((fwd_zones | map('map_format', '%s=' + pdns_ips) | list) + ['+.=' + (nameservers | join(';'))]) | join(', ') }}"
+    listen_address: "0.0.0.0"
 
   roles:
 
@@ -38,6 +38,29 @@
         state: absent
         purge: yes
 
+      when:
+        - ansible_os_family is defined
+        - ansible_os_family == 'Debian'
+        - ansible_distribution_release == 'bionic'
+
+    - name: disable systemd-resolved
+      service:
+        name: systemd-resolved
+        state: stopped
+        enabled: no
+      register: systemd_resolved_svc
+
+    - name: bootstrap resolv.conf
+      include_role:
+        name: ahuffman.resolv
+      vars:
+        resolv_nameservers: "{{ nameservers }}"
+        resolv_domain: "{{ base_domain }}"
+        resolv_options:
+          - timeout:2
+          - rotate
+      when: systemd_resolved_svc.changed
+
     - name: install pdns recursor
       include_role:
         name: PowerDNS.pdns_recursor
@@ -47,3 +70,94 @@
           forward-zones: "{{ pdns_fwd }}"
           max-cache-ttl: 15
           max-negative-ttl: 15
+      ignore_errors: yes
+
+    - block:
+
+        - name: set netplan facts
+          set_fact:
+            netplan_config_file: "/etc/netplan/{{ ansible_default_ipv4.alias }}.yaml"
+            netplan_iface: "{{ ansible_default_ipv4 }}"
+            netplan_ipaddr: "{{ (ansible_default_ipv4.address + '/' + ansible_default_ipv4.netmask) | ipv4 }}"
+            netplan_nameservers: "{{ groups['recursors'] | map('extract', hostvars, 'ansible_host') | list }}"
+
+        - name: find existing netplan files
+          find:
+            paths: "{{ netplan_config_file | dirname }}"
+            patterns: "*.yml,*.yaml"
+          register: netplan_query
+
+        - name: define netplan configuration
+          copy:
+            dest: "{{ netplan_config_file }}"
+            content: |
+              ---
+              {{ network_config }}
+          vars:
+            network_config: |
+              network:
+                version: 2
+                ethernets:
+                  {{ netplan_iface.alias }}:
+                    match:
+                      macaddress: {{ netplan_iface.macaddress }}
+                    addresses:
+                      - {{ netplan_ipaddr }}
+                    gateway4: {{ netplan_iface.gateway }}
+                    nameservers:
+                      search:
+                        - {{ base_domain }}
+                      addresses:
+                        - 127.0.0.1
+          notify: restart networking
+
+        - name: remove existing netplan files
+          file:
+            path: "{{ netplan_file }}"
+            state: absent
+          become: true
+          loop_control:
+            loop_var: netplan_file
+          with_items: "{{ netplan_query.files | map(attribute='path') | list }}"
+          when:
+            - netplan_file != netplan_config_file
+          notify: restart networking
+
+        - name: manage resolv.conf
+          include_role:
+            name: ahuffman.resolv
+          vars:
+            resolv_nameservers:
+              - 127.0.0.1
+            resolv_domain: "{{ base_domain }}"
+            resolv_options:
+              - timeout:2
+              - rotate
+
+      when:
+        - ansible_os_family is defined
+        - ansible_os_family == 'Debian'
+        - ansible_distribution_release == 'bionic'
+
+    - name: install pdns recursor
+      include_role:
+        name: PowerDNS.pdns_recursor
+      vars:
+        pdns_rec_config:
+          local-address: "{{ listen_address }}"
+          forward-zones: "{{ pdns_fwd }}"
+          max-cache-ttl: 15
+          max-negative-ttl: 15
+      ignore_errors: yes
+
+  handlers:
+
+    - name: netplan apply
+      command: netplan apply
+      listen: restart networking
+
+    - name: restart systemd-networkd
+      service:
+        name: systemd-networkd
+        state: restarted
+      listen: restart networking
