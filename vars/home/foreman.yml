@@ -36,3 +36,4 @@ foreman_hostgroups:
     domain: "{{ base_domain }}"
     root_pass: "{{ users.root.password  | password_hash(foreman_os.centos7.password_hash | lower) }}"
 foreman_domains: "{{ dns.zones.values() | list }}"
+foreman_networks: "{{ nets.values() | list | selectattr('foreman_proxy', 'defined') | list }}" 

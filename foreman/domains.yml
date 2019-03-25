@@ -46,11 +46,15 @@
     - name: set organization dict
       set_fact:
         foreman_organization_dict: "{{ (foreman_organization_dict | default({})) | combine({ item.name: item }) }}"
+      loop_control:
+        label: "{{ item.name }}"
       loop: "{{ foreman_organization_results | flatten(levels=1) }}"
 
     - name: set location dict
       set_fact:
         foreman_location_dict: "{{ (foreman_location_dict | default({})) | combine({ item.name: item }) }}"
+      loop_control:
+        label: "{{ item.name }}"
       loop: "{{ foreman_location_results | flatten(levels=1) }}"
 
     - name: query foreman domains
