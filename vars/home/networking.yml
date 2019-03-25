@@ -42,6 +42,10 @@ nets:
       - range: '192.168.5.129 192.168.5.254'
     reservations: {}
     bridge: br1
+    foreman_locations:
+      - "{{ foreman_locations.home.name }}"
+    foreman_organizations:
+      - "{{ foreman_organizations.nephelai.name }}"
     foreman_proxy:
       zone: "{{ base_domain }}"
       dns: kvmc.home.nephelai.io

@@ -1,0 +1,118 @@
+---
+- name: query foreman locations
+  uri:
+    url: "{{ foreman_url }}/api/locations"
+    method: GET
+    body_format: json
+    body:
+      per_page: "{{ foreman_api_allpages }}"
+    force_basic_auth: yes
+    user: "{{ foreman_admin_user }}"
+    password: "{{ foreman_admin_pass }}"
+  register: foreman_location_query
+
+- name: query foreman organizations
+  uri:
+    url: "{{ foreman_url }}/api/organizations"
+    method: GET
+    body_format: json
+    body:
+      per_page: "{{ foreman_api_allpages }}"
+    force_basic_auth: yes
+    user: "{{ foreman_admin_user }}"
+    password: "{{ foreman_admin_pass }}"
+  register: foreman_organization_query
+
+- name: query foreman proxies
+  uri:
+    url: "{{ foreman_url }}/api/smart_proxies"
+    method: GET
+    body_format: json
+    body:
+      per_page: "{{ foreman_api_allpages }}"
+    user: "{{ foreman_api_user }}"
+    password: "{{ foreman_api_pass }}"
+    force_basic_auth: yes
+    status_code: 200
+  register: foreman_proxy_query
+
+- name: set proxy facts
+  set_fact:
+    foreman_proxy_urls: "{{ foreman_proxy_query.json.results | map(attribute='url') | list }}"
+    foreman_proxy_url: "http://{{ ansible_fqdn }}:{{ foreman_proxy_port }}"
+    foreman_location_results: "{{ foreman_location_query.json.results }}"
+    foreman_organization_results: "{{ foreman_organization_query.json.results }}"
+
+- name: set location ids
+  set_fact:
+    foreman_location_ids: "{{ foreman_location_ids | default([]) + [foreman_location_id] }}"
+  vars:
+    foreman_location_id: "{{ foreman_location_results | selectattr('name', 'equalto', item ) | map(attribute='id') | first }}"
+  loop: "{{ foreman_locations | flatten(levels=1) }}"
+
+- name: set organization ids
+  set_fact:
+    foreman_organization_ids: "{{ foreman_organization_ids | default([]) + [foreman_organization_id] }}"
+  vars:
+    foreman_organization_id: "{{ foreman_organization_results | selectattr('name', 'equalto', item ) | map(attribute='id') | first }}"
+  loop: "{{ foreman_organizations.values() | map(attribute='name') | flatten(levels=1) }}"
+
+- block:
+
+    - name: register foreman proxy
+      uri:
+        url: "{{ foreman_url }}/api/smart_proxies"
+        method: POST
+        body_format: json
+        body:
+          smart_proxy:
+            name: "{{ ansible_fqdn }}"
+            url: "{{ foreman_proxy_url }}"
+            location_ids: "{{ foreman_location_ids }}"
+            organization_ids: "{{ foreman_organization_ids }}"
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 201
+      register: foreman_proxy_register
+
+    - name: set proxy facts
+      set_fact:
+        foreman_proxy_id: "{{ foreman_proxy_register.json.id }}"
+
+  when: foreman_proxy_url not in foreman_proxy_urls
+
+- block:
+
+    - name: set proxy facts
+      set_fact:
+        foreman_proxy_id: "{{ foreman_proxy_query.json.results | selectattr('url', 'equalto', foreman_proxy_url) | map(attribute='id') | first }}"
+
+    - name: update foreman proxy
+      uri:
+        url: "{{ foreman_url }}/api/smart_proxies/{{ foreman_proxy_id }}"
+        method: PUT
+        body_format: json
+        body:
+          smart_proxy:
+            name: "{{ ansible_fqdn }}"
+            url: "{{ foreman_proxy_url }}"
+            location_ids: "{{ foreman_location_ids }}"
+            organization_ids: "{{ foreman_organization_ids }}"
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
+
+  when: foreman_proxy_url in foreman_proxy_urls
+
+- name: refresh foreman proxy
+  uri:
+    url: "{{ foreman_url }}/api/smart_proxies/{{ foreman_proxy_id }}/refresh"
+    method: PUT
+    body_format: json
+    user: "{{ foreman_api_user }}"
+    password: "{{ foreman_api_pass }}"
+    force_basic_auth: yes
+    status_code: 200
+

@@ -1,0 +1,38 @@
+---
+foreman_organizations:
+  nephelai:
+    name: nephelai
+foreman_locations:
+  home:
+    name: home
+    organization: "{{ foreman_organizations.nephelai.name }}"
+foreman_media:
+  ubuntu:
+    name: Ubuntu home mirror
+    path: "{{ ubuntu_url }}/{{ ubuntu_mirror_dir }}"
+    os_family: Debian
+  centos:
+    name: CentOS home mirror
+    path: "{{ centos_url }}/{{ centos_mirror_dir }}/$version/os/$arch"
+    os_family: Redhat
+foreman_os:
+  centos7:
+    name: CentOS
+    architecture: x86_64
+    major: 7
+    provisioning_template: "Kickstart default"
+    ptable: "Kickstart default"
+    medium: "{{ foreman_media.centos.name }}"
+    password_hash: SHA512
+foreman_hostgroups:
+  nuc:
+    name: NUC
+    architecture: x86_64
+    operatingsystem: "{{ foreman_os.centos7.name }}"
+    medium: "{{ foreman_os.centos7.medium }}"
+    ptable: "Kickstart default"
+    pxe_loader: Grub2 UEFI
+    subnet: "{{ nets.management.network }}/{{ nets.management.netmask }}"
+    domain: "{{ base_domain }}"
+    root_pass: "{{ users.root.password  | password_hash(foreman_os.centos7.password_hash | lower) }}"
+foreman_domains: "{{ dns.zones.values() | list }}"
