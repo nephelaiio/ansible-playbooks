@@ -15,6 +15,49 @@
       include_vars:
         dir: "../{{ variables }}"
 
+    - name: query foreman organizations
+      uri:
+        url: "{{ foreman_url }}/api/organizations"
+        method: GET
+        body_format: json
+        body:
+          per_page: "{{ foreman_api_allpages }}"
+        force_basic_auth: yes
+        user: "{{ foreman_admin_user }}"
+        password: "{{ foreman_admin_pass }}"
+      register: foreman_organization_query
+
+    - name: query foreman locations
+      uri:
+        url: "{{ foreman_url }}/api/locations"
+        method: GET
+        body_format: json
+        body:
+          per_page: "{{ foreman_api_allpages }}"
+        force_basic_auth: yes
+        user: "{{ foreman_admin_user }}"
+        password: "{{ foreman_admin_pass }}"
+      register: foreman_location_query
+
+    - name: set organization/location facts
+      set_fact:
+        foreman_organization_results: "{{ foreman_organization_query.json.results }}"
+        foreman_location_results: "{{ foreman_location_query.json.results }}"
+
+    - name: set organization dict
+      set_fact:
+        foreman_organization_dict: "{{ (foreman_organization_dict | default({})) | combine({ item.name: item }) }}"
+      loop_control:
+        label: "{{ item.name }}"
+      loop: "{{ foreman_organization_results | flatten(levels=1) }}"
+
+    - name: set location dict
+      set_fact:
+        foreman_location_dict: "{{ (foreman_location_dict | default({})) | combine({ item.name: item }) }}"
+      loop_control:
+        label: "{{ item.name }}"
+      loop: "{{ foreman_location_results | flatten(levels=1) }}"
+
     - name: query foreman architectures
       uri:
         url: "{{ foreman_url }}/api/architectures"
@@ -152,6 +195,8 @@
             ptable_id: "{{ (foreman_ptable_results | selectattr('name', 'equalto', inventory_hostgroup.ptable | default('')) | map(attribute='id') | first) | default(omit) }}"
             pxe_loader: "{{ inventory_hostgroup.pxe_loader | default(omit) }}"
             root_pass: "{{ inventory_hostgroup.root_pass | default(omit) }}"
+            location_ids: "{{ item.foreman_locations | default([]) | map('extract', foreman_location_dict) | map(attribute='id') | list }}"
+            organization_ids: "{{ item.foreman_organizations | default([]) | map('extract', foreman_organization_dict) | map(attribute='id') | list }}"
         user: "{{ foreman_api_user }}"
         password: "{{ foreman_api_pass }}"
         force_basic_auth: yes
@@ -187,6 +232,8 @@
           ptable_id: "{{ (foreman_ptable_results | selectattr('name', 'equalto', inventory_hostgroup.ptable | default('')) | map(attribute='id') | first) | default(omit) }}"
           pxe_loader: "{{ inventory_hostgroup.pxe_loader | default(omit) }}"
           root_pass: "{{ inventory_hostgroup.root_pass | default(omit) }}"
+          location_ids: "{{ inventory_hostgroup.foreman_locations | default([]) | map('extract', foreman_location_dict) | map(attribute='id') | list }}"
+          organization_ids: "{{ inventory_hostgroup.foreman_organizations | default([]) | map('extract', foreman_organization_dict) | map(attribute='id') | list }}"
       loop_control:
         label: "{{ item.name }}"
       with_items: "{{ foreman_hostgroup_results }}"

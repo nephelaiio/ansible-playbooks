@@ -43,5 +43,9 @@ foreman_hostgroups:
     subnet: "{{ nets.management.network }}/{{ nets.management.netmask }}"
     domain: "{{ base_domain }}"
     root_pass: "{{ users.root.password  | password_hash(foreman_os.centos7.password_hash | lower) }}"
+    foreman_organizations:
+      - "{{ foreman_organizations.nephelai.name }}"
+    foreman_locations:
+      - "{{ foreman_locations.home.name }}"
 foreman_domains: "{{ dns.zones.values() | list }}"
 foreman_networks: "{{ nets.values() | list | selectattr('foreman_proxy', 'defined') | list }}" 
