@@ -30,9 +30,9 @@ foreman_os:
     major: 7
     provisioning_templates:
       - "Kickstart default"
+      - "iPXE global default"
+      - "Kickstart default PXEGrub2"
       - "Kickstart default finish"
-      - "Kickstart default iPXE"
-      - "Kickstart default PXELinux"
     ptable: "Kickstart default"
     medium: "{{ foreman_media.centos.name }}"
     password_hash: SHA512
