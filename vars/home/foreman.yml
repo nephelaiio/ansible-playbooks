@@ -28,7 +28,11 @@ foreman_os:
     name: CentOS
     architecture: x86_64
     major: 7
-    provisioning_template: "Kickstart default"
+    provisioning_templates:
+      - "Kickstart default"
+      - "Kickstart default finish"
+      - "Kickstart default iPXE"
+      - "Kickstart default PXELinux"
     ptable: "Kickstart default"
     medium: "{{ foreman_media.centos.name }}"
     password_hash: SHA512
