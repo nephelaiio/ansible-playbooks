@@ -15,6 +15,49 @@
       include_vars:
         dir: "../{{ variables }}"
 
+    - name: query foreman organizations
+      uri:
+        url: "{{ foreman_url }}/api/organizations"
+        method: GET
+        body_format: json
+        body:
+          per_page: "{{ foreman_api_allpages }}"
+        force_basic_auth: yes
+        user: "{{ foreman_admin_user }}"
+        password: "{{ foreman_admin_pass }}"
+      register: foreman_organization_query
+
+    - name: query foreman locations
+      uri:
+        url: "{{ foreman_url }}/api/locations"
+        method: GET
+        body_format: json
+        body:
+          per_page: "{{ foreman_api_allpages }}"
+        force_basic_auth: yes
+        user: "{{ foreman_admin_user }}"
+        password: "{{ foreman_admin_pass }}"
+      register: foreman_location_query
+
+    - name: set organization/location facts
+      set_fact:
+        foreman_organization_results: "{{ foreman_organization_query.json.results }}"
+        foreman_location_results: "{{ foreman_location_query.json.results }}"
+
+    - name: set organization dict
+      set_fact:
+        foreman_organization_dict: "{{ (foreman_organization_dict | default({})) | combine({ item.name: item }) }}"
+      loop_control:
+        label: "{{ item.name }}"
+      loop: "{{ foreman_organization_results | flatten(levels=1) }}"
+
+    - name: set location dict
+      set_fact:
+        foreman_location_dict: "{{ (foreman_location_dict | default({})) | combine({ item.name: item }) }}"
+      loop_control:
+        label: "{{ item.name }}"
+      loop: "{{ foreman_location_results | flatten(levels=1) }}"
+
     - name: query foreman media
       uri:
         url: "{{ foreman_url }}/api/media"
@@ -49,6 +92,8 @@
           name: "{{ item.name }}"
           path: "{{ item.path }}"
           os_family: "{{ item.os_family }}"
+          location_ids: "{{ item.foreman_locations | default([]) | map('extract', foreman_location_dict) | map(attribute='id') | list }}"
+          organization_ids: "{{ item.foreman_organizations | default([]) | map('extract', foreman_organization_dict) | map(attribute='id') | list }}"
       with_items: "{{ foreman_media.values() | list }}"
       when: foreman_medium.name not in foreman_media_names
 
@@ -69,6 +114,8 @@
           name: "{{ inventory_medium.name }}"
           path: "{{ inventory_medium.path }}"
           os_family: "{{ inventory_medium.os_family }}"
+          location_ids: "{{ inventory_medium.foreman_locations | default([]) | map('extract', foreman_location_dict) | map(attribute='id') | list }}"
+          organization_ids: "{{ inventory_medium.foreman_organizations | default([]) | map('extract', foreman_organization_dict) | map(attribute='id') | list }}"
       loop_control:
         label: "{{ item.name }}"
       with_items: "{{ foreman_media_results }}"

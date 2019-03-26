@@ -11,10 +11,18 @@ foreman_media:
     name: Ubuntu home mirror
     path: "{{ ubuntu_url }}/{{ ubuntu_mirror_dir }}"
     os_family: Debian
+    foreman_organizations:
+      - "{{ foreman_organizations.nephelai.name }}"
+    foreman_locations:
+      - "{{ foreman_locations.home.name }}"
   centos:
     name: CentOS home mirror
     path: "{{ centos_url }}/{{ centos_mirror_dir }}/$version/os/$arch"
     os_family: Redhat
+    foreman_organizations:
+      - "{{ foreman_organizations.nephelai.name }}"
+    foreman_locations:
+      - "{{ foreman_locations.home.name }}"
 foreman_os:
   centos7:
     name: CentOS
