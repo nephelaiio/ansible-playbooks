@@ -122,7 +122,7 @@
             disk: "{{ vm_disk }}"
           when: diskcopy.changed
 
-        - name: regsiter password salt
+        - name: register password salt
           set_fact:
             pass_salt: salt
 
