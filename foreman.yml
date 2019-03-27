@@ -18,3 +18,5 @@
 - import_playbook: foreman/domains.yml
 
 - import_playbook: foreman/networks.yml
+
+- import_playbook: foreman/hosts.yml
