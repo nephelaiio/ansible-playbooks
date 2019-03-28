@@ -30,9 +30,8 @@ foreman_os:
     major: 7
     provisioning_templates:
       - "Kickstart default"
-      - "iPXE global default"
-      - "Kickstart default PXEGrub2"
       - "Kickstart default finish"
+      - "Kickstart default PXELinux"
     ptable: "Kickstart default"
     medium: "{{ foreman_media.centos.name }}"
     password_hash: SHA512
@@ -43,7 +42,7 @@ foreman_hostgroups:
     operatingsystem: "{{ foreman_os.centos7.name }}"
     medium: "{{ foreman_os.centos7.medium }}"
     ptable: "Kickstart default"
-    pxe_loader: Grub2 UEFI
+    pxe_loader: PXELinux BIOS
     subnet: "{{ nets.management.network }}/{{ nets.management.netmask }}"
     domain: "{{ base_domain }}"
     root_pass: "{{ users.root.password  | password_hash(foreman_os.centos7.password_hash | lower) }}"
