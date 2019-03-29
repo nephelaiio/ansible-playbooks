@@ -197,6 +197,7 @@
             root_pass: "{{ inventory_hostgroup.root_pass | default(omit) }}"
             location_ids: "{{ item.foreman_locations | default([]) | map('extract', foreman_location_dict) | map(attribute='id') | list }}"
             organization_ids: "{{ item.foreman_organizations | default([]) | map('extract', foreman_organization_dict) | map(attribute='id') | list }}"
+            group_parameters_attributes: "{{ item.group_parameters_attributes | default(omit) }}"
         user: "{{ foreman_api_user }}"
         password: "{{ foreman_api_pass }}"
         force_basic_auth: yes
@@ -234,6 +235,7 @@
           root_pass: "{{ inventory_hostgroup.root_pass | default(omit) }}"
           location_ids: "{{ inventory_hostgroup.foreman_locations | default([]) | map('extract', foreman_location_dict) | map(attribute='id') | list }}"
           organization_ids: "{{ inventory_hostgroup.foreman_organizations | default([]) | map('extract', foreman_organization_dict) | map(attribute='id') | list }}"
+          group_parameters_attributes: "{{ inventory_hostgroup.group_parameters_attributes | default(omit) }}"
       loop_control:
         label: "{{ item.name }}"
       with_items: "{{ foreman_hostgroup_results }}"

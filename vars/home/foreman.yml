@@ -50,5 +50,20 @@ foreman_hostgroups:
       - "{{ foreman_organizations.nephelai.name }}"
     foreman_locations:
       - "{{ foreman_locations.home.name }}"
+    group_parameters_attributes:
+      - name: selinux-mode
+        value: disabled
+      - name: disable-firewall
+        value: true
+      - name: enable-epel
+        value: false
+      - name: remote_execution_ssh_user
+        value: "{{ users.teddyphreak.username }}"
+      - name: remote_execution_ssh_keys
+        value: "{{ users.teddyphreak.pubkey }}"
+      - name: remote_execution_create_user
+        value: true
+      - name: remote_execution_effective_user_method
+        value: sudo
 foreman_domains: "{{ dns.zones.values() | list }}"
 foreman_networks: "{{ nets.values() | list | selectattr('foreman_proxy', 'defined') | list }}" 
