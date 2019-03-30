@@ -58,11 +58,6 @@
 
           when: ansible_os_family == 'RedHat'
 
-        - name: upgrade pip
-          package:
-            name: python-pip
-            state: latest
-
       when:
         - ! (unreachable | default('no'))
         - ansible_os_family is defined
