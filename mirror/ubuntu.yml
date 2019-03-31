@@ -11,6 +11,7 @@
 
     ubuntu_mirror_thread_num: 20
     ubuntu_mirror_thread_speed: 10k
+    ubuntu_rsync_bw: 256k
     ubuntu_mirror_root: "{{ mirror_root }}/{{ ubuntu_mirror_dir }}"
     ubuntu_mirror_host: archive.ubuntu.com
     ubuntu_mirror_list: /etc/apt/mirror.ubuntu.list
@@ -81,6 +82,7 @@
           - i386
         mirrors:
           - "http://{{ ubuntu_mirror_host }}/ubuntu xenial main restricted universe multiverse"
+          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial main restricted universe multiverse"
           - "http://{{ ubuntu_mirror_host }}/ubuntu xenial-security main restricted universe multiverse"
           - "http://{{ ubuntu_mirror_host }}/ubuntu xenial-updates main restricted universe multiverse"
           - "http://{{ ubuntu_mirror_host }}/ubuntu bionic main restricted universe multiverse"
@@ -102,6 +104,10 @@
           #!/usr/bin/env bash
 
           flock -n /tmp/ubuntu-mirror apt-mirror {{ ubuntu_mirror_list }}
+          mkdir -p {{ ubuntu_mirror_root }}/dists/xenial/main
+          flock -n /tmp/ubuntu-mirror rsync -av -P --bwlimit={{ ubuntu_rsync_bw }} rsync://{{ ubuntu_mirror_host }}/ubuntu/dists/xenial/main/installer-* {{ ubuntu_mirror_root }}/dists/xenial/main
+          mkdir -p {{ ubuntu_mirror_root }}/dists/bionic/main
+          flock -n /tmp/ubuntu-mirror rsync -av -P --bwlimit={{ ubuntu_rsync_bw }} rsync://{{ ubuntu_mirror_host }}/ubuntu/dists/bionic/main/installer-* {{ ubuntu_mirror_root }}/dists/bionic/main
         dest: "{{ ubuntu_update_bin }}"
         owner: root
         group: root

@@ -11,11 +11,18 @@ set nthreads          {{ threads | default('20') }}
 set _tilde            0
 set limit_speed       {{ thread_speed | default('10k') }}
 
-{% for arch in arches %}
-{% for mirror in mirrors %}
+{% if arches | default([]) | length > 0 %}
+{%   for arch in arches %}
+{%     for mirror in mirrors %}
 deb-{{ arch }} {{ mirror }}
 deb-src {{ mirror }}
-{% endfor %}
-{% endfor %}
+{%     endfor %}
+{%   endfor %}
+{% else %}
+{%   for mirror in mirrors %}
+deb {{ mirror }}
+deb-src {{ mirror }}
+{%   endfor %}
+{% endif %}
 
 {{ extra_config | default('') }}
