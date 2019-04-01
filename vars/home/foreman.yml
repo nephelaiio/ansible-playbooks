@@ -24,6 +24,18 @@ foreman_media:
     foreman_locations:
       - "{{ foreman_locations.home.name }}"
 foreman_os:
+  bionic:
+    name: Ubuntu
+    architecture: x86_64
+    major: 18.04
+    release_name: bionic
+    provisioning_templates:
+      - "Preseed default"
+      - "Preseed default finish"
+      - "Preseed default PXELinux"
+    ptable: "Preseed default"
+    medium: "{{ foreman_media.ubuntu.name }}"
+    password_hash: SHA512
   centos7:
     name: CentOS
     architecture: x86_64
@@ -36,12 +48,33 @@ foreman_os:
     medium: "{{ foreman_media.centos.name }}"
     password_hash: SHA512
 foreman_hostgroups:
-  nuc:
-    name: NUC
+  bionic:
+    name: Ubuntu Bionic
+    architecture: x86_64
+    operatingsystem: "{{ foreman_os.bionic.name }}"
+    medium: "{{ foreman_os.bionic.medium }}"
+    pxe_loader: PXELinux BIOS
+    subnet: "{{ nets.management.network }}/{{ nets.management.netmask }}"
+    domain: "{{ base_domain }}"
+    root_pass: "{{ users.root.password  | password_hash(foreman_os.bionic.password_hash | lower) }}"
+    foreman_organizations:
+      - "{{ foreman_organizations.nephelai.name }}"
+    foreman_locations:
+      - "{{ foreman_locations.home.name }}"
+    group_parameters_attributes:
+      - name: remote_execution_ssh_user
+        value: "{{ users.teddyphreak.username }}"
+      - name: remote_execution_ssh_keys
+        value: "{{ users.teddyphreak.pubkey }}"
+      - name: remote_execution_create_user
+        value: true
+      - name: remote_execution_effective_user_method
+        value: sudo
+  centos7:
+    name: CentOS7
     architecture: x86_64
     operatingsystem: "{{ foreman_os.centos7.name }}"
     medium: "{{ foreman_os.centos7.medium }}"
-    ptable: "Kickstart default"
     pxe_loader: PXELinux BIOS
     subnet: "{{ nets.management.network }}/{{ nets.management.netmask }}"
     domain: "{{ base_domain }}"
