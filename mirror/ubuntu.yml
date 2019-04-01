@@ -10,13 +10,15 @@
   vars:
 
     ubuntu_mirror_thread_num: 20
-    ubuntu_mirror_thread_speed: 10k
-    ubuntu_rsync_bw: 256k
+    ubuntu_mirror_thread_speed: 50k
+    ubuntu_rsync_bw: 1M
     ubuntu_mirror_root: "{{ mirror_root }}/{{ ubuntu_mirror_dir }}"
     ubuntu_mirror_host: archive.ubuntu.com
     ubuntu_mirror_list: /etc/apt/mirror.ubuntu.list
     ubuntu_vhost_path: "{{ web_root }}/{{ ubuntu_mirror_dir }}"
     ubuntu_update_bin: /usr/local/bin/ubuntu-update
+    ubuntu_mirror_distros:
+      - bionic
 
   roles:
 
@@ -56,8 +58,7 @@
     - name: install mirror packages
       package:
         name:
-          - apt-mirror
-          - apt-transport-https
+          - rsync
           - util-linux
           - wget
 
@@ -72,29 +73,14 @@
         - "{{ ubuntu_mirror_root }}"
 
     - name: manage ubuntu mirror configuration
-      template:
-        src: mirror.list.j2
+      file:
         dest: "{{ ubuntu_mirror_list }}"
-      vars:
-        base_path: "{{ ubuntu_mirror_root }}"
-        arches:
-          - amd64
-          - i386
-        mirrors:
-          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial main restricted universe multiverse"
-          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial main restricted universe multiverse"
-          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial-security main restricted universe multiverse"
-          - "http://{{ ubuntu_mirror_host }}/ubuntu xenial-updates main restricted universe multiverse"
-          - "http://{{ ubuntu_mirror_host }}/ubuntu bionic main restricted universe multiverse"
-          - "http://{{ ubuntu_mirror_host }}/ubuntu bionic-security main restricted universe multiverse"
-          - "http://{{ ubuntu_mirror_host }}/ubuntu bionic-updates main restricted universe multiverse"
-        threads: "{{ ubuntu_mirror_thread_num }}"
-        thread_speed: "{{ ubuntu_mirror_thread_speed }}"
+        state: absent
 
     - name: create ubuntu mirror link
       file:
-        path: "{{ web_root }}/{{ ubuntu_mirror_dir }}"
-        src: "{{ ubuntu_mirror_root }}/mirror/{{ ubuntu_mirror_host }}/ubuntu"
+        path: "{{ ubuntu_vhost_path }}"
+        src: "{{ ubuntu_mirror_root }}"
         state: link
         force: yes
 
@@ -103,11 +89,12 @@
         content: |
           #!/usr/bin/env bash
 
-          flock -n /tmp/ubuntu-mirror apt-mirror {{ ubuntu_mirror_list }}
-          mkdir -p {{ ubuntu_mirror_root }}/dists/xenial/main
-          flock -n /tmp/ubuntu-mirror rsync -av -P --bwlimit={{ ubuntu_rsync_bw }} rsync://{{ ubuntu_mirror_host }}/ubuntu/dists/xenial/main/installer-* {{ ubuntu_mirror_root }}/dists/xenial/main
-          mkdir -p {{ ubuntu_mirror_root }}/dists/bionic/main
-          flock -n /tmp/ubuntu-mirror rsync -av -P --bwlimit={{ ubuntu_rsync_bw }} rsync://{{ ubuntu_mirror_host }}/ubuntu/dists/bionic/main/installer-* {{ ubuntu_mirror_root }}/dists/bionic/main
+          for distro in {{ ubuntu_mirror_distros | join(' ') }} ; do
+            RSYNC_MAIN_SOURCE="rsync://{{ ubuntu_mirror_host }}/ubuntu/dists/$distro*"
+            MAIN_ROOT="{{ ubuntu_mirror_root }}/dists"
+            mkdir -p $MAIN_ROOT
+            flock -n /tmp/ubuntu-mirror rsync -av -P --bwlimit={{ ubuntu_rsync_bw }} --exclude "*-proposed" $RSYNC_MAIN_SOURCE $MAIN_ROOT
+          done;
         dest: "{{ ubuntu_update_bin }}"
         owner: root
         group: root
@@ -131,7 +118,7 @@
 
     - name: add ubuntu mirror update cronjob
       cron:
-        name: 'update ubuntu apt-mirror cache'
+        name: 'update ubuntu mirror cache'
         job: "{{ ubuntu_update_bin }}"
         special_time: daily
 
