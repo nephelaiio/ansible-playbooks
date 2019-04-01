@@ -91,7 +91,9 @@
       vars:
         domain_location_ids: "{{ item.foreman_locations | default([]) | map('extract', foreman_location_dict) | map(attribute='id') | list }}"
         domain_organization_ids: "{{ item.foreman_organizations | default([]) | map('extract', foreman_organization_dict) | map(attribute='id') | list }}"
-      with_items: "{{ foreman_domains }}"
+      loop_control:
+        label: "{{ item.name }}"
+      loop: "{{ foreman_domains | flatten(levels=1) }}"
       when: item.name not in foreman_domain_names
 
     - name: update foreman domains

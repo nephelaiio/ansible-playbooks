@@ -248,6 +248,8 @@
         password: "{{ foreman_api_pass }}"
         force_basic_auth: yes
         status_code: 200
+      loop_control:
+        label: "{{ item.name }}"
       loop: "{{ foreman_os_results | flatten(levels=1) }}"
       register: foreman_os_deftemplate_query
       tags:
