@@ -23,6 +23,26 @@ foreman_media:
       - "{{ foreman_organizations.nephelai.name }}"
     foreman_locations:
       - "{{ foreman_locations.home.name }}"
+foreman_ptables:
+  kickstart_custom:
+    name: Kickstart custom
+    layout: |
+      <%#
+      kind: ptable
+      name: Kickstart custom
+      model: Ptable
+      oses:
+      - CentOS
+      - Fedora
+      - RedHat
+      %>
+      <%
+        partitioning_disk = host_param('install-disk') ? '--drives=' + host_param('install-disk') : ''
+      -%>
+      zerombr
+      clearpart <%= partitioning_disk %> --initlabel --all
+      autopart
+    os_family: Redhat
 foreman_os:
   bionic:
     name: Ubuntu
@@ -44,7 +64,7 @@ foreman_os:
       - "Kickstart default"
       - "Kickstart default finish"
       - "Kickstart default PXELinux"
-    ptable: "Kickstart default"
+    ptable: "{{ foreman_ptables.kickstart_custom.name }}"
     medium: "{{ foreman_media.centos.name }}"
     password_hash: SHA512
 foreman_hostgroups:
@@ -70,6 +90,10 @@ foreman_hostgroups:
         value: true
       - name: remote_execution_effective_user_method
         value: sudo
+      - name: install-disk
+        value: /dev/nvme0n1
+      - name: partitioning-vg-name
+        value: ubuntu
   centos7:
     name: CentOS7
     architecture: x86_64
@@ -98,5 +122,7 @@ foreman_hostgroups:
         value: true
       - name: remote_execution_effective_user_method
         value: sudo
+      - name: install-disk
+        value: /dev/nvme0n1
 foreman_domains: "{{ dns.zones.values() | list }}"
 foreman_networks: "{{ nets.values() | list | selectattr('foreman_proxy', 'defined') | list }}" 
