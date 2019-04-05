@@ -5,3 +5,8 @@ variables: "vars/{{ inventory }}"
 base_domain: home.nephelai.io
 kubeadm_enabled: yes
 k8s_cluster_name: kube.home.nephelai.io
+raspbian_image_url: http://downloads.raspberrypi.org/raspbian_lite/images/raspbian_lite-2018-06-29/2018-06-27-raspbian-stretch-lite.zip
+kvm_image_default:
+  url: https://cloud-images.ubuntu.com/bionic/current/bionic-server-cloudimg-amd64.img
+  pool: default
+  format: qcow2

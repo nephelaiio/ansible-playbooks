@@ -38,11 +38,11 @@
 
     - name: define raspbian image archive
       set_fact:
-        raspbian_local_image: "{{ raspbian_image_path }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
+        raspbian_local_image: "{{ raspbian_image_path }}/{{ raspbian_url | urlsplit('path') | basename }}"
 
     - name: fetch raspbian source image
       get_url:
-        url: "{{ archive_url }}/{{ archive_mirror_dir }}/{{ raspbian_release.url | urlsplit('path') | basename }}"
+        url: "{{ raspbian_image_url }}"
         dest: "{{ raspbian_local_image | realpath }}"
 
     - name: create raspbian images

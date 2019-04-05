@@ -19,7 +19,7 @@
     - name: build vm img and iso definitions
       set_fact:
         iso: "{{ kvm_pools[kvm_profile.pool].path }}/cloud_init_{{ guest_name }}.iso"
-        img: "{{ kvm_image | default(kvm_images[kvm_profile.image]) }}"
+        img: "{{ kvm_image | default(kvm_image_default) }}"
 
     - block:
 
@@ -83,17 +83,24 @@
 
         - name: set vm target disk path var
           set_fact:
+            local_vm_img: "/tmp/{{ img.url | basename }}"
             vm_img: "{{ tmpdir.path }}/{{ img.url | basename }}"
             vm_disk: "{{ pool | default(kvm_profile.pool) }}/{{ guest_name }}.img"
 
         - name: fetch vm image
           get_url:
             url: "{{ img.url }}"
-            dest: "{{ vm_img }}"
+            dest: "{{ local_vm_img }}"
             mode: 0666
             timeout: 60
           register: fetch_image
           retries: 5
+
+        - name: copy vm image
+          copy: 
+            src: "/tmp/{{ img.url | basename }}"
+            dest: "{{ tmpdir.path }}/{{ img.url | basename }}"
+            remote_src: yes
 
         - name: extract vm image
           command: "xz -k -d {{ vm_img }}"
@@ -136,9 +143,9 @@
             ssh_key: "{{ ansible_guest_ssh_key }}"
             hostname: "{{ guest_name }}"
             fqdn: "{{ inventory_hostname }}"
-            apt_mirror_host: "{{ apt_mirror | default(ubuntu_url | urlsplit('hostname')) }}"
-            yum_mirror_host: "{{ centos_mirror | default(centos_url | urlsplit('hostname')) }}"
-            epel_mirror_host: "{{ centos_url | default(epel_url | urlsplit('hostname')) }}"
+            ubuntu_mirror_host: "{{ ubuntu_mirror | default(omit) }}"
+            yum_mirror_host: "{{ centos_mirror | default(omit) }}"
+            epel_mirror_host: "{{ epel_mirror | default(omit) }}"
             image: "{{ kvm_profile.image }}"
           when: diskcopy.changed
           become: no
@@ -196,6 +203,7 @@
             disk: "{{ vm_disk }}"
             profile: "{{ kvm_profile }}"
             bridge: "{{ nets[kvm_profile.network].bridge }}"
+            image_format: "{{ (kvm_image | default(kvm_image_default)).format }}"
           become: no
 
         - name: get vm template contents

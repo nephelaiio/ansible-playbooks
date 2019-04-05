@@ -13,7 +13,6 @@
     ubuntu_mirror_thread_speed: 50k
     ubuntu_rsync_bw: 1M
     ubuntu_mirror_root: "{{ mirror_root }}/{{ ubuntu_mirror_dir }}"
-    ubuntu_mirror_host: archive.ubuntu.com
     ubuntu_mirror_list: /etc/apt/mirror.ubuntu.list
     ubuntu_vhost_path: "{{ web_root }}/{{ ubuntu_mirror_dir }}"
     ubuntu_update_bin: /usr/local/bin/ubuntu-update
@@ -97,7 +96,7 @@
             flock -n /tmp/ubuntu-mirror rsync -av -P --bwlimit={{ ubuntu_rsync_bw }} --exclude "*-proposed" $RSYNC_MAIN_SOURCE $MAIN_ROOT
           done;
 
-          RSYNC_MAIN_SOURCE="rsync://{{ ubuntu_mirror_host }}/ubuntu/pool"
+          RSYNC_POOL_SOURCE="rsync://{{ ubuntu_mirror_host }}/ubuntu/pool"
           POOL_ROOT="{{ ubuntu_mirror_root }}/pool"
           mkdir -p $POOL_ROOT
           flock -n /tmp/ubuntu-mirror rsync -av -P --bwlimit={{ ubuntu_rsync_bw }} $RSYNC_POOL_SOURCE $POOL_ROOT

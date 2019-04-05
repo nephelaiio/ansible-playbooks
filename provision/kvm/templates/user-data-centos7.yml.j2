@@ -3,6 +3,9 @@ packages:
   - python
   - nfs-utils
   - python-pip
+{% if epel_mirror_host is not defined %}
+  - epel-release
+{% %}
 package_update: true
 package_upgrade: true
 package_reboot_if_required: true

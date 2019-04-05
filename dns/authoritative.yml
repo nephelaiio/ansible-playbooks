@@ -32,15 +32,6 @@
       tags:
         - always
 
-    - name: bootstrap host file entries
-      lineinfile:
-        dest: /etc/hosts
-        line: "{{ item }}"
-      with_items:
-        - "{{ hostvars[groups['mirror'] | first].ansible_host }} {{ ubuntu_url | urlsplit('hostname') }}"
-        - "{{ hostvars[groups['mirror'] | first].ansible_host }} {{ centos_url | urlsplit('hostname') }}"
-        - "{{ hostvars[groups['mirror'] | first].ansible_host }} {{ archive_url | urlsplit('hostname') }}"
-
     - name: install python pip
       package:
         name: python-pip

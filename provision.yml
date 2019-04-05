@@ -1,11 +1,11 @@
 ---
-- import_playbook: provision/nuc.yml
-
-- import_playbook: provision/raspbian.yml
+- import_playbook: foreman.yml
 
 - import_playbook: provision/kvm_hosts.yml
 
 - import_playbook: provision/kvm_guests.yml
+
+- import_playbook: provision/raspbian.yml
 
 - import_playbook: provision/aws.yml
 
