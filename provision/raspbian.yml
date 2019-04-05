@@ -38,7 +38,7 @@
 
     - name: define raspbian image archive
       set_fact:
-        raspbian_local_image: "{{ raspbian_image_path }}/{{ raspbian_url | urlsplit('path') | basename }}"
+        raspbian_local_image: "/tmp/{{ raspbian_image_url | urlsplit('path') | basename }}"
 
     - name: fetch raspbian source image
       get_url:
