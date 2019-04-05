@@ -1,9 +1,0 @@
-Listen {{ mirror_port | default('80') }}
-
-<VirtualHost *:{{ mirror_port | default('80') }}>
-  ServerName {{ mirror_servername }}
-  DocumentRoot {{ mirror_root | default('/var/www/html') }}
-
-  ErrorLog ${APACHE_LOG_DIR}/{{ proxy_error_log | default('mirror-error.log') }}
-  CustomLog ${APACHE_LOG_DIR}/{{ proxy_access_log | default('mirror-access.log') }} combined
-</VirtualHost>
