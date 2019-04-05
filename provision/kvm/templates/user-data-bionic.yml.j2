@@ -26,7 +26,7 @@ apt:
   primary:
     - arches:
         - amd64
-{% if ubuntu_mirror_host is defined %}
+{% if ubuntu_mirror_host is defined and ubuntu_mirror_host != '' %}
       uri: http://{{ ubuntu_mirror_host }}/ubuntu/
   disable_suites:
     - backports

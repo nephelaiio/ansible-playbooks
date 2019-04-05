@@ -143,9 +143,9 @@
             ssh_key: "{{ ansible_guest_ssh_key }}"
             hostname: "{{ guest_name }}"
             fqdn: "{{ inventory_hostname }}"
-            ubuntu_mirror_host: "{{ ubuntu_mirror | default(omit) }}"
-            yum_mirror_host: "{{ centos_mirror | default(omit) }}"
-            epel_mirror_host: "{{ epel_mirror | default(omit) }}"
+            ubuntu_mirror_host: "{{ ubuntu_mirror | default('') }}"
+            yum_mirror_host: "{{ centos_mirror | default('') }}"
+            epel_mirror_host: "{{ epel_mirror | default('') }}"
             image: "{{ kvm_profile.image }}"
           when: diskcopy.changed
           become: no
