@@ -167,3 +167,4 @@
       loop_control:
         label: "{{ item.network }}"
       loop: "{{ foreman_networks | flatten(levels=1) }}"
+      when: foreman_subnet.name in foreman_subnet_names
