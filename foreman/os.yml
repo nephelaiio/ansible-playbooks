@@ -123,6 +123,13 @@
         foreman_os_results: "{{ foreman_os_query.json.results }}"
         foreman_os_names: "{{ foreman_os_query.json.results | map(attribute='name') | list }}"
 
+    - name: set operating system dict
+      set_fact:
+        foreman_os_dict: "{{ (foreman_os_dict | default({})) | combine({ item.name: item}) }}"
+      loop_control:
+        label: "{{ item.name }}"
+      loop: "{{ foreman_os_results | flatten(levels=1) }}"
+
     - name: create foreman operating systems
       uri:
         url: "{{ foreman_url }}/api/operatingsystems"
@@ -207,6 +214,31 @@
       loop_control:
         label: "{{ item }}"
       loop: "{{ os_details.values() | selectattr('provisioning_templates', 'defined') | map(attribute='provisioning_templates') | flatten | list }}"
+
+    - debug:
+        msg: "{{ foreman_ptables.values() | map(attribute='name') }}"
+
+    - name: update foreman ptables
+      uri:
+        url: "{{ foreman_url }}/api/ptables/{{ ptable_id }}"
+        method: PUT
+        body_format: json
+        body:
+          ptable:
+            id: "{{ ptable_id }}"
+            operatingsystem_ids: "{{ os_ids }}"
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
+      vars:
+        os_names: "{{ foreman_os.values() | selectattr('ptable', 'defined') | selectattr('ptable', 'equalto', item) | map(attribute='name') | list }}"
+        os_ids: "{{ os_names | map('extract', foreman_os_dict) | map(attribute='id') | list }}"
+        ptable_id: "{{ foreman_ptable_results | selectattr('name', 'equalto', item) | map(attribute='id') | first }}"
+      loop_control:
+        label: "{{ item }}"
+      loop: "{{ os_details.values() | selectattr('ptable', 'defined') | map(attribute='ptable') | flatten | list }}"
+      when: item in (foreman_ptables.values() | map(attribute='name'))
 
     - name: update foreman operating systems
       uri:

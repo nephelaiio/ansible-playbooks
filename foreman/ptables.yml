@@ -39,11 +39,13 @@
         method: POST
         body_format: json
         body:
-          ptable: "{{ item }}"
+          ptable: "{{ ptable }}"
         user: "{{ foreman_api_user }}"
         password: "{{ foreman_api_pass }}"
         force_basic_auth: yes
         status_code: 201
+      vars:
+        ptable: "{{ item }}"
       loop_control:
         label: "{{ item.name }}"
       loop: "{{ foreman_ptables.values() | flatten(levels=1) }}"
@@ -55,13 +57,14 @@
         method: PUT
         body_format: json
         body:
-          ptable: "{{ inventory_ptable }}"
+          ptable: "{{ ptable }}"
         user: "{{ foreman_api_user }}"
         password: "{{ foreman_api_pass }}"
         force_basic_auth: yes
         status_code: 200
       vars:
-        inventory_ptable:  "{{ foreman_ptables.values() | selectattr('name', 'equalto', item.name) | first }}"
+        inventory_ptable: "{{ foreman_ptables.values() | list | selectattr('name', 'equalto', item.name) | first }}"
+        ptable: "{{ item | combine(inventory_ptable) }}"
       loop_control:
         label: "{{ item.name }}"
       loop: "{{ foreman_ptable_results | flatten(levels=1) }}"
