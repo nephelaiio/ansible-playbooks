@@ -13,6 +13,8 @@
 
 - import_playbook: foreman/ptables.yml
 
+- import_playbook: foreman/provisioning_templates.yml
+
 - import_playbook: foreman/os.yml
 
 - import_playbook: foreman/hostgroups.yml

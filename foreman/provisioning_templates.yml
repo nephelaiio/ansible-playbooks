@@ -1,0 +1,121 @@
+---
+- name: Configure foreman provisioning templates
+
+  hosts: foreman_app
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: query foreman organizations
+      uri:
+        url: "{{ foreman_url }}/api/organizations"
+        method: GET
+        body_format: json
+        body:
+          per_page: "{{ foreman_api_allpages }}"
+        force_basic_auth: yes
+        user: "{{ foreman_admin_user }}"
+        password: "{{ foreman_admin_pass }}"
+      register: foreman_organization_query
+
+    - name: query foreman locations
+      uri:
+        url: "{{ foreman_url }}/api/locations"
+        method: GET
+        body_format: json
+        body:
+          per_page: "{{ foreman_api_allpages }}"
+        force_basic_auth: yes
+        user: "{{ foreman_admin_user }}"
+        password: "{{ foreman_admin_pass }}"
+      register: foreman_location_query
+
+    - name: set organization/location facts
+      set_fact:
+        foreman_organization_results: "{{ foreman_organization_query.json.results }}"
+        foreman_location_results: "{{ foreman_location_query.json.results }}"
+
+    - name: query template kinds
+      uri:
+        url: "{{ foreman_url }}/api/template_kinds"
+        method: GET
+        body_format: json
+        body:
+          per_page: "{{ foreman_api_allpages }}"
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
+      register: foreman_template_kind_query
+
+    - name: set template kind facts
+      set_fact:
+        foreman_template_kind_results: "{{ foreman_template_kind_query.json.results }}"
+
+    - debug:
+        var: foreman_template_kind_results
+
+    - name: query provisioning templates
+      uri:
+        url: "{{ foreman_url }}/api/provisioning_templates"
+        method: GET
+        body_format: json
+        body:
+          per_page: "{{ foreman_api_allpages }}"
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
+      register: foreman_ptemplate_query
+
+    - name: set provisioning template facts
+      set_fact:
+        foreman_ptemplate_results: "{{ foreman_ptemplate_query.json.results }}"
+        foreman_ptemplate_names: "{{ foreman_ptemplate_query.json.results | map(attribute='name') | list }}"
+
+    - name: create foreman provisioning templates
+      uri:
+        url: "{{ foreman_url }}/api/provisioning_templates"
+        method: POST
+        body_format: json
+        body:
+          provisioning_template: "{{ provisioning_template }}"
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 201
+      vars:
+        kind_id: "{{ foreman_template_kind_results | selectattr('name', 'equalto', item.kind) | map(attribute='id') | first }}"
+        provisioning_template: "{{ item | combine({'template_kind_id': kind_id }) }}"
+      loop_control:
+        label: "{{ item.name }}"
+      loop: "{{ foreman_provisioning_templates.values() | flatten(levels=1) }}"
+      when: item.name not in foreman_ptemplate_names
+
+    - name: update foreman ptables
+      uri:
+        url: "{{ foreman_url }}/api/provisioning_templates/{{ provisioning_template.id }}"
+        method: PUT
+        body_format: json
+        body:
+          provisioning_template: "{{ provisioning_template }}"
+        user: "{{ foreman_api_user }}"
+        password: "{{ foreman_api_pass }}"
+        force_basic_auth: yes
+        status_code: 200
+      vars:
+        foreman_ptemplate: "{{ foreman_ptemplate_results | selectattr('name', 'equalto', item.name) | first }}"
+        provisioning_template: "{{ foreman_ptemplate | combine(item) }}"
+      loop_control:
+        label: "{{ item.name }}"
+      loop: "{{ foreman_provisioning_templates.values() | flatten(levels=1) }}"
+      when: item.name in (foreman_ptemplate_names)
