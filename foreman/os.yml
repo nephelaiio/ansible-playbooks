@@ -215,9 +215,6 @@
         label: "{{ item }}"
       loop: "{{ os_details.values() | selectattr('provisioning_templates', 'defined') | map(attribute='provisioning_templates') | flatten | list }}"
 
-    - debug:
-        msg: "{{ foreman_ptables.values() | map(attribute='name') }}"
-
     - name: update foreman ptables
       uri:
         url: "{{ foreman_url }}/api/ptables/{{ ptable_id }}"
