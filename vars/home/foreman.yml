@@ -92,7 +92,7 @@ foreman_hostgroups:
 
 foreman_domains: "{{ dns.zones.values() | list }}"
 
-foreman_networks: "{{ nets.values() | list | selectattr('foreman_proxy', 'defined') | list }}" 
+foreman_networks: "{{ nets.values() | list | selectattr('foreman_proxy', 'defined') | list }}"
 
 foreman_ptables:
   kickstart_custom:

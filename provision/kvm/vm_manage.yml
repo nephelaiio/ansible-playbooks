@@ -97,7 +97,7 @@
           retries: 5
 
         - name: copy vm image
-          copy: 
+          copy:
             src: "/tmp/{{ img.url | basename }}"
             dest: "{{ tmpdir.path }}/{{ img.url | basename }}"
             remote_src: yes

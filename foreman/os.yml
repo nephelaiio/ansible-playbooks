@@ -184,7 +184,7 @@
         inventory: "{{ item.0 }}"
         foreman: "{{ item.1 }}"
       when: inventory.name == foreman.name
-      loop_control: 
+      loop_control:
         label: "{{ item.0.name }}"
       loop: "{{ foreman_os.values() | product(foreman_os_query.json.results) | list }}"
 

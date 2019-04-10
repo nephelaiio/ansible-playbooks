@@ -1,3 +1,4 @@
+---
 - name: Configure foreman networks
 
   hosts: foreman_app
@@ -118,4 +119,3 @@
         label: "{{ item.name }}"
       loop: "{{ foreman_domain_results | flatten(levels=1) }}"
       when: item.name in foreman_domain_names
-
