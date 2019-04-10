@@ -1,86 +1,53 @@
 ---
 - src: ahuffman.resolv
   version: 1.3.1
+- src: elastic.elasticsearch
+  version: 6.2.4
 - src: geerlingguy.apache
   version: 3.0.0
-- src: geerlingguy.nginx
-  version: 2.6.0
-- src: geerlingguy.java
-  version: 1.8.0
-- src: geerlingguy.ntp
-  version: 1.6.0
-- src: geerlingguy.mysql
-  version: 2.9.0
-- src: geerlingguy.php
-  version: 3.7.0
 - src: geerlingguy.composer
   version: 1.7.0
-- src: geerlingguy.postgresql
-  version: 1.4.3
 - src: geerlingguy.docker
   version: 2.5.1
+- src: geerlingguy.java
+  version: 1.8.0
+- src: geerlingguy.nginx
+  version: 2.6.0
+- src: geerlingguy.mysql
+  version: 2.9.0
+- src: geerlingguy.ntp
+  version: 1.6.0
+- src: geerlingguy.php
+  version: 3.7.0
+- src: geerlingguy.pip
+  version: 1.3.0
 - src: geerlingguy.passenger
   version: 1.2.0
+- src: geerlingguy.postgresql
+  version: 1.4.3
+- src: geerlingguy.repo-epel
+  version: 1.2.3
 - src: PowerDNS.pdns_recursor
   version: v1.1.0
 - src: PowerDNS.pdns
   version: v1.4.0
-- src: Stouts.openvpn
-  version: 2.4.1
-- src: https://github.com/nephelaiio/ansible-role-plugins.git
-  name: nephelaiio.plugins
+- src: nephelaiio.plugins
   version: 1.0.9
-- src: https://github.com/nephelaiio/ansible-role-vim.git
-  name: nephelaiio.vim
-  version: 2.0.1
-- src: https://github.com/nephelaiio/ansible-role-tree.git
-  name: nephelaiio.tree
-  version: 1.0.2
-- src: https://github.com/nephelaiio/ansible-role-devtools.git
-  name: nephelaiio.devtools
+- src: nephelaiio.devtools
   version: 2.0.0
-- src: https://github.com/nephelaiio/ansible-role-rbenv.git
-  name: nephelaiio.rbenv
+- src: nephelaiio.nfs
   version: 2.0.2
-- src: https://github.com/nephelaiio/ansible-role-pyenv.git
-  name: nephelaiio.pyenv
-  version: 1.0.10
-- src: https://github.com/nephelaiio/ansible-role-nfs.git
-  name: nephelaiio.nfs
-  version: 2.0.2
-- src: https://github.com/nephelaiio/ansible-role-tmux.git
-  name: nephelaiio.tmux
-  version: 2.0.2
-- src: https://github.com/nephelaiio/ansible-role-vagrant.git
-  name: nephelaiio.vagrant
+- src: nephelaiio.unifi-controller
   version: 2.0.0
-- src: https://github.com/nephelaiio/ansible-role-i3.git
-  name: nephelaiio.i3
-  version: 1.0.4
-- src: https://github.com/nephelaiio/ansible-role-pip.git
-  name: nephelaiio.pip
-  version: 2.0.2
-- src: https://github.com/nephelaiio/ansible-role-docker.git
-  name: nephelaiio.docker
-  version: 2.1.0
-- src: https://github.com/nephelaiio/ansible-role-nfs.git
-  name: nephelaiio.unifi-controller
-  version: 2.0.0
-- src: https://github.com/nephelaiio/ansible-role-golang.git
-  name: nephelaiio.golang
+- src: nephelaiio.golang
   version: 1.0.1
-- src: https://github.com/nephelaiio/ansible-role-ubuntu-installer.git
-  name: nephelaiio.ubuntu-installer
-  version: 2.2.0
-- src: https://github.com/nephelaiio/ansible-role-centos-installer.git
-  name: nephelaiio.centos-installer
+- src: nephelaiio.ubuntu-installer
+  version: 2.2.5
+- src: nephelaiio.centos-installer
   version: 2.0.7
-- src: https://github.com/Graylog2/graylog-ansible-role.git
-  name: graylog2.graylog
-  version: 2.4.0
-- src: https://github.com/elastic/ansible-elasticsearch.git
-  name: elastic.elasticsearch
-  version: 6.2.4
 - src: https://github.com/dj-wasabi/ansible-telegraf
   name: dj_wasabi.telegraf
   version: 0.9.0
+- src: https://github.com/Stouts/Stouts.openvpn.git
+  name: Stouts.openvpn
+  version: 2.4.1
