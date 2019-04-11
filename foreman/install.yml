@@ -14,30 +14,26 @@
     # external variables
     route53_access_key_id: "{{ aws_access_key_id }}"
     route53_secret_access_key: "{{ aws_secret_access_key }}"
-    letsencrypt_domain: "{{ foreman_hostname }}"
-    letsencrypt_domain_email: "{{ letsencrypt_email }}"
     # local variables
     nginx_user: www-data
     foreman_db_host: 127.0.0.1
-    # letsencrypt derived variables
-    letsencrypt_basedir: /etc/letsencrypt
-    letsencrypt_certdir: "{{ letsencrypt_basedir }}/live"
-    letsencrypt_keydir: "{{ letsencrypt_basedir }}/keys"
-    letsencrypt_account_keyfile: "{{ letsencrypt_keydir }}/id_rsa.letsencrypt"
-    letsencrypt_zone: "{{ letsencrypt_domain | split_with('.') | tail | join('.') }}"
-    letsencrypt_domain_keyfile: "{{ letsencrypt_keydir }}/id_rsa.{{ letsencrypt_domain }}"
-    letsencrypt_domain_csrfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.csr"
-    letsencrypt_domain_crtfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.crt"
-    letsencrypt_domain_chainfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.chain.crt"
     # foreman app variables
     foreman_permissions_reset: no
     foreman_api_allpages: 9999999999
 
-  tasks:
+  pre_tasks:
 
     - name: include private variables
       include_vars:
         dir: "../{{ variables }}"
+      run_once: yes
+
+    - include_tasks: ../letsencrypt.yml
+      vars:
+        acme_certificate_group_members:
+          - "{{ foreman_group }}"
+
+  tasks:
 
     - name: install foreman apt key
       apt_key:
@@ -113,6 +109,13 @@
         passenger_app_env: production
         passenger_app_root: /usr/share/foreman/public
 
+    - name: fix nginx settings
+      lineinfile:
+        dest: /etc/nginx/nginx.conf
+        regexp: ".*server_names_hash_bucket_size.*"
+        line: "server_names_hash_bucket_size 64;"
+      notify: restart nginx
+
     - name: add nginx user to foreman group
       user:
         name: "{{ nginx_user }}"
@@ -144,110 +147,20 @@
         foreman_url_host: "{{ foreman_hostname }}."
         foreman_url_zone: "{{ foreman_domain }}"
 
-    - name: create letsencrypt folders
-      file:
-        path: "{{ item }}"
-        mode: 0755
-        state: directory
-      with_items:
-        - "{{ letsencrypt_certdir }}"
-        - "{{ letsencrypt_keydir }}"
-
-    - name: create key
-      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_domain_email }}" -f {{ letsencrypt_account_keyfile }} -q -N ""'
-      args:
-        creates: "{{ letsencrypt_account_keyfile }}"
-
-    - name: create domain key
-      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_domain_email }}" -f {{ letsencrypt_domain_keyfile }} -q -N ""'
-      args:
-        creates: "{{ letsencrypt_domain_keyfile }}"
-
-    - name: create csr
-      shell: 'openssl req -new -nodes -key {{ letsencrypt_domain_keyfile }} -out {{ letsencrypt_domain_csrfile }} -subj "/CN={{ letsencrypt_domain }}"'
-      changed_when: false
-
-    - name: create challenge
-      acme_certificate:
-        account_key: "{{ letsencrypt_account_keyfile }}"
-        challenge: dns-01
-        csr: "{{ letsencrypt_domain_csrfile }}"
-        dest: "{{ letsencrypt_domain_crtfile }}"
-        fullchain_dest: "{{ letsencrypt_domain_chainfile }}"
-        terms_agreed: yes
-        acme_directory: https://acme-v01.api.letsencrypt.org/directory
-      register: letsencrypt_challenge
-
-    - name: install pip
-      package:
-        name: python-pip
-
-    - name: install route53 dependencies
-      pip:
-        name: boto
-
-    - name: create route53 txt record for certificate validation
-      route53:
-        command: create
-        aws_access_key: "{{ route53_access_key_id }}"
-        aws_secret_key: "{{ route53_secret_access_key }}"
-        zone: "{{ letsencrypt_zone }}"
-        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_domain }}"
-        retry_interval: 300
-        type: TXT
-        ttl: 7200
-        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
-        wait: yes
-        overwrite: yes
-      when: "'challenge_data' in letsencrypt_challenge"
-      ignore_errors: yes
-
-    - name: wait for txt record propagation
-      pause:
-        seconds: 60
-      when: "'challenge_data' in letsencrypt_challenge"
-
-    - name: validate challenge
-      acme_certificate:
-        account_key: "{{ letsencrypt_account_keyfile }}"
-        challenge: dns-01
-        csr: "{{ letsencrypt_domain_csrfile }}"
-        dest: "{{ letsencrypt_domain_crtfile }}"
-        fullchain_dest: "{{ letsencrypt_domain_chainfile }}"
-        data: "{{ letsencrypt_challenge }}"
-        terms_agreed: yes
-        acme_directory: https://acme-v01.api.letsencrypt.org/directory
-      when: "'challenge_data' in letsencrypt_challenge"
-
-    - name: delete route53 txt record for certificate validation
-      route53:
-        command: delete
-        aws_access_key: "{{ route53_access_key_id }}"
-        aws_secret_key: "{{ route53_secret_access_key }}"
-        zone: "{{ letsencrypt_zone }}"
-        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_zone }}"
-        retry_interval: 300
-        type: TXT
-        ttl: 7200
-        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
-        wait: yes
-      when: "'challenge_data' in letsencrypt_challenge"
-      ignore_errors: yes
-
     - name: create nginx vhost file
       copy:
-        dest: "/etc/nginx/sites-enabled/{{ letsencrypt_domain }}.https.conf"
+        dest: "/etc/nginx/sites-enabled/{{ acme_certificate_domain }}.https.conf"
         content: |
           server {
             listen  443 ssl;
-            server_name {{ letsencrypt_domain }};
+            server_name {{ acme_certificate_domain }};
 
-            access_log /var/log/nginx/{{ letsencrypt_domain }}.access.log;
-            error_log /var/log/nginx/{{ letsencrypt_domain }}.error.log;
+            access_log /var/log/nginx/{{ acme_certificate_domain }}.access.log;
+            error_log /var/log/nginx/{{ acme_certificate_domain }}.error.log;
 
             keepalive_timeout   300;
-            ssl_certificate {{ letsencrypt_domain_chainfile }};
-            ssl_certificate_key {{ letsencrypt_domain_keyfile }};
+            ssl_certificate {{ acme_certificate_domain_chainfile }};
+            ssl_certificate_key {{ acme_certificate_domain_keyfile }};
             ssl_session_cache   shared:SSL:10m;
             ssl_session_timeout 10m;
             ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
@@ -259,7 +172,7 @@
             gzip_types text/css application/javascript text/javascript application/x-javascript image/svg+xml text/plain text/xsd text/xsl text/xml image/x-icon;
 
             location / {
-              proxy_pass http://{{ letsencrypt_domain }}/;
+              proxy_pass http://{{ acme_certificate_domain }}/;
               proxy_http_version 1.1;
               proxy_set_header   Host               $host;
               proxy_set_header   X-Real-IP          $remote_addr;

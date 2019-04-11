@@ -9,11 +9,19 @@
 
     - nephelaiio.plugins
 
-  tasks:
+  pre_tasks:
 
     - name: include private variables
       include_vars:
         dir: "../{{ variables }}"
+      run_once: yes
+
+    - include_tasks: ../letsencrypt.yml
+      vars:
+        acme_certificate_group_members:
+          - "{{ foreman_proxy_group }}"
+
+  tasks:
 
     - name: install foreman apt key
       apt_key:
@@ -29,7 +37,7 @@
     - name: install foreman packages
       package:
         name:
-          - foreman-proxy
+          - "{{ foreman_proxy_user }}"
 
     - name: manage foreman proxy configuration
       copy:
