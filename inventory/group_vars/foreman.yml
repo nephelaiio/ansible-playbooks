@@ -14,7 +14,7 @@ foreman_settings:
   :locations_enabled: false
   :organizations_enabled: false
   :unattended: true
-  :require_ssl: false
+  :require_ssl: true
   :support_jsonp: false
   :mark_translated: false
   :webpack_dev_server: true
@@ -34,3 +34,7 @@ foreman_settings:
     :logger:
       :enabled: false
       :level: 'DEBUG'
+  :ssl_certificate: "{{ acme_certificate_domain_crtfile }}"
+  :ssl_private_key: "{{ acme_certificate_domain_keyfile }}"
+  :ssl_ca_file: "{{ acme_certificate_cafile }}"
+acme_certificate_hostname: "{{ foreman_hostname }}"
