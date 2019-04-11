@@ -1,0 +1,15 @@
+---
+acme_certificate_basedir: /etc/letsencrypt
+acme_certificate_certdir: "{{ acme_certificate_basedir }}/live"
+acme_certificate_keydir: "{{ acme_certificate_basedir }}/keys"
+acme_certificate_account_keyfile: "{{ acme_certificate_keydir }}/id_rsa.letsencrypt"
+acme_certificate_domain: "{{ acme_certificate_hostname }}"
+acme_certificate_zone: "{{ acme_certificate_hostname | split_with('.') | tail | join('.') }}"
+acme_certificate_domain_keyfile: "{{ acme_certificate_keydir }}/id_rsa.{{ acme_certificate_domain }}"
+acme_certificate_domain_csrfile: "{{ acme_certificate_certdir }}/{{ acme_certificate_domain }}.csr"
+acme_certificate_domain_crtfile: "{{ acme_certificate_certdir }}/{{ acme_certificate_domain }}.crt"
+acme_certificate_domain_chainfile: "{{ acme_certificate_certdir }}/{{ acme_certificate_domain }}.chain.crt"
+acme_certificate_caurl: https://letsencrypt.org/certs/isrgrootx1.pem.txt
+acme_certificate_cafile: "{{ acme_certificate_certdir }}/letsencrypt.ca.pem"
+acme_certificate_group: letsencrypt
+acme_certificate_group_members: []

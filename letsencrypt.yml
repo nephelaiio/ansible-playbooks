@@ -1,0 +1,121 @@
+---
+- name: create letsencrypt group
+  group:
+    name: "{{ acme_certificate_group }}"
+
+- name: add users to letsencrypt group
+  user:
+    name: "{{ item }}"
+    groups: "{{ acme_certificate_group }}"
+    append: yes
+  loop: "{{ acme_certificate_group_members | flatten(levels=1) }}"
+
+- name: create letsencrypt folders
+  file:
+    path: "{{ item }}"
+    mode: 0755
+    state: directory
+    group: "{{ acme_certificate_group }}"
+  loop:
+    - "{{ acme_certificate_certdir }}"
+    - "{{ acme_certificate_keydir }}"
+
+- name: create key
+  shell: 'ssh-keygen -t rsa -b 2048 -C "{{ acme_certificate_email }}" -f {{ acme_certificate_account_keyfile }} -q -N ""'
+  args:
+    creates: "{{ acme_certificate_account_keyfile }}"
+
+- name: create domain key
+  shell: 'ssh-keygen -t rsa -b 2048 -C "{{ acme_certificate_email }}" -f {{ acme_certificate_domain_keyfile }} -q -N ""'
+  args:
+    creates: "{{ acme_certificate_domain_keyfile }}"
+
+- name: create csr
+  shell: 'openssl req -new -nodes -key {{ acme_certificate_domain_keyfile }} -out {{ acme_certificate_domain_csrfile }} -subj "/CN={{ acme_certificate_domain }}"'
+  changed_when: false
+
+- name: create challenge
+  acme_certificate:
+    account_key: "{{ acme_certificate_account_keyfile }}"
+    challenge: dns-01
+    csr: "{{ acme_certificate_domain_csrfile }}"
+    dest: "{{ acme_certificate_domain_crtfile }}"
+    fullchain_dest: "{{ acme_certificate_domain_chainfile }}"
+    terms_agreed: yes
+    acme_directory: https://acme-v01.api.letsencrypt.org/directory
+  register: acme_certificate_challenge
+
+- name: install epel
+  include_role:
+    name: geerlingguy.repo-epel
+  when: ansible_os_family == 'RedHat'
+
+- name: install pip
+  include_role:
+    name: geerlingguy.pip
+
+- name: install route53 dependencies
+  pip:
+    name: boto
+
+- name: create route53 txt record for certificate validation
+  route53:
+    command: create
+    aws_access_key: "{{ aws_access_key_id }}"
+    aws_secret_key: "{{ aws_secret_access_key }}"
+    zone: "{{ acme_certificate_zone }}"
+    record: "{{ acme_certificate_challenge.challenge_data[acme_certificate_domain]['dns-01']['resource'] }}.{{ acme_certificate_domain }}"
+    retry_interval: 300
+    type: TXT
+    ttl: 7200
+    value: '"{{ acme_certificate_challenge.challenge_data[acme_certificate_domain]["dns-01"]["resource_value"] }}"'
+    wait: yes
+    overwrite: yes
+  when: "'challenge_data' in acme_certificate_challenge"
+  ignore_errors: yes
+
+- name: wait for txt record propagation
+  pause:
+    seconds: 60
+  when: "'challenge_data' in acme_certificate_challenge"
+
+- name: validate challenge
+  acme_certificate:
+    account_key: "{{ acme_certificate_account_keyfile }}"
+    challenge: dns-01
+    csr: "{{ acme_certificate_domain_csrfile }}"
+    dest: "{{ acme_certificate_domain_crtfile }}"
+    fullchain_dest: "{{ acme_certificate_domain_chainfile }}"
+    data: "{{ acme_certificate_challenge }}"
+    terms_agreed: yes
+    acme_directory: https://acme-v01.api.letsencrypt.org/directory
+  when: "'challenge_data' in acme_certificate_challenge"
+
+- name: delete route53 txt record for certificate validation
+  route53:
+    command: delete
+    aws_access_key: "{{ aws_access_key_id }}"
+    aws_secret_key: "{{ aws_secret_access_key }}"
+    zone: "{{ acme_certificate_zone }}"
+    record: "{{ acme_certificate_challenge.challenge_data[acme_certificate_domain]['dns-01']['resource'] }}.{{ acme_certificate_zone }}"
+    retry_interval: 300
+    type: TXT
+    ttl: 7200
+    value: '"{{ acme_certificate_challenge.challenge_data[acme_certificate_domain]["dns-01"]["resource_value"] }}"'
+    wait: yes
+  when: "'challenge_data' in acme_certificate_challenge"
+  ignore_errors: yes
+
+- name: retrieve letsencrypt ca file
+  get_url:
+    url: "{{ acme_certificate_caurl }}"
+    dest: "{{ acme_certificate_cafile }}"
+    group: "{{ acme_certificate_group }}"
+
+- name: manage keyfile permissions
+  file:
+    path: "{{ acme_certificate_domain_keyfile }}"
+    owner: root
+    group: "{{ acme_certificate_group }}"
+    mode: 0640
+    state: file

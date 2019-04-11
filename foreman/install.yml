@@ -11,29 +11,18 @@
 
   vars:
 
-    # external variables
-    route53_access_key_id: "{{ aws_access_key_id }}"
-    route53_secret_access_key: "{{ aws_secret_access_key }}"
-    # local variables
     nginx_user: www-data
     foreman_db_host: 127.0.0.1
     # foreman app variables
     foreman_permissions_reset: no
     foreman_api_allpages: 9999999999
 
-  pre_tasks:
+  tasks:
 
     - name: include private variables
       include_vars:
         dir: "../{{ variables }}"
       run_once: yes
-
-    - include_tasks: ../letsencrypt.yml
-      vars:
-        acme_certificate_group_members:
-          - "{{ foreman_group }}"
-
-  tasks:
 
     - name: install foreman apt key
       apt_key:
@@ -100,6 +89,11 @@
       vars:
         settings_yaml: "{{ foreman_settings }}"
       notify: restart nginx
+
+    - include_tasks: ../letsencrypt.yml
+      vars:
+        acme_certificate_group_members:
+          - "{{ foreman_group }}"
 
     - name: install nginx / passenger
       include_role:
