@@ -1,7 +1,21 @@
 ---
+- name: include letsencrypt defaults
+  include_vars:
+    dir: "letsencrypt/defaults"
+  run_once: yes
+
+- name: include letsencrypt variables
+  include_vars:
+    file: "letsencrypt/vars/{{ ansible_os_family }}.yml"
+  run_once: yes
+
+- name: install openssl
+  package:
+    name: openssl
+
 - name: create letsencrypt group
   group:
-    name: "{{ acme_certificate_group }}"
+    name: "{{ certificate_group | default(acme_certificate_group) }}"
 
 - name: add users to letsencrypt group
   user:
@@ -42,7 +56,7 @@
     dest: "{{ acme_certificate_domain_crtfile }}"
     fullchain_dest: "{{ acme_certificate_domain_chainfile }}"
     terms_agreed: yes
-    acme_directory: https://acme-v01.api.letsencrypt.org/directory
+    acme_directory: "{{ acme_certificate_directory }}"
   register: acme_certificate_challenge
 
 - name: install epel
@@ -106,12 +120,6 @@
   when: "'challenge_data' in acme_certificate_challenge"
   ignore_errors: yes
 
-- name: retrieve letsencrypt ca file
-  get_url:
-    url: "{{ acme_certificate_caurl }}"
-    dest: "{{ acme_certificate_cafile }}"
-    group: "{{ acme_certificate_group }}"
-
 - name: manage keyfile permissions
   file:
     path: "{{ acme_certificate_domain_keyfile }}"
@@ -119,3 +127,76 @@
     group: "{{ acme_certificate_group }}"
     mode: 0640
     state: file
+
+- name: retrieve letsencrypt root ca file
+  get_url:
+    url: "{{ acme_certificate_caurl }}"
+    dest: "{{ acme_certificate_certdir }}/{{ acme_certificate_cafile }}"
+    group: "{{ acme_certificate_group }}"
+
+- name: retrieve letsencrypt intermediate ca file
+  get_url:
+    url: "{{ acme_certificate_intcaurl }}"
+    dest: "{{ acme_certificate_certdir }}/{{ acme_certificate_intcafile }}"
+    group: "{{ acme_certificate_group }}"
+
+- block:
+
+    - name: create letsencrypt ca root dir
+      file:
+        state: directory
+        dest: "{{ acme_certificate_storedir }}"
+
+    - name: copy letsencrypt root ca file to trust store
+      copy:
+        mode: preserve
+        remote_src: yes
+        src: "{{ acme_certificate_certdir }}/{{ acme_certificate_cafile }}"
+        dest: "{{ acme_certificate_storedir }}/{{ acme_certificate_cafile }}"
+
+    - name: update ca certificates
+      command: update-ca-certificates
+      changed_when: false
+      when: ansible_os_family == 'Debian'
+
+    - name: update ca certificates
+      command: update-ca-trust extract
+      changed_when: false
+      when: ansible_os_family == 'RedHat'
+
+  when: acme_certificate_add_ca
+
+- name: set certificate file link
+  file:
+    state: link
+    src: "{{ acme_certificate_domain_crtfile }}"
+    dest: "{{ certificate_file }}"
+  when: certificate_file is defined
+
+- name: set certificate chain link
+  file:
+    state: link
+    src: "{{ acme_certificate_domain_chainfile }}"
+    dest: "{{ certificate_chainfile }}"
+  when: certificate_chainfile is defined
+
+- name: set certificate key link
+  file:
+    state: link
+    src: "{{ acme_certificate_domain_keyfile }}"
+    dest: "{{ certificate_keyfile }}"
+  when: certificate_keyfile is defined
+
+- name: set ca file link
+  file:
+    state: link
+    src: "{{ acme_certificate_certdir }}/{{ acme_certificate_cafile }}"
+    dest: "{{ certificate_cafile }}"
+  when: certificate_cafile is defined
+
+- name: set intca file link
+  file:
+    state: link
+    src: "{{ acme_certificate_certdir }}/{{ acme_certificate_intcafile }}"
+    dest: "{{ certificate_intcafile }}"
+  when: certificate_intcafile is defined

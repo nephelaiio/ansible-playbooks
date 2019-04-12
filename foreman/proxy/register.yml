@@ -39,7 +39,7 @@
 - name: set proxy facts
   set_fact:
     foreman_proxy_urls: "{{ foreman_proxy_query.json.results | map(attribute='url') | list }}"
-    foreman_proxy_url: "http://{{ ansible_fqdn }}:{{ foreman_proxy_port }}"
+    foreman_proxy_url: "https://{{ ansible_fqdn }}:{{ foreman_proxy_port }}"
     foreman_location_results: "{{ foreman_location_query.json.results }}"
     foreman_organization_results: "{{ foreman_organization_query.json.results }}"
 

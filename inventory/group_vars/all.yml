@@ -10,4 +10,3 @@ kvm_image_default:
   url: https://cloud-images.ubuntu.com/bionic/current/bionic-server-cloudimg-amd64.img
   pool: default
   format: qcow2
-acme_certificate_hostname: "{{ inventory_hostname }}"

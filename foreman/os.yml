@@ -123,13 +123,6 @@
         foreman_os_results: "{{ foreman_os_query.json.results }}"
         foreman_os_names: "{{ foreman_os_query.json.results | map(attribute='name') | list }}"
 
-    - name: set operating system dict
-      set_fact:
-        foreman_os_dict: "{{ (foreman_os_dict | default({})) | combine({ item.name: item}) }}"
-      loop_control:
-        label: "{{ item.name }}"
-      loop: "{{ foreman_os_results | flatten(levels=1) }}"
-
     - name: create foreman operating systems
       uri:
         url: "{{ foreman_url }}/api/operatingsystems"
@@ -176,6 +169,13 @@
       set_fact:
         foreman_os_results: "{{ foreman_os_query.json.results }}"
         foreman_os_names: "{{ foreman_os_query.json.results | map(attribute='name') | list }}"
+
+    - name: set operating system dict
+      set_fact:
+        foreman_os_dict: "{{ (foreman_os_dict | default({})) | combine({ item.name: item}) }}"
+      loop_control:
+        label: "{{ item.name }}"
+      loop: "{{ foreman_os_results | flatten(levels=1) }}"
 
     - name: merge os facts
       set_fact:

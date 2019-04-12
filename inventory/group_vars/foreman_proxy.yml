@@ -3,9 +3,6 @@ dhcp_user: dhcpd
 dhcp_group: dhcpd
 foreman_proxy_settings:
   :bind_host: '*'
-  :trusted_hosts: "{{ (['localhost', ansible_host] + groups['foreman']) | unique }}"
+  :trusted_hosts: "{{ groups['foreman_app'] | unique }}"
   :daemon: true
   :https_port: "{{ foreman_proxy_port }}"
-  :ssl_certificate: "{{ acme_certificate_domain_crtfile }}"
-  :ssl_private_key: "{{ acme_certificate_domain_keyfile }}"
-  :ssl_ca_file: "{{ acme_certificate_cafile }}"

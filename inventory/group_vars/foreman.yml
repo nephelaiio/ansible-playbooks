@@ -21,8 +21,7 @@ foreman_settings:
   :webpack_dev_server_https: false
   :assets_debug: false
   :hsts_enabled: true
-  :domain: '{{ foreman_domain }}'
-  :fqdn: '{{ foreman_hostname }}'
+  :fqdn: '{{ ansible_fqdn }}'
   :telemetry:
     :prefix: 'fm_rails'
     :prometheus:
@@ -34,7 +33,3 @@ foreman_settings:
     :logger:
       :enabled: false
       :level: 'DEBUG'
-  :ssl_certificate: "{{ acme_certificate_domain_crtfile }}"
-  :ssl_private_key: "{{ acme_certificate_domain_keyfile }}"
-  :ssl_ca_file: "{{ acme_certificate_cafile }}"
-acme_certificate_hostname: "{{ foreman_hostname }}"

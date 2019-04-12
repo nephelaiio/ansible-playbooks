@@ -1,0 +1,20 @@
+---
+acme_certificate_group: "{{ certificate_group | default('letsencrypt') }}"
+acme_certificate_group_members: "{{ certificate_group_members | default([]) }}"
+acme_certificate_directory: "{{ certificate_directory | default('https://acme-v01.api.letsencrypt.org/directory') }}"
+acme_certificate_add_ca: "{{ certificate_add_ca | default(False) }}"
+
+acme_certificate_basedir: /etc/letsencrypt
+acme_certificate_certdir: "{{ acme_certificate_basedir }}/live"
+acme_certificate_keydir: "{{ acme_certificate_basedir }}/keys"
+acme_certificate_account_keyfile: "{{ acme_certificate_keydir }}/id_rsa.letsencrypt"
+acme_certificate_domain: "{{ certificate_hostname }}"
+acme_certificate_zone: "{{ certificate_hostname | split_with('.') | tail | join('.') }}"
+acme_certificate_domain_keyfile: "{{ acme_certificate_keydir }}/id_rsa.{{ acme_certificate_domain }}"
+acme_certificate_domain_csrfile: "{{ acme_certificate_certdir }}/{{ acme_certificate_domain }}.csr"
+acme_certificate_domain_crtfile: "{{ acme_certificate_certdir }}/{{ acme_certificate_domain }}.crt"
+acme_certificate_domain_chainfile: "{{ acme_certificate_certdir }}/{{ acme_certificate_domain }}.chain.crt"
+acme_certificate_caurl: https://letsencrypt.org/certs/isrgrootx1.pem.txt
+acme_certificate_intcaurl: https://letsencrypt.org/certs/letsencryptauthorityx3.pem.txt
+acme_certificate_cafile: "{{ acme_certificate_caurl | urlsplit('path') | basename }}"
+acme_certificate_intcafile: "{{ acme_certificate_intcaurl | urlsplit('path') | basename }}"

@@ -5,23 +5,25 @@
 
   become: yes
 
+  vars:
+
+    foreman_proxy_conf_dir: "/etc/foreman-proxy"
+    host_certificate_hostname: "{{ ansible_fqdn }}"
+    host_certificate_chainfile: "{{ foreman_proxy_conf_dir }}/{{ host_certificate_hostname }}.chain.crt"
+    host_certificate_keyfile: "{{ foreman_proxy_conf_dir }}/{{ host_certificate_hostname }}.key"
+    host_certificate_cafile: "{{ foreman_proxy_conf_dir }}/letsencrypt.crt"
+    host_certificate_intcafile: "{{ foreman_proxy_conf_dir }}/letsencrypt.intermediate.crt"
+
   roles:
 
     - nephelaiio.plugins
 
-  pre_tasks:
+  tasks:
 
     - name: include private variables
       include_vars:
         dir: "../{{ variables }}"
       run_once: yes
-
-    - include_tasks: ../letsencrypt.yml
-      vars:
-        acme_certificate_group_members:
-          - "{{ foreman_proxy_group }}"
-
-  tasks:
 
     - name: install foreman apt key
       apt_key:
@@ -39,16 +41,80 @@
         name:
           - "{{ foreman_proxy_user }}"
 
+    - include_tasks: ../letsencrypt.yml
+      vars:
+        certificate_hostname: "{{ host_certificate_hostname }}"
+        certificate_cafile: "{{ host_certificate_cafile }}"
+        certificate_intcafile: "{{ host_certificate_intcafile }}"
+        certificate_chainfile: "{{ host_certificate_chainfile }}"
+        certificate_keyfile: "{{ host_certificate_keyfile }}"
+        certificate_add_ca: yes
+        certificate_group_members:
+          - "{{ foreman_proxy_user }}"
+
+    - name: slurp ca file
+      slurp:
+        src: "{{ host_certificate_cafile }}"
+      register: cafile
+
+    - name: slurp intca file
+      slurp:
+        src: "{{ host_certificate_intcafile }}"
+      register: intcafile
+
+    - name: create letsencrypt ca root dir
+      file:
+        state: directory
+        dest: "{{ acme_certificate_storedir }}"
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['foreman_app'] | flatten(levels=1) }}"
+
+    - name: copy letsencrypt root ca file to foreman trust store
+      copy:
+        content: "{{ cafile_content }}"
+        dest: "{{ acme_certificate_storedir }}/{{ host_certificate_cafile | basename }}"
+      vars:
+        cafile_content: "{{ cafile['content'] | b64decode }}"
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['foreman_app'] | flatten(levels=1) }}"
+
+    - name: copy letsencrypt root ca file to foreman trust store
+      copy:
+        content: "{{ intcafile_content }}"
+        dest: "{{ acme_certificate_storedir }}/{{ host_certificate_intcafile | basename }}"
+      vars:
+        intcafile_content: "{{ intcafile['content'] | b64decode }}"
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['foreman_app'] | flatten(levels=1) }}"
+
+    - name: update ca certificates
+      command: update-ca-certificates
+      changed_when: false
+      when: ansible_os_family == 'Debian'
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['foreman_app'] | flatten(levels=1) }}"
+
+    - name: update ca certificates
+      command: update-ca-trust extract
+      changed_when: false
+      when: ansible_os_family == 'RedHat'
+      delegate_to: "{{ item }}"
+      loop: "{{ groups['foreman_app'] | flatten(levels=1) }}"
+
     - name: manage foreman proxy configuration
       copy:
-        dest: /etc/foreman-proxy/settings.yml
+        dest: "{{ foreman_proxy_conf_dir }}/settings.yml"
         content: |
           {{ settings_yaml | to_nice_yaml(indent=2) }}
         mode: 0640
         owner: "{{ foreman_proxy_user }}"
         group: "{{ foreman_proxy_group }}"
       vars:
-        settings_yaml: "{{ foreman_proxy_settings }}"
+        foreman_proxy_ssl_settings:
+          :ssl_ca_file: "{{ acme_os_ca_file }}"
+          :ssl_certificate: "{{ host_certificate_chainfile }}"
+          :ssl_private_key: "{{ host_certificate_keyfile }}"
+        settings_yaml: "{{ foreman_proxy_settings | combine(foreman_proxy_ssl_settings) }}"
       notify:
         - restart foreman proxy
 
