@@ -22,6 +22,10 @@
       include_vars:
         dir: "{{ variables }}"
 
+    - name: install unifi
+      include_role:
+        name: nephelaiio.unifi-controller
+
     - name: install nginx
       include_role:
         name: geerlingguy.nginx
@@ -75,10 +79,6 @@
                 proxy_set_header Upgrade $http_upgrade;
                 proxy_set_header Connection "upgrade";
               }
-
-    - name: install unifi
-      include_role:
-        name: nephelaiio.unifi-controller
 
     - name: install pip requirements
       pip:
