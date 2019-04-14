@@ -19,7 +19,7 @@
     - name: build vm img and iso definitions
       set_fact:
         iso: "{{ kvm_pools[kvm_profile.pool].path }}/cloud_init_{{ guest_name }}.iso"
-        img: "{{ kvm_image | default(kvm_image_default) }}"
+        img: "{{ kvm_images[kvm_image | default(kvm_image_default)] }}"
 
     - block:
 
@@ -203,7 +203,7 @@
             disk: "{{ vm_disk }}"
             profile: "{{ kvm_profile }}"
             bridge: "{{ nets[kvm_profile.network].bridge }}"
-            image_format: "{{ (kvm_image | default(kvm_image_default)).format }}"
+            image_format: "{{ img.format }}"
           become: no
 
         - name: get vm template contents
