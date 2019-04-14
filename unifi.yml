@@ -110,9 +110,3 @@
         unifi_url_host: "{{ unifi_url | urlsplit('hostname') }}."
         unifi_url_zone: "{{ unifi_url_host | split_with('.') | tail | join('.') }}"
       register: pdns_zones_query
-
-    - name: create vhost roots
-      file:
-        state: directory
-        path: "{{ item }}"
-      with_items: "{{ nginx.vhosts.values() | list | map(attribute='root') | list }}"
