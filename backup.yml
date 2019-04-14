@@ -38,13 +38,13 @@
 
     - name: update backup pdns record
       uri:
-        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ raspbian_url_zone }}"
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ backup_fqdn_zone }}"
         method: PATCH
         return_content: yes
         body_format: json
         body:
           rrsets:
-            - name: "{{ backup_host }}."
+            - name: "{{ backup_fqdn_host }}"
               type: A
               ttl: 3600
               changetype: REPLACE
@@ -56,6 +56,6 @@
           X-API-Key: "{{ pdns_api_key }}"
         status_code: 204
       vars:
-        raspbian_url_host: "{{ raspbian_url | urlsplit('hostname') }}."
-        raspbian_url_zone: "{{ raspbian_url_host | split_with('.') | tail | join('.') }}"
+        backup_fqdn_host: "{{ backup_host }}."
+        backup_fqdn_zone: "{{ backup_host | split_with('.') | tail | join('.') }}"
       register: pdns_zones_query
