@@ -21,7 +21,7 @@ foreman_settings:
   :webpack_dev_server_https: false
   :assets_debug: false
   :hsts_enabled: true
-  :fqdn: '{{ ansible_fqdn }}'
+  :fqdn: '{{ inventory_hostname }}'
   :telemetry:
     :prefix: 'fm_rails'
     :prometheus:
