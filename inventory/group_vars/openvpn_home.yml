@@ -13,3 +13,4 @@ openvpn_client_options: "{{ openvpn_client_routes + openvpn_client_recursors }}"
 openvpn_backup: yes
 openvpn_users:
   - user: teddyphreak
+  - user: acook
