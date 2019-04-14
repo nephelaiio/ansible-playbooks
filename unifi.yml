@@ -12,56 +12,9 @@
 
   vars:
 
-    letsencrypt_basedir: /etc/letsencrypt
-    letsencrypt_certdir: "{{ letsencrypt_basedir }}/live"
-    letsencrypt_keydir: "{{ letsencrypt_basedir }}/keys"
-    letsencrypt_account_keyfile: "{{ letsencrypt_keydir }}/id_rsa.letsencrypt"
-    letsencrypt_domain: "{{ unifi_hostname }}"
-    letsencrypt_zone: "{{ unifi_hostname | split_with('.') | tail | join('.') }}"
-    letsencrypt_domain_keyfile: "{{ letsencrypt_keydir }}/id_rsa.{{ letsencrypt_domain }}"
-    letsencrypt_domain_csrfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.csr"
-    letsencrypt_domain_crtfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.crt"
-    letsencrypt_domain_chainfile: "{{ letsencrypt_certdir }}/{{ letsencrypt_domain }}.chain.crt"
-
-    nginx:
-      vhosts:
-        unifi_https:
-          listen: "443 ssl"
-          server_name: "{{ unifi_hostname }}"
-          filename: "{{ unifi_hostname }}.https.conf"
-          root: /var/www/html/unifi
-          access_log: "/var/log/nginx/{{ unifi_hostname }}.access.log"
-          error_log: "/var/log/nginx/{{ unifi_hostname }}.error.log"
-          extra_parameters: |
-            keepalive_timeout   300;
-            ssl_certificate {{ letsencrypt_domain_chainfile }};
-            ssl_certificate_key {{ letsencrypt_domain_keyfile }};
-            ssl_session_cache   shared:SSL:10m;
-            ssl_session_timeout 10m;
-            ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
-            ssl_prefer_server_ciphers on;
-            ssl_stapling on;
-            ssl_ciphers ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:DHE-RSA-AES256-SHA;
-            add_header Strict-Transport-Security max-age=31536000;
-            add_header X-Frame-Options DENY;
-            proxy_cache off;
-            proxy_store off;
-            location / {
-              proxy_redirect          off;
-              proxy_pass_header       Server;
-              proxy_set_header        X-Real-IP $remote_addr;
-              proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_set_header        X-Scheme $scheme;
-              proxy_set_header        Host $http_host;
-              proxy_set_header        X-NginX-Proxy true;
-              proxy_connect_timeout   5;
-              proxy_read_timeout      240;
-              proxy_intercept_errors  on;
-              proxy_pass https://localhost:8443/;
-              proxy_http_version 1.1;
-              proxy_set_header Upgrade $http_upgrade;
-              proxy_set_header Connection "upgrade";
-            }
+    unifi_certificate_hostname: "{{ unifi_hostname }}"
+    unifi_certificate_chainfile: "/etc/nginx/{{ unifi_certificate_hostname }}.chain.crt"
+    unifi_certificate_keyfile: "/etc/nginx/{{ unifi_certificate_hostname }}.key"
 
   tasks:
 
@@ -69,50 +22,58 @@
       include_vars:
         dir: "{{ variables }}"
 
+    - include_tasks: letsencrypt.yml
+      vars:
+        certificate_hostname: "{{ unifi_certificate_hostname }}"
+        certificate_chainfile: "{{ unifi_certificate_chainfile }}"
+        certificate_keyfile: "{{ unifi_certificate_keyfile }}"
+
+    - name: install nginx
+      include_role:
+        name: geerlingguy.nginx
+      vars:
+        nginx_remove_default_vhost: true
+        nginx_vhosts:
+          - listen: "443 ssl"
+            server_name: "{{ unifi_certificate_hostname }}"
+            filename: "{{ unifi_certificate_hostname }}.https.conf"
+            root: /var/www/html/unifi
+            access_log: "/var/log/nginx/{{ unifi_certificate_hostname }}.access.log"
+            error_log: "/var/log/nginx/{{ unifi_certificate_hostname }}.error.log"
+            extra_parameters: |
+              keepalive_timeout   300;
+              ssl_certificate {{ unifi_certificate_chainfile }};
+              ssl_certificate_key {{ unifi_certificate_keyfile }};
+              ssl_session_cache   shared:SSL:10m;
+              ssl_session_timeout 10m;
+              ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+              ssl_prefer_server_ciphers on;
+              ssl_stapling on;
+              ssl_ciphers ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:DHE-RSA-AES256-SHA;
+              add_header Strict-Transport-Security max-age=31536000;
+              add_header X-Frame-Options DENY;
+              proxy_cache off;
+              proxy_store off;
+              location / {
+                proxy_redirect          off;
+                proxy_pass_header       Server;
+                proxy_set_header        X-Real-IP $remote_addr;
+                proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header        X-Scheme $scheme;
+                proxy_set_header        Host $http_host;
+                proxy_set_header        X-NginX-Proxy true;
+                proxy_connect_timeout   5;
+                proxy_read_timeout      240;
+                proxy_intercept_errors  on;
+                proxy_pass https://localhost:8443/;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+              }
+
     - name: install unifi
       include_role:
         name: nephelaiio.unifi-controller
-
-    - name: create letsencrypt folders
-      file:
-        path: "{{ item }}"
-        mode: 0755
-        state: directory
-      with_items:
-        - "{{ letsencrypt_certdir }}"
-        - "{{ letsencrypt_keydir }}"
-
-    - name: create key
-      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_email }}" -f {{ letsencrypt_account_keyfile }} -q -N ""'
-      args:
-        creates: "{{ letsencrypt_account_keyfile }}"
-
-    - name: create domain key
-      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_email }}" -f {{ letsencrypt_domain_keyfile }} -q -N ""'
-      args:
-        creates: "{{ letsencrypt_domain_keyfile }}"
-
-    - name: create csr
-      shell: 'openssl req -new -nodes -key {{ letsencrypt_domain_keyfile }} -out {{ letsencrypt_domain_csrfile }} -subj "/CN={{ letsencrypt_domain }}"'
-      changed_when: false
-
-    - name: install route53 dependencies
-      pip:
-        name: boto
-
-    - name: create challenge
-      letsencrypt:
-        account_key: "{{ letsencrypt_account_keyfile }}"
-        challenge: dns-01
-        csr: "{{ letsencrypt_domain_csrfile }}"
-        dest: "{{ letsencrypt_domain_crtfile }}"
-        fullchain_dest: "{{ letsencrypt_domain_chainfile }}"
-        terms_agreed: yes
-        acme_directory: https://acme-v01.api.letsencrypt.org/directory
-      register: letsencrypt_challenge
-      notify: generate certificate
-
-    - meta: flush_handlers
 
     - name: install pip requirements
       pip:
@@ -150,61 +111,3 @@
         state: directory
         path: "{{ item }}"
       with_items: "{{ nginx.vhosts.values() | list | map(attribute='root') | list }}"
-
-    - name: install nginx
-      include_role:
-        name: geerlingguy.nginx
-      vars:
-        nginx_remove_default_vhost: true
-        nginx_vhosts:
-          - "{{ nginx.vhosts.unifi_https }}"
-
-  handlers:
-
-    - name: create route53 txt record for certificate validation
-      route53:
-        command: create
-        aws_access_key: "{{ aws_access_key_id }}"
-        aws_secret_key: "{{ aws_secret_access_key }}"
-        zone: "{{ letsencrypt_zone }}"
-        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_domain }}"
-        retry_interval: 300
-        type: TXT
-        ttl: 7200
-        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
-        wait: yes
-        overwrite: yes
-      ignore_errors: yes
-      listen: generate certificate
-
-    - name: wait for txt record propagation
-      pause:
-        seconds: 60
-      listen: generate certificate
-
-    - name: validate challenge
-      letsencrypt:
-        account_key: "{{ letsencrypt_account_keyfile }}"
-        challenge: dns-01
-        csr: "{{ letsencrypt_domain_csrfile }}"
-        dest: "{{ letsencrypt_domain_crtfile }}"
-        fullchain_dest: "{{ letsencrypt_domain_chainfile }}"
-        data: "{{ letsencrypt_challenge }}"
-        terms_agreed: yes
-        acme_directory: https://acme-v01.api.letsencrypt.org/directory
-      listen: generate certificate
-
-    - name: delete route53 txt record for certificate validation
-      route53:
-        command: delete
-        aws_access_key: "{{ aws_access_key_id }}"
-        aws_secret_key: "{{ aws_secret_access_key }}"
-        zone: "{{ letsencrypt_zone }}"
-        record: "{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]['dns-01']['resource'] }}.{{ letsencrypt_zone }}"
-        retry_interval: 300
-        type: TXT
-        ttl: 7200
-        value: '"{{ letsencrypt_challenge.challenge_data[letsencrypt_domain]["dns-01"]["resource_value"] }}"'
-        wait: yes
-      ignore_errors: yes
-      listen: generate certificate
