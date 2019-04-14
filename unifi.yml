@@ -8,7 +8,7 @@
   roles:
 
     - nephelaiio.plugins
-    - nephelaiio.pip
+    - geerlingguy.pip
 
   vars:
 
@@ -22,17 +22,22 @@
       include_vars:
         dir: "{{ variables }}"
 
+    - name: install nginx
+      include_role:
+        name: geerlingguy.nginx
+      vars:
+        nginx_remove_default_vhost: true
+
     - include_tasks: letsencrypt.yml
       vars:
         certificate_hostname: "{{ unifi_certificate_hostname }}"
         certificate_chainfile: "{{ unifi_certificate_chainfile }}"
         certificate_keyfile: "{{ unifi_certificate_keyfile }}"
 
-    - name: install nginx
+    - name: configure nginx
       include_role:
         name: geerlingguy.nginx
       vars:
-        nginx_remove_default_vhost: true
         nginx_vhosts:
           - listen: "443 ssl"
             server_name: "{{ unifi_certificate_hostname }}"
