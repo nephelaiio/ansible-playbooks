@@ -1,3 +1,0 @@
----
-unifi_url: "http://unifi.{{ base_domain }}"
-unifi_hostname: "{{ unifi_url | urlsplit('hostname') }}"

@@ -12,6 +12,9 @@
 
   vars:
 
+    unifi_java_version: 8
+    unifi_java_package: "openjdk-{{ unifi_java_version }}-jre-headless"
+    unifi_java_home: "/usr/lib/jvm/java-{{ unifi_java_version }}-openjdk-amd64"
     unifi_certificate_hostname: "{{ unifi_hostname }}"
     unifi_certificate_chainfile: "/etc/nginx/{{ unifi_certificate_hostname }}.chain.crt"
     unifi_certificate_keyfile: "/etc/nginx/{{ unifi_certificate_hostname }}.key"
@@ -21,6 +24,10 @@
     - name: load private variables
       include_vars:
         dir: "{{ variables }}"
+
+    - name: install java
+      package:
+        name: "{{ unifi_java_package }}"
 
     - name: install unifi
       include_role:
@@ -43,6 +50,14 @@
         name: geerlingguy.nginx
       vars:
         nginx_vhosts:
+          - listen: "80"
+            server_name: "{{ unifi_certificate_hostname }}"
+            filename: "{{ unifi_certificate_hostname }}.http.conf"
+            root: /var/www/html/unifi
+            access_log: "/var/log/nginx/{{ unifi_certificate_hostname }}.access.log"
+            error_log: "/var/log/nginx/{{ unifi_certificate_hostname }}.error.log"
+            extra_parameters: |
+              return 301 https://{{ unifi_certificate_hostname }}$request_uri;
           - listen: "443 ssl"
             server_name: "{{ unifi_certificate_hostname }}"
             filename: "{{ unifi_certificate_hostname }}.https.conf"
