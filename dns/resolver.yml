@@ -15,6 +15,7 @@
 
     - name: wait for connection
       wait_for_connection:
+        timeout: 30
 
     - name: gather facts
       setup:
