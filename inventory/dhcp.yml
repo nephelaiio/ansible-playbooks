@@ -1,0 +1,13 @@
+---
+dhcp:
+  children:
+    dhcp_primary:
+    dhcp_secondary:
+
+dhcp_primary:
+  hosts:
+    kvmd.home.nephelai.io:
+
+dhcp_secondary:
+  hosts:
+    kvme.home.nephelai.io:

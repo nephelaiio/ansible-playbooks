@@ -1,0 +1,16 @@
+---
+
+lightsail:
+  hosts: {}
+
+openvpn:
+  children:
+    openvpn_home:
+    openvpn_aws:
+
+openvpn_home:
+  hosts:
+    kvma.home.nephelai.io:
+
+openvpn_aws:
+  hosts: {}

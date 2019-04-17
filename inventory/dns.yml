@@ -1,0 +1,10 @@
+---
+recursors:
+  hosts:
+    kvmn.home.nephelai.io:
+    kvms.home.nephelai.io:
+
+pdns:
+  hosts:
+    kvmt.home.nephelai.io:
+

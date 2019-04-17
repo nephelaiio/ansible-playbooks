@@ -1,0 +1,17 @@
+---
+kvm_hosts:
+  hosts:
+    nucz.home.nephelai.io:
+
+kvm_guests:
+  hosts:
+    kvma.home.nephelai.io:
+    kvmb.home.nephelai.io:
+    kvmc.home.nephelai.io:
+    kvmd.home.nephelai.io:
+    kvme.home.nephelai.io:
+    kvmn.home.nephelai.io:
+    kvms.home.nephelai.io:
+    kvmt.home.nephelai.io:
+    kvmu.home.nephelai.io:
+    kvmx.home.nephelai.io:

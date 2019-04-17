@@ -1,0 +1,4 @@
+---
+foreman_hostgroup: "{{ foreman_hostgroups.centos7.name }}"
+foreman_organization: "{{ foreman_organizations.nephelai.name }}"
+foreman_location: "{{ foreman_locations.home.name }}"
