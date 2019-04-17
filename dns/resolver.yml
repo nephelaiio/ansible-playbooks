@@ -1,7 +1,7 @@
 ---
 - name: Configure dns resolvers
 
-  hosts: all:!recursors:!pdns:!lightsail:!networking:!offline
+  hosts: all:!recursors:!pdns:!lightsail:!offline
 
   become: yes
 

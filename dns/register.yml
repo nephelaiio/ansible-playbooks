@@ -1,7 +1,7 @@
 ---
 - name: Register ansible hosts in dns
 
-  hosts: all:!networking:!offline
+  hosts: all:!offline
 
   gather_facts: no
 
