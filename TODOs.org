@@ -1,0 +1,44 @@
+* meta
+** TODO learn org mode
+*** DONE install org mode
+    CLOSED: [2019-04-16 Tue 23:49]
+*** DONE configure projectile integration
+    CLOSED: [2019-04-16 Tue 23:50]
+*** DONE create deadlines
+    CLOSED: [2019-04-17 Wed 00:04] DEADLINE: <2019-04-17 Wed>
+*** DONE manage tags
+    CLOSED: [2019-04-17 Wed 00:08]
+*** TODO configure agenda integration
+
+* infrastructure tests
+** TODO install awx
+** TODO refactor awx configuration management to use tower_* modules
+** TODO install traefik lb
+** TODO install harbor registry
+** TODO install keycloack iam service
+** TODO install openstack
+** TODO install kubernetes on bare metal
+** TODO install kubernetes on open stack
+
+* release management
+** TODO clean up travis ci test failures
+*** TODO clean up ansible-role-tmux
+    SCHEDULED: <2019-04-17 Wed>
+*** TODO clean up ansible-role-rbenv
+*** TODO clean up ansible-role-i3
+*** TODO clean up ansible-role-rabbitmq
+*** TODO clean up ansible-role bind
+*** TODO clean up ansible-role-golang
+*** TODO clean up ansible-role-nfs
+*** TODO clean up ansible-role-ubuntu-installer
+*** TODO clean up ansible-role-devtools
+*** TODO clean up ansible-role-gitlab
+*** TODO clean up ansible-role-unifi
+    SCHEDULED: <2019-04-19 Fri>
+*** TODO clean up ansible-role-rxvt-unicode
+*** TODO clean up ansible-role-git
+** TODO split ansible-playbooks into separate subplays
+
+* marketing
+** TODO create blog
+
