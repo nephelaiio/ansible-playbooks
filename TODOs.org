@@ -1,5 +1,6 @@
 * meta
-** TODO learn org mode
+** DONE learn org mode
+   CLOSED: [2019-04-18 Thu 23:18]
 *** DONE install org mode
     CLOSED: [2019-04-16 Tue 23:49]
 *** DONE configure projectile integration
@@ -8,7 +9,9 @@
     CLOSED: [2019-04-17 Wed 00:04] DEADLINE: <2019-04-17 Wed>
 *** DONE manage tags
     CLOSED: [2019-04-17 Wed 00:08]
-*** TODO configure agenda integration
+*** DONE configure agenda integration
+    CLOSED: [2019-04-18 Thu 00:50]
+
 
 * infrastructure tests
 ** TODO install awx
@@ -22,23 +25,43 @@
 
 * release management
 ** TODO clean up travis ci test failures
-*** TODO clean up ansible-role-tmux
-    SCHEDULED: <2019-04-17 Wed>
-*** TODO clean up ansible-role-rbenv
-*** TODO clean up ansible-role-i3
 *** TODO clean up ansible-role-rabbitmq
-*** TODO clean up ansible-role bind
-*** TODO clean up ansible-role-golang
-*** TODO clean up ansible-role-nfs
-*** TODO clean up ansible-role-ubuntu-installer
-*** TODO clean up ansible-role-devtools
 *** TODO clean up ansible-role-gitlab
-*** TODO clean up ansible-role-unifi
-    SCHEDULED: <2019-04-19 Fri>
-*** TODO clean up ansible-role-rxvt-unicode
-*** TODO clean up ansible-role-git
+*** TODO clean up ansible-role-chefdk
+*** DONE clean up ansible-role bind
+    CLOSED: [2019-04-23 Tue 22:54]
+*** DONE clean up ansible-role-i3
+    CLOSED: [2019-04-22 Mon 22:28]
+*** DONE clean up ansible-role-docker
+    CLOSED: [2019-04-21 Sun 17:44]
+*** DONE clean up ansible-role-golang
+    CLOSED: [2019-04-21 Sun 15:45]
+*** DONE clean up ansible-role-tmux
+    CLOSED: [2019-04-17 Wed 23:50] SCHEDULED: <2019-04-17 Wed>
+*** DONE clean up ansible-role-plugins
+    CLOSED: [2019-04-18 Thu 19:24]
+*** DONE clean up ansible-role-rbenv
+    CLOSED: [2019-04-18 Thu 22:50]
+*** DONE clean up ansible-role-nfs
+    CLOSED: [2019-04-20 Sat 23:12]
+*** DONE clean up ansible-role-ubuntu-installer
+    CLOSED: [2019-04-18 Thu 19:12] SCHEDULED: <2019-04-19 Fri>
+*** DONE clean up ansible-role-devtools
+    CLOSED: [2019-04-18 Thu 20:04] SCHEDULED: <2019-04-19 Fri>
+*** DONE clean up ansible-role-git
+    CLOSED: [2019-04-19 Fri 21:16]
+*** DONE clean up ansible-role-unifi
+    CLOSED: [2019-04-18 Thu 00:44] SCHEDULED: <2019-04-19 Fri>
+*** DONE clean up ansible-role-rxvt-unicode
+    CLOSED: [2019-04-20 Sat 23:04]
 ** TODO split ansible-playbooks into separate subplays
+*** create letsencrypt + route53 dns challenge role
+
 
 * marketing
 ** TODO create blog
+
+* chores
+** DONE finish application AA008VU22X
+   CLOSED: [2019-04-22 Mon 23:17]
 
