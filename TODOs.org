@@ -25,11 +25,15 @@
 
 * release management
 ** TODO clean up travis ci test failures
-*** TODO clean up ansible-role-rabbitmq
 *** TODO clean up ansible-role-gitlab
-*** TODO clean up ansible-role-chefdk
-*** DONE clean up ansible-role bind
-    CLOSED: [2019-04-23 Tue 22:54]
+*** DONE clean up ansible-role-bind
+    CLOSED: [2019-04-30 mar 23:35]
+*** DONE clean up ansible-role-vim
+    CLOSED: [2019-04-30 mar 23:19]
+*** DONE clean up ansible-role-chefdk
+    CLOSED: [2019-04-30 mar 23:06]
+*** DONE clean up ansible-role-rabbitmq
+    CLOSED: [2019-04-30 mar 22:43]
 *** DONE clean up ansible-role-i3
     CLOSED: [2019-04-22 Mon 22:28]
 *** DONE clean up ansible-role-docker
