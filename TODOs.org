@@ -57,6 +57,12 @@
 ** TODO split ansible-playbooks into separate subplays
 *** create letsencrypt + route53 dns challenge role
 
+** DONE try podman for ansible playbook tests with molecule
+   Attempt again after migrating to Ansible 2.8
+   CLOSED: [2019-04-26 Fri 23:33]
+
+** try podman for ansible (2.8) playbook tests with molecule
+** port foreman plays to use foreman plugin
 
 * marketing
 ** TODO create blog
