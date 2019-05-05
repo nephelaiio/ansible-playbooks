@@ -1,0 +1,8 @@
+---
+freeipa:
+  children:
+    ipaserver:
+
+ipaserver:
+  hosts:
+    nucy.home.nephelai.io:

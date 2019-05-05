@@ -1,0 +1,16 @@
+---
+- name: Install freeipa server
+
+  hosts: ipaserver
+
+  become: yes
+
+  tasks:
+
+    - name: include private variables
+      include_vars:
+        dir: "../{{ variables }}"
+
+    - name: install freeipa server
+      include_role:
+        name: ipaserver

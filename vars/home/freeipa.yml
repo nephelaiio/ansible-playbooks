@@ -1,2 +1,2 @@
 ---
-freeipa_root: ./freeipa
+freeipa_domain: "ipa.{{ base_domain }}"

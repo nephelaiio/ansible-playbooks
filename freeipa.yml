@@ -1,2 +1,2 @@
 ---
-- import_playbook: freeipa/prepare.yml
+- import_playbook: freeipa/server.yml
