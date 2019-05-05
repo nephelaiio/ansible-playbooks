@@ -3,10 +3,7 @@ extends: default
 ignore: |
   galaxy/
   resources/
-  kubernetes/kubespray/
-  kubernetes/awx/
-  kubernetes/rook/
-  freeipa/
+  submodules/
   **/vault.yml
   **/vault/
 

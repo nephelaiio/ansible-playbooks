@@ -18,6 +18,3 @@ resources/**
 inventory/artifacts/
 /credentials/**
 /library/**
-kubernetes/kubespray/
-kubernetes/rook/
-kubernetes/awx/
