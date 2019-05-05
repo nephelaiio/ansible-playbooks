@@ -1,7 +1,7 @@
 ---
 dhcp_failover:
   - secondary
-  - "address {{ ansible_default_ipv4.address }}"
+  - "address {{ ansible_host }}"
   - "port {{ dhcp_secondary_port }}"
   - "peer address {{ groups['dhcp_primary'] | map('extract', hostvars, 'ansible_host') | first }}"
   - peer port 647
