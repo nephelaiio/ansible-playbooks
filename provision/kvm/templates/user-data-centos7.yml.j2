@@ -5,9 +5,9 @@ packages:
   - python-pip
 {% if epel_mirror_host is not defined or epel_mirror_host == '' %}
   - epel-release
-{% %}
-package_update: true
-package_upgrade: true
+{% endif %}
+package_update: false
+package_upgrade: false
 package_reboot_if_required: true
 disable_root: true
 users:
@@ -65,7 +65,7 @@ write_files:
       gpgcheck=1
       gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever
 {% endif %}
-runcmd:
-  - rm -f /etc/sysconfig/network-scripts/ifcfg-eth0
+bootcmd:
+  - sed -ie '/locale/d' /etc/cloud/cloud.cfg
 power_state:
   mode: reboot

@@ -146,11 +146,11 @@
             ubuntu_mirror_host: "{{ ubuntu_mirror | default('') }}"
             yum_mirror_host: "{{ centos_mirror | default('') }}"
             epel_mirror_host: "{{ epel_mirror | default('') }}"
-            image: "{{ kvm_profile.image }}"
+            image: "{{ kvm_image }}"
           when: diskcopy.changed
           become: no
 
-        - name: create vm cloud image network config
+        - name: create vm ubuntu cloud image network config
           copy:
             content: "{{ network_config }}"
             dest: "{{ tmpdir.path }}/network-config"
@@ -160,7 +160,7 @@
             network_config: |
               version: 2
               ethernets:
-                {{ kvm_profile.nic }}:
+                enp0s3:
                   match:
                     macaddress: {{ kvm_profile.hw_address }}
                   dhcp4: {{ kvm_profile.dhcp }}
@@ -171,7 +171,43 @@
                     search:
                       - {{ base_domain }}
                     addresses: {{ (nameservers | default(network_profile.ns)) | to_yaml }}
-          when: diskcopy.changed
+          when:
+            - img.netconf_ver | int == 2
+            - diskcopy.changed
+          become: no
+
+        - name: create vm centos cloud image static network config
+          copy:
+            content: "{{ network_config }}"
+            dest: "{{ tmpdir.path }}/network-config"
+          vars:
+            network_profile: "{{ nets[kvm_profile.network] }}"
+            network_prefix: "{{ (network_profile.network + '/' + network_profile.netmask) | ipaddr('prefix') | ipaddr('prefix') }}"
+            network_config: |
+              version: 1
+              config:
+                - type: physical
+                  name: eth0
+                  mac_address: {{ kvm_profile.hw_address }}
+                  subnets:
+                    - type: static
+                      address: {{ kvm_profile.ansible_host }}/24
+                      gateway: {{ network_profile.router }}
+                      dns_nameservers: {{ (nameservers | default(network_profile.ns)) | to_yaml }}
+                      dns_search:
+                        - {{ base_domain }}
+          when:
+            - img.netconf_ver | int == 1
+            - diskcopy.changed
+            - not kvm_profile.dhcp
+          become: no
+
+        - name: create vm centos cloud image static network config
+          fail:
+          when:
+            - img.netconf_ver | int == 1
+            - diskcopy.changed
+            - kvm_profile.dhcp
           become: no
 
         - name: create vm cloud image meta data
