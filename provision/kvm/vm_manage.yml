@@ -4,6 +4,7 @@
     state: directory
     suffix: images
   register: img_dir
+  changed_when: false
   delegate_to: localhost
 
 - block:
@@ -286,4 +287,5 @@
     path: "{{ img_dir.path }}"
     state: absent
   register: img_dir
+  changed_when: false
   delegate_to: localhost
