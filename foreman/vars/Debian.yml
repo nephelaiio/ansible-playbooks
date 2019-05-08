@@ -1,0 +1,14 @@
+---
+passenger_package: libnginx-mod-http-passenger
+nginx_user: www-data
+foreman_db_packages:
+  - mariadb-client
+  - mariadb-server
+  - python-mysqldb
+foreman_app_packages:
+  - foreman
+  - foreman-cli
+  - foreman-ec2
+  - foreman-console
+  - foreman-mysql2
+foreman_packages: "{{ foreman_app_packages + foreman_db_packages }}"

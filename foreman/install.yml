@@ -11,12 +11,18 @@
 
   vars:
 
+    mariadb_mirror: yum.mariadb.org
+    mariadb_version: 10.2
+    mariadb_pid_file: /var/run/mariadb/mariadb/pid
+    passenger_server_name: "{{ nginx_certificate_hostname }}"
+    passenger_app_env: production
+    passenger_app_root: /usr/share/foreman/public
     foreman_conf_dir: /etc/foreman
+    foreman_web_root: /usr/share/foreman/public
     foreman_db_host: 127.0.0.1
     foreman_permissions_reset: no
     foreman_api_allpages: 9999999999
     nginx_conf_dir: /etc/nginx
-    nginx_user: www-data
     nginx_vhost_dir: "{{ nginx_conf_dir }}/sites-enabled"
     nginx_ssl_dir: "{{ nginx_conf_dir }}/ssl"
     nginx_certificate_hostname: "{{ foreman_hostname }}"
@@ -33,44 +39,93 @@
         dir: "../{{ variables }}"
       run_once: yes
 
-    - name: install foreman apt key
-      apt_key:
-        url: https://deb.theforeman.org/pubkey.gpg
-        id: 6F8600B9563278F6
+    - name: include variable overrides
+      include_vars: "{{ item }}"
+      with_first_found:
+        - files:
+            - "vars/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+            - "vars/{{ ansible_distribution }}.yml"
+            - "vars/{{ ansible_os_family }}.yml"
+          skip: true
+      run_once: yes
+
+    - block:
+
+        - name: install foreman apt key
+          apt_key:
+            url: https://deb.theforeman.org/pubkey.gpg
+            id: 6F8600B9563278F6
+
+        - name: install foreman apt repository
+          apt_repository:
+            repo: "deb http://deb.theforeman.org/ {{ ansible_lsb.codename }} {{ foreman_release }}"
+            state: present
+            update_cache: yes
+
+        - name: install passenger apt key
+          apt_key:
+            keyserver: keyserver.ubuntu.com
+            id: 561F9B9CAC40B2F7
+
+        - name: install passenger apt repository
+          apt_repository:
+            repo: "deb https://oss-binaries.phusionpassenger.com/apt/passenger {{ ansible_lsb.codename }} main"
+            state: present
+            update_cache: yes
+
       when: ansible_os_family == 'Debian'
 
-    - name: install foreman apt repository
-      apt_repository:
-        repo: "deb http://deb.theforeman.org/ bionic {{ foreman_release }}"
-        state: present
-        update_cache: yes
-      when: ansible_os_family == 'Debian'
+    - block:
 
-    - name: install epel
-      include_role:
-        name: geerlingguy.repo-epel
-      when: ansible_os_family == 'RedHat'
+        - name: install epel
+          include_role:
+            name: geerlingguy.repo-epel
 
-    - name: install foreman yum repository
-      yum:
-        name: https://yum.theforeman.org/releases/1.21/el7/x86_64/foreman-release.rpm
+        - name: install foreman yum repository
+          yum:
+            name: https://yum.theforeman.org/releases/1.21/el7/x86_64/foreman-release.rpm
+
+        - name: install foreman scl
+          package:
+            name:
+              - foreman-release-scl
+
+        - name: install mariadb yum repository
+          yum_repository:
+            name: mariadb
+            description: Official MariaDB repository
+            baseurl: "http://{{ mariadb_mirror }}/{{ mariadb_version }}/{{ ansible_distribution|lower|regex_replace('redhat', 'rhel')|regex_replace('oraclelinux', 'centos') }}{{ ansible_distribution_major_version }}-amd64"
+            gpgkey: https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+            gpgcheck: true
+
+        - name: install passenger yum repository
+          yum_repository:
+            description: Official Physion Passenger repository
+            name: passenger
+            baseurl: https://oss-binaries.phusionpassenger.com/yum/passenger/el/$releasever/$basearch
+            gpgcheck: false
+            gpgkey: https://packagecloud.io/phusion/passenger/gpgkey
+
       when: ansible_os_family == 'RedHat'
 
     - name: install foreman packages
       package:
-        name:
-          - foreman
-          - foreman-cli
-          - foreman-ec2
-          - foreman-console
-          - foreman-mysql2
-          - ruby-hammer-cli
-          - ruby-hammer-cli-foreman
+        name: "{{ foreman_packages }}"
+
+    - name: create mariadb run folder
+      file:
+        state: directory
+        path: "{{ mariadb_pid_file | dirname }}"
+        owner: mysql
+        group: mysql
 
     - name: install mysql
       include_role:
         name: geerlingguy.mysql
       vars:
+        mysql_log_error: ''
+        mysql_pid_file: "{{ mariadb_pid_file }}"
+        mysql_packages: "{{ foreman_db_packages }}"
         mysql_databases:
           - name: "{{ foreman_db_name }}"
         mysql_users:
@@ -122,23 +177,69 @@
           :ssl_certificate: "{{ host_certificate_chainfile }}"
           :ssl_priv_key: "{{ host_certificate_keyfile }}"
         settings_yaml: "{{ foreman_settings | combine(foreman_ssl_settings) }}"
-
       notify: restart nginx
 
-    - name: install nginx / passenger
-      include_role:
-        name: geerlingguy.passenger
+    - name: install nginx
+      package:
+        name:
+          - nginx
+          - "{{ passenger_package }}"
+
+    - include_tasks: ../letsencrypt.yml
       vars:
-        passenger_server_name: "{{ nginx_certificate_hostname }}"
-        passenger_app_env: production
-        passenger_app_root: /usr/share/foreman/public
+        certificate_hostname: "{{ nginx_certificate_hostname }}"
+        certificate_chainfile: "{{ nginx_certificate_chainfile }}"
+        certificate_keyfile: "{{ nginx_certificate_keyfile }}"
+        certificate_add_ca: yes
 
-    - name: fix nginx settings
-      lineinfile:
-        dest: /etc/nginx/nginx.conf
-        regexp: ".*server_names_hash_bucket_size.*"
-        line: "server_names_hash_bucket_size 64;"
-      notify: restart nginx
+    - name: configure nginx
+      include_role:
+        name: geerlingguy.nginx
+      vars:
+        nginx_extra_conf_options: ""
+        nginx_pacakge_name:
+          - nginx
+          - "{{ passenger_package }}"
+        nginx_remove_default_vhost: true
+        nginx_vhosts:
+          - listen: "80 default_server"
+            server_name: "{{ nginx_certificate_hostname }}"
+            filename: "{{ nginx_certificate_hostname }}.http.conf"
+            root: "{{ foreman_web_root }}"
+            access_log: "/var/log/nginx/{{ nginx_certificate_hostname }}.access.log"
+            error_log: "/var/log/nginx/{{ nginx_certificate_hostname }}.error.log"
+            extra_parameters: |
+              passenger_enabled on;
+              passenger_app_env production;
+          - listen: "443 ssl"
+            server_name: "{{ nginx_certificate_hostname }}"
+            filename: "{{ nginx_certificate_hostname }}.https.conf"
+            access_log: "/var/log/nginx/{{ nginx_certificate_hostname }}.access.log"
+            error_log: "/var/log/nginx/{{ nginx_certificate_hostname }}.error.log"
+            extra_parameters: |
+              keepalive_timeout   300;
+              ssl_certificate {{ nginx_certificate_chainfile }};
+              ssl_certificate_key {{ nginx_certificate_keyfile }};
+              ssl_session_cache   shared:SSL:10m;
+              ssl_session_timeout 10m;
+              ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+              ssl_prefer_server_ciphers on;
+              ssl_stapling on;
+              ssl_ciphers ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:DHE-RSA-AES256-SHA;
+              charset utf-8;
+              gzip on;
+              gzip_types text/css application/javascript text/javascript application/x-javascript image/svg+xml text/plain text/xsd text/xsl text/xml image/x-icon;
+
+              location / {
+                proxy_pass http://{{ foreman_hostname }}/;
+                proxy_http_version 1.1;
+                proxy_set_header   Host               $host;
+                proxy_set_header   X-Real-IP          $remote_addr;
+                proxy_set_header   X-Forwarded-For    $proxy_add_x_forwarded_for;
+                proxy_set_header   X-Forwarded-Proto  $scheme;
+                proxy_set_header   Upgrade            $http_upgrade;
+                proxy_set_header   Connection         "upgrade";
+              }
 
     - name: add nginx user to foreman group
       user:
@@ -171,50 +272,6 @@
         foreman_url_host: "{{ nginx_certificate_hostname }}."
         foreman_url_zone: "{{ foreman_domain }}"
 
-    - include_tasks: ../letsencrypt.yml
-      vars:
-        certificate_hostname: "{{ nginx_certificate_hostname }}"
-        certificate_chainfile: "{{ nginx_certificate_chainfile }}"
-        certificate_keyfile: "{{ nginx_certificate_keyfile }}"
-        certificate_add_ca: yes
-
-    - name: create nginx vhost file
-      copy:
-        dest: "{{ nginx_vhost_dir }}/{{ nginx_certificate_hostname }}.https.conf"
-        content: |
-          server {
-            listen  443 ssl;
-            server_name {{ nginx_certificate_hostname }};
-
-            access_log /var/log/nginx/{{ nginx_certificate_hostname }}.access.log;
-            error_log /var/log/nginx/{{ nginx_certificate_hostname }}.error.log;
-
-            keepalive_timeout   300;
-            ssl_certificate {{ nginx_certificate_chainfile }};
-            ssl_certificate_key {{ nginx_certificate_keyfile }};
-            ssl_session_cache   shared:SSL:10m;
-            ssl_session_timeout 10m;
-            ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
-            ssl_prefer_server_ciphers on;
-            ssl_stapling on;
-            ssl_ciphers ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:DHE-RSA-AES256-SHA;
-            charset utf-8;
-            gzip on;
-            gzip_types text/css application/javascript text/javascript application/x-javascript image/svg+xml text/plain text/xsd text/xsl text/xml image/x-icon;
-
-            location / {
-              proxy_pass http://{{ foreman_hostname }}/;
-              proxy_http_version 1.1;
-              proxy_set_header   Host               $host;
-              proxy_set_header   X-Real-IP          $remote_addr;
-              proxy_set_header   X-Forwarded-For    $proxy_add_x_forwarded_for;
-              proxy_set_header   X-Forwarded-Proto  $scheme;
-              proxy_set_header   Upgrade            $http_upgrade;
-              proxy_set_header   Connection         "upgrade";
-            }
-          }
-      notify: restart nginx
-
     - meta: flush_handlers
 
     - name: query foreman users
@@ -231,7 +288,7 @@
       ignore_errors: yes
 
     - name: rake permissions:reset
-      command: foreman-rake permissions:reset
+      command: /usr/sbin/foreman-rake permissions:reset
       register: handler_permissions_reset
       when: foreman_user_query is failed
 
@@ -407,7 +464,7 @@
         state: restarted
 
     - name: rake migrate
-      command: foreman-rake db:migrate
+      command: /usr/sbin/foreman-rake db:migrate
       listen: rake
 
     - name: rake seed

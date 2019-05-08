@@ -1,0 +1,10 @@
+---
+passenger_package: passenger
+nginx_user: nginx
+foreman_db_packages:
+  - MariaDB-server
+  - MariaDB-client
+foreman_app_packages:
+  - foreman
+  - foreman-mysql2
+foreman_packages: "{{ foreman_app_packages + foreman_db_packages }}"

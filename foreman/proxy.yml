@@ -25,16 +25,37 @@
         dir: "../{{ variables }}"
       run_once: yes
 
-    - name: install foreman apt key
-      apt_key:
-        url: https://deb.theforeman.org/pubkey.gpg
-        id: 6F8600B9563278F6
+    - block:
 
-    - name: install foreman apt repository
-      apt_repository:
-        repo: "deb http://deb.theforeman.org/ bionic {{ foreman_release }}"
-        state: present
-        update_cache: yes
+        - name: install foreman apt key
+          apt_key:
+            url: https://deb.theforeman.org/pubkey.gpg
+            id: 6F8600B9563278F6
+
+        - name: install foreman apt repository
+          apt_repository:
+            repo: "deb http://deb.theforeman.org/ {{ ansible_lsb.codename }} {{ foreman_release }}"
+            state: present
+            update_cache: yes
+
+      when: ansible_os_family == 'Debian'
+
+    - block:
+
+        - name: install epel
+          include_role:
+            name: geerlingguy.repo-epel
+
+        - name: install foreman yum repository
+          yum:
+            name: https://yum.theforeman.org/releases/1.21/el7/x86_64/foreman-release.rpm
+
+        - name: install foreman scl
+          package:
+            name:
+              - foreman-release-scl
+
+      when: ansible_os_family == 'RedHat'
 
     - name: install foreman packages
       package:
