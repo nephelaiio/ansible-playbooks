@@ -3,7 +3,7 @@ extends: default
 ignore: |
   galaxy/
   resources/
-  submodules/
+  submodule/
   **/vault.yml
   **/vault/
 
