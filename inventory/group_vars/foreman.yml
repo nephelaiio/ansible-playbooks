@@ -9,7 +9,7 @@ foreman_group: foreman
 foreman_proxy_user: foreman-proxy
 foreman_proxy_group: foreman-proxy
 foreman_proxy_port: 8443
-foreman_tftp_root: /tftpboot
+foreman_tftp_root: /var/lib/tftpboot
 foreman_settings:
   :locations_enabled: false
   :organizations_enabled: false

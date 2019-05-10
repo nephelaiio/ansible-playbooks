@@ -1,6 +1,13 @@
 ---
-passenger_package: passenger
-nginx_user: nginx
+foreman_passenger_packages:
+  - nginx
+  - passenger
+foreman_tftp_packages:
+  - xinetd
+  - tftp-server
+  - tftp
+  - syslinux-tftpboot
+foreman_nginx_user: nginx
 foreman_db_packages:
   - MariaDB-server
   - MariaDB-client

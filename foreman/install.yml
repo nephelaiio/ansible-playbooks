@@ -22,6 +22,7 @@
     foreman_db_host: 127.0.0.1
     foreman_permissions_reset: no
     foreman_api_allpages: 9999999999
+    nginx_user: "{{ foreman_nginx_user }}"
     nginx_conf_dir: /etc/nginx
     nginx_vhost_dir: "{{ nginx_conf_dir }}/sites-enabled"
     nginx_ssl_dir: "{{ nginx_conf_dir }}/ssl"
@@ -179,11 +180,9 @@
         settings_yaml: "{{ foreman_settings | combine(foreman_ssl_settings) }}"
       notify: restart nginx
 
-    - name: install nginx
+    - name: install passenger
       package:
-        name:
-          - nginx
-          - "{{ passenger_package }}"
+        name: "{{ foreman_passenger_packages }}"
 
     - include_tasks: ../letsencrypt.yml
       vars:

@@ -18,14 +18,19 @@
       include_vars:
         dir: "../{{ variables }}"
 
+    - name: include variable overrides
+      include_vars: "{{ item }}"
+      with_first_found:
+        - files:
+            - "vars/{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"
+            - "vars/{{ ansible_distribution }}.yml"
+            - "vars/{{ ansible_os_family }}.yml"
+          skip: true
+      run_once: yes
+
     - name: install tftp packages
       package:
-        name:
-          - xinetd
-          - tftpd
-          - tftp
-          - syslinux
-          - pxelinux
+        name: "{{ tftp_packages }}"
         state: latest
 
     - name: create tftp root
@@ -56,6 +61,9 @@
           dest: "{{ foreman_tftp_root }}/libcom32.c32"
         - src: /usr/lib/syslinux/modules/bios/libutil.c32
           dest: "{{ foreman_tftp_root }}/libutil.c32"
+      when: ansible_os_family == 'Debian'
+
+    - pause:
 
     - name: configure tftp xinetd daemon
       copy:
