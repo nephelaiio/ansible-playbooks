@@ -1,8 +1,0 @@
----
-- name: Playbook to configure IPA replicas
-  hosts: ipareplicas
-  become: true
-
-  roles:
-  - role: ipareplica
-    state: present
