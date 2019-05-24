@@ -11,17 +11,19 @@
     iptables_savefile: /etc/iptables/iptables.rules
     kvm_requirement_packages:
       - qemu
-      - libvirt
-      - libvirt-python
+      - qemu-kvm
+      - libvirt0
+      - libvirt-dev
+      - libvirt-bin
+      - python-lxml
       - bridge-utils
       - ebtables
       - dmidecode
-      - python-lxml
-      - cdrtools
 
   roles:
 
     - nephelaiio.plugins
+    - nephelaiio.pip
 
   tasks:
 
@@ -53,34 +55,13 @@
         - name: net.ipv4.ip_forward
           value: 1
 
-    - name: install pacman requirements
-      package:
-        name:
-          - qemu
-          - libvirt
-          - libvirt-python
-          - dnsmasq
-          - ebtables
-          - dmidecode
-          - cdrtools
-          - python-lxml
-        update_cache: yes
-
-    - name: initialize iptables configuration
-      file:
-        path: "{{ iptables_savefile }}"
-        state: touch
-
-    - meta: flush_handlers
-
-    - name: allow iptables forward chain
-      iptables:
-        chain: FORWARD
-        policy: ACCEPT
-
-    - name: save iptables configuration
-      shell: "iptables-save > {{ iptables_savefile }}"
-
-    - name: install requirements
+    - name: install package requirements
       package:
         name: "{{ kvm_requirement_packages }}"
+        update_cache: yes
+
+    - name: start libvirt daemon
+      service:
+        name: libvirtd
+        state: started
+        enabled: yes

@@ -9,6 +9,8 @@
   version: 1.7.0
 - src: geerlingguy.docker
   version: 2.5.1
+- src: nephelaiio.docker
+  version: 3.0.0
 - src: geerlingguy.java
   version: 1.8.0
 - src: geerlingguy.nginx
@@ -34,7 +36,7 @@
 - src: nephelaiio.plugins
   version: 1.0.9
 - src: nephelaiio.devtools
-  version: 2.0.0
+  version: 2.1.0
 - src: nephelaiio.nfs
   version: 2.0.2
 - src: nephelaiio.unifi-controller
@@ -51,3 +53,7 @@
 - src: https://github.com/Stouts/Stouts.openvpn.git
   name: Stouts.openvpn
   version: 2.4.1
+- src: nephelaiio.i3
+- src: nephelaiio.docker
+- src: nephelaiio.git
+- src: nephelaiio.vim
