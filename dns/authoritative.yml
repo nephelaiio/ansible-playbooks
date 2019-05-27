@@ -81,6 +81,14 @@
         - pdns-server
         - pdns-backend-mysql
 
+    - name: stop systemd-resolved
+      service:
+        name: systemd-resolved
+        state: stopped
+        enabled: no
+      when: ansible_os_family == 'Debian'
+      notify: restart pdns
+
     - name: build database initialization script
       template:
         src: schema.sql.j2
@@ -283,6 +291,8 @@
             - content: "{{ record['ip-address'] }}"
               disabled: false
               set-ptr: true
+      loop_control:
+        label: "{{ item.0 }}"
       with_subelements:
         - "{{ dns.zones.values() | list }}"
         - records
@@ -318,6 +328,8 @@
             - content: "{{ record['ip-address'] }}"
               disabled: false
               set-ptr: true
+      loop_control:
+        label: "{{ item.0 }}"
       with_subelements:
         - "{{ dns.zones.values() | list }}"
         - records
