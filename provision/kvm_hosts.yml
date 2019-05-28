@@ -11,13 +11,14 @@
     iptables_savefile: /etc/iptables/iptables.rules
     kvm_requirement_packages:
       - qemu
-      - libvirt
-      - libvirt-python
+      - qemu-kvm
+      - libvirt-bin
+      - python-libvirt
       - bridge-utils
       - ebtables
       - dmidecode
       - python-lxml
-      - cdrtools
+      - iptables-persistent
 
   roles:
 
@@ -53,17 +54,9 @@
         - name: net.ipv4.ip_forward
           value: 1
 
-    - name: install pacman requirements
+    - name: install package requirements
       package:
-        name:
-          - qemu
-          - libvirt
-          - libvirt-python
-          - dnsmasq
-          - ebtables
-          - dmidecode
-          - cdrtools
-          - python-lxml
+        name: "{{ kvm_requirement_packages }}"
         update_cache: yes
 
     - name: initialize iptables configuration
@@ -84,3 +77,9 @@
     - name: install requirements
       package:
         name: "{{ kvm_requirement_packages }}"
+
+    - name: start libvirtd
+      service:
+        name: libvirtd
+        state: started
+        enabled: yes
