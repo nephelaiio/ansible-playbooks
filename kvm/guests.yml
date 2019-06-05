@@ -39,7 +39,7 @@
       run_once: yes
 
     - name: manage vms
-      import_tasks: kvm/vm_manage.yml
+      import_tasks: vm_manage.yml
       vars:
         guest_name: "{{ inventory_hostname }}"
         ansible_guest_user: "{{ users[ansible_kvm_user] }}"
