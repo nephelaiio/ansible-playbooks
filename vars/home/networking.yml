@@ -34,6 +34,7 @@ nets:
     netmask: 255.255.255.0
     router: 192.168.5.1
     zone: 5.168.192.in-addr.arpa
+    bridge: br1
     ns: "{{ servers.recursors }}"
     lb:
       name: management
@@ -41,7 +42,6 @@ nets:
     pools:
       - range: '192.168.5.129 192.168.5.254'
     reservations: {}
-    bridge: br1
     foreman_locations:
       - "{{ foreman_locations.home.name }}"
     foreman_organizations:

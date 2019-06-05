@@ -28,7 +28,7 @@ kvm_profiles:
     size: 10G
     pool: default
     dhcp: false
-    network: home
+    network: management
   medium:
     state: present  # | recreate | absent
     memory: 4096
@@ -38,7 +38,7 @@ kvm_profiles:
     size: 20G
     pool: default
     dhcp: false
-    network: home
+    network: management
   large:
     state: present  # | recreate | absent
     memory: 8192
@@ -48,7 +48,7 @@ kvm_profiles:
     size: 20G
     pool: default
     dhcp: false
-    network: home
+    network: management
 
 kvm_pools:
   default:
