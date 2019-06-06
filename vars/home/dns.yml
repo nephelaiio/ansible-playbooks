@@ -62,7 +62,7 @@ pdns:
     default-soa-mail: "{{ dns_master }}"
     default-ttl: "{{ dns_ttl }}"
   backends:
-    gmysql:
+    gpgsql:
       user: "{{ pdns_mysql_user }}"
       host: 127.0.0.1
       password: "{{ pdns_mysql_pass }}"

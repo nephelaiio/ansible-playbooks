@@ -46,25 +46,51 @@
         name: dnsutils
         state: latest
 
-    - name: install mysql
+    - name: install postgresql
       include_role:
-        name: geerlingguy.mysql
+        name: geerlingguy.postgresql
       vars:
-        mysql_root_pass: "{{ pdns_mysql_root_pass }}"
-        mysql_root_password_update: yes
-        mysql_packages:
-          - mariadb-client
-          - mariadb-server
-          - python-mysqldb
-        mysql_databases:
-          - name: '{{ pdns.backends.gmysql.dbname }}'
-        mysql_users:
-          - name: '{{ pdns.backends.gmysql.user }}'
-            password: '{{ pdns.backends.gmysql.password }}'
-            priv: '{{ pdns.backends.gmysql.dbname }}.*:ALL'
-          - name: '{{ telegraf_user_name }}'
-            password: '{{ telegraf_user_pass }}'
-            priv: '{{ pdns.backends.gmysql.dbname }}.*:SELECT'
+        postgresql_databases:
+          - name: "{{ pdns.backends.gpgsql.dbname }}"
+        postgresql_users:
+          - name: "{{ pdns.backends.gpgsql.user }}"
+            password: "{{ pdns.backends.gpgsql.password }}"
+            encrypted: yes
+          - name: "{{ telegraf_user_name }}"
+            password: "{{ telegraf_user_pass }}"
+            encrypted: yes
+
+    - name: initialize database schema
+      postgresql_query:
+        db: "{{ pdns.backends.gpgsql.dbname }}"
+        query: "{{ lookup('template', 'schema.j2.sql') }}"
+      become_user: postgres
+
+    - name: set {{ pdns.backends.gpgsql.user }} table access
+      postgresql_privs:
+        db: "{{ pdns.backends.gpgsql.dbname }}"
+        role: "{{ pdns.backends.gpgsql.user }}"
+        objs: ALL_IN_SCHEMA
+        privs: SELECT,INSERT,UPDATE,DELETE
+        type: table
+      become_user: postgres
+
+    - name: set {{ pdns.backends.gpgsql.user }} schema access
+      postgresql_privs:
+        db: "{{ pdns.backends.gpgsql.dbname }}"
+        role: "{{ pdns.backends.gpgsql.user }}"
+        objs: ALL_IN_SCHEMA
+        privs: USAGE
+        type: sequence
+      become_user: postgres
+
+    - name: set {{ telegraf_user_name }} table access
+      postgresql_privs:
+        db: "{{ pdns.backends.gpgsql.dbname }}"
+        role: "{{ telegraf_user_name }}"
+        objs: ALL_IN_SCHEMA
+        privs: SELECT
+      become_user: postgres
 
     - name: create temporary directory
       tempfile:
@@ -73,53 +99,31 @@
       register: tmpdir
       changed_when: false
 
-    - name: install powerdns
-      apt:
-        name: "{{ item }}"
-        state: latest
-      with_items:
-        - pdns-server
-        - pdns-backend-mysql
-
-    - name: stop systemd-resolved
+    - name: disable systemd-resolved
       service:
         name: systemd-resolved
         state: stopped
         enabled: no
-      when: ansible_os_family == 'Debian'
-      notify: restart pdns
+      register: systemd_resolved_svc
 
-    - name: build database initialization script
-      template:
-        src: schema.sql.j2
-        dest: "{{ tmpdir.path }}/schema.sql"
-      changed_when: false
-
-    - name: initialize database
-      command: |
-        mysql "{{ pdns.backends.gmysql.dbname }}" -e "SOURCE {{ tmpdir.path }}/schema.sql;"
-      changed_when: false
-
-    - name: remove temporary directory
-      file:
-        path: "{{ tmpdir.path }}"
-        state: absent
-      changed_when: false
-
-    - name: configure powerdns
-      template:
-        src: pdns.conf.j2
-        dest: /etc/powerdns/pdns.conf
+    - name: bootstrap resolv.conf
+      include_role:
+        name: ahuffman.resolv
       vars:
-        config: "{{ pdns.config }}"
-        backends: "{{ pdns.backends }}"
-      notify: restart pdns
+        resolv_nameservers: "{{ nameservers }}"
+        resolv_domain: "{{ base_domain }}"
+        resolv_options:
+          - timeout:2
+          - rotate
+      when: systemd_resolved_svc.changed
 
-    - name: manage pdns service
-      service:
-        name: pdns
-        state: started
-        enabled: yes
+    - name: install powerdns
+      include_role:
+        name: PowerDNS.pdns
+      vars:
+        pdns_install_repo: "{{ pdns_auth_powerdns_repo_master }}"
+        pdns_config: "{{ pdns.config }}"
+        pdns_backends: "{{ pdns.backends }}"
 
     - meta: flush_handlers
 

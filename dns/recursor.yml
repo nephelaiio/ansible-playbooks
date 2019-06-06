@@ -18,14 +18,6 @@
 
     - nephelaiio.plugins
 
-  pre_tasks:
-
-    - name: gather authoritative facts
-      setup:
-      delegate_to: "{{ item }}"
-      delegate_facts: yes
-      with_items: "{{ groups['pdns'] }}"
-
   tasks:
 
     - name: include private variables
