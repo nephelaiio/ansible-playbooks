@@ -1,0 +1,4 @@
+---
+- import_playbook: kvm/hosts.yml
+
+- import_playbook: kvm/guests.yml
