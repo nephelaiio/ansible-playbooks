@@ -1,9 +1,9 @@
 ---
-kube-master:
+kube_master:
   hosts:
     nucx.home.nephelai.io:
 
-kube-node:
+kube_node:
   hosts:
     nuca.home.nephelai.io:
     nucb.home.nephelai.io:
@@ -11,12 +11,12 @@ kube-node:
 
 etcd:
   children:
-    kube-node:
+    kube_node:
 
-calico-rr:
+calico_rr:
   hosts: {}
 
-k8s-cluster:
+k8s_cluster:
   children:
-    kube-master:
-    kube-node:
+    kube_master:
+    kube_node:
