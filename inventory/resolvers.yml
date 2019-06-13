@@ -1,0 +1,4 @@
+---
+plugin: constructed
+groups:
+  resolvers: inventory_hostname.startswith('kvm')
