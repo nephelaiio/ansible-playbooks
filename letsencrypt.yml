@@ -164,39 +164,39 @@
       changed_when: false
       when: ansible_os_family == 'RedHat'
 
-  when: acme_certificate_add_ca
+  when: acme_certificate_add_ca | bool
 
 - name: set certificate file link
   file:
     state: link
     src: "{{ acme_certificate_domain_crtfile }}"
     dest: "{{ certificate_file }}"
-  when: certificate_file is defined
+  when: certificate_file is defined | bool
 
 - name: set certificate chain link
   file:
     state: link
     src: "{{ acme_certificate_domain_chainfile }}"
     dest: "{{ certificate_chainfile }}"
-  when: certificate_chainfile is defined
+  when: certificate_chainfile is defined | bool
 
 - name: set certificate key link
   file:
     state: link
     src: "{{ acme_certificate_domain_keyfile }}"
     dest: "{{ certificate_keyfile }}"
-  when: certificate_keyfile is defined
+  when: certificate_keyfile is defined | bool
 
 - name: set ca file link
   file:
     state: link
     src: "{{ acme_certificate_certdir }}/{{ acme_certificate_cafile }}"
     dest: "{{ certificate_cafile }}"
-  when: certificate_cafile is defined
+  when: certificate_cafile is defined | bool
 
 - name: set intca file link
   file:
     state: link
     src: "{{ acme_certificate_certdir }}/{{ acme_certificate_intcafile }}"
     dest: "{{ certificate_intcafile }}"
-  when: certificate_intcafile is defined
+  when: certificate_intcafile is defined | bool

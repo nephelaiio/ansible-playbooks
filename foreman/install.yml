@@ -113,27 +113,25 @@
       package:
         name: "{{ foreman_packages }}"
 
-    - name: create mariadb run folder
-      file:
-        state: directory
-        path: "{{ mariadb_pid_file | dirname }}"
-        owner: mysql
-        group: mysql
-
-    - name: install mysql
+    - name: install postgresql
       include_role:
-        name: geerlingguy.mysql
+        name: geerlingguy.postgresql
       vars:
-        mysql_log_error: ''
-        mysql_pid_file: "{{ mariadb_pid_file }}"
-        mysql_packages: "{{ foreman_db_packages }}"
-        mysql_databases:
+        postgresql_databases:
           - name: "{{ foreman_db_name }}"
-        mysql_users:
+        postgresql_users:
           - name: "{{ foreman_db_user }}"
             password: "{{ foreman_db_pass }}"
-            priv: "{{ foreman_db_name }}.*:ALL"
-        mysql_bind_address: "{{ foreman_db_host }}"
+            encrypted: yes
+
+    - name: set {{ foreman_db_name }} table access
+      postgresql_privs:
+        db: "{{ foreman_db_name }}"
+        role: "{{ foreman_db_user }}"
+        objs: ALL_IN_SCHEMA
+        privs: SELECT,INSERT,UPDATE,DELETE
+        type: table
+      become_user: postgres
 
     - name: configure database
       copy:
@@ -146,7 +144,7 @@
       vars:
         database_yaml:
           production:
-            adapter: mysql2
+            adapter: postgresql
             database: "{{ foreman_db_name }}"
             username: "{{ foreman_db_user }}"
             password: "{{ foreman_db_pass }}"
@@ -195,10 +193,8 @@
       include_role:
         name: geerlingguy.nginx
       vars:
-        nginx_extra_conf_options: ""
-        nginx_pacakge_name:
-          - nginx
-          - "{{ passenger_package }}"
+        nginx_extra_conf_options: |
+          load_module /usr/lib/nginx/modules/ngx_http_passenger_module.so;
         nginx_remove_default_vhost: true
         nginx_vhosts:
           - listen: "80 default_server"
@@ -453,7 +449,7 @@
     - name: notify of credential changes
       debug:
         msg: "{{ handler_permissions_reset.stdout }}"
-      when: foreman_permissions_reset
+      when: foreman_permissions_reset | bool
 
   handlers:
 

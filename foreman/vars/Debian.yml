@@ -18,5 +18,5 @@ foreman_app_packages:
   - foreman-cli
   - foreman-ec2
   - foreman-console
-  - foreman-mysql2
+  - foreman-postgresql
 foreman_packages: "{{ foreman_app_packages + foreman_db_packages }}"

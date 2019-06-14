@@ -13,5 +13,5 @@ foreman_db_packages:
   - MariaDB-client
 foreman_app_packages:
   - foreman
-  - foreman-mysql2
+  - foreman-postgresql
 foreman_packages: "{{ foreman_app_packages + foreman_db_packages }}"

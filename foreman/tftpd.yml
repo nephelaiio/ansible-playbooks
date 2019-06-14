@@ -30,7 +30,7 @@
 
     - name: install tftp packages
       package:
-        name: "{{ tftp_packages }}"
+        name: "{{ foreman_tftp_packages }}"
         state: latest
 
     - name: create tftp root
@@ -62,8 +62,6 @@
         - src: /usr/lib/syslinux/modules/bios/libutil.c32
           dest: "{{ foreman_tftp_root }}/libutil.c32"
       when: ansible_os_family == 'Debian'
-
-    - pause:
 
     - name: configure tftp xinetd daemon
       copy:
