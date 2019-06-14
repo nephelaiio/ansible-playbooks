@@ -20,6 +20,7 @@
         name:
           - libpq-dev
           - ruby-pg
+          - libmysqlclient-dev
 
     - name: install powerdns foreman proxy gems
       gem:
