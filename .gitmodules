@@ -1,3 +1,6 @@
 [submodule "submodules/freeipa"]
 	path = submodules/freeipa
 	url = https://github.com/freeipa/ansible-freeipa.git
+[submodule "submodules/awx"]
+	path = submodules/awx
+	url = https://github.com/ansible/awx.git
