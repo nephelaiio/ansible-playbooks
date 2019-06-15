@@ -47,6 +47,8 @@
   version: 2.2.5
 - src: nephelaiio.centos-installer
   version: 2.0.7
+- src: nephelaiio.acme_certificate_route53
+  version: 1.0.0
 - src: https://github.com/dj-wasabi/ansible-telegraf
   name: dj_wasabi.telegraf
   version: 0.9.0
