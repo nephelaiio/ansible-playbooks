@@ -62,15 +62,18 @@
         name:
           - "{{ foreman_proxy_user }}"
 
-    - include_tasks: ../letsencrypt.yml
+    - include_role:
+        name: nephelaiio.acme_certificate_route53
       vars:
-        certificate_hostname: "{{ host_certificate_hostname }}"
-        certificate_cafile: "{{ host_certificate_cafile }}"
-        certificate_intcafile: "{{ host_certificate_intcafile }}"
-        certificate_chainfile: "{{ host_certificate_chainfile }}"
-        certificate_keyfile: "{{ host_certificate_keyfile }}"
-        certificate_add_ca: yes
-        certificate_group_members:
+        acme_certificate_domain: "{{ host_certificate_hostname }}"
+        acme_certificate_cafile: "{{ host_certificate_cafile }}"
+        acme_certificate_intcafile: "{{ host_certificate_intcafile }}"
+        acme_certificate_chainfile: "{{ host_certificate_chainfile }}"
+        acme_certificate_keyfile: "{{ host_certificate_keyfile }}"
+        acme_certificate_add_ca: yes
+        acme_certificate_aws_accesskey_id: "{{ aws_access_key_id }}"
+        acme_certificate_aws_accesskey_secret: "{{ aws_secret_access_key }}"
+        acme_certificate_group_members:
           - "{{ foreman_proxy_user }}"
 
     - name: slurp ca file

@@ -153,14 +153,15 @@
 
     - meta: flush_handlers
 
-    - include_tasks: ../letsencrypt.yml
+    - include_role:
+        name: nephelaiio.acme_certificate_route53
       vars:
-        certificate_hostname: "{{ host_certificate_hostname }}"
-        certificate_chainfile: "{{ host_certificate_chainfile }}"
-        certificate_keyfile: "{{ host_certificate_keyfile }}"
-        certificate_add_ca: yes
-        certificate_group_members:
-          - "{{ foreman_user }}"
+        acme_certificate_domain: "{{ nginx_certificate_hostname }}"
+        acme_certificate_chainfile: "{{ nginx_certificate_chainfile }}"
+        acme_certificate_keyfile: "{{ nginx_certificate_keyfile }}"
+        acme_certificate_add_ca: yes
+        acme_certificate_aws_accesskey_id: "{{ aws_access_key_id }}"
+        acme_certificate_aws_accesskey_secret: "{{ aws_secret_access_key }}"
 
     - name: configure settings
       copy:
@@ -181,13 +182,6 @@
     - name: install passenger
       package:
         name: "{{ foreman_passenger_packages }}"
-
-    - include_tasks: ../letsencrypt.yml
-      vars:
-        certificate_hostname: "{{ nginx_certificate_hostname }}"
-        certificate_chainfile: "{{ nginx_certificate_chainfile }}"
-        certificate_keyfile: "{{ nginx_certificate_keyfile }}"
-        certificate_add_ca: yes
 
     - name: configure nginx
       include_role:
