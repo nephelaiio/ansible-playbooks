@@ -14,14 +14,3 @@
 
     - name: run ansible galaxy
       command: ansible-galaxy install -r roles/requirements.yml -p galaxy/ --force
-
-    - name: create local module directory
-      file:
-        state: directory
-        path: ./library/
-
-    - name: install aur module
-      git:
-        repo: https://github.com/kewlfft/ansible-aur.git
-        version: v0.23
-        dest: ./library/aur
