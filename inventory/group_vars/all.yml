@@ -7,3 +7,5 @@ kubeadm_enabled: yes
 k8s_cluster_name: kube.home.nephelai.io
 raspbian_image_url: http://downloads.raspberrypi.org/raspbian_lite/images/raspbian_lite-2018-06-29/2018-06-27-raspbian-stretch-lite.zip
 kvm_image_default: bionic
+
+awx_url: "https://awx.{{ base_domain }}"
