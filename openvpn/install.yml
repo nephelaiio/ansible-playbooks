@@ -65,18 +65,6 @@
         state: started
         enabled: yes
 
-    - name: create dynamic dns updater
-      copy:
-        dest: "{{ openvpn_conf_root }}/duck.sh"
-        content: 'echo url="https://www.duckdns.org/update?domains={{ duckdns_record_openvpn }}&token={{ duckdns_token }}&ip=" | curl -k -o /var/log/duckdns.log -sK -'
-        mode: 0700
-
-    - name: create dynamic dns update cronjob
-      cron:
-        name: duckdns updater
-        minute: "*/5"
-        job: "{{ openvpn_conf_root }}/duck.sh"
-
     - name: configure iptables forwarding
       iptables:
         chain: FORWARD

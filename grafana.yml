@@ -88,12 +88,12 @@
         - "{{ letsencrypt_keydir }}"
 
     - name: create key
-      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_email }}" -f {{ letsencrypt_account_keyfile }} -q -N ""'
+      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ acme_certificate_email }}" -f {{ letsencrypt_account_keyfile }} -q -N ""'
       args:
         creates: "{{ letsencrypt_account_keyfile }}"
 
     - name: create domain key
-      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_email }}" -f {{ letsencrypt_domain_keyfile }} -q -N ""'
+      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ acme_certificate_email }}" -f {{ letsencrypt_domain_keyfile }} -q -N ""'
       args:
         creates: "{{ letsencrypt_domain_keyfile }}"
 

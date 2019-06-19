@@ -26,12 +26,6 @@
 
   tasks:
 
-    - name: include private variables
-      include_vars:
-        dir: "../{{ variables }}"
-      tags:
-        - always
-
     - name: install python pip
       package:
         name: python-pip
@@ -56,9 +50,6 @@
           - name: "{{ pdns.backends.gpgsql.user }}"
             password: "{{ pdns.backends.gpgsql.password }}"
             encrypted: yes
-          - name: "{{ telegraf_user_name }}"
-            password: "{{ telegraf_user_pass }}"
-            encrypted: yes
 
     - name: initialize database schema
       postgresql_query:
@@ -82,14 +73,6 @@
         objs: ALL_IN_SCHEMA
         privs: USAGE
         type: sequence
-      become_user: postgres
-
-    - name: set {{ telegraf_user_name }} table access
-      postgresql_privs:
-        db: "{{ pdns.backends.gpgsql.dbname }}"
-        role: "{{ telegraf_user_name }}"
-        objs: ALL_IN_SCHEMA
-        privs: SELECT
       become_user: postgres
 
     - name: create temporary directory
@@ -137,12 +120,12 @@
         - "{{ letsencrypt_keydir }}"
 
     - name: create key
-      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_email }}" -f {{ letsencrypt_account_keyfile }} -q -N ""'
+      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ acme_certificate_email }}" -f {{ letsencrypt_account_keyfile }} -q -N ""'
       args:
         creates: "{{ letsencrypt_account_keyfile }}"
 
     - name: create domain key
-      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ letsencrypt_email }}" -f {{ letsencrypt_domain_keyfile }} -q -N ""'
+      shell: 'ssh-keygen -t rsa -b 2048 -C "{{ acme_certificate_email }}" -f {{ letsencrypt_domain_keyfile }} -q -N ""'
       args:
         creates: "{{ letsencrypt_domain_keyfile }}"
 
@@ -368,29 +351,11 @@
         record: "{{ letsencrypt_record }}"
         zone: "{{ letsencrypt_zone }}"
 
-    - name: query telegraf user
-      getent:
-        database: passwd
-      register: users_query
-
-    - name: manage telegraf user groups
-      user:
-        name: telegraf
-        append: yes
-        groups: pdns
-      when: telegraf_user_name in users_query.ansible_facts.getent_passwd
-      notify: restart telegraf
-
   handlers:
 
     - name: restart pdns
       service:
         name: pdns
-        state: restarted
-
-    - name: restart telegraf
-      service:
-        name: telegraf
         state: restarted
 
     - name: create route53 txt record for certificate validation

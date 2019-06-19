@@ -1,0 +1,14 @@
+---
+librenms_url: "https://librenms.{{ base_domain }}"
+librenms_poll_interval_min: 1
+librenms_db_name: "{{ secret_librenms_db_name }}"
+librenms_db_user: "{{ secret_librenms_db_user }}"
+librenms_db_pass: "{{ secret_librenms_db_pass }}"
+librenms_api_user: "{{ secret_librenms_api_user }}"
+librenms_api_pass: "{{ secret_librenms_api_pass }}"
+librenms_api_token: "{{ secret_librenms_api_token }}"
+librenms_graylog_user: "{{ secret_librenms_graylog_user }}"
+librenms_graylog_pass: "{{ secret_librenms_graylog_pass }}"
+librenms_influxdb_db_name: "{{ secret_librenms_influxdb_db_name }}"
+librenms_influxdb_user_name: "{{ secret_librenms_influxdb_user_name }}"
+librenms_influxdb_user_pass: "{{ secret_librenms_influxdb_user_pass }}"

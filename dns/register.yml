@@ -13,12 +13,6 @@
 
     - block:
 
-        - name: include private variables
-          include_vars:
-            dir: "../{{ variables }}"
-          tags:
-            - always
-
         - name: query zone records
           uri:
             url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ zone_name }}"

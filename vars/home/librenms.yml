@@ -1,3 +1,0 @@
----
-librenms_url: "https://librenms.{{ base_domain }}"
-librenms_poll_interval_min: 1

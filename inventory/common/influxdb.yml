@@ -1,0 +1,11 @@
+---
+influxdb_api_proto: http
+influxdb_api_port: 8086
+influxdb_udp_port: 8089
+influxdb_auth_enabled: 'true'
+influxdb_admin_user_name: "{{ secret_influxdb_admin_user_name }}"
+influxdb_admin_user_pass: "{{ secret_influxdb_admin_user_pass }}"
+influxdb_read_user_name: "{{ secret_influxdb_read_user_name }}"
+influxdb_read_user_pass: "{{ secret_influxdb_read_user_pass }}"
+influxdb_write_user_name: "{{ secret_influxdb_write_user_name }}"
+influxdb_write_user_pass: "{{ secret_influxdb_write_user_pass }}"

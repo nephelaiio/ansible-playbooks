@@ -1,0 +1,8 @@
+---
+graylog_url: https://logs.home.nephelai.io
+graylog_hostname: "{{ graylog_url | urlsplit('hostname') }}"
+graylog_syslog_proto: udp
+graylog_syslog_port: 8514
+graylog_syslog_url: "{{ graylog_syslog_proto }}://{{ graylog_hostname }}:{{ graylog_syslog_port }}"
+graylog_admin_user: "{{ secret_graylog_admin_user }}"
+graylog_admin_pass: "{{ secret_graylog_admin_pass }}"

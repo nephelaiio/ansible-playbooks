@@ -1,0 +1,5 @@
+---
+pdns_mysql_root_pass: "{{ secret_pdns_mysql_root_pass }}"
+pdns_mysql_user: "{{ secret_pdns_mysql_user }}"
+pdns_mysql_pass: "{{ secret_pdns_mysql_pass }}"
+pdns_api_key: "{{ secret_pdns_api_key }}"

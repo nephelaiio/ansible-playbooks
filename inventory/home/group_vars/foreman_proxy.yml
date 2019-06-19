@@ -1,0 +1,8 @@
+---
+dhcp_user: dhcpd
+dhcp_group: dhcpd
+foreman_proxy_settings:
+  :bind_host: '*'
+  :trusted_hosts: "{{ groups['foreman_app'] | unique }}"
+  :daemon: true
+  :https_port: "{{ foreman_proxy_port }}"

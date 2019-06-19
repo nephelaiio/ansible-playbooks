@@ -11,7 +11,7 @@
 
     - name: build vm profile definitions
       set_fact:
-        kvm_profile: "{{ kvm_profiles[kvm_profile | default(kvm_default_profile)] | combine(dict(hostvars[inventory_hostname]), recursive=true) }}"
+        kvm_profile: "{{ kvm_profiles[kvm_profile | default(kvm_profile_default)] | combine(dict(hostvars[inventory_hostname]), recursive=true) }}"
 
     - name: build vm pool definition
       set_fact:

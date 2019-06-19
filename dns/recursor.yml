@@ -20,10 +20,6 @@
 
   tasks:
 
-    - name: include private variables
-      include_vars:
-        dir: "../{{ variables }}"
-
     - name: remove bind recursor
       apt:
         package: bind9

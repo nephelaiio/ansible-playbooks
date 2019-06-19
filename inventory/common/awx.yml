@@ -1,0 +1,2 @@
+---
+awx_url: "https://awx.{{ base_domain }}"

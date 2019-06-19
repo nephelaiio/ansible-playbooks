@@ -1,0 +1,9 @@
+---
+kubeadm_enabled: yes
+k8s_cluster_name: "kube.{{ base_domain }}"
+
+kubespray_version: v2.8.1
+kubespray_root: ./kubespray
+
+rook_version: v0.9.0
+rook_root: ./rook

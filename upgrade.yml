@@ -1,7 +1,7 @@
 ---
 - name: Upgrade hosts
 
-  hosts: all:!no_upgrade:!offline
+  hosts: online
 
   become: yes
 

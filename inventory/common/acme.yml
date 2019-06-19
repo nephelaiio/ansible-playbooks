@@ -1,0 +1,2 @@
+---
+acme_certificate_email: "{{ secret_acme_certificate_email }}"

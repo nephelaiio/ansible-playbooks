@@ -1,8 +1,0 @@
----
-openvpn_tls_auth: yes
-openvpn_unified_client_profiles: yes
-openvpn_net: "{{ openvpn_nets[openvpn_net_name].network }}/{{ openvpn_nets[openvpn_net_name].netmask }}"
-openvpn_proto: tcp
-openvpn_server: "{{ openvpn_net | ipaddr('network') }} {{ openvpn_net | ipaddr('netmask') }}"
-openvpn_auth_pam: /usr/lib/openvpn/openvpn-auth-pam.so
-openvpn_easyrsa_cnf: /usr/share/easy-rsa/openssl-1.0.0.cnf

@@ -1,0 +1,26 @@
+---
+- name: Install awx
+
+  hosts: awx
+
+  become: yes
+
+  vars:
+
+    awx_container_port: 80
+    host_port: "{{ awx_container_port }}"
+    dockerhub_version: "{{ awx_release }}"
+    dockerhub_base: ansible
+    docker_compose_dir: /tmp/awxcompose
+    awx_web_hostname: awx_web
+    awx_task_hostname: awx_task
+    pg_username: "{{ awx_pg_user }}"
+    pg_password: "{{ awx_pg_pass }}"
+    pg_database: "awx_{{ awx_release }}"
+
+  roles:
+
+    - nephelaiio.plugins
+    - nephelaiio.pip
+    - nephelaiio.docker
+    - local_docker
