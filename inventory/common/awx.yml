@@ -1,2 +1,5 @@
 ---
 awx_url: "https://awx.{{ base_domain }}"
+awx_admin_user: "{{ secret_awx_admin_user }}"
+awx_admin_pass: "{{ secret_awx_admin_pass }}"
+awx_key: "{{ secret_awx_key }}"
