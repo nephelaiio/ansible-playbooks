@@ -44,7 +44,7 @@
 - src: nephelaiio.centos-installer
   version: 2.0.7
 - src: nephelaiio.docker
-  version: 4.0.2
+  version: 4.0.3
 - src: nephelaiio.pip
   version: 4.0.1
 - src: nephelaiio.acme_certificate_route53
