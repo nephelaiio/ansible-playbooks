@@ -7,6 +7,58 @@
 
   vars:
 
+    docker_pip_helpers:
+      - docker
+      - docker-compose
+
+    postgresql_databases:
+      - name: "{{ pg_database }}"
+        port: "{{ pg_port }}"
+    postgresql_users:
+      - name: "{{ pg_username }}"
+        password: "{{ pg_password }}"
+        encrypted: yes
+
+    nginx_htp_template_enable: yes
+    nginx_http_template:
+      upstreams:
+        awx:
+          name: awx
+          servers:
+            localhost:
+              address: localhost
+              port: 80
+              health_check: max_fails=1 fail_timeout=10s
+      awx:
+        port: 443
+        server_name: "{{ awx_url | urlsplit('hostname') }}"
+        ssl:
+          cert:
+          protocols: TLSv1.2
+          ciphers: HIGH:!aNULL:!MD5
+        locations:
+          proxy:
+            location: /
+            proxy_cache_path:
+              - path: /var/cache/nginx/proxy/backend
+                keys_zone:
+                  name: awx_proxy_cache
+                  size: 10m
+                levels: "1:2"
+                max_size: 10g
+                inactive: 60m
+                use_temp_path: true
+            proxy_temp_path:
+              path: /var/cache/nginx/proxy/temp
+            proxy_cache_lock: true
+            proxy_cache_min_uses: 5
+            proxy_cache_revalidate: true
+            proxy_cache_use_stale:
+              - error
+              - timeout
+            proxy_ignore_headers:
+              - Expires
+
     awx_container_port: 80
     host_port: "{{ awx_container_port }}"
     dockerhub_version: "{{ awx_release }}"
@@ -14,13 +66,47 @@
     docker_compose_dir: /tmp/awxcompose
     awx_web_hostname: awx_web
     awx_task_hostname: awx_task
+    pg_hostname: "{{ ansible_default_ipv4.address }}"
     pg_username: "{{ awx_pg_user }}"
     pg_password: "{{ awx_pg_pass }}"
-    pg_database: "awx_{{ awx_release }}"
+    pg_database: "awx_{{ awx_release | regex_replace('\\.', '_') }}"
+    pg_port: 5432
+    admin_user: "{{ awx_admin_user }}"
+    admin_password: "{{ awx_admin_pass }}"
+    secret_key: "{{ awx_key }}"
 
   roles:
 
     - nephelaiio.plugins
     - nephelaiio.pip
     - nephelaiio.docker
+    - geerlingguy.postgresql
+    - nginxinc.nginx
     - local_docker
+
+  tasks:
+
+    - name: update nginx pdns record
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ awx_url_zone }}"
+        method: PATCH
+        return_content: yes
+        body_format: json
+        body:
+          rrsets:
+            - name: "{{ awx_url_host }}"
+              type: A
+              ttl: 3600
+              changetype: REPLACE
+              records:
+                - content: "{{ ansible_default_ipv4.address }}"
+                  disabled: no
+                  set-ptr: no
+                  comments: []
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        awx_url_host: "{{ awx_url | urlsplit('hostname') }}."
+        awx_url_zone: "{{ awx_url_host | split_with('.') | tail | join('.') }}"
+      register: pdns_zones_query
