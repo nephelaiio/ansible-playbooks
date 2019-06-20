@@ -8,9 +8,5 @@
     - name: install requirements
       command: pip install -r requirements.txt
 
-    - name: include private variables
-      include_vars:
-        dir: "{{ variables }}"
-
     - name: run ansible galaxy
       command: ansible-galaxy install -r roles/requirements.yml -p galaxy/ --force
