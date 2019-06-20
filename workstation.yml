@@ -1,0 +1,11 @@
+---
+- name: Install workstation
+
+  hosts: localhost
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.pip
+    - nephelaiio.docker
