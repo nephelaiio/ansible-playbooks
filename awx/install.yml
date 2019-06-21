@@ -19,7 +19,18 @@
         password: "{{ pg_password }}"
         encrypted: yes
 
-    nginx_htp_template_enable: yes
+    acme_certificate_domain: "{{ awx_url | urlsplit('hostname') }}"
+    acme_certificate_chainfile: "/etc/nginx/{{ acme_certificate_domain }}.chain.crt"
+    acme_certificate_keyfile: "/etc/nginx/{{ acme_certificate_domain }}.key"
+    acme_certificate_add_ca: yes
+    acme_certificate_aws_accesskey_id: "{{ aws_access_key_id }}"
+    acme_certificate_aws_accesskey_secret: "{{ aws_secret_access_key }}"
+
+    nginx_install_from: os_repository
+    nginx_cleanup_config: false
+    nginx_cleanup_config_path:
+      - /etc/nginx/conf.d
+    nginx_http_template_enable: yes
     nginx_http_template:
       upstreams:
         awx:
@@ -31,9 +42,10 @@
               health_check: max_fails=1 fail_timeout=10s
       awx:
         port: 443
-        server_name: "{{ awx_url | urlsplit('hostname') }}"
+        server_name: "{{ acme_certificate_domain }}"
         ssl:
-          cert:
+          key: "{{ acme_certificate_keyfile }}"
+          cert: "{{ acme_certificate_chainfile }}"
           protocols: TLSv1.2
           ciphers: HIGH:!aNULL:!MD5
         locations:
@@ -81,6 +93,7 @@
     - nephelaiio.pip
     - nephelaiio.docker
     - geerlingguy.postgresql
+    - nephelaiio.acme_certificate_route53
     - nginxinc.nginx
     - local_docker
 
@@ -88,13 +101,13 @@
 
     - name: update nginx pdns record
       uri:
-        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ awx_url_zone }}"
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ pdns_url_zone }}"
         method: PATCH
         return_content: yes
         body_format: json
         body:
           rrsets:
-            - name: "{{ awx_url_host }}"
+            - name: "{{ pdns_url_host }}"
               type: A
               ttl: 3600
               changetype: REPLACE
@@ -107,6 +120,6 @@
           X-API-Key: "{{ pdns_api_key }}"
         status_code: 204
       vars:
-        awx_url_host: "{{ awx_url | urlsplit('hostname') }}."
-        awx_url_zone: "{{ awx_url_host | split_with('.') | tail | join('.') }}"
+        pdns_url_host: "{{ acme_certificate_domain }}."
+        pdns_url_zone: "{{ pdns_url_host | split_with('.') | tail | join('.') }}"
       register: pdns_zones_query
