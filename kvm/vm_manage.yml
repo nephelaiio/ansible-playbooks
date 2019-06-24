@@ -251,7 +251,6 @@
         - name: create vm
           virt:
             command: define
-            name: "{{ guest_name }}"
             xml: "{{ domain['content'] | b64decode }}"
           when: diskcopy.changed
 
