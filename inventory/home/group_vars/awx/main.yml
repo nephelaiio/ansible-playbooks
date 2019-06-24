@@ -1,5 +1,5 @@
 ---
-awx_release: "4.0.0"
+awx_release: "5.0.0"
 awx_hostname: "{{ awx_url | urlsplit('hostname') }}"
 awx_port: 8080
 awx_nolog: yes
