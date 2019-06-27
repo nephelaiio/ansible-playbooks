@@ -83,6 +83,7 @@
     admin_user: "{{ awx_admin_user }}"
     admin_password: "{{ awx_admin_pass }}"
     secret_key: "{{ awx_key }}"
+    create_preload_data: no
 
   roles:
 

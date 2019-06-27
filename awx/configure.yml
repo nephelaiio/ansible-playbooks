@@ -1,9 +1,9 @@
 ---
 - name: Configure awx
 
-  hosts: localhost
+  hosts: awx
 
-  connection: local
+  become: yes
 
   vars:
 
@@ -16,22 +16,16 @@
 
   tasks:
 
-    - name: include private variables
-      include_vars:
-        dir: "{{ variables }}"
-      tags:
-        - always
-
     - name: install tower cli
       pip:
         name: ansible-tower-cli
-        state: latest
+        state: present
 
     - name: create tower cli configuration file
       template:
-        src: awx/tower_cli.cfg.j2
+        src: tower_cli.cfg.j2
         dest: "{{ awx_cli_conf }}"
-        mode: 0640
+        mode: 0600
       vars:
         host: "{{ awx_url | urlsplit('hostname') }}"
         username: "{{ awx_admin_user }}"
@@ -39,152 +33,155 @@
         verify_ssl: false
         verbose: false
 
-    - name: manage awx settings
-      command: "awx-cli setting modify {{ item.key }} \"{{ item.value }}\""
-      with_dict: "{{ awx_settings }}"
-      no_log: "{{ awx_nolog }}"
+    - block:
 
-    - name: destroy awx job schedules
-      include_tasks: awx/schedule_destroy.yml
-      vars:
-        schedule: "{{ item.1 }}"
-      with_subelements:
-        - "{{ awx_organizations | selectattr('schedules', 'defined') | list }}"
-        - schedules
-      when: item.0.state | default('present') == 'absent' or item.1.state | default('present') == 'absent'
-      no_log: "{{ awx_nolog }}"
+        - name: manage awx settings
+          tower_settings:
+            name: "{{ item.key }}"
+            value: "{{ item.value }}"
+          loop_control:
+            label: "{{ item.key }}"
+          loop: "{{ awx_settings | dict2items }}"
 
-    - name: destroy awx workflows
-      include_tasks: awx/workflow_destroy.yml
-      vars:
-        organization: "{{ item.0.name }}"
-        workflow: "{{ item.1 }}"
-      with_subelements:
-        - "{{ awx_organizations | selectattr('projects', 'defined') | list }}"
-        - workflows
-      when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
-      no_log: "{{ awx_nolog }}"
-      tags:
-        - workflows
+        - name: destroy awx job schedules
+          include_tasks: schedule_destroy.yml
+          vars:
+            schedule: "{{ item.1 }}"
+          loop_control:
+            label: "{{ schedule.name }}"
+          loop: "{{ awx_organizations | subelements('schedules', skip_missing='yes') }}"
+          when: organization.state | default('present') == 'absent' or schedule.state | default('present') == 'absent'
+          no_log: "{{ awx_nolog }}"
 
-    - name: destroy awx job templates
-      include_tasks: awx/template_destroy.yml
-      vars:
-        template: "{{ item.1 }}"
-      with_subelements:
-        - "{{ awx_organizations | selectattr('templates', 'defined') | list }}"
-        - templates
-      when: item.0.state | default('present') == 'absent' or item.1.state | default('present') == 'absent'
-      no_log: "{{ awx_nolog }}"
+        - name: destroy awx workflows
+          include_tasks: workflow_destroy.yml
+          vars:
+            organization: "{{ item.0.name }}"
+            workflow: "{{ item.1 }}"
+          loop_control:
+            label: "{{ workflow.name }}"
+          loop: "{{ awx_organizations | subelements('workflows', skip_missing='yes') }}"
+          when: organization.state | default('present') == 'absent' or workflow.state | default('present') == 'absent'
+          no_log: "{{ awx_nolog }}"
 
-    - name: destroy awx inventories
-      include_tasks: awx/inventory_destroy.yml
-      vars:
-        inventory: "{{ item.1 }}"
-      with_subelements:
-        - "{{ awx_organizations | selectattr('inventories', 'defined') | list }}"
-        - inventories
-      when: item.0.state | default('present') == 'absent' or item.1.state | default('present') == 'absent'
-      no_log: "{{ awx_nolog }}"
+        - name: destroy awx job templates
+          include_tasks: template_destroy.yml
+          vars:
+            template: "{{ item.1 }}"
+          loop_control:
+            label: "{{ template.name }}"
+          loop: "{{ awx_organizations | subelements('templates', skip_missing='yes') }}"
+          when: organization.state | default('present') == 'absent' or template.state | default('present') == 'absent'
+          no_log: "{{ awx_nolog }}"
 
-    - name: destroy awx projects
-      include_tasks: awx/project_destroy.yml
-      vars:
-        project: "{{ item.1 }}"
-      with_subelements:
-        - "{{ awx_organizations | selectattr('projects', 'defined') | list }}"
-        - projects
-      when: item.0.state | default('present') == 'absent' or item.1.state | default('present') == 'absent'
-      no_log: "{{ awx_nolog }}"
+        - name: destroy awx inventories
+          include_tasks: inventory_destroy.yml
+          vars:
+            inventory: "{{ item.1 }}"
+          loop_control:
+            label: "{{ inventory.name }}"
+          loop: "{{ awx_organizations | subelements('inventories', skip_missing='yes') }}"
+          when: organization.state | default('present') == 'absent' or inventory.state | default('present') == 'absent'
+          no_log: "{{ awx_nolog }}"
 
-    - name: destroy awx credentials
-      include_tasks: awx/credential_destroy.yml
-      vars:
-        credential: "{{ item.1 }}"
-      with_subelements:
-        - "{{ awx_organizations | selectattr('credentials', 'defined') | list }}"
-        - credentials
-      when: item.0.state | default('present') == 'absent' or item.1.state | default('present') == 'absent'
-      no_log: "{{ awx_nolog }}"
+        - name: destroy awx projects
+          include_tasks: project_destroy.yml
+          vars:
+            project: "{{ item.1 }}"
+          loop_control:
+            label: "{{ project.name }}"
+          loop: "{{ awx_organizations | subelements('projects', skip_missing='yes') }}"
+          when: organization.state | default('present') == 'absent' or project.state | default('present') == 'absent'
+          no_log: "{{ awx_nolog }}"
 
-    - name: destroy awx organizations
-      command: "awx-cli organization delete -n {{ organization.name | quote }}"
-      vars:
-        organization: "{{ item }}"
-      with_items: "{{ awx_organizations }}"
-      when: item.state | default('present') == 'absent'
-      no_log: "{{ awx_nolog }}"
+        - name: destroy awx credentials
+          include_tasks: credential_destroy.yml
+          vars:
+            credential: "{{ item.1 }}"
+          loop_control:
+            label: "{{ credential.name }}"
+          loop: "{{ awx_organizations | subelements('credentials', skip_missing='yes') }}"
+          when: organization.state | default('present') == 'absent' or credential.state | default('present') == 'absent'
+          no_log: "{{ awx_nolog }}"
 
-    - name: create awx organizations
-      command: "awx-cli organization create -n {{ name | string | quote }}"
-      vars:
-        name: "{{ item.name }}"
-      with_items: "{{ awx_organizations }}"
-      when: item.state | default('present') == 'present'
-      no_log: "{{ awx_nolog }}"
+        - name: destroy awx organizations
+          command: "awx-cli organization delete -n {{ organization.name | quote }}"
+          vars:
+            organization: "{{ item }}"
+          loop: "{{ awx_organizations | list }}"
+          when: organization.state | default('present') == 'absent'
+          no_log: "{{ awx_nolog }}"
 
-    - name: create awx credentials
-      include_tasks: awx/credential_create.yml
-      vars:
-        organization: "{{ item.0.name }}"
-        credential: "{{ item.1 }}"
-      with_subelements:
-        - "{{ awx_organizations | selectattr('credentials', 'defined') | list }}"
-        - credentials
-      when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
-      no_log: false
+        - name: create awx organizations
+          command: "awx-cli organization create -n {{ name | string | quote }}"
+          vars:
+            name: "{{ item.name }}"
+          loop: "{{ awx_organizations | list }}"
+          when: item.state | default('present') == 'present'
+          no_log: "{{ awx_nolog }}"
 
-    - name: create awx projects
-      include_tasks: awx/project_create.yml
-      vars:
-        organization: "{{ item.0.name }}"
-        project: "{{ item.1 }}"
-      with_subelements:
-        - "{{ awx_organizations | selectattr('projects', 'defined') | list }}"
-        - projects
-      when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
-      no_log: "{{ awx_nolog }}"
+        - name: create awx credentials
+          include_tasks: credential_create.yml
+          vars:
+            organization: "{{ item.0.name }}"
+            credential: "{{ item.1 }}"
+          loop_control:
+            label: "{{ credential.name }}"
+          loop: "{{ awx_organizations | subelements('credentials', skip_missing='yes') }}"
+          when: organization.state | default('present') == 'present' or credential.state | default('present') == 'present'
+          no_log: false
 
-    - name: create awx inventories
-      include_tasks: awx/inventory_create.yml
-      vars:
-        organization: "{{ item.0.name }}"
-        inventory: "{{ item.1 }}"
-      with_subelements:
-        - "{{ awx_organizations | selectattr('inventories', 'defined') | list }}"
-        - inventories
-      when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
-      no_log: "{{ awx_nolog }}"
+        - name: create awx projects
+          include_tasks: project_create.yml
+          vars:
+            organization: "{{ item.0.name }}"
+            project: "{{ item.1 }}"
+          loop_control:
+            label: "{{ project.name }}"
+          loop: "{{ awx_organizations | subelements('projects', skip_missing='yes') }}"
+          when: organization.state | default('present') == 'present' and project.state | default('present') == 'present'
+          no_log: "{{ awx_nolog }}"
 
-    - name: create awx job templates
-      include_tasks: awx/template_create.yml
-      vars:
-        template: "{{ item.1 }}"
-      with_subelements:
-        - "{{ awx_organizations | selectattr('templates', 'defined') | list }}"
-        - templates
-      when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
-      no_log: "{{ awx_nolog }}"
+        - name: create awx inventories
+          include_tasks: inventory_create.yml
+          vars:
+            organization: "{{ item.0.name }}"
+            inventory: "{{ item.1 }}"
+          loop_control:
+            label: "{{ inventory.name }}"
+          loop: "{{ awx_organizations | subelements('inventories', skip_missing='yes') }}"
+          when: organization.state | default('present') == 'present' and inventory.state | default('present') == 'present'
+          no_log: "{{ awx_nolog }}"
 
-    - name: create awx workflows
-      include_tasks: awx/workflow_create.yml
-      vars:
-        organization: "{{ item.0.name }}"
-        workflow: "{{ item.1 }}"
-      with_subelements:
-        - "{{ awx_organizations | selectattr('projects', 'defined') | list }}"
-        - workflows
-      when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
-      no_log: "{{ awx_nolog }}"
-      tags:
-        - workflows
+        - name: create awx job templates
+          include_tasks: template_create.yml
+          vars:
+            template: "{{ item.1 }}"
+          loop_control:
+            label: "{{ template.name }}"
+          loop: "{{ awx_organizations | subelements('templates', skip_missing='yes') }}"
+          when: organization.state | default('present') == 'present' and template.state | default('present') == 'present'
+          no_log: "{{ awx_nolog }}"
 
-    - name: create awx job schedules
-      include_tasks: awx/schedule_create.yml
-      vars:
-        schedule: "{{ item.1 }}"
-      with_subelements:
-        - "{{ awx_organizations | selectattr('schedules', 'defined') | list }}"
-        - schedules
-      when: item.0.state | default('present') == 'present' and item.1.state | default('present') == 'present'
-      no_log: "{{ awx_nolog }}"
+        - name: create awx workflows
+          include_tasks: workflow_create.yml
+          vars:
+            organization: "{{ item.0.name }}"
+            workflow: "{{ item.1 }}"
+          loop_control:
+            label: "{{ workflow.name }}"
+          loop: "{{ awx_organizations | subelements('workflows', skip_missing='yes') }}"
+          when: organization.state | default('present') == 'present' and workflow.state | default('present') == 'present'
+          no_log: "{{ awx_nolog }}"
+
+        - name: create awx job schedules
+          include_tasks: schedule_create.yml
+          vars:
+            schedule: "{{ item.1 }}"
+          loop_control:
+            label: "{{ schedule.name }}"
+          loop: "{{ awx_organizations | subelements('schedules', skip_missing='yes') }}"
+          when: organization.state | default('present') == 'present' and schedule.state | default('present') == 'present'
+          no_log: "{{ awx_nolog }}"
+
+      run_once: yes

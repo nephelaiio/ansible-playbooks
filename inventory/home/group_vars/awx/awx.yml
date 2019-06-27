@@ -13,12 +13,11 @@ awx_secret_key: "{{ secret_awx_secret_key }}"
 awx_github_user: "{{ secret_awx_github_user }}"
 awx_github_pass: "{{ secret_awx_github_pass }}"
 awx_vault_home_pass: "{{ secret_awx_vault_home_pass }}"
-rabbitmq_password: "{{ secret_rabbitmq_password }}"
-rabbitmq_erlang_cookie: "{{ secret_rabbitmq_erlang_cookie }}"
+rabbitmq_user: awx
+rabbitmq_password: "{{ secret_awx_rabbitmq_password }}"
+rabbitmq_erlang_cookie: "{{ secret_awx_rabbitmq_erlangcookie }}"
 
 awx_organizations:
-  - name: Default
-    state: absent
 
   - name: home
     state: present
@@ -40,8 +39,6 @@ awx_organizations:
           ssh_key_data: "{{ users.teddyphreak.privkey }}"
 
     projects:
-      - name: Demo Project
-        state: absent
       - name: nephelai.io
         scm_type: git
         scm_url: https://github.com/nephelaiio/ansible-playbooks.git
@@ -63,8 +60,6 @@ awx_organizations:
         update_on_project_update: false
 
     templates:
-      - name: Demo Job Template
-        state: absent
       - name: ping.home
         job_type: run
         project: nephelai.io
