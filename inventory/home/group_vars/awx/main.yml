@@ -3,10 +3,9 @@ awx_release: "5.0.0"
 awx_hostname: "{{ awx_url | urlsplit('hostname') }}"
 awx_port: 8080
 awx_nolog: yes
-awx_user: "{{ secret_awx_admin_user }}"
-awx_pass: "{{ secret_awx_admin_pass }}"
 awx_admin_user: "{{ secret_awx_admin_user }}"
 awx_admin_pass: "{{ secret_awx_admin_pass }}"
+awx_key: "{{ secret_awx_key }}"
 awx_host_key: "{{ secret_awx_host_key }}"
 awx_pg_user: "{{ secret_awx_pg_user }}"
 awx_pg_pass: "{{ secret_awx_pg_pass }}"
@@ -25,8 +24,6 @@ awx_organizations:
     state: present
 
     credentials:
-      - name: Demo Credential
-        state: absent
       - name: github.com
         kind: scm
         inputs:
