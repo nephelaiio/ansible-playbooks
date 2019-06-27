@@ -105,7 +105,9 @@
           no_log: "{{ awx_nolog }}"
 
         - name: destroy awx organizations
-          command: "awx-cli organization delete -n {{ organization.name | quote }}"
+          tower_organization:
+            name: "{{ organization.name }}"
+            state: absent
           vars:
             organization: "{{ item }}"
           loop: "{{ awx_organizations | list }}"
@@ -113,9 +115,11 @@
           no_log: "{{ awx_nolog }}"
 
         - name: create awx organizations
-          command: "awx-cli organization create -n {{ name | string | quote }}"
+          tower_organization:
+            name: "{{ organization.name }}"
+            state: present
           vars:
-            name: "{{ item.name }}"
+            organization: "{{ item }}"
           loop: "{{ awx_organizations | list }}"
           when: item.state | default('present') == 'present'
           no_log: "{{ awx_nolog }}"
