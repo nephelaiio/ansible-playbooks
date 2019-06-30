@@ -82,7 +82,7 @@
     postgres_data_dir: /opt/awx/data
     admin_user: "{{ awx_admin_user | default('admin') }}"
     admin_password: "{{ awx_admin_pass }}"
-    secret_key: "{{ awx_key }}"
+    secret_key: "{{ awx_secret_key }}"
     create_preload_data: no
     rabbitmq_user: "{{ awx_rabbitmq_user | default('awx') }}"
     rabbitmq_password: "{{ awx_rabbitmq_password }}"
