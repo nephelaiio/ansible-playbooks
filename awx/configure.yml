@@ -9,12 +9,20 @@
 
     awx_cli_conf: ~/.tower_cli.cfg
     awx_settings: {}
+    awx_nolog: yes
 
   roles:
 
     - nephelaiio.plugins
 
   tasks:
+
+    - name: include vars files
+      include_vars:
+        dir: "{{ item }}"
+      loop: "{{ vars_dirs | list }}"
+      ignore_errors: yes
+      when: vars_dirs is defined
 
     - name: install tower cli
       pip:
