@@ -36,7 +36,7 @@
         mode: 0600
       vars:
         host: "{{ awx_url | urlsplit('hostname') }}"
-        username: "{{ awx_admin_user }}"
+        username: "{{ awx_admin_user | default('admin') }}"
         password: "{{ awx_admin_pass }}"
         verify_ssl: false
         verbose: false
