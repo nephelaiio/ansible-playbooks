@@ -1,5 +1,4 @@
 ---
 plugin: constructed
-strict: no
 groups:
   resolvers: (inventory_hostname.startswith('kvm') and (state | default('present')) != 'absent')
