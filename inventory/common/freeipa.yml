@@ -1,2 +1,0 @@
----
-freeipa_domain: "ipa.{{ base_domain }}"

@@ -1,1 +1,3 @@
-../../../common/traefik.yml
+---
+traefik_release: v1.7
+traefik_target: "lb.{{ base_domain }}"

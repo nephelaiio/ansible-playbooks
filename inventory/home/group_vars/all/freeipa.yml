@@ -1,1 +1,2 @@
-../../../common/freeipa.yml
+---
+freeipa_domain: "ipa.{{ base_domain }}"
