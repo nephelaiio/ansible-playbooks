@@ -1,7 +1,0 @@
----
-openshift:
-  hosts:
-    nucx.home.nephelai.io:
-    nuca.home.nephelai.io:
-    nucb.home.nephelai.io:
-    nucc.home.nephelai.io:

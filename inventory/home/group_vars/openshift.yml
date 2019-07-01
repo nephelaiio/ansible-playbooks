@@ -1,3 +1,0 @@
----
-openshift_installer_version: release-3.11
-openshift_installer_root: ./openshift/installer

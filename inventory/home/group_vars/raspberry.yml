@@ -1,3 +1,0 @@
----
-ansible_user: pi
-ansible_os_family: Debian
