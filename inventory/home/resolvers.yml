@@ -1,4 +1,4 @@
 ---
-plugin: constructed
-groups:
-  resolvers: (inventory_hostname.startswith('kvm') and (state | default('present')) != 'absent')
+resolvers:
+  hosts:
+    kvm_guests:
