@@ -386,12 +386,6 @@
         librenms_config_graylog_user: "{{ graylog_admin_user }}"
         librenms_config_graylog_pass: "{{ graylog_admin_pass }}"
         librenms_config_graylog_version: 2.4
-        librenms_config_influxdb_host: "127.0.0.1"
-        librenms_config_influxdb_port: "{{ influxdb_api_port }}"
-        librenms_config_influxdb_db_name: "{{ librenms_influxdb_db_name }}"
-        librenms_config_influxdb_user_name: "{{ librenms_influxdb_user_name }}"
-        librenms_config_influxdb_user_pass: "{{ librenms_influxdb_user_pass }}"
-        librenms_config_influxdb_proto: "{{ influxdb_api_proto }}"
       notify: restart fpm
 
     - name: configure rrdcached
@@ -529,33 +523,6 @@
           echo run {{ librenms_restore_bin | basename }} to manually restore latest librenms backup
           echo
         mode: 0755
-
-  post_tasks:
-
-    - name: create influxdb database
-      influxdb_database:
-        database_name: "{{ librenms_influxdb_db_name }}"
-        username: "{{ influxdb_admin_user_name }}"
-        password: "{{ influxdb_admin_user_pass }}"
-      delegate_to: "{{ item }}"
-      with_items: "{{ groups['influxdb'] }}"
-      run_once: yes
-
-    - name: create influxdb users
-      influxdb_user:
-        user_name: "{{ librenms_influxdb_user_name }}"
-        user_password: "{{ librenms_influxdb_user_pass }}"
-        username: "{{ influxdb_admin_user_name }}"
-        password: "{{ influxdb_admin_user_pass }}"
-      delegate_to: "{{ item }}"
-      with_items: "{{ groups['influxdb'] }}"
-      run_once: yes
-
-    - name: configure influxdb permissions
-      command: influx -execute "GRANT ALL ON {{ librenms_influxdb_db_name }} TO {{ librenms_influxdb_user_name }}" -username "{{ influxdb_admin_user_name }}" -password "{{ influxdb_admin_user_pass }}"
-      delegate_to: "{{ item }}"
-      with_items: "{{ groups['influxdb'] }}"
-      run_once: yes
 
   handlers:
 

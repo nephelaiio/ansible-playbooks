@@ -51,16 +51,6 @@ $config['graylog']['version']  = '{{ librenms_config_graylog_version }}';
 $config['show_services'] = 1;
 $config['nagios_plugins'] = "/usr/lib/nagios/plugins";
 
- ## InfluxDB export configuration
-$config['influxdb']['enable'] = true;
-$config['influxdb']['transport'] = '{{ librenms_config_influxdb_proto }}';
-$config['influxdb']['host'] = '{{ librenms_config_influxdb_host }}';
-$config['influxdb']['port'] = '{{ librenms_config_influxdb_port }}';
-$config['influxdb']['db'] = '{{ librenms_config_influxdb_db_name }}';
-$config['influxdb']['username'] = '{{ librenms_config_influxdb_user_name }}';
-$config['influxdb']['password'] = '{{ librenms_config_influxdb_user_pass }}';
-$config['influxdb']['verifySSL'] = false;
-
 ## Set up RRDCached (https://github.com/librenms/librenms/blob/master/doc/Extensions/RRDCached.md)
 $config['rrdtool_version'] = '1.5.5';
 $config['rrdcached'] = "unix:/var/run/rrdcached.sock";
