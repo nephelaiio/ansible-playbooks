@@ -1,6 +1,0 @@
----
-chronograf_url: "https://chronograf.{{ base_domain }}"
-chronograf_hostname: "{{ chronograf_url | urlsplit('hostname') }}"
-chronograf_bind_address: 127.0.0.1
-chronograf_backend_proto: http
-chronograf_backend_port: 8888
