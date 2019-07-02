@@ -1,0 +1,55 @@
+---
+foreman_release: 1.21
+foreman_url: "https://foreman.{{ base_domain }}"
+foreman_hostname: "{{ foreman_url | urlsplit('hostname') }}"
+foreman_domain: "{{ foreman_url | split_with('.') | tail | join('.') }}"
+foreman_api_allpages: 9999999999
+foreman_user: foreman
+foreman_group: foreman
+foreman_proxy_user: foreman-proxy
+foreman_proxy_group: foreman-proxy
+foreman_proxy_port: 8443
+foreman_tftp_root: /var/lib/tftpboot
+foreman_settings:
+  :locations_enabled: false
+  :organizations_enabled: false
+  :unattended: true
+  :require_ssl: true
+  :support_jsonp: false
+  :mark_translated: false
+  :webpack_dev_server: true
+  :webpack_dev_server_https: false
+  :assets_debug: false
+  :hsts_enabled: true
+  :fqdn: '{{ inventory_hostname }}'
+  :telemetry:
+    :prefix: 'fm_rails'
+    :prometheus:
+      :enabled: false
+    :statsd:
+      :enabled: false
+      :host: '127.0.0.1:8125'
+      :protocol: 'statsd'
+    :logger:
+      :enabled: false
+      :level: 'DEBUG'
+
+foreman_db_name: foreman
+foreman_db_user: foreman
+foreman_db_pass: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  35363936376336303233323666393765383163633135373032616433386539326233653031616533
+  3866326238353866323435626164643663663664663332380a303666356664336162303937653333
+  65326531323966653965383736353430303433656233313431376331613336303262366666643463
+  6433653833396635640a366234386662316466323964366636383662613638646530653763666465
+  65303166396463346136306438656631623338396430373834323365383664366563
+foreman_admin_user: admin
+foreman_admin_pass: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  37633661393034373234623535373066666664353533353661666263363662356133386264333739
+  3462303936386461643065623062643964623264613762630a353331316532656332353266613431
+  39666434303836653031363262386539373131386533633631356262323834643166353530333730
+  6437323031383539640a333530343038343331313835613339363238626234633130353066646263
+  64313936323732363966653939333263633538643235363164346230336539616536
+foreman_api_user: "{{ foreman_admin_user }}"
+foreman_api_pass: "{{ foreman_admin_pass }}"

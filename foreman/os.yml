@@ -11,10 +11,6 @@
 
   tasks:
 
-    - name: include private variables
-      include_vars:
-        dir: "../{{ variables }}"
-
     - name: query foreman architectures
       uri:
         url: "{{ foreman_url }}/api/architectures"

@@ -16,10 +16,6 @@
 
   tasks:
 
-    - name: include private variables
-      include_vars:
-        dir: "../{{ variables }}"
-
     - name: manage foreman proxy configuration
       copy:
         dest: /etc/foreman-proxy/settings.d/dhcp.yml

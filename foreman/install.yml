@@ -35,11 +35,6 @@
 
   tasks:
 
-    - name: include private variables
-      include_vars:
-        dir: "../{{ variables }}"
-      run_once: yes
-
     - name: include variable overrides
       include_vars: "{{ item }}"
       with_first_found:
