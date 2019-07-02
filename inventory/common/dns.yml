@@ -1,6 +1,5 @@
 ---
-base_domain: home.nephelai.io
-pdns_url: "https://pdns.{{ base_domain }}"
+pdns_url: "https://pdns.home.nephelai.io"
 pdns_api_proto: http
 pdns_api_port: 8081
 pdns_api_key: !vault |
