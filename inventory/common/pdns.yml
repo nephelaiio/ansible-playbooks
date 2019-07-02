@@ -14,11 +14,69 @@ pdns_mysql_pass: !vault |
   33643863653631663634353831653833663064306562656531666530373363633837343365616431
   3630633265313830300a386366353232646164346365336533323735366434396131353563626338
   37303865643532393132316630616531323363353531353762373739356231623031
-pdns_api_key: !vault |
-  $ANSIBLE_VAULT;1.1;AES256
-  66313166386639363530353439643139313562366363613863363763393430373962663865353263
-  6262343638626637306130633161323337623734303239660a356635616166643839356231666639
-  31626537396162633137363761313666393230353734383733376237366532633038343935623534
-  6436393862363232330a613139643264653265373166306537373237333761623935383466616465
-  62366434643236313636306338303232336236316539363432613038333234633030353439303634
-  6164343165656338316334323632643733363636653537326436
+
+dns_ttl: 3600
+dns_master: domainmaster.nephelai.io
+
+dns:
+  search_domains:
+    - "{{ base_domain }}"
+  zones:
+    home:
+      name: "{{ base_domain }}"
+      hostmaster: "master@{{ base_domain }}"
+      ns: "{{ groups['pdns'] }}"
+      records: "{{ nets.home.reservations.values() | list | map('merge_dicts', {'type': 'A'}) | list }}"
+      cnames:
+        - host: "assistant.{{ base_domain }}"
+          cname: rpig.home.nephelai.io
+      foreman_locations:
+        - "{{ foreman_locations.home.name }}"
+      foreman_organizations:
+        - "{{ foreman_organizations.nephelai.name }}"
+    emoh:
+      name: "{{ nets.home.zone }}"
+      hostmaster: master@home.nephelai.io
+      ns: "{{ groups['pdns'] }}"
+      records: []
+      cnames: []
+      foreman_locations:
+        - "{{ foreman_locations.home.name }}"
+      foreman_organizations:
+        - "{{ foreman_organizations.nephelai.name }}"
+    tnemeganam:
+      name: "{{ nets.management.zone }}"
+      hostmaster: master@home.nephelai.io
+      ns: "{{ groups['pdns'] }}"
+      records: []
+      cnames: []
+      foreman_locations:
+        - "{{ foreman_locations.home.name }}"
+      foreman_organizations:
+        - "{{ foreman_organizations.nephelai.name }}"
+
+pdns:
+  config:
+    api: yes
+    api-key: "{{ pdns_api_key }}"
+    webserver: yes
+    webserver-address: 127.0.0.1
+    webserver-port: "{{ pdns_api_port }}"
+    webserver-allow-from: 127.0.0.1
+    dnsupdate: no
+    master: yes
+    setuid: pdns
+    setgid: pdns
+    slave: no
+    local-address: "{{ ansible_host }}:53"
+    security-poll-suffix: ''
+    default-soa-name: "{{ groups['pdns'] | first | map(attribute='inventory_hostname') }}"
+    default-soa-mail: "{{ dns_master }}"
+    default-ttl: "{{ dns_ttl }}"
+  backends:
+    gpgsql:
+      user: "{{ pdns_mysql_user }}"
+      host: 127.0.0.1
+      password: "{{ pdns_mysql_pass }}"
+      dbname: pdns
+  domains: "{{ dns.zones.values() | list }}"
