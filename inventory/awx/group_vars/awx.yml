@@ -147,7 +147,7 @@ awx_machine_key: !vault |
 
 awx_organizations:
 
-  - name: home
+  - name: nephelai.io
     state: present
 
     credentials:
@@ -191,17 +191,17 @@ awx_organizations:
       - name: ping.awx
         job_type: run
         project: nephelai.io
-        inventory: home
+        inventory: awx
         playbook: ping.yml
-        vault_credential: home.vault
-        credential: home.ssh
+        vault_credential: awx.vault
+        credential: awx.ssh
       - name: configure.awx
         job_type: run
         project: nephelai.io
-        inventory: home
+        inventory: awx
         playbook: awx/configure.yml
-        vault_credential: home.vault
-        credential: home.ssh
+        vault_credential: awx.vault
+        credential: awx.ssh
 
     workflows: []
 
