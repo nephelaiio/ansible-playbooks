@@ -29,7 +29,7 @@ awx_pg_pass: !vault |
   33393233653464623230393832633465376164373762313532613932663065613638663730343339
   6636663631363039390a316237366131646438653963646532633564363165623565613036656164
   65666438363832613065396565636139663031616531343165666363643134353430
-awx_vault_home_pass: !vault |
+awx_vault_awx_pass: !vault |
   $ANSIBLE_VAULT;1.1;AES256
   66616633663061313038353939363661663839316431353133663561383665623961353338343530
   6432366262316231376533393362656234616333326464610a356236356434386539316533653235
@@ -156,11 +156,11 @@ awx_organizations:
         inputs:
           username: "{{ awx_github_user }}"
           password: "{{ awx_github_pass }}"
-      - name: home.vault
+      - name: awx.vault
         kind: vault
         inputs:
-          vault_password: "{{ awx_vault_home_pass }}"
-      - name: home.ssh
+          vault_password: "{{ awx_vault_awx_pass }}"
+      - name: awx.ssh
         kind: ssh
         inputs:
           username: "{{ awx_machine_user }}"
@@ -178,62 +178,31 @@ awx_organizations:
         scm_clean: false
 
     inventories:
-      - name: home
+      - name: awx
         source: scm
         source_project: nephelai.io
-        source_path: inventory/home
+        source_path: inventory/awx
         overwrite: true
         overwrite_vars: true
         update_on_launch: true
         update_on_project_update: false
 
     templates:
-      - name: ping.home
+      - name: ping.awx
         job_type: run
         project: nephelai.io
         inventory: home
         playbook: ping.yml
         vault_credential: home.vault
         credential: home.ssh
-      - name: upgrade.home
+      - name: configure.awx
         job_type: run
         project: nephelai.io
         inventory: home
-        playbook: upgrade.yml
+        playbook: awx/configure.yml
         vault_credential: home.vault
         credential: home.ssh
-      - name: dhcp.home
-        job_type: run
-        project: nephelai.io
-        inventory: home
-        playbook: dhcp.yml
-        vault_credential: home.vault
-        credential: home.ssh
-        host_config_key: "{{ awx_host_key }}"
-      - name: dns.home
-        job_type: run
-        project: nephelai.io
-        inventory: home
-        playbook: dns.yml
-        vault_credential: home.vault
-        credential: home.ssh
-        host_config_key: "{{ awx_host_key }}"
 
-    workflows:
-      - name: home
-        nodes:
-          - name: upgrade
-            template: upgrade.home
-          - name: dns
-            template: dns.home
-            parent: upgrade
-          - name: dhcp
-            template: dhcp.home
-            parent: dns
+    workflows: []
 
-    schedules:
-      - name: home
-        job_template: home
-        enabled: true
-        rrule: "DTSTART:20180826T000000Z RRULE:FREQ=DAILY;INTERVAL=1"
-        state: absent
+    schedules: []
