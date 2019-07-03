@@ -1,5 +1,5 @@
 ---
-- hosts: online
+- hosts: all
 
   gather_facts: no
 
