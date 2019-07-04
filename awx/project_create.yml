@@ -3,7 +3,7 @@
   set_fact:
     name: "-n {{ project.name | string | quote }}"
     description: "{{ ('--description ' + project.description | string | quote) if 'description' in project else '' }}"
-    project_org: "{{ '--organization ' + organization | string | quote }}"
+    project_org: "{{ '--organization ' + organization.name | string | quote }}"
     scm_type: "--scm-type {{ project.scm_type | string | quote }}"
     scm_url: "{{ ('--scm-url ' + project.scm_url | string | quote) if 'scm_url' in project else '' }}"
     scm_branch: "{{ ('--scm-branch ' + project.scm_branch | string | quote) if 'scm_branch' in project else '' }}"

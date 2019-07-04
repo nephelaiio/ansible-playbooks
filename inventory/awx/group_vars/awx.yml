@@ -143,6 +143,24 @@ awx_machine_key: !vault |
           64626362396534373735643930336433376563326133323139353138656137343561353237376265
           37333234386634356361
 
+awx_templates:
+  - name: ping.awx
+    job_type: run
+    project: nephelai.io
+    inventory: awx
+    playbook: ping.yml
+    vault_credential: awx.vault
+    credential: awx.ssh
+  - name: configure.awx
+    job_type: run
+    project: nephelai.io
+    inventory: awx
+    playbook: awx/configure.yml
+    vault_credential: awx.vault
+    credential: awx.ssh
+
+awx_schedules: []
+
 awx_organizations:
 
   - name: nephelai.io
@@ -185,22 +203,4 @@ awx_organizations:
         update_on_launch: true
         update_on_project_update: false
 
-    templates:
-      - name: ping.awx
-        job_type: run
-        project: nephelai.io
-        inventory: awx
-        playbook: ping.yml
-        vault_credential: awx.vault
-        credential: awx.ssh
-      - name: configure.awx
-        job_type: run
-        project: nephelai.io
-        inventory: awx
-        playbook: awx/configure.yml
-        vault_credential: awx.vault
-        credential: awx.ssh
-
     workflows: []
-
-    schedules: []

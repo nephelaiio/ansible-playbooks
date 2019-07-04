@@ -1,6 +1,6 @@
 ---
 - name: create inventory
-  command: "awx-cli inventory create -n {{ inventory.name | quote }} --organization {{ organization | quote }} -f json"
+  command: "awx-cli inventory create -n {{ inventory.name | quote }} --organization {{ organization.name | quote }} -f json"
 
 - name: build inventory configuration options
   set_fact:

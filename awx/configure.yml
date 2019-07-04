@@ -54,17 +54,17 @@
         - name: destroy awx job schedules
           include_tasks: schedule_destroy.yml
           vars:
-            schedule: "{{ item.1 }}"
+            schedule: "{{ item }}"
           loop_control:
             label: "{{ schedule.name }}"
-          loop: "{{ awx_organizations | subelements('schedules', skip_missing='yes') }}"
-          when: organization.state | default('present') == 'absent' or schedule.state | default('present') == 'absent'
+          loop: "{{ awx_schedules }}"
+          when: schedule.state | default('present') == 'absent'
           no_log: "{{ awx_nolog }}"
 
         - name: destroy awx workflows
           include_tasks: workflow_destroy.yml
           vars:
-            organization: "{{ item.0.name }}"
+            organization: "{{ item.0 }}"
             workflow: "{{ item.1 }}"
           loop_control:
             label: "{{ workflow.name }}"
@@ -75,16 +75,17 @@
         - name: destroy awx job templates
           include_tasks: template_destroy.yml
           vars:
-            template: "{{ item.1 }}"
+            template: "{{ item }}"
           loop_control:
             label: "{{ template.name }}"
-          loop: "{{ awx_organizations | subelements('templates', skip_missing='yes') }}"
-          when: organization.state | default('present') == 'absent' or template.state | default('present') == 'absent'
+          loop: "{{ awx_templates }}"
+          when: template.state | default('present') == 'absent'
           no_log: "{{ awx_nolog }}"
 
         - name: destroy awx inventories
           include_tasks: inventory_destroy.yml
           vars:
+            organization: "{{ item.0 }}"
             inventory: "{{ item.1 }}"
           loop_control:
             label: "{{ inventory.name }}"
@@ -95,6 +96,7 @@
         - name: destroy awx projects
           include_tasks: project_destroy.yml
           vars:
+            organization: "{{ item.0 }}"
             project: "{{ item.1 }}"
           loop_control:
             label: "{{ project.name }}"
@@ -105,6 +107,7 @@
         - name: destroy awx credentials
           include_tasks: credential_destroy.yml
           vars:
+            organization: "{{ item.0 }}"
             credential: "{{ item.1 }}"
           loop_control:
             label: "{{ credential.name }}"
@@ -135,7 +138,7 @@
         - name: create awx credentials
           include_tasks: credential_create.yml
           vars:
-            organization: "{{ item.0.name }}"
+            organization: "{{ item.0 }}"
             credential: "{{ item.1 }}"
           loop_control:
             label: "{{ credential.name }}"
@@ -146,7 +149,7 @@
         - name: create awx projects
           include_tasks: project_create.yml
           vars:
-            organization: "{{ item.0.name }}"
+            organization: "{{ item.0 }}"
             project: "{{ item.1 }}"
           loop_control:
             label: "{{ project.name }}"
@@ -157,7 +160,7 @@
         - name: create awx inventories
           include_tasks: inventory_create.yml
           vars:
-            organization: "{{ item.0.name }}"
+            organization: "{{ item.0 }}"
             inventory: "{{ item.1 }}"
           loop_control:
             label: "{{ inventory.name }}"
@@ -168,17 +171,17 @@
         - name: create awx job templates
           include_tasks: template_create.yml
           vars:
-            template: "{{ item.1 }}"
+            template: "{{ item }}"
           loop_control:
             label: "{{ template.name }}"
-          loop: "{{ awx_organizations | subelements('templates', skip_missing='yes') }}"
-          when: organization.state | default('present') == 'present' and template.state | default('present') == 'present'
+          loop: "{{ awx_templates }}"
+          when: template.state | default('present') == 'present'
           no_log: "{{ awx_nolog }}"
 
         - name: create awx workflows
           include_tasks: workflow_create.yml
           vars:
-            organization: "{{ item.0.name }}"
+            organization: "{{ item.0 }}"
             workflow: "{{ item.1 }}"
           loop_control:
             label: "{{ workflow.name }}"
@@ -189,11 +192,11 @@
         - name: create awx job schedules
           include_tasks: schedule_create.yml
           vars:
-            schedule: "{{ item.1 }}"
+            schedule: "{{ item }}"
           loop_control:
             label: "{{ schedule.name }}"
-          loop: "{{ awx_organizations | subelements('schedules', skip_missing='yes') }}"
-          when: organization.state | default('present') == 'present' and schedule.state | default('present') == 'present'
+          loop: "{{ awx_schedules }}"
+          when: schedule.state | default('present') == 'present'
           no_log: "{{ awx_nolog }}"
 
       run_once: yes

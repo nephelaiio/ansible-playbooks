@@ -3,7 +3,7 @@
   set_fact:
     name: "-n {{ workflow.name | string | quote }}"
     description: "{{ ('--description ' + workflow.description | string | quote) if 'description' in workflow else '' }}"
-    workflow_org: "{{ '--organization ' + organization | string | quote }}"
+    workflow_org: "{{ '--organization ' + organization.name | string | quote }}"
   tags:
     - workflows
 
