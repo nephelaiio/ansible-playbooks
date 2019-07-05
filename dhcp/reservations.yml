@@ -13,12 +13,6 @@
 
   tasks:
 
-    - name: include global variables
-      include_vars:
-        dir: "../{{ variables }}"
-      delegate_to: localhost
-      run_once: yes
-
     - name: add reservation
       lineinfile:
         path: /etc/dhcp/dhcpd.conf

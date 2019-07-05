@@ -11,10 +11,6 @@
 
   tasks:
 
-    - name: include global variables
-      include_vars:
-        dir: "../{{ variables }}"
-
     - name: install dhcpd
       apt:
         name: isc-dhcp-server
