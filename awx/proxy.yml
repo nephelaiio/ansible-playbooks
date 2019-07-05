@@ -36,6 +36,11 @@
       http_global_autoindex: false
       server_tokens: off
     nginx_http_template:
+      default:
+        port: 80
+        server_name: "{{ acme_certificate_domain }}"
+        conf_file_name: "{{ acme_certificate_domain }}.http.conf"
+        https_redirect: yes
       awx:
         port: 443
         server_name: "{{ acme_certificate_domain }}"
@@ -67,15 +72,14 @@
 
     - name: build list of upstream servers
       set_fact:
-        awx_app_servers: "{{ (awx_app_servers | default({})) | combine (awx_app_server) }}"
-      loop: "{{ groups['awx_proxy'] }}"
+        awx_app_servers: "{{ (awx_app_servers | default({})) | combine ({ item: awx_item_server}) }}"
+      loop: "{{ groups['awx_app'] | list }}"
       vars:
-        awx_app_server:
-          "{{ item }}":
-            address: "{{ [item] | map('extract', hostvars, 'ansible_host') | first }}" 
-            port: "{{ awx_container_port }}"
-            weight: 1
-            health_check: max_fails=3 fail_timeout=5s
+        awx_item_server:
+          address: "{{ item }}"
+          port: "{{ awx_container_port }}"
+          weight: 1
+          health_check: max_fails=3 fail_timeout=5s
 
     - name: install nginx
       import_role:
