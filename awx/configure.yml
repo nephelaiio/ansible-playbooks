@@ -1,7 +1,7 @@
 ---
 - name: Configure awx
 
-  hosts: awx
+  hosts: awx_app
 
   become: yes
 

@@ -1,5 +1,6 @@
 ---
 awx_release: "6.0.0"
+awx_container_port: 80
 awx_admin_pass: !vault |
           $ANSIBLE_VAULT;1.1;AES256
           38326437383561303736613837343736396238303031653035363861656139663364326635643361
