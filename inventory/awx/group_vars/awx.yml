@@ -146,6 +146,7 @@ awx_machine_key: !vault |
 
 awx_templates:
   - name: ping.awx
+    state: absent
     job_type: run
     project: nephelai.io
     inventory: awx
@@ -159,8 +160,18 @@ awx_templates:
     playbook: awx/configure.yml
     vault_credential: awx.vault
     credential: awx.ssh
+  - name: proxy.awx
+    job_type: run
+    project: nephelai.io
+    inventory: awx
+    playbook: awx/proxy.yml
+    vault_credential: awx.vault
+    credential: awx.ssh
 
-awx_schedules: []
+awx_schedules:
+  - name: proxy.awx
+    job_template: proxy.awx
+    rrule: "DTSTART:20190705T002000Z RRULE:FREQ=WEEKLY;INTERVAL=2"
 
 awx_organizations:
 
