@@ -1,3 +1,0 @@
----
-- name: destroy project
-  command: "awx-cli project delete -n {{ project.name | quote }}"

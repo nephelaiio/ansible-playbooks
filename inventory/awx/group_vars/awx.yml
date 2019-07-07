@@ -146,12 +146,10 @@ awx_machine_key: !vault |
 
 awx_templates:
   - name: ping.awx
-    state: absent
     job_type: run
     project: nephelai.io
     inventory: awx
     playbook: ping.yml
-    vault_credential: awx.vault
     credential: awx.ssh
   - name: configure.awx
     job_type: run
