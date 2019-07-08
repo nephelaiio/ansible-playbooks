@@ -98,6 +98,20 @@
           when: organization.state | default('present') == 'absent' or inventory.state | default('present') == 'absent'
           no_log: "{{ awx_nolog }}"
 
+        - name: destroy awx projects
+          tower_project:
+            organization: "{{ organization.name }}"
+            name: "{{ project.name }}"
+            state: absent
+          vars:
+            organization: "{{ item.0 }}"
+            project: "{{ item.1 }}"
+          loop_control:
+            label: "{{ project.name }}"
+          loop: "{{ awx_organizations | subelements('projects', skip_missing='yes') }}"
+          when: organization.state | default('present') == 'absent' or project.state | default('present') == 'absent'
+          no_log: "{{ awx_nolog }}"
+
         - name: destroy awx credentials
           tower_credential:
             organization: "{{ organization.name }}"
@@ -113,26 +127,14 @@
           when: organization.state | default('present') == 'absent' or credential.state | default('present') == 'absent'
           no_log: "{{ awx_nolog }}"
 
-        - name: destroy awx projects
-          tower_project:
-            organization: "{{ organization.name }}"
-            name: "{{ project.name }}"
-            state: absent
-          vars:
-            organization: "{{ item.0 }}"
-            project: "{{ item.1 }}"
-          loop_control:
-            label: "{{ project.name }}"
-          loop: "{{ awx_organizations | subelements('projects', skip_missing='yes') }}"
-          when: organization.state | default('present') == 'absent' or project.state | default('present') == 'absent'
-          no_log: "{{ awx_nolog }}"
-
         - name: destroy awx organizations
           tower_organization:
             name: "{{ organization.name }}"
             state: absent
           vars:
             organization: "{{ item }}"
+          loop_control:
+            label: "{{ organization.name }}"
           loop: "{{ awx_organizations | list }}"
           when: organization.state | default('present') == 'absent'
           no_log: "{{ awx_nolog }}"
@@ -143,32 +145,10 @@
             state: present
           vars:
             organization: "{{ item }}"
+          loop_control:
+            label: "{{ organization.name }}"
           loop: "{{ awx_organizations | list }}"
           when: item.state | default('present') == 'present'
-          no_log: "{{ awx_nolog }}"
-
-        - name: create awx projects
-          tower_project:
-            organization: "{{ organization.name }}"
-            name: "{{ project.name }}"
-            state: present
-            scm_type: "{{ project.scm_type | default('git') }}"
-            scm_url: "{{ project.scm_url }}"
-            scm_update_cache_timeout: "{{ project.scm_update_cache_timeout | default(omit) }}"
-            scm_update_on_launch: "{{ project.scm_update_on_launch | default(omit) }}"
-            scm_branch: "{{ project.scm_branch | default(omit) }}"
-            scm_delete_on_update: "{{ project.scm_delete_on_update | default(omit) }}"
-            scm_credential: "{{ project.scm_credential | default(omit) }}"
-            scm_update_on_launch: "{{ project.scm_update_on_launch | default(omit) }}"
-            scm_update_cache_timeout: "{{ project.scm_update_cache_timeout | default(omit) }}"
-            scm_clean: "{{ project.scm_clean | default(omit) }}"
-          vars:
-            organization: "{{ item.0 }}"
-            project: "{{ item.1 }}"
-          loop_control:
-            label: "{{ project.name }}"
-          loop: "{{ awx_organizations | subelements('projects', skip_missing='yes') }}"
-          when: organization.state | default('present') == 'present' and project.state | default('present') == 'present'
           no_log: "{{ awx_nolog }}"
 
         - name: create awx credentials
@@ -197,6 +177,28 @@
           when: organization.state | default('present') == 'present' and credential.state | default('present') == 'present'
           no_log: "{{ awx_nolog }}"
 
+        - name: create awx projects
+          tower_project:
+            organization: "{{ organization.name }}"
+            name: "{{ project.name }}"
+            state: present
+            scm_type: "{{ project.scm_type | default('git') }}"
+            scm_url: "{{ project.scm_url }}"
+            scm_branch: "{{ project.scm_branch | default(omit) }}"
+            scm_delete_on_update: "{{ project.scm_delete_on_update | default(omit) }}"
+            scm_credential: "{{ project.scm_credential | default(omit) }}"
+            scm_update_on_launch: "{{ project.scm_update_on_launch | default(omit) }}"
+            scm_update_cache_timeout: "{{ project.scm_update_cache_timeout | default(omit) }}"
+            scm_clean: "{{ project.scm_clean | default(omit) }}"
+          vars:
+            organization: "{{ item.0 }}"
+            project: "{{ item.1 }}"
+          loop_control:
+            label: "{{ project.name }}"
+          loop: "{{ awx_organizations | subelements('projects', skip_missing='yes') }}"
+          when: organization.state | default('present') == 'present' and project.state | default('present') == 'present'
+          no_log: "{{ awx_nolog }}"
+
         - name: create awx inventories
           include_tasks: inventory_create.yml
           vars:
@@ -214,7 +216,7 @@
             playbook: "{{ template.playbook }}"
             project: "{{ template.project }}"
             job_type: "{{ template.job_type | default('run') }}"
-            credential: "{{ template.credential | default(omit) }}"
+            credential: "{{ template.credential }}"
             description: "{{ template.description | default(omit) }}"
             diff_mode_enabled: "{{ template.diff_mode_enabled | default(omit) }}"
             fact_caching_enabled: "{{ template.fact_caching_enabled | default(omit) }}"
