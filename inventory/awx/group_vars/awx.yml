@@ -1,5 +1,5 @@
 ---
-awx_release: "6.0.0"
+awx_release: "4.0.0"
 awx_container_port: 80
 awx_admin_pass: !vault |
           $ANSIBLE_VAULT;1.1;AES256
@@ -145,30 +145,30 @@ awx_machine_key: !vault |
           66306363376666396665
 
 awx_templates:
-  - name: ping.awx
+  - name: awx.ping
     job_type: run
-    project: nephelai.io
+    project: awx
     inventory: awx
     playbook: ping.yml
     credential: awx.ssh
-  - name: configure.awx
+  - name: awx.configure
     job_type: run
-    project: nephelai.io
+    project: awx
     inventory: awx
     playbook: awx/configure.yml
     vault_credential: awx.vault
     credential: awx.ssh
-  - name: proxy.awx
+  - name: awx.proxy
     job_type: run
-    project: nephelai.io
+    project: awx
     inventory: awx
     playbook: awx/proxy.yml
     vault_credential: awx.vault
     credential: awx.ssh
 
 awx_schedules:
-  - name: proxy.awx
-    job_template: proxy.awx
+  - name: awx.proxy
+    job_template: awx.proxy
     enabled: true
     rrule: "DTSTART:20190705T002000Z RRULE:FREQ=WEEKLY;INTERVAL=2"
 
@@ -178,7 +178,7 @@ awx_organizations:
     state: present
 
     credentials:
-      - name: github.com
+      - name: awx.github
         kind: scm
         inputs:
           username: "{{ awx_github_user }}"
@@ -194,24 +194,24 @@ awx_organizations:
           ssh_key_data: "{{ awx_machine_key }}"
 
     projects:
-      - name: nephelai.io
+      - name: awx
         scm_type: git
         scm_url: https://github.com/nephelaiio/ansible-playbooks.git
         scm_branch: master
         scm_delete_on_update: false
-        scm_credential: github.com
-        scm_update_on_launch: true
+        scm_credential: awx.github
+        scm_update_on_launch: false
         scm_update_cache_timeout: 60
         scm_clean: false
 
     inventories:
       - name: awx
         source: scm
-        source_project: nephelai.io
+        source_project: awx
         source_path: inventory/awx
         overwrite: true
         overwrite_vars: true
-        update_on_launch: true
-        update_on_project_update: false
+        update_on_launch: false
+        update_on_project_update: true
 
     workflows: []
