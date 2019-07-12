@@ -185,6 +185,9 @@ awx_schedules:
 
 awx_organizations:
 
+  - name: Demo Organization
+    state: absent
+
   - name: nephelai.io
     state: present
 
@@ -215,12 +218,23 @@ awx_organizations:
         scm_update_on_launch: false
         scm_update_cache_timeout: 60
         scm_clean: false
+      - name: inventory
+        scm_type: git
+        scm_url: https://github.com/nephelaiio/ansible-playbooks.git
+        scm_branch: master
+        scm_delete_on_update: false
+        scm_credential: awx.github
+        scm_update_on_launch: false
+        scm_update_cache_timeout: 60
+        scm_clean: false
 
     inventories:
 
+      - name: Demo Inventory
+        state: absent
       - name: awx
         source: scm
-        source_project: awx
+        source_project: inventory
         source_path: inventory/awx
         overwrite: true
         overwrite_vars: true
