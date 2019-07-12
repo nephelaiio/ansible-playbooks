@@ -1,6 +1,0 @@
----
-- import_playbook: awx/install.yml
-
-- import_playbook: awx/proxy.yml
-
-- import_playbook: awx/configure.yml

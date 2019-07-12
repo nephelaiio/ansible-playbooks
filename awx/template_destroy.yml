@@ -1,3 +1,0 @@
----
-- name: destroy job template
-  command: "awx-cli job_template delete -n {{ template.name | quote }}"

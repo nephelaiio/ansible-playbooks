@@ -1,3 +1,0 @@
----
-- name: destroy organization
-  command: "awx-cli organization delete -n {{ organization.name | quote }}"

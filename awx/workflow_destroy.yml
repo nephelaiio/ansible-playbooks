@@ -1,6 +1,0 @@
----
-- name: destroy workflow
-  command: "awx-cli workflow delete -f json -n {{ workflow.name }}"
-  register: awx_workflow_item
-  tags:
-    - workflows
