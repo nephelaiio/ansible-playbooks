@@ -5,7 +5,7 @@
     suffix: images
   register: img_dir
   changed_when: false
-  delegate_to: localhost
+  delegate_to: "{{ groups['kvm_hosts'] | first }}"
 
 - block:
 
@@ -279,7 +279,7 @@
   when:
     - inventory_hostname is defined
     - ansible_host is defined
-  delegate_to: localhost
+  delegate_to: "{{ groups['kvm_hosts'] | first }}"
 
 - name: delete image temp directory
   file:
@@ -287,4 +287,4 @@
     state: absent
   register: img_dir
   changed_when: false
-  delegate_to: localhost
+  delegate_to: "{{ groups['kvm_hosts'] | first }}"
