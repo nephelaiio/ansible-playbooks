@@ -160,21 +160,29 @@ awx_templates:
     project: awx
     inventory: awx
     playbook: ping.yml
-    credential: awx.ssh
+    credentials:
+      - name: awx.ssh
+        kind: ssh
   - name: awx.configure
     job_type: run
     project: awx
     inventory: awx
     playbook: configure.yml
-    vault_credential: awx.vault
-    credential: awx.ssh
+    credentials:
+      - name: awx.ssh
+        kind: ssh
+      - name: awx.vault
+        kind: vault
   - name: awx.proxy
     job_type: run
     project: awx
     inventory: awx
     playbook: nginx.yml
-    vault_credential: awx.vault
-    credential: awx.ssh
+    credentials:
+      - name: awx.ssh
+        kind: ssh
+      - name: awx.vault
+        kind: vault
 
 awx_schedules:
 
