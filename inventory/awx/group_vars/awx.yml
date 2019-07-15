@@ -150,6 +150,13 @@ awx_machine_key: !vault |
   61643038623366626235656566623865326665353930613766633465346134323833323433613965
   66306363376666396665
 
+awx_users:
+  - first_name: CI
+    last_name: Integration
+    username: "{{ awx_ci_user }}"
+    password: "{{ awx_ci_pass }}"
+    superuser: yes
+
 awx_templates:
 
   - name: Demo Job Template
