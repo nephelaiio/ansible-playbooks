@@ -4,9 +4,9 @@ language: python
 sudo: required
 
 install:
-  - sudo pip install yamllint
-  - sudo pip install flake8
+  - pip install -r requirements.txt
 
 script:
   - yamllint ./ -c ./.yamllint
   - flake8 ./
+  - ./bin/awx_update_projects.sh --host $AWX_URL --user $AWX_USER --pass $AWX_PASS --repo https://github.com/$TRAVIS_REPO_SLUG.git --debug
