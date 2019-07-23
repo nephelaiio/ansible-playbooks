@@ -5,6 +5,7 @@ sudo: required
 
 pre_install:
   - apt install -y libvirt0 libvirt-dev
+  - apt install -y git jq
 
 install:
   - pip install -r requirements.txt
