@@ -3,6 +3,9 @@ language: python
 
 sudo: required
 
+pre_install:
+  - sudo apt install -y libvirt0 libvirt-dev
+
 install:
   - pip install -r requirements.txt
 
