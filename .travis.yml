@@ -4,9 +4,9 @@ language: python
 sudo: required
 
 install:
-  - apt install -y libvirt0 libvirt-dev
-  - apt install -y git jq
-  - pip install -r requirements.txt
+  - sudo apt-get install -y libvirt0 libvirt-dev
+  - sudo apt-get install -y git jq
+  - sudo pip install -r requirements.txt
 
 script:
   - yamllint ./ -c ./.yamllint
