@@ -260,7 +260,6 @@ awx_organizations:
         scm_update_cache_timeout: 60
         scm_clean: false
       - name: inventory
-        state: absent
         scm_type: git
         scm_url: https://github.com/nephelaiio/ansible-playbooks.git
         scm_branch: master
@@ -278,6 +277,14 @@ awx_organizations:
         source: scm
         source_project: inventory
         source_path: inventory/awx
+        overwrite: true
+        overwrite_vars: true
+        update_on_launch: false
+        update_on_project_update: true
+      - name: freeipa
+        source: scm
+        source_project: inventory
+        source_path: inventory/freeipa
         overwrite: true
         overwrite_vars: true
         update_on_launch: false
