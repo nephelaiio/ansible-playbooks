@@ -7,6 +7,7 @@ DEBUG=${FALSE}
 ERROR=1
 SUCCESS=0
 PARAMS=$SUCCESS
+FOUND=${FALSE}
 
 function check_requirement {
     cmd=$1
@@ -22,6 +23,7 @@ function debug {
     fi
 }
 
+check_requirement git
 check_requirement tower-cli
 check_requirement jq
 
@@ -47,20 +49,14 @@ do
             shift # past argument
             shift # past value
             ;;
-        --repo)
-            REPO="$2"
-            shift # past argument
-            shift # past value
-            ;;
-        --branch)
-            BRANCH="$2"
+        --template)
+            TEMPLATE="$2"
             shift # past argument
             shift # past value
             ;;
         --debug)
             DEBUG=${TRUE}
             shift # past argument
-            shift # past value
             ;;
         *)    # unknown option
             POSITIONAL+=("$1") # save it in an array for later
@@ -83,17 +79,40 @@ if [ -z "${_PASS}" ]; then
     echo "--pass <awx api password> option is required"
     PARAMS=${ERROR}
 fi
-if [ -z "${REPO}" ]; then
-    echo "--repo <project reposority url> option is required"
+if [ -z "${TEMPLATE}" ]; then
+    echo "--template <awx template name> option is required"
     PARAMS=${ERROR}
-fi
-if [ "${PARAMS}" == "${ERROR}" ]; then
-    exit ${ERROR}
 fi
 
 # set defaults
-if [ -z "${BRANCH}" ]; then
-    BRANCH="master"
+TRIGGERS=$@
+RUN=${FALSE}
+
+if [ -z "${TRIGGERS}" ]; then
+
+    RUN=${TRUE}
+    debug "no triggers set, forcing execution"
+
+else
+
+    debug "checking for changes in ${TRIGGERS[@]}"
+
+    for change in $(git diff --name-only HEAD HEAD~1); do
+
+        for trigger in ${TRIGGERS}; do
+
+            if [ $(echo "${change}" | grep "${trigger}") ]; then
+
+                debug "trigger ${trigger} matched changeset file ${change}"
+                RUN=${TRUE}
+                break 2
+
+            fi
+
+        done
+
+    done
+
 fi
 
 tower-cli config host ${HOST} 2>&1 >/dev/null
@@ -101,33 +120,20 @@ tower-cli config username ${_USER} 2>&1 >/dev/null
 tower-cli config password ${_PASS} 2>&1 >/dev/null
 tower-cli config format json 2>&1 >/dev/null
 
-# retrieve awx project ids
-PRJS=$(tower-cli project list --scm-url ${REPO} --scm-branch ${BRANCH} | jq -cr '.results[] | {name,organization}')
+if [ ${RUN} -eq ${FALSE} ]; then
 
-if [ -z ${PRJS} ]; then
-
-    echo "no projects found for repository ${REPO}"
+    echo "no triggers matched, checked ${TRIGGERS[@]}"
 
 else
 
-    for PRJ in ${PRJS}; do
+    TPL_RUN=$(tower-cli job launch --job-template ${TEMPLATE} --wait)
 
-        debug "testing project ${PRJ_NAME}"
+    if [ $? -ne 0 ]; then
 
-        PRJ_NAME=$(echo $PRJ | jq -r '.name')
-        PRJ_ORG=$(echo $PRJ | jq -r '.organization')
-        echo "updating project ${PRJ_NAME}"
-        PRJ_UPDATE=$(tower-cli project update -n ${PRJ_NAME} --organization ${PRJ_ORG} --wait)
+        echo "${TPL_RUN}"
+        exit ${ERROR}
 
-        if [ $? -ne 0 ]; then
-
-            echo "unable to update project ${PRJ_ID}"
-            echo "${PRJ_UPDATE}"
-            exit ${ERROR}
-
-        fi
-
-    done
+    fi
 
 fi
 
