@@ -243,6 +243,7 @@ awx_organizations:
         scm_update_cache_timeout: 60
         scm_clean: false
       - name: inventory
+        state: absent
         scm_type: git
         scm_url: https://github.com/nephelaiio/ansible-playbooks.git
         scm_branch: master
