@@ -190,6 +190,16 @@ awx_templates:
         kind: ssh
       - name: awx.vault
         kind: vault
+  - name: freeipa.install
+    job_type: run
+    project: freeipa
+    inventory: freeipa
+    playbook: playbooks/install-cluster.yml
+    credentials:
+      - name: freeipa.ssh
+        kind: ssh
+      - name: freeipa.vault
+        kind: vault
 
 awx_schedules:
 
@@ -216,6 +226,13 @@ awx_organizations:
         kind: vault
         vault_password: "{{ awx_vault_awx_pass }}"
       - name: awx.ssh
+        kind: ssh
+        username: "{{ awx_machine_user }}"
+        ssh_key_data: "{{ awx_machine_key }}"
+      - name: freeipa.vault
+        kind: vault
+        vault_password: "{{ awx_vault_awx_pass }}"
+      - name: freeipa.ssh
         kind: ssh
         username: "{{ awx_machine_user }}"
         ssh_key_data: "{{ awx_machine_key }}"
