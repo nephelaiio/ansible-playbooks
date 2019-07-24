@@ -3,6 +3,10 @@ language: python
 
 sudo: required
 
+dist: xenial
+
+python: "3.7"
+
 install:
   - sudo apt-get install -y libvirt0 libvirt-dev
   - sudo apt-get install -y git jq
@@ -13,3 +17,7 @@ script:
   - flake8 ./
   - ./bin/awx_update_projects.sh --host $AWX_URL --user $AWX_USER --pass $AWX_PASS --repo https://github.com/$TRAVIS_REPO_SLUG.git --debug
   - ./bin/awx_run_template.sh --host $AWX_URL --user $AWX_USER --pass $AWX_PASS --template awx.configure --debug inventory/common/awx.yml inventory/awx/group_vars/awx.yml
+
+branches:
+  only:
+    - master
