@@ -1,2 +1,4 @@
 ---
-freeipa_domain: "ipa.{{ base_domain }}"
+freeipa_url: "https://freeipa.{{ base_domain }}"
+ipaserver_domain: "ipa.{{ base_domain }}"
+ipaserver_realm: "{{ base_domain | upper }}"
