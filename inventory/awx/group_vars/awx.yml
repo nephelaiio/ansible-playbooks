@@ -317,4 +317,12 @@ awx_organizations:
         update_on_launch: false
         update_on_project_update: true
 
-    workflows: []
+    workflows:
+      - name: site
+        nodes:
+          - name: freeipa.servers
+            id: freeipa.servers
+            template: freeipa.install.servers
+          - name: freeipa.replicas
+            id: freeipa.replicas
+            template: freeipa.install.replicas
