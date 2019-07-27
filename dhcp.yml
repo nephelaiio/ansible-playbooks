@@ -1,4 +1,0 @@
----
-- import_playbook: dhcp/install.yml
-
-- import_playbook: dhcp/reservations.yml

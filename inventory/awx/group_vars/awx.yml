@@ -237,6 +237,24 @@ awx_templates:
         kind: ssh
       - name: freeipa.vault
         kind: vault
+  - name: dhcp.install
+    job_type: run
+    project: playbooks
+    playbook: dhcp/install.yml
+    credentials:
+      - name: freeipa.ssh
+        kind: ssh
+      - name: freeipa.vault
+        kind: vault
+  - name: dhcp.reservations
+    job_type: run
+    project: playbooks
+    playbook: dhcp/reservations.yml
+    credentials:
+      - name: freeipa.ssh
+        kind: ssh
+      - name: freeipa.vault
+        kind: vault
 
 awx_schedules:
 

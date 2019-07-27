@@ -20,7 +20,7 @@ tsigkeys:
     algorithm: 'hmac-md5'
     secret: "{{ tsigkey_dhcp }}"
     domains:
-      - "{{ dns.zones.home.name }}"
+      - "{{ base_domain }}"
   omapi:
     name: omapi
     algorithm: 'hmac-md5'
