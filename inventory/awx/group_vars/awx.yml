@@ -364,3 +364,11 @@ awx_organizations:
           - name: freeipa.replicas
             id: freeipa.replicas
             template: freeipa.install.replicas
+            parent: freeipa.servers
+          - name: awx.proxy
+            id: awx.proxy
+            template: awx.proxy
+          - name: awx.configure
+            id: awx.proxy
+            template: awx.proxy
+            parent: awx.proxy
