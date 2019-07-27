@@ -202,7 +202,7 @@ awx_templates:
     job_type: run
     project: playbooks
     inventory: freeipa
-    playbook: playbooks/install-server.yml
+    playbook: submodules/freeipa/playbooks/install-server.yml
     credentials:
       - name: freeipa.ssh
         kind: ssh
