@@ -199,6 +199,7 @@ awx_templates:
       - name: awx.vault
         kind: vault
   - name: freeipa.install.servers
+    state: absent
     job_type: run
     project: freeipa
     inventory: freeipa
@@ -209,6 +210,7 @@ awx_templates:
       - name: freeipa.vault
         kind: vault
   - name: freeipa.install.replicas
+    state: absent
     job_type: run
     project: freeipa
     inventory: freeipa
@@ -278,6 +280,7 @@ awx_organizations:
         scm_update_cache_timeout: 60
         scm_clean: false
       - name: freeipa
+        state: absent
         scm_type: git
         scm_url: https://github.com/freeipa/ansible-freeipa.git
         scm_branch: master
@@ -319,6 +322,7 @@ awx_organizations:
 
     workflows:
       - name: site
+        state: absent
         nodes:
           - name: freeipa.servers
             id: freeipa.servers
