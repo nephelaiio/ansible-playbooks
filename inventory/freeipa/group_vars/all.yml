@@ -1,5 +1,5 @@
 ---
-ipaserver_domain: nephelai.io
+ipaserver_domain: ipa.nephelai.io
 ipaserver_realm: NEPHELAI.IO
 ipaserver_setup_dns: yes
 ipaserver_auto_forwarders: yes
