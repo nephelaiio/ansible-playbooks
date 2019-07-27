@@ -198,11 +198,30 @@ awx_templates:
         kind: ssh
       - name: awx.vault
         kind: vault
-  - name: freeipa.install
+  - name: freeipa.install.servers
     job_type: run
     project: freeipa
     inventory: freeipa
-    playbook: playbooks/install-cluster.yml
+    playbook: playbooks/install-server.yml
+    credentials:
+      - name: freeipa.ssh
+        kind: ssh
+      - name: freeipa.vault
+        kind: vault
+  - name: freeipa.install.replicas
+    job_type: run
+    project: freeipa
+    inventory: freeipa
+    playbook: playbooks/install-replica.yml
+    credentials:
+      - name: freeipa.ssh
+        kind: ssh
+      - name: freeipa.vault
+        kind: vault
+  - name: freeipa.install.client
+    job_type: run
+    project: freeipa
+    playbook: playbooks/install-replica.yml
     credentials:
       - name: freeipa.ssh
         kind: ssh
