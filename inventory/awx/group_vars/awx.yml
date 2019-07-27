@@ -201,7 +201,7 @@ awx_templates:
   - name: freeipa.install.servers
     state: absent
     job_type: run
-    project: freeipa
+    project: playbooks
     inventory: freeipa
     playbook: playbooks/install-server.yml
     credentials:
@@ -212,9 +212,9 @@ awx_templates:
   - name: freeipa.install.replicas
     state: absent
     job_type: run
-    project: freeipa
+    project: playbooks
     inventory: freeipa
-    playbook: playbooks/install-replica.yml
+    playbook: submodules/freeipa/playbooks/install-replica.yml
     credentials:
       - name: freeipa.ssh
         kind: ssh
@@ -222,8 +222,8 @@ awx_templates:
         kind: vault
   - name: freeipa.install.client
     job_type: run
-    project: freeipa
-    playbook: playbooks/install-replica.yml
+    project: playbooks
+    playbook: submodules/freeipa/playbooks/install-client.yml
     credentials:
       - name: freeipa.ssh
         kind: ssh
@@ -298,6 +298,15 @@ awx_organizations:
         scm_update_on_launch: false
         scm_update_cache_timeout: 60
         scm_clean: false
+      - name: playbooks
+        scm_type: git
+        scm_url: https://github.com/nephelaiio/ansible-playbooks.git
+        scm_branch: master
+        scm_delete_on_update: false
+        scm_credential: awx.github
+        scm_update_on_launch: false
+        scm_update_cache_timeout: 60
+        scm_clean: false
 
     inventories:
 
@@ -322,7 +331,6 @@ awx_organizations:
 
     workflows:
       - name: site
-        state: absent
         nodes:
           - name: freeipa.servers
             id: freeipa.servers
