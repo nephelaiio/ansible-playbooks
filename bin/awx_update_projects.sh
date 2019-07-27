@@ -104,6 +104,14 @@ tower-cli config format json 2>&1 >/dev/null
 # retrieve awx project ids
 PRJS=$(tower-cli project list --scm-url ${REPO} --scm-branch ${BRANCH} | jq -cr '.results[] | {name,organization}')
 
+if [ $? -ne 0 ]; then
+
+    echo "unable to query project list"
+    echo "${PRJS}"
+    exit ${ERROR}
+
+fi
+
 if [ -z ${PRJS} ]; then
 
     echo "no projects found for repository ${REPO}"
