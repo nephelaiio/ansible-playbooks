@@ -1,0 +1,9 @@
+---
+- name: Configure ipa clients
+
+  hosts: all
+
+  become: true
+
+  roles:
+    - ipaclient

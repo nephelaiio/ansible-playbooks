@@ -219,9 +219,19 @@ awx_templates:
       - name: freeipa.vault
         kind: vault
   - name: freeipa.install.client
+    state: absent
     job_type: run
     project: playbooks
     playbook: submodules/freeipa/playbooks/install-client.yml
+    credentials:
+      - name: freeipa.ssh
+        kind: ssh
+      - name: freeipa.vault
+        kind: vault
+  - name: freeipa.install.clients
+    job_type: run
+    project: playbooks
+    playbook: freeipa/clients.yml
     credentials:
       - name: freeipa.ssh
         kind: ssh
