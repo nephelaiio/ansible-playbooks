@@ -9,10 +9,93 @@
 
   vars:
 
-    fwd_zones: "{{ (dns.zones.values() | list | map(attribute='name') | list) }}"
-    pdns_ips: "{{ groups['pdns'] | map('extract', hostvars, 'ansible_host') | join(';') }}"
-    pdns_fwd: "{{ ((fwd_zones | map('map_format', '%s=' + pdns_ips) | list) + ['+.=' + (nameservers | join(';'))]) | join(', ') }}"
-    listen_address: "0.0.0.0"
+    default_nameservers:
+      - 1.1.1.1
+      - 8.8.8.8
+    pdns_rec_api_dir: "/etc/powerdns/recursor.d"
+    pdns_rec_api_port: 8082
+    pdns_rec_config:
+      webserver: yes
+      webserver-port: "{{ pdns_rec_api_port }}"
+      api-key: "{{ pdns_rec_api_key }}"
+      api-config-dir: "{{ pdns_rec_api_dir }}"
+      include-dir: "{{ pdns_rec_api_dir }}"
+      local-address: 0.0.0.0
+      max-cache-ttl: 15
+      max-negative-ttl: 15
+
+    acme_certificate_domain: "{{ inventory_hostname }}"
+    acme_certificate_chainfile: "/etc/nginx/{{ acme_certificate_domain }}.chain.crt"
+    acme_certificate_keyfile: "/etc/nginx/{{ acme_certificate_domain }}.key"
+    acme_certificate_add_ca: yes
+    acme_certificate_aws_accesskey_id: "{{ aws_access_key_id | default(lookup('env', 'AWS_ACCESS_KEY_ID')) }}"
+    acme_certificate_aws_accesskey_secret: "{{ aws_secret_access_key | default(lookup('env', 'AWS_SECRET_ACCESS_KEY')) }}"
+
+    nginx_install_from: os_repository
+    nginx_cleanup_config_path:
+      - /etc/nginx/conf.d
+      - /etc/nginx/sites-enabled/default
+      - /etc/nginx/sites-available/default
+    nginx_main_template:
+      conf_file_name: nginx.conf
+      conf_file_location: /etc/nginx/
+      user: www-data
+      worker_processes: auto
+      error_level: warn
+      worker_connections: 1024
+      http_enable: true
+      http_settings:
+        keepalive_timeout: 60
+        cache: false
+        rate_limit: false
+        keyval: false
+      stream_enable: false
+      http_global_autoindex: false
+      server_tokens: off
+    nginx_http_template:
+      default:
+        port: 80
+        server_name: "{{ acme_certificate_domain }}"
+        conf_file_name: "{{ acme_certificate_domain }}.http.conf"
+        https_redirect: yes
+      pdns:
+        port: 443
+        server_name: "{{ acme_certificate_domain }}"
+        conf_file_name: "{{ acme_certificate_domain }}.https.conf"
+        ssl:
+          key: "{{ acme_certificate_keyfile }}"
+          cert: "{{ acme_certificate_chainfile }}"
+          protocols: TLSv1.2 TLSv1.3
+          ciphers: HIGH:!aNULL:!MD5
+        reverse_proxy:
+          locations:
+            default:
+              location: /
+              proxy_pass: http://pdns
+              proxy_set_header:
+                header_host:
+                  name: Host
+                  value: $host
+                header_upgrade:
+                  name: Upgrade
+                  value: $http_upgrade
+                header_connection:
+                  name: Connection
+                  value: Upgrade
+                header_x_forwarded_for:
+                  name: X-Forwarded-For
+                  value: $proxy_add_x_forwarded_for
+        upstreams:
+          pdns:
+            name: pdns
+            lb_method: least_conn
+            zone_name: pdns
+            zone_size: 32k
+            sticky_cookie: false
+            servers:
+              localhost:
+                address: localhost
+                port: "{{ pdns_rec_api_port }}"
 
   roles:
 
@@ -42,7 +125,7 @@
       include_role:
         name: ahuffman.resolv
       vars:
-        resolv_nameservers: "{{ nameservers }}"
+        resolv_nameservers: "{{ nameservers | default(default_nameservers) }}"
         resolv_domain: "{{ base_domain }}"
         resolv_options:
           - timeout:2
@@ -52,12 +135,6 @@
     - name: install pdns recursor
       include_role:
         name: PowerDNS.pdns_recursor
-      vars:
-        pdns_rec_config:
-          local-address: "{{ listen_address }}"
-          forward-zones: "{{ pdns_fwd }}"
-          max-cache-ttl: 15
-          max-negative-ttl: 15
       ignore_errors: yes
 
     - block:
@@ -130,13 +207,28 @@
     - name: install pdns recursor
       include_role:
         name: PowerDNS.pdns_recursor
+
+  post_tasks:
+
+    - name: install nginx
+      import_role:
+        name: nginxinc.nginx
       vars:
-        pdns_rec_config:
-          local-address: "{{ listen_address }}"
-          forward-zones: "{{ pdns_fwd }}"
-          max-cache-ttl: 15
-          max-negative-ttl: 15
-      ignore_errors: yes
+        nginx_cleanup_config: no
+        nginx_http_template_enable: no
+        nginx_main_template_enable: no
+
+    - name: generate certificates
+      import_role:
+        name: nephelaiio.acme_certificate_route53
+
+    - name: configure nginx
+      import_role:
+        name: nginxinc.nginx
+      vars:
+        nginx_cleanup_config: yes
+        nginx_http_template_enable: yes
+        nginx_main_template_enable: yes
 
   handlers:
 
