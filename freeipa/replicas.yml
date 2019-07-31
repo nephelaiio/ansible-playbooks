@@ -1,0 +1,10 @@
+---
+- name: Configure ipa replicas
+
+  hosts: ipareplicas
+
+  become: true
+
+  roles:
+
+    - ipareplica

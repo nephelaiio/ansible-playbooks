@@ -1,10 +1,11 @@
 ---
 - name: Configure ipa clients
 
-  hosts: all
+  hosts: ipaserver
 
   become: true
 
   roles:
 
-    - ipaclient
+    - bertvv.hosts
+    - ipaserver
