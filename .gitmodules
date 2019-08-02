@@ -1,3 +1,6 @@
 [submodule "submodules/freeipa"]
 	path = submodules/freeipa
 	url = https://github.com/freeipa/ansible-freeipa.git
+[submodule "submodules/mitogen"]
+	path = submodules/mitogen
+	url = https://github.com/dw/mitogen.git
