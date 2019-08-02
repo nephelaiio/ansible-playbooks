@@ -5,20 +5,29 @@
 
   become: yes
 
-  serial: 1
-
   vars:
-
+    
     default_nameservers:
       - 1.1.1.1
       - 8.8.8.8
-    pdns_rec_api_dir: "/etc/powerdns/recursor.d"
+    pdns_rec_api_addr: 127.0.0.1
+    pdns_rec_api_dir: /etc/powerdns/recursor.d
     pdns_rec_api_port: 8082
+    pdns_rec_user: pdns
+    pdns_rec_group: pdns
+    pdns_rec_service_overrides:
+      ReadWritePaths: "{{ pdns_rec_api_dir }}"
     pdns_rec_config:
+      setuid: "{{ pdns_rec_user }}"
+      setgid: "{{ pdns_rec_group }}"
       webserver: yes
+      forward-zones: ''
+      forward-zones-recurse: ''
       webserver-port: "{{ pdns_rec_api_port }}"
+      webserver-address: "{{ pdns_rec_api_addr }}"
       api-key: "{{ pdns_rec_api_key }}"
       api-config-dir: "{{ pdns_rec_api_dir }}"
+      api-readonly: no
       include-dir: "{{ pdns_rec_api_dir }}"
       local-address: 0.0.0.0
       max-cache-ttl: 15
@@ -94,12 +103,30 @@
             sticky_cookie: false
             servers:
               localhost:
-                address: localhost
+                address: "{{ pdns_rec_api_addr }}"
                 port: "{{ pdns_rec_api_port }}"
 
   roles:
 
     - nephelaiio.plugins
+    - bertvv.hosts
+
+  pre_tasks:
+
+    - block:
+
+        - name: build recursor host metadata
+          set_fact:
+            hosts_entries: "{{ (hosts_entries | default([])) | union([recursor_host]) }}"
+          loop_control:
+            label: "{{ item }}"
+          vars:
+            recursor_host:
+              name: "{{ hostvars[item]['ansible_fqdn'] }}"
+              ip: "{{ hostvars[item]['ansible_default_ipv4']['address'] }}"
+          loop: "{{ groups['recursors'] }}"
+
+      run_once: yes
 
   tasks:
 
@@ -183,7 +210,7 @@
           become: true
           loop_control:
             loop_var: netplan_file
-          with_items: "{{ netplan_query.files | map(attribute='path') | list }}"
+          loop: "{{ netplan_query.files | map(attribute='path') | list }}"
           when:
             - netplan_file != netplan_config_file
           notify: restart networking
@@ -207,6 +234,14 @@
     - name: install pdns recursor
       include_role:
         name: PowerDNS.pdns_recursor
+
+    - name: fix configuration file permissions
+      file:
+        path: /etc/powerdns
+        state: directory
+        owner: "{{ pdns_rec_user }}"
+        group: "{{ pdns_rec_group }}"
+        recurse: yes
 
   post_tasks:
 

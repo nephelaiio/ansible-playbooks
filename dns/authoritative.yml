@@ -7,7 +7,34 @@
 
   vars:
 
+    pdns_recursors: "{{ groups['recursors'] | default([]) }}"
     pdns_hostname: "{{ pdns_url | urlsplit('hostname') }}"
+    pdns_config:
+      api: yes
+      api-key: "{{ pdns_api_key }}"
+      webserver: yes
+      webserver-address: 127.0.0.1
+      webserver-port: "{{ pdns_api_port }}"
+      webserver-allow-from: 127.0.0.1
+      dnsupdate: no
+      master: "{{ (pdns_master | default('no')) | bool }}"
+      slave: "{{ not ((pdns_master | default('no')) | bool) }}"
+      disable-axfr: "{{ not ((pdns_master | default('no')) | bool) }}"
+      allow-axfr-ips: "{{ play_hosts | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | join(',') }}"
+      setuid: pdns
+      setgid: pdns
+      local-address: "{{ ansible_host }}:53"
+      security-poll-suffix: ''
+      default-soa-name: "{{ play_hosts | first | map(attribute='inventory_hostname') }}"
+      default-soa-mail: "{{ dns_master }}"
+      default-ttl: "{{ dns_ttl }}"
+    pdns_backends:
+      gpgsql:
+        user: "{{ pdns_mysql_user }}"
+        host: 127.0.0.1
+        password: "{{ pdns_mysql_pass }}"
+        dbname: pdns
+
     letsencrypt_basedir: /etc/letsencrypt
     letsencrypt_certdir: "{{ letsencrypt_basedir }}/live"
     letsencrypt_keydir: "{{ letsencrypt_basedir }}/keys"
@@ -23,12 +50,37 @@
   roles:
 
     - nephelaiio.plugins
+    - nephelaiio.pip
+    - bertvv.hosts
+
+  pre_tasks:
+
+    - block:
+
+        - name: gather recursor metadata
+          setup:
+          delegate_to: "{{ item }}"
+          delegate_facts: yes
+          loop: "{{ pdns_recursors }}"
+          tags:
+            - always
+
+        - name: build recursor host metadata
+          set_fact:
+            hosts_entries: "{{ (hosts_entries | default([])) | union([recursor_host]) }}"
+          loop_control:
+            label: "{{ item }}"
+          vars:
+            recursor_host:
+              name: "{{ hostvars[item]['ansible_fqdn'] }}"
+              ip: "{{ hostvars[item]['ansible_default_ipv4']['address'] }}"
+          loop: "{{ pdns_recursors }}"
+          tags:
+            - always
+
+      run_once: yes
 
   tasks:
-
-    - name: install python pip
-      package:
-        name: python-pip
 
     - name: install python dns modules
       pip:
@@ -45,31 +97,31 @@
         name: geerlingguy.postgresql
       vars:
         postgresql_databases:
-          - name: "{{ pdns.backends.gpgsql.dbname }}"
+          - name: "{{ pdns_backends.gpgsql.dbname }}"
         postgresql_users:
-          - name: "{{ pdns.backends.gpgsql.user }}"
-            password: "{{ pdns.backends.gpgsql.password }}"
+          - name: "{{ pdns_backends.gpgsql.user }}"
+            password: "{{ pdns_backends.gpgsql.password }}"
             encrypted: yes
 
     - name: initialize database schema
       postgresql_query:
-        db: "{{ pdns.backends.gpgsql.dbname }}"
+        db: "{{ pdns_backends.gpgsql.dbname }}"
         query: "{{ lookup('template', 'schema.j2.sql') }}"
       become_user: postgres
 
-    - name: set {{ pdns.backends.gpgsql.user }} table access
+    - name: set {{ pdns_backends.gpgsql.user }} table access
       postgresql_privs:
-        db: "{{ pdns.backends.gpgsql.dbname }}"
-        role: "{{ pdns.backends.gpgsql.user }}"
+        db: "{{ pdns_backends.gpgsql.dbname }}"
+        role: "{{ pdns_backends.gpgsql.user }}"
         objs: ALL_IN_SCHEMA
         privs: SELECT,INSERT,UPDATE,DELETE
         type: table
       become_user: postgres
 
-    - name: set {{ pdns.backends.gpgsql.user }} schema access
+    - name: set {{ pdns_backends.gpgsql.user }} schema access
       postgresql_privs:
-        db: "{{ pdns.backends.gpgsql.dbname }}"
-        role: "{{ pdns.backends.gpgsql.user }}"
+        db: "{{ pdns_backends.gpgsql.dbname }}"
+        role: "{{ pdns_backends.gpgsql.user }}"
         objs: ALL_IN_SCHEMA
         privs: USAGE
         type: sequence
@@ -105,8 +157,6 @@
         name: PowerDNS.pdns
       vars:
         pdns_install_repo: "{{ pdns_auth_powerdns_repo_master }}"
-        pdns_config: "{{ pdns.config }}"
-        pdns_backends: "{{ pdns.backends }}"
 
     - meta: flush_handlers
 
@@ -115,7 +165,7 @@
         path: "{{ item }}"
         mode: 0755
         state: directory
-      with_items:
+      loop:
         - "{{ letsencrypt_certdir }}"
         - "{{ letsencrypt_keydir }}"
 
@@ -136,6 +186,8 @@
     - name: install route53 dependencies
       pip:
         name: boto
+      tags:
+        - nginx
 
     - name: create certificate challenge
       acme_certificate:
@@ -148,8 +200,12 @@
         acme_directory: https://acme-v01.api.letsencrypt.org/directory
       register: letsencrypt_challenge
       notify: generate certificate
+      tags:
+        - nginx
 
     - meta: flush_handlers
+      tags:
+        - always
 
     - name: install nginx
       include_role:
@@ -194,11 +250,15 @@
                 proxy_set_header   Upgrade            $http_upgrade;
                 proxy_set_header   Connection         "upgrade";
               }
+      tags:
+        - nginx
 
     - name: reload nginx
       service:
         name: nginx
         state: reloaded
+      tags:
+        - nginx
 
     - name: query pdns zones
       uri:
@@ -223,9 +283,9 @@
         zone: "{{ dns.zones[item] }}"
         zone_name: "{{ zone.name }}."
         zone_ns: "{{ zone.ns | map('map_format', '%s.') | list | first | string }}"
-      with_items: "{{ dns.zones.keys() | list }}"
+      loop: "{{ dns.zones.keys() | list }}"
       when: zone_name not in pdns_zones
-      delegate_to: "{{ groups['pdns'][0] }}"
+      delegate_to: "{{ play_hosts[0] }}"
       tags:
         - zones
 
@@ -237,8 +297,7 @@
           X-API-Key: "{{ pdns_api_key }}"
       vars:
         zone_name: "{{ item }}."
-      with_items:
-        - "{{ dns.zones.values() | list | map(attribute='name') | list }}"
+      loop: "{{ pdns_domains | map(attribute='name') | list }}"
       register: pdns_records_query
       tags:
         - records
@@ -280,9 +339,7 @@
               set-ptr: true
       loop_control:
         label: "{{ item.0 }}"
-      with_subelements:
-        - "{{ dns.zones.values() | list }}"
-        - records
+      loop: "{{ pdns_domains | subelements('records') }}"
       when:
         - not record_name in pdns_records
         - record_type != 'PTR'
@@ -317,9 +374,7 @@
               set-ptr: true
       loop_control:
         label: "{{ item.0 }}"
-      with_subelements:
-        - "{{ dns.zones.values() | list }}"
-        - records
+      loop: "{{ pdns_domains | subelements('records') }}"
       when:
         - not record_name in pdns_records
         - record_type != 'PTR'
@@ -350,6 +405,86 @@
         fqdn: "{{ letsencrypt_domain }}."
         record: "{{ letsencrypt_record }}"
         zone: "{{ letsencrypt_zone }}"
+      tags:
+        - records
+
+    - block:
+
+        - name: query pdns zones
+          uri:
+            url: "{{ pdns_api_proto }}://localhost:{{ pdns_api_port }}/api/v1/servers/localhost/zones"
+            method: GET
+            headers:
+              X-API-Key: "{{ pdns_api_key }}"
+          register: pdns_zones_query
+          tags:
+            - always
+
+        - name: build list of existing zones
+          set_fact:
+            pdns_zones: "{{ pdns_zones_query.json | map(attribute='id') | list }}"
+          tags:
+            - always
+
+        - name: query resolver delegations
+          uri:
+            url: "https://{{ item }}/api/v1/servers/localhost/zones"
+            method: GET
+            headers:
+              X-API-Key: "{{ pdns_rec_api_key }}"
+            validate_certs: no
+          loop: "{{ pdns_recursors }}"
+          register: pdns_recursor_zones
+          tags:
+            - recursors
+
+        - name: delete resolver delegations
+          uri:
+            url: "https://{{ recursor }}/api/v1/servers/localhost/zones/{{ zone_id }}"
+            method: DELETE
+            status_code:
+              - 200
+              - 204
+            headers:
+              X-API-Key: "{{ pdns_rec_api_key }}"
+          loop_control:
+            label: "{{ recursor }}: {{ zone_name }}"
+          vars:
+            recursor: "{{ item.0 }}"
+            zone_name: "{{ item.1 }}"
+            recursor_zones: "{{ pdns_recursor_zones.results | selectattr('item', 'equalto', recursor) | first }}"
+            zone_id: "{{ (recursor_zones.json | selectattr('name', 'match', zone_name + '\\.?') | first).id | default('') }}"
+          loop: "{{ pdns_recursors | product(pdns_domains | map(attribute='name') | list) | list }}"
+          when: zone_id != ''
+          tags:
+            - recursors
+
+        - name: create resolver delegations
+          uri:
+            url: "https://{{ recursor }}/api/v1/servers/localhost/zones"
+            method: POST
+            status_code:
+              - 200
+              - 201
+            body_format: json
+            body:
+              name: "{{ zone_name }}."
+              type: Zone
+              kind: Forwarded
+              servers: "{{ play_hosts | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list }}"
+              recursion_desired: yes
+            headers:
+              X-API-Key: "{{ pdns_rec_api_key }}"
+          loop_control:
+            label: "{{ recursor }}: {{ zone_name }}"
+          vars:
+            recursor: "{{ item.0 }}"
+            zone_name: "{{ item.1 }}"
+          loop: "{{ pdns_recursors | product(pdns_domains | map(attribute='name') | list) | list }}"
+          tags:
+            - recursors
+
+      run_once: yes
 
   handlers:
 
