@@ -1,7 +1,7 @@
 ---
 - name: Configure dns recursors
 
-  hosts: recursors
+  hosts: pdns_recursors
 
   become: yes
 
@@ -124,7 +124,7 @@
             recursor_host:
               name: "{{ hostvars[item]['ansible_fqdn'] }}"
               ip: "{{ hostvars[item]['ansible_default_ipv4']['address'] }}"
-          loop: "{{ groups['recursors'] }}"
+          loop: "{{ play_hosts }}"
 
       run_once: yes
 
@@ -171,7 +171,7 @@
             netplan_config_file: "/etc/netplan/{{ ansible_default_ipv4.alias }}.yaml"
             netplan_iface: "{{ ansible_default_ipv4 }}"
             netplan_ipaddr: "{{ (ansible_default_ipv4.address + '/' + ansible_default_ipv4.netmask) | ipv4 }}"
-            netplan_nameservers: "{{ groups['recursors'] | map('extract', hostvars, 'ansible_host') | list }}"
+            netplan_nameservers: "{{ play_hosts | map('extract', hostvars, 'ansible_host') | list }}"
 
         - name: find existing netplan files
           find:

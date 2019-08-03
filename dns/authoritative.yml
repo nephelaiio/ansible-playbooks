@@ -1,13 +1,13 @@
 ---
 - name: Configure pdns authoritative server
 
-  hosts: pdns
+  hosts: pdns_servers
 
   become: yes
 
   vars:
 
-    pdns_recursors: "{{ groups['recursors'] | default([]) }}"
+    pdns_recursors: []
     pdns_hostname: "{{ pdns_url | urlsplit('hostname') }}"
     pdns_config:
       api: yes

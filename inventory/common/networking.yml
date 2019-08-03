@@ -6,7 +6,7 @@ nets:
     router: 192.168.5.1
     zone: 5.168.192.in-addr.arpa
     bridge: br1
-    ns: "{{ servers.recursors }}"
+    ns: "{{ pdns_recursors }}"
     lb:
       name: management
       range: '192.168.5.65 192.168.5.128'
@@ -28,7 +28,7 @@ openvpn_nets:
   home:
     network: 10.8.0.0
     netmask: 255.255.255.0
-    ns: "{{ servers.recursors }}"
+    ns: "{{ pdns_recursors }}"
   aws:
     network: 10.7.0.0
     netmask: 255.255.255.0

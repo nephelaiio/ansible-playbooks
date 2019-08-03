@@ -6,7 +6,7 @@ dns_zones:
   management:
     name: "{{ base_domain }}"
     hostmaster: "master@{{ base_domain }}"
-    ns: "{{ groups['pdns'] }}"
+    ns: "{{ groups['pdns_servers'] }}"
     records: []
     cnames: []
     foreman_locations:
@@ -16,7 +16,7 @@ dns_zones:
   tnemeganam:
     name: "{{ nets.management.zone }}"
     hostmaster: "master@{{ base_domain }}"
-    ns: "{{ groups['pdns'] }}"
+    ns: "{{ groups['pdns_servers'] }}"
     records: []
     cnames: []
     foreman_locations:
@@ -46,7 +46,7 @@ pdns_api_key: !vault |
           6436393862363232330a613139643264653265373166306537373237333761623935383466616465
           62366434643236313636306338303232336236316539363432613038333234633030353439303634
           6164343165656338316334323632643733363636653537326436
-pdns_recursors: "{{ groups['recursors'] }}"
+pdns_recursors: "{{ groups['pdns_recursors'] }}"
 pdns_rec_api_key: !vault |
   $ANSIBLE_VAULT;1.1;AES256
   61323735396561396338663331343138633261663665373561346531613934373530633761613262

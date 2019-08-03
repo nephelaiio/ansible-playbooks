@@ -1,9 +1,14 @@
 ---
-recursors:
+pdns:
+  children:
+    pdns_recursors:
+    pdns_servers:
+
+pdns_recursors:
   hosts:
     kvmn.home.nephelai.io:
     kvms.home.nephelai.io:
 
-pdns:
+pdns_servers:
   hosts:
     kvmt.home.nephelai.io:
