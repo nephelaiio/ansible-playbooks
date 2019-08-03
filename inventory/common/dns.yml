@@ -1,5 +1,40 @@
 ---
 base_domain: home.nephelai.io
+dns_ttl: 3600
+dns_master: domainmaster.nephelai.io
+dns_zones:
+  management:
+    name: "{{ base_domain }}"
+    hostmaster: "master@{{ base_domain }}"
+    ns: "{{ groups['pdns'] }}"
+    records: []
+    cnames: []
+    foreman_locations:
+      - "{{ foreman_locations.home.name }}"
+    foreman_organizations:
+      - "{{ foreman_organizations.nephelai.name }}"
+  tnemeganam:
+    name: "{{ nets.management.zone }}"
+    hostmaster: "master@{{ base_domain }}"
+    ns: "{{ groups['pdns'] }}"
+    records: []
+    cnames: []
+    foreman_locations:
+      - "{{ foreman_locations.home.name }}"
+    foreman_organizations:
+      - "{{ foreman_organizations.nephelai.name }}"
+
+resolv_netplan_config_file: "/etc/netplan/{{ ansible_default_ipv4.alias }}.yaml"
+resolv_iface: "{{ ansible_default_ipv4 }}"
+resolv_ipaddr: "{{ (ansible_default_ipv4.address + '/' + ansible_default_ipv4.netmask) | ipv4 }}"
+resolv_domain: ''
+resolv_nameservers:
+  - 1.1.1.1
+  - 8.8.8.8
+resolv_options:
+  - timeout:2
+  - rotate
+
 pdns_url: "https://pdns.home.nephelai.io"
 pdns_api_proto: http
 pdns_api_port: 8081
@@ -19,3 +54,19 @@ pdns_rec_api_key: !vault |
   63626362646639363037363933383531656235663263613036666130623131333662646138303536
   3539363463366238370a333435613664333934316564663566653936616661316337363932396435
   31623932636437396466353863616636323039363531366439623737396530393464
+pdns_mysql_root_pass: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  61323735396561396338663331343138633261663665373561346531613934373530633761613262
+  3330313534393730313039336232386131343036623735330a616436396437376630313831393762
+  63626362646639363037363933383531656235663263613036666130623131333662646138303536
+  3539363463366238370a333435613664333934316564663566653936616661316337363932396435
+  31623932636437396466353863616636323039363531366439623737396530393464
+pdns_mysql_user: foreman
+pdns_mysql_pass: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  62356665306363363932656435353535623461303536346333613731373236356332663965653565
+  3839333766333038363832623736376539356164313633390a383263346164353132353631326637
+  33643863653631663634353831653833663064306562656531666530373363633837343365616431
+  3630633265313830300a386366353232646164346365336533323735366434396131353563626338
+  37303865643532393132316630616531323363353531353762373739356231623031
+pdns_domains: "{{ dns_zones.values() | list }}"
