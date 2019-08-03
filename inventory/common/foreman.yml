@@ -109,7 +109,7 @@ foreman_hostgroups:
       - name: remote_execution_effective_user_method
         value: sudo
 
-foreman_domains: "{{ dns.zones.values() | list }}"
+foreman_domains: "{{ dns_zones.values() | list }}"
 
 foreman_networks: "{{ nets.values() | list | selectattr('foreman_proxy', 'defined') | list }}"
 

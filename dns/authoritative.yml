@@ -280,10 +280,10 @@
       command:
         "pdnsutil create-zone {{ zone_name }} {{ zone_ns }}"
       vars:
-        zone: "{{ dns.zones[item] }}"
+        zone: "{{ item.value }}"
         zone_name: "{{ zone.name }}."
         zone_ns: "{{ zone.ns | map('map_format', '%s.') | list | first | string }}"
-      loop: "{{ dns.zones.keys() | list }}"
+      loop: "{{ dns_zones | dict2items }}"
       when: zone_name not in pdns_zones
       delegate_to: "{{ play_hosts[0] }}"
       tags:

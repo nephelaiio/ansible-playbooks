@@ -34,7 +34,7 @@
         lease_time: 1800
         networks: "{{ nets.values() | list }}"
         failover: "{{ dhcp_failover | default([]) }}"
-        domain_name: "{{ dns.zones.home.name }}"
+        domain_name: "{{ dns_zones.management.name }}"
       notify: restart dhcpd
 
     - name: configure dhcp leases permissions
