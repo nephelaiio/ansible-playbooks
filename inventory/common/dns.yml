@@ -7,20 +7,12 @@ dns_zones:
     ns: "{{ groups['pdns_servers'] }}"
     records: []
     cnames: []
-    foreman_locations:
-      - "{{ foreman_locations.home.name }}"
-    foreman_organizations:
-      - "{{ foreman_organizations.nephelai.name }}"
   tnemeganam:
     name: "{{ nets.management.zone }}"
     hostmaster: "master@{{ base_domain }}"
     ns: "{{ groups['pdns_servers'] }}"
     records: []
     cnames: []
-    foreman_locations:
-      - "{{ foreman_locations.home.name }}"
-    foreman_organizations:
-      - "{{ foreman_organizations.nephelai.name }}"
 
 resolv_domain: ''
 resolv_nameservers:
