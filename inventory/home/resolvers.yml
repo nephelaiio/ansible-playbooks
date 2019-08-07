@@ -1,4 +1,0 @@
----
-resolvers:
-  children:
-    kvm_guests:

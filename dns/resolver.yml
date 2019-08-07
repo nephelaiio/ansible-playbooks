@@ -1,33 +1,28 @@
 ---
-- name: Configure dns resolvers
+- name: Configure pdns resolvers
 
-  hosts: resolvers
+  hosts: pdns_clients
 
   become: yes
 
-  gather_facts: no
+  gather_facts: yes
 
   roles:
 
     - nephelaiio.plugins
 
+  vars:
+
+    resolv_netplan_config_file: "/etc/netplan/{{ ansible_default_ipv4.alias }}.yaml"
+    resolv_iface: "{{ ansible_default_ipv4 }}"
+    resolv_ipaddr: "{{ (ansible_default_ipv4.address + '/' + ansible_default_ipv4.netmask) | ipv4 }}"
+
   tasks:
 
-    - name: wait for connection
-      wait_for_connection:
-        timeout: 30
-
-    - name: gather facts
-      setup:
+    - name: retrieve package fats
+      package_facts:
 
     - block:
-
-        - name: set netplan facts
-          set_fact:
-            netplan_config_file: "/etc/netplan/{{ ansible_default_ipv4.alias }}.yaml"
-            netplan_iface: "{{ ansible_default_ipv4 }}"
-            netplan_ipaddr: "{{ (ansible_default_ipv4.address + '/' + ansible_default_ipv4.netmask) | ipv4 }}"
-            netplan_nameservers: "{{ groups['recursors'] | map('extract', hostvars, 'ansible_host') | list }}"
 
         - name: find existing netplan files
           find:
@@ -70,40 +65,23 @@
             - netplan_file != netplan_config_file
           notify: restart networking
 
-      when:
-        - ansible_os_family is defined
-        - ansible_os_family == 'Debian'
-        - ansible_distribution_release == 'bionic'
+      when: package_facts.packages | intersect(['netplan.io']) | length > 0
 
-    - block:
+    - name: check run resolv.conf symlink
+      stat:
+        path: /run/resolvconf/
+      register: resolvconf_run
 
-        - name: link resolv conf
-          file:
-            src: /run/resolvconf/resolv.conf
-            dest: /etc/resolv.conf
-            state: link
+    - name: link resolv conf
+      file:
+        src: /run/resolvconf/resolv.conf
+        dest: /etc/resolv.conf
+        state: link
 
-      when:
-        - ansible_os_family is defined
-        - ansible_os_family == 'Debian'
-        - ansible_distribution_release == 'xenial'
-
-    - block:
-
-        - name: manage resolv.conf
-          include_role:
-            name: ahuffman.resolv
-          vars:
-            resolv_nameservers: "{{ groups['recursors'] | map('extract', hostvars, 'ansible_host') | list }}"
-            resolv_domain: "{{ base_domain }}"
-            resolv_options:
-              - timeout:2
-              - rotate
-
-      when:
-        - ansible_os_family is defined
-        - ansible_os_family == 'Debian'
-        - ansible_distribution_release == 'stretch'
+    - name: manage resolv.conf
+      include_role:
+        name: ahuffman.resolv
+      when: package_facts.packages | intersect(['netplan.io']) | length == 0
 
   handlers:
 

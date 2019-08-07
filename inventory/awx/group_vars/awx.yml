@@ -176,7 +176,7 @@ awx_templates:
     inventory: awx
     playbook: ping.yml
     credentials:
-      - name: awx.ssh
+      - name: home.ssh
         kind: ssh
   - name: awx.configure
     job_type: run
@@ -184,9 +184,9 @@ awx_templates:
     inventory: awx
     playbook: configure.yml
     credentials:
-      - name: awx.ssh
+      - name: home.ssh
         kind: ssh
-      - name: awx.vault
+      - name: home.vault
         kind: vault
   - name: awx.proxy
     job_type: run
@@ -194,9 +194,9 @@ awx_templates:
     inventory: awx
     playbook: nginx.yml
     credentials:
-      - name: awx.ssh
+      - name: home.ssh
         kind: ssh
-      - name: awx.vault
+      - name: home.vault
         kind: vault
   - name: freeipa.install.servers
     job_type: run
@@ -204,9 +204,9 @@ awx_templates:
     inventory: freeipa
     playbook: freeipa/server.yml
     credentials:
-      - name: freeipa.ssh
+      - name: home.ssh
         kind: ssh
-      - name: freeipa.vault
+      - name: home.vault
         kind: vault
   - name: freeipa.install.replicas
     job_type: run
@@ -214,9 +214,9 @@ awx_templates:
     inventory: freeipa
     playbook: freeipa/replicas.yml
     credentials:
-      - name: freeipa.ssh
+      - name: home.ssh
         kind: ssh
-      - name: freeipa.vault
+      - name: home.vault
         kind: vault
   - name: freeipa.install.client
     state: absent
@@ -224,36 +224,59 @@ awx_templates:
     project: playbooks
     playbook: freeipa/clients.yml
     credentials:
-      - name: freeipa.ssh
+      - name: home.ssh
         kind: ssh
-      - name: freeipa.vault
+      - name: home.vault
         kind: vault
   - name: freeipa.install.clients
     job_type: run
     project: playbooks
     playbook: freeipa/clients.yml
     credentials:
-      - name: freeipa.ssh
+      - name: home.ssh
         kind: ssh
-      - name: freeipa.vault
+      - name: home.vault
         kind: vault
-  - name: dhcp.install
+  - name: pdns.recursors
     job_type: run
-    project: playbooks
-    playbook: dhcp/install.yml
+    project: pdns
+    playbook: recursor.yml
+    inventory: pdns
     credentials:
-      - name: freeipa.ssh
+      - name: home.ssh
         kind: ssh
-      - name: freeipa.vault
+      - name: home.vault
         kind: vault
-  - name: dhcp.reservations
+  - name: pdns.servers
     job_type: run
-    project: playbooks
-    playbook: dhcp/reservations.yml
+    project: pdns
+    playbook: server.yml
+    inventory: pdns
+    inventory: 
     credentials:
-      - name: freeipa.ssh
+      - name: home.ssh
         kind: ssh
-      - name: freeipa.vault
+      - name: home.vault
+        kind: vault
+  - name: pdns.records
+    job_type: run
+    project: pdns
+    playbook: records.yml
+    inventory: pdns
+    credentials:
+      - name: home.ssh
+        kind: ssh
+      - name: home.vault
+        kind: vault
+  - name: pdns.register
+    job_type: run
+    project: pdns
+    playbook: register.yml
+    inventory: pdns
+    credentials:
+      - name: home.ssh
+        kind: ssh
+      - name: home.vault
         kind: vault
 
 awx_schedules:
@@ -277,17 +300,10 @@ awx_organizations:
         kind: scm
         username: "{{ awx_github_user }}"
         password: "{{ awx_github_pass }}"
-      - name: awx.vault
+      - name: home.vault
         kind: vault
         vault_password: "{{ awx_vault_awx_pass }}"
-      - name: awx.ssh
-        kind: ssh
-        username: "{{ awx_machine_user }}"
-        ssh_key_data: "{{ awx_machine_key }}"
-      - name: freeipa.vault
-        kind: vault
-        vault_password: "{{ awx_vault_awx_pass }}"
-      - name: freeipa.ssh
+      - name: home.ssh
         kind: ssh
         username: "{{ awx_machine_user }}"
         ssh_key_data: "{{ awx_machine_key }}"
@@ -298,7 +314,16 @@ awx_organizations:
         state: absent
       - name: awx
         scm_type: git
-        scm_url: https://github.com/nephelaiio/ansible-playbook-awx.git
+        scm_url: https://github.com/nephelaiio/ansible-playbooks-awx.git
+        scm_branch: master
+        scm_delete_on_update: false
+        scm_credential: awx.github
+        scm_update_on_launch: false
+        scm_update_cache_timeout: 60
+        scm_clean: false
+      - name: pdns
+        scm_type: git
+        scm_url: https://github.com/nephelaiio/ansible-playbooks-pdns.git
         scm_branch: master
         scm_delete_on_update: false
         scm_credential: awx.github
@@ -354,9 +379,65 @@ awx_organizations:
         overwrite_vars: true
         update_on_launch: false
         update_on_project_update: true
+      - name: pdns
+        source: scm
+        source_project: inventory
+        source_path: inventory/pdns
+        overwrite: true
+        overwrite_vars: true
+        update_on_launch: false
+        update_on_project_update: true
 
     workflows:
       - name: site
+        nodes:
+          - name: pdns.recursors
+            id: pdns.recursors
+            template: pdns.recursors
+          - name: pdns.servers
+            id: pdns.servers
+            template: pdns.servers
+            parent: pdns.recursors
+          - name: pdns.records
+            id: pdns.records
+            template: pdns.records
+            parent: pdns.servers
+          - name: pdns.register
+            id: pdns.register
+            template: pdns.register
+            parent: pdns.records
+          - name: freeipa.servers
+            id: freeipa.servers
+            template: freeipa.install.servers
+          - name: freeipa.replicas
+            id: pdns.recursors
+            template: freeipa.install.replicas
+            parent: freeipa.servers
+          - name: awx.proxy
+            id: awx.proxy
+            template: awx.proxy
+          - name: awx.configure
+            id: pdns.records
+            template: awx.proxy
+            parent: awx.proxy
+      - name: pdns
+        nodes:
+          - name: pdns.recursors
+            id: pdns.recursors
+            template: pdns.recursors
+          - name: pdns.servers
+            id: pdns.servers
+            template: pdns.servers
+            parent: pdns.recursors
+          - name: pdns.records
+            id: pdns.records
+            template: pdns.records
+            parent: pdns.servers
+          - name: pdns.register
+            id: pdns.register
+            template: pdns.register
+            parent: pdns.records
+      - name: freeipa
         nodes:
           - name: freeipa.servers
             id: freeipa.servers
@@ -365,10 +446,12 @@ awx_organizations:
             id: freeipa.replicas
             template: freeipa.install.replicas
             parent: freeipa.servers
+      - name: awx
+        nodes:
           - name: awx.proxy
             id: awx.proxy
             template: awx.proxy
           - name: awx.configure
-            id: awx.proxy
-            template: awx.proxy
+            id: awx.configure
+            template: awx.configure
             parent: awx.proxy

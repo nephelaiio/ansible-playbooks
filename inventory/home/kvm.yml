@@ -7,7 +7,6 @@ kvm_guests:
   hosts:
     kvma.home.nephelai.io:
     kvmb.home.nephelai.io:
-    kvmc.home.nephelai.io:
     kvmd.home.nephelai.io:
     kvme.home.nephelai.io:
     kvmn.home.nephelai.io:
