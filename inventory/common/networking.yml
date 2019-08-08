@@ -13,16 +13,6 @@ nets:
     pools:
       - range: '192.168.5.129 192.168.5.254'
     reservations: {}
-    foreman_locations:
-      - "{{ foreman_locations.home.name }}"
-    foreman_organizations:
-      - "{{ foreman_organizations.nephelai.name }}"
-    foreman_proxy:
-      zone: "{{ base_domain }}"
-      dns: kvmc.home.nephelai.io
-      template: kvmc.home.nephelai.io
-      tftp: kvmc.home.nephelai.io
-      dhcp: kvmc.home.nephelai.io
 
 openvpn_nets:
   home:
