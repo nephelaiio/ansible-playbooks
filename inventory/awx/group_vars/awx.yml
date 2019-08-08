@@ -252,7 +252,6 @@ awx_templates:
     project: pdns
     playbook: server.yml
     inventory: pdns
-    inventory: 
     credentials:
       - name: home.ssh
         kind: ssh
