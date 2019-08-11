@@ -416,8 +416,8 @@ awx_organizations:
             id: awx.proxy
             template: awx.proxy
           - name: awx.configure
-            id: pdns.records
-            template: awx.proxy
+            id: awx.configure
+            template: awx.configure
             parent: awx.proxy
       - name: pdns
         nodes:
