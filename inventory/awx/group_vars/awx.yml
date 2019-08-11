@@ -412,13 +412,6 @@ awx_organizations:
             id: pdns.recursors
             template: freeipa.install.replicas
             parent: freeipa.servers
-          - name: awx.proxy
-            id: awx.proxy
-            template: awx.proxy
-          - name: awx.configure
-            id: awx.configure
-            template: awx.configure
-            parent: awx.proxy
       - name: pdns
         nodes:
           - name: pdns.recursors
@@ -446,11 +439,5 @@ awx_organizations:
             template: freeipa.install.replicas
             parent: freeipa.servers
       - name: awx
-        nodes:
-          - name: awx.proxy
-            id: awx.proxy
-            template: awx.proxy
-          - name: awx.configure
-            id: awx.configure
-            template: awx.configure
-            parent: awx.proxy
+        state: absent
+        nodes: []
