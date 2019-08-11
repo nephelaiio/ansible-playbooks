@@ -8,9 +8,12 @@ dist: xenial
 python: "3.7"
 
 install:
-  - sudo apt-get install -y libvirt0 libvirt-dev
   - sudo apt-get install -y git jq
   - pip install -r requirements.txt
+  - git clone https://github.com/basherpm/basher.git ~/.basher
+  - export PATH="$HOME/.basher/bin:$PATH"
+  - eval "$(basher init -)"
+  - basher install nephelaiio/basher-awx
 
 stages:
   - test
@@ -23,8 +26,8 @@ jobs:
         - flake8 ./
       stage: test
     - script:
-        - ./bin/awx_update_projects.sh --host $AWX_URL --user $AWX_USER --pass $AWX_PASS --repo https://github.com/$TRAVIS_REPO_SLUG.git --debug
-        - ./bin/awx_run_template.sh --host $AWX_URL --user $AWX_USER --pass $AWX_PASS --template awx.configure --debug inventory/common/awx.yml inventory/awx/group_vars/awx.yml
+        - awx-update-projects --host $AWX_URL --user $AWX_USER --pass $AWX_PASS --repo https://github.com/$TRAVIS_REPO_SLUG.git --debug
+        - awx-run-playbooks --host $AWX_URL --user $AWX_USER --pass $AWX_PASS --repo https://github.com/$TRAVIS_REPO_SLUG.git --debug $(git diff --name-only HEAD~1)
       stage:
         deploy
 
