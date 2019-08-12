@@ -201,7 +201,7 @@ awx_templates:
   - name: freeipa.install.servers
     job_type: run
     project: playbooks
-    inventory: freeipa
+    inventory: home
     playbook: freeipa/server.yml
     credentials:
       - name: home.ssh
@@ -211,7 +211,7 @@ awx_templates:
   - name: freeipa.install.replicas
     job_type: run
     project: playbooks
-    inventory: freeipa
+    inventory: home
     playbook: freeipa/replicas.yml
     credentials:
       - name: home.ssh
@@ -241,7 +241,7 @@ awx_templates:
     job_type: run
     project: pdns
     playbook: recursor.yml
-    inventory: pdns
+    inventory: home
     credentials:
       - name: home.ssh
         kind: ssh
@@ -251,7 +251,7 @@ awx_templates:
     job_type: run
     project: pdns
     playbook: server.yml
-    inventory: pdns
+    inventory: home
     credentials:
       - name: home.ssh
         kind: ssh
@@ -261,7 +261,7 @@ awx_templates:
     job_type: run
     project: pdns
     playbook: records.yml
-    inventory: pdns
+    inventory: home
     credentials:
       - name: home.ssh
         kind: ssh
@@ -271,7 +271,7 @@ awx_templates:
     job_type: run
     project: pdns
     playbook: register.yml
-    inventory: pdns
+    inventory: home
     credentials:
       - name: home.ssh
         kind: ssh
@@ -371,6 +371,7 @@ awx_organizations:
         update_on_launch: false
         update_on_project_update: true
       - name: freeipa
+        state: absent
         source: scm
         source_project: inventory
         source_path: inventory/freeipa
@@ -379,6 +380,7 @@ awx_organizations:
         update_on_launch: false
         update_on_project_update: true
       - name: pdns
+        state: absent
         source: scm
         source_project: inventory
         source_path: inventory/pdns

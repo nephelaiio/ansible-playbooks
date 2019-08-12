@@ -9,3 +9,29 @@
 
     - bertvv.hosts
     - ipaserver
+
+  tasks:
+
+    - name: create recursor delegation
+      uri:
+        url: "https://{{ recursor }}/api/v1/servers/localhost/zones"
+        method: POST
+        status_code:
+          - 200
+          - 201
+        body_format: json
+        body:
+          name: "{{ zone_name }}"
+          type: Zone
+          kind: Forwarded
+          servers: "{{ play_hosts | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list }}"
+          recursion_desired: yes
+        headers:
+          X-API-Key: "{{ pdns_rec_api_key }}"
+      loop_control:
+        label: "{{ recursor }}: {{ zone_name }}"
+      vars:
+        recursor: "{{ item.0 }}"
+        zone_name: "{{ item.1 | regex_replace('\\.?$', '') }}."
+      loop: "{{ pdns_recursors | default([]) | product([ipaserver_domain]) | list }}"
+      run_once: yes
