@@ -67,17 +67,6 @@
 
       when: package_facts.packages | intersect(['netplan.io']) | length > 0
 
-    - name: check run resolv.conf symlink
-      stat:
-        path: /run/resolvconf/
-      register: resolvconf_run
-
-    - name: link resolv conf
-      file:
-        src: /run/resolvconf/resolv.conf
-        dest: /etc/resolv.conf
-        state: link
-
     - name: manage resolv.conf
       include_role:
         name: ahuffman.resolv
