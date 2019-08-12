@@ -1,6 +1,7 @@
 [submodule "submodules/freeipa"]
 	path = submodules/freeipa
 	url = https://github.com/freeipa/ansible-freeipa.git
+	branch = v0.1.6
 [submodule "submodules/mitogen"]
 	path = submodules/mitogen
 	url = https://github.com/dw/mitogen.git
