@@ -5,6 +5,10 @@
 
   become: true
 
+  vars:
+
+    kinit_acl_path: /etc/krb5kdc/kadm5.acl
+
   roles:
 
     - bertvv.hosts
@@ -12,26 +16,104 @@
 
   tasks:
 
-    - name: create recursor delegation
-      uri:
-        url: "https://{{ recursor }}/api/v1/servers/localhost/zones"
-        method: POST
-        status_code:
-          - 200
-          - 201
-        body_format: json
-        body:
-          name: "{{ zone_name }}"
-          type: Zone
-          kind: Forwarded
-          servers: "{{ play_hosts | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list }}"
-          recursion_desired: yes
-        headers:
-          X-API-Key: "{{ pdns_rec_api_key }}"
-      loop_control:
-        label: "{{ recursor }}: {{ zone_name }}"
-      vars:
-        recursor: "{{ item.0 }}"
-        zone_name: "{{ item.1 | regex_replace('\\.?$', '') }}."
-      loop: "{{ pdns_recursors | default([]) | product([ipaserver_domain]) | list }}"
+    - name: verify kinit access file
+      stat:
+        path: "{{ kinit_acl_path }}"
+      register: kinit_stat
+
+    - name: ensure kinit acl file exists
+      file:
+        state: touch
+        path: "{{ kinit_acl_path }}"
+      when: not kinit_stat.stat.exists
+      notify: restart ipa services
+
+    - block:
+
+        - name: fix krb5kdc directory permissions
+          shell: chmod 0755 /var/lib/krb5kdc
+
+        - name: fix krb5kdc file permissions
+          shell: chmod 0700 /var/lib/krb5kdc/*
+
+      when: ansible_os_family == 'Ubuntu'
+
+    - block:
+
+        - name: set recursor metadata
+          set_fact:
+            pdns_recursor_domains: "{{ pdns_recursors | default([]) | product([ipaserver_domain]) | list }}"
+
+        - name: query resolver delegations
+          uri:
+            url: "https://{{ item }}/api/v1/servers/localhost/zones"
+            method: GET
+            headers:
+              X-API-Key: "{{ pdns_rec_api_key }}"
+            validate_certs: no
+          loop: "{{ pdns_recursors | default([]) }}"
+          register: pdns_recursor_zones
+          tags:
+            - recursors
+
+        - name: delete resolver delegations
+          uri:
+            url: "https://{{ recursor }}/api/v1/servers/localhost/zones/{{ zone_id }}"
+            method: DELETE
+            status_code:
+              - 200
+              - 204
+            headers:
+              X-API-Key: "{{ pdns_rec_api_key }}"
+          loop_control:
+            label: "{{ recursor }}: {{ zone_name }}"
+          vars:
+            recursor: "{{ item.0 }}"
+            zone_name: "{{ item.1 }}"
+            recursor_zones: "{{ pdns_recursor_zones.results | selectattr('item', 'equalto', recursor) | first }}"
+            zone_id: "{{ (recursor_zones.json | selectattr('name', 'match', zone_name + '\\.?') | first).id | default('') }}"
+          loop: "{{ pdns_recursor_domains }}"
+          when: zone_id != ''
+          tags:
+            - recursors
+
+        - name: create recursor delegation
+          uri:
+            url: "https://{{ recursor }}/api/v1/servers/localhost/zones"
+            method: POST
+            status_code:
+              - 200
+              - 201
+            body_format: json
+            body:
+              name: "{{ zone_name }}"
+              type: Zone
+              kind: Forwarded
+              servers: "{{ play_hosts | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list }}"
+              recursion_desired: yes
+            headers:
+              X-API-Key: "{{ pdns_rec_api_key }}"
+          loop_control:
+            label: "{{ recursor }}: {{ zone_name }}"
+          vars:
+            recursor: "{{ item.0 }}"
+            zone_name: "{{ item.1 | regex_replace('\\.?$', '') }}."
+          loop: "{{ pdns_recursor_domains }}"
+
+        - name: create freeipa pdns record
+          ipa_dnsrecord:
+            ipa_host: "{{ ansible_fqdn }}"
+            ipa_user: "{{ ipaadmin_principal }}" 
+            ipa_pass: "{{ ipaadmin_password }}" 
+            zone_name: "{{ ipaserver_domain }}"
+            record_name: '@'
+            record_type: A
+            record_value: "{{ ansible_default_ipv4.address }}"
+            validate_certs: no
+
       run_once: yes
+
+  handlers:
+
+    - name: restart ipa services
+      command: "ipactl restart"

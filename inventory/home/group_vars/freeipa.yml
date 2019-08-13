@@ -20,3 +20,4 @@ ipaserver_setup_firewalld: no
 ipaserver_allow_zone_overlap: yes
 ipareplica_setup_firewalld: no
 ipareplica_allow_zone_overlap: yes
+ipaclient_force_join: yes
