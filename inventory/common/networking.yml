@@ -6,7 +6,7 @@ nets:
     router: 192.168.5.1
     zone: 5.168.192.in-addr.arpa
     bridge: br1
-    ns: "{{ pdns_recursors }}"
+    ns: "{{ pdns_recursors | map('extract', hostvars, 'ansible_host') | list }}"
     lb:
       name: management
       range: '192.168.5.65 192.168.5.128'
