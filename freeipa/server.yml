@@ -25,7 +25,9 @@
       file:
         state: touch
         path: "{{ kinit_acl_path }}"
-      when: not kinit_stat.stat.exists
+      when:
+        - not kinit_stat.stat.exists
+        - ansible_os_family == 'Debian'
       notify: restart ipa services
 
     - block:
