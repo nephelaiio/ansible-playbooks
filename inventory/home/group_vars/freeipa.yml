@@ -18,6 +18,9 @@ ipadm_password: !vault |
   65356433316631383430353034393731313239653238633338376434323035376434
 ipaserver_setup_firewalld: no
 ipaserver_allow_zone_overlap: yes
+ipareplica_setup_ca: yes
+ipareplica_setup_dns: yes
+ipareplica_no_forwarders: yes
 ipareplica_setup_firewalld: no
 ipareplica_allow_zone_overlap: yes
 ipaclient_force_join: yes
