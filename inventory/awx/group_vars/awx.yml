@@ -14,6 +14,7 @@ awx_ci_email: !vault |
   65386530643363323133366162616561303834333364303463653630306465326162336136653736
   3764626331353034660a626164343532623461393938633465656530653865336433363236333239
   61326530373831316336646138613638656566306531373461333634316536383062
+awx_admin_user: root
 awx_admin_pass: !vault |
   $ANSIBLE_VAULT;1.1;AES256
   38326437383561303736613837343736396238303031653035363861656139663364326635643361
@@ -388,32 +389,16 @@ awx_organizations:
         overwrite_vars: true
         update_on_launch: false
         update_on_project_update: true
+      - name: home
+        source: scm
+        source_project: inventory
+        source_path: inventory/home
+        overwrite: true
+        overwrite_vars: true
+        update_on_launch: false
+        update_on_project_update: true
 
     workflows:
-      - name: site
-        nodes:
-          - name: pdns.recursors
-            id: pdns.recursors
-            template: pdns.recursors
-          - name: pdns.servers
-            id: pdns.servers
-            template: pdns.servers
-            parent: pdns.recursors
-          - name: pdns.records
-            id: pdns.records
-            template: pdns.records
-            parent: pdns.servers
-          - name: pdns.register
-            id: pdns.register
-            template: pdns.register
-            parent: pdns.records
-          - name: freeipa.servers
-            id: freeipa.servers
-            template: freeipa.install.servers
-          - name: freeipa.replicas
-            id: pdns.recursors
-            template: freeipa.install.replicas
-            parent: freeipa.servers
       - name: pdns
         nodes:
           - name: pdns.recursors
@@ -441,5 +426,23 @@ awx_organizations:
             template: freeipa.install.replicas
             parent: freeipa.servers
       - name: awx
-        state: absent
-        nodes: []
+        nodes:
+          - name: awx.configure
+            id: awx.configure
+            template: awx.configure
+      - name: site
+        nodes:
+          - name: pdns
+            id: pdns
+            template: pdns
+            type: workflow_job
+          - name: awx
+            id: awx
+            template: awx
+            parent: pdns
+            type: workflow_job
+          - name: freeipa
+            id: freeipa
+            template: freeipa
+            parent: pdns
+            type: workflow_job
