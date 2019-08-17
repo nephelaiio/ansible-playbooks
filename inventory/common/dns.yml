@@ -50,3 +50,4 @@ pdns_psql_pass: !vault |
 pdns_domains: "{{ dns_zones.values() | map(attribute='name') | list }}"
 pdns_master_ips: "{{ hostvars.values() | selectattr('pdns_master', 'defined') | selectattr('pdns_master', 'equalto', True) | map(attribute='ansible_default_ipv4') | map(attribute='address') | list }}"
 pdns_records: []
+pdns_register: "{{ groups['online'] | list }}"
