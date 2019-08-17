@@ -330,16 +330,6 @@ awx_organizations:
         scm_update_on_launch: false
         scm_update_cache_timeout: 60
         scm_clean: false
-      - name: freeipa
-        state: absent
-        scm_type: git
-        scm_url: https://github.com/freeipa/ansible-freeipa.git
-        scm_branch: master
-        scm_delete_on_update: false
-        scm_credential: awx.github
-        scm_update_on_launch: true
-        scm_update_cache_timeout: 60
-        scm_clean: false
       - name: inventory
         scm_type: git
         scm_url: https://github.com/nephelaiio/ansible-playbooks.git
