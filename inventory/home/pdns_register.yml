@@ -1,0 +1,4 @@
+---
+pdns_register:
+  children:
+    online:
