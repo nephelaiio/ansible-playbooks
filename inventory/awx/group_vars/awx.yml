@@ -371,24 +371,6 @@ awx_organizations:
         overwrite_vars: true
         update_on_launch: false
         update_on_project_update: true
-      - name: freeipa
-        state: absent
-        source: scm
-        source_project: inventory
-        source_path: inventory/freeipa
-        overwrite: true
-        overwrite_vars: true
-        update_on_launch: false
-        update_on_project_update: true
-      - name: pdns
-        state: absent
-        source: scm
-        source_project: inventory
-        source_path: inventory/pdns
-        overwrite: true
-        overwrite_vars: true
-        update_on_launch: false
-        update_on_project_update: true
       - name: home
         source: scm
         source_project: inventory
@@ -415,7 +397,7 @@ awx_organizations:
           - name: pdns.register
             id: pdns.register
             template: pdns.register
-            parent: pdns.records
+            parent: pdns.servers
       - name: freeipa
         nodes:
           - name: freeipa.servers
