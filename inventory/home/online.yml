@@ -1,0 +1,5 @@
+---
+plugin: constructed
+strict: False
+groups:
+  online: not 'offline' in group_names

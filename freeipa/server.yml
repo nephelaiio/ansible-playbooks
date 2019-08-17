@@ -1,5 +1,5 @@
 ---
-- name: Configure ipa clients
+- name: Configure ipa server
 
   hosts: ipaserver
 
@@ -15,30 +15,6 @@
     - ipaserver
 
   tasks:
-
-    - name: verify kinit access file
-      stat:
-        path: "{{ kinit_acl_path }}"
-      register: kinit_stat
-
-    - name: ensure kinit acl file exists
-      file:
-        state: touch
-        path: "{{ kinit_acl_path }}"
-      when:
-        - not kinit_stat.stat.exists
-        - ansible_os_family == 'Debian'
-      notify: restart ipa services
-
-    - block:
-
-        - name: fix krb5kdc directory permissions
-          shell: chmod 0755 /var/lib/krb5kdc
-
-        - name: fix krb5kdc file permissions
-          shell: chmod 0700 /var/lib/krb5kdc/*
-
-      when: ansible_os_family == 'Ubuntu'
 
     - name: set recursor metadata
       set_fact:

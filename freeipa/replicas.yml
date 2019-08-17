@@ -9,3 +9,8 @@
 
     - bertvv.hosts
     - ipareplica
+
+  tasks:
+
+    - name: work around ipareplica dns forwarding errors before reboot
+      reboot:

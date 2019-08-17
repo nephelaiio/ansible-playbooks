@@ -1,0 +1,5 @@
+---
+plugin: constructed
+strict: False
+groups:
+  pdns_register: "'online' in group_names"
