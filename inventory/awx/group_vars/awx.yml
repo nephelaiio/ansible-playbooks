@@ -184,6 +184,9 @@ awx_templates:
     project: awx
     inventory: awx
     playbook: configure.yml
+    skip_tags:
+      - awx_skip
+    ask_skip_tags: yes
     credentials:
       - name: home.ssh
         kind: ssh
@@ -402,6 +405,8 @@ awx_organizations:
           - name: awx.configure
             id: awx.configure
             template: awx.configure
+            skip_tags:
+              - workflows
       - name: site
         nodes:
           - name: pdns
