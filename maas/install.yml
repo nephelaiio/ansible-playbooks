@@ -1,0 +1,12 @@
+---
+- name: Install maas server
+
+  hosts: maas_app
+
+  become: true
+
+  tasks:
+
+    - name: install maas package
+      package:
+        name: maas

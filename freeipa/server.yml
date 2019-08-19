@@ -5,10 +5,6 @@
 
   become: true
 
-  vars:
-
-    kinit_acl_path: /etc/krb5kdc/kadm5.acl
-
   roles:
 
     - bertvv.hosts

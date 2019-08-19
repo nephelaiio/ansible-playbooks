@@ -1,0 +1,13 @@
+---
+maas:
+  children:
+    maas_app:
+    maas_proxy:
+
+maas_app:
+  hosts:
+    kvmm.home.nephelai.io:
+
+maas_proxy:
+  hosts:
+    kvmp.home.nephelai.io:
