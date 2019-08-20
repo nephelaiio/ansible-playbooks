@@ -170,6 +170,7 @@ awx_templates:
 
   - name: Demo Job Template
     state: absent
+
   - name: awx.ping
     state: absent
     job_type: run
@@ -179,6 +180,7 @@ awx_templates:
     credentials:
       - name: home.ssh
         kind: ssh
+
   - name: awx.configure
     job_type: run
     project: awx
@@ -192,6 +194,7 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+
   - name: awx.proxy
     job_type: run
     project: awx
@@ -202,6 +205,7 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+
   - name: freeipa.install.servers
     job_type: run
     project: playbooks
@@ -212,6 +216,7 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+
   - name: freeipa.install.replicas
     job_type: run
     project: playbooks
@@ -222,6 +227,7 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+
   - name: freeipa.install.client
     state: absent
     job_type: run
@@ -232,6 +238,7 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+
   - name: freeipa.install.clients
     job_type: run
     project: playbooks
@@ -241,6 +248,7 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+
   - name: pdns.recursors
     job_type: run
     project: pdns
@@ -251,6 +259,7 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+
   - name: pdns.servers
     job_type: run
     project: pdns
@@ -261,6 +270,7 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+
   - name: pdns.records
     job_type: run
     project: pdns
@@ -271,10 +281,33 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+
   - name: pdns.register
     job_type: run
     project: pdns
     playbook: register.yml
+    inventory: home
+    credentials:
+      - name: home.ssh
+        kind: ssh
+      - name: home.vault
+        kind: vault
+
+  - name: maas.install
+    job_type: run
+    project: playbooks
+    playbook: maas/install.yml
+    inventory: home
+    credentials:
+      - name: home.ssh
+        kind: ssh
+      - name: home.vault
+        kind: vault
+
+  - name: maas.proxy
+    job_type: run
+    project: playbooks
+    playbook: maas/nginx.yml
     inventory: home
     credentials:
       - name: home.ssh
@@ -374,6 +407,7 @@ awx_organizations:
         update_on_project_update: true
 
     workflows:
+
       - name: pdns
         nodes:
           - name: pdns.recursors
@@ -391,6 +425,7 @@ awx_organizations:
             id: pdns.register
             template: pdns.register
             parent: pdns.servers
+
       - name: freeipa
         nodes:
           - name: freeipa.servers
@@ -400,6 +435,7 @@ awx_organizations:
             id: freeipa.replicas
             template: freeipa.install.replicas
             parent: freeipa.servers
+
       - name: awx
         nodes:
           - name: awx.configure
@@ -407,11 +443,26 @@ awx_organizations:
             template: awx.configure
             skip_tags:
               - workflows
+
+      - name: maas
+        nodes:
+          - name: maas.install
+            id: maas.install
+            template: maas.install
+          - name: maas.proxy
+            id: maas.proxy
+            template: maas.proxy
+
       - name: site
         nodes:
           - name: pdns
             id: pdns
             template: pdns
+            type: workflow_job
+          - name: maas
+            id: maas
+            template: maas
+            parent: pdns
             type: workflow_job
           - name: awx
             id: awx
