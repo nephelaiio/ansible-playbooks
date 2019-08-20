@@ -13,6 +13,12 @@ dns_zones:
     ns: "{{ groups['pdns_servers'] }}"
     records: []
     cnames: []
+  exp:
+    name: "{{ nets.pxe.zone }}"
+    hostmaster: "master@{{ base_domain }}"
+    ns: "{{ groups['pdns_servers'] }}"
+    records: []
+    cnames: []
 
 resolv_domain: ''
 resolv_nameservers:
