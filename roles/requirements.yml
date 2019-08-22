@@ -25,8 +25,9 @@
   version: 1.4.5
 - src: geerlingguy.repo-epel
   version: 1.2.3
-- src: nginxinc.nginx
-  version: 0.12.0
+- src: https://github.com/nginxinc/ansible-role-nginx.git
+  version: a92d424bdb5dc51b143c702754bed761e919a576
+  name: nginxinc.nginx
 - src: PowerDNS.pdns_recursor
   version: v1.1.0
 - src: PowerDNS.pdns
