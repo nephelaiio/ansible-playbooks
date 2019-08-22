@@ -1,3 +1,0 @@
----
-maas_url: "https://maas.{{ base_domain }}"
-maas_app_port: 5240
