@@ -67,5 +67,7 @@ write_files:
 {% endif %}
 bootcmd:
   - sed -ie '/locale/d' /etc/cloud/cloud.cfg
+runcmd:
+  - [ sh, -c, "sed -ie 's/^SELINUX=.*/SELINUX=disabled/g' /etc/selinux/config" ] 
 power_state:
   mode: reboot
