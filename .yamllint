@@ -4,6 +4,7 @@ ignore: |
   galaxy/
   resources/
   submodules/
+  plugins/
   **/vault.yml
   **/vault/
 
