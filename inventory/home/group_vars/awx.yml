@@ -175,7 +175,7 @@ awx_templates:
     state: absent
     job_type: run
     project: awx
-    inventory: awx
+    inventory: home
     playbook: ping.yml
     credentials:
       - name: home.ssh
@@ -184,7 +184,7 @@ awx_templates:
   - name: awx.configure
     job_type: run
     project: awx
-    inventory: awx
+    inventory: home
     playbook: configure.yml
     skip_tags:
       - awx_skip
@@ -198,7 +198,7 @@ awx_templates:
   - name: awx.proxy
     job_type: run
     project: awx
-    inventory: awx
+    inventory: home
     playbook: nginx.yml
     credentials:
       - name: home.ssh
@@ -390,6 +390,7 @@ awx_organizations:
       - name: Demo Inventory
         state: absent
       - name: awx
+        state: absent
         source: scm
         source_project: inventory
         source_path: inventory/awx
