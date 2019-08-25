@@ -294,6 +294,7 @@ awx_templates:
         kind: vault
 
   - name: maas.install
+    state: absent
     job_type: run
     project: playbooks
     playbook: maas/install.yml
@@ -305,6 +306,7 @@ awx_templates:
         kind: vault
 
   - name: maas.proxy
+    state: absent
     job_type: run
     project: playbooks
     playbook: maas/nginx.yml
@@ -446,6 +448,7 @@ awx_organizations:
               - workflows
 
       - name: maas
+        state: absent
         nodes:
           - name: maas.install
             id: maas.install
@@ -459,11 +462,6 @@ awx_organizations:
           - name: pdns
             id: pdns
             template: pdns
-            type: workflow_job
-          - name: maas
-            id: maas
-            template: maas
-            parent: pdns
             type: workflow_job
           - name: awx
             id: awx
