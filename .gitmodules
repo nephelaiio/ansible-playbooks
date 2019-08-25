@@ -5,7 +5,3 @@
 [submodule "submodules/mitogen"]
 	path = submodules/mitogen
 	url = https://github.com/dw/mitogen.git
-[submodule "plugins/mitogen"]
-	path = plugins/mitogen
-	url = https://github.com/dw/mitogen.git
-        branch = v0.2.8
