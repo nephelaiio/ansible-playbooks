@@ -228,17 +228,6 @@ awx_templates:
       - name: home.vault
         kind: vault
 
-  - name: freeipa.install.client
-    state: absent
-    job_type: run
-    project: playbooks
-    playbook: freeipa/clients.yml
-    credentials:
-      - name: home.ssh
-        kind: ssh
-      - name: home.vault
-        kind: vault
-
   - name: freeipa.install.clients
     job_type: run
     project: playbooks
@@ -437,6 +426,10 @@ awx_organizations:
           - name: freeipa.replicas
             id: freeipa.replicas
             template: freeipa.install.replicas
+            parent: freeipa.servers
+          - name: freeipa.clients
+            id: freeipa.clients
+            template: freeipa.install.clients
             parent: freeipa.servers
 
       - name: awx
