@@ -158,6 +158,38 @@ awx_machine_key: !vault |
   61643038623366626235656566623865326665353930613766633465346134323833323433613965
   66306363376666396665
 
+awx_ldap_bind_user: admin
+awx_ldap_bind_pass: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  37373465626539643563343662633736353636643734363636363037353035313965323934316631
+  3534306433346261393637353832653238363133373935650a663061323839656235326664623232
+  30363831316662656130393733346234326332326432643838306561316534633333646630386561
+  6562373138656538630a346136373166393936666438666461386533623834363162336363633439
+  32363533633531653434643334656131373331343764616631363933633731623832
+awx_ldap_domain_dn: "dc={{ ipaserver_domain | split_with('.') | join(',dc=') }}"
+
+awx_settings:
+
+  AUTH_LDAP_SERVER_URI: "{{ (groups['ipaserver'] + groups['ipareplicas']) | map('map_format', 'ldap://%s:389') | join(' ') }}"
+  AUTH_LDAP_GROUP_TYPE: GroupOfNamesType
+  AUTH_LDAP_GROUP_SEARCH:
+    - 'cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}'
+    - 'SCOPE_SUBTREE'
+    - '(objectClass=ipausergroup)'
+  AUTH_LDAP_USER_SEARCH:
+    - 'cn=users,cn=accounts,{{ awx_ldap_domain_dn }}'
+    - 'SCOPE_SUBTREE'
+    - '(uid=%(user)s)'
+  AUTH_LDAP_USER_ATTR_MAP:
+    first_name: 'givenName'
+    last_name: 'sn'
+    email: 'mail'
+  AUTH_LDAP_BIND_DN: "uid={{ awx_ldap_bind_user }},cn=users,cn=accounts,{{ awx_ldap_domain_dn }}"
+  AUTH_LDAP_BIND_PASSWORD: "{{ awx_ldap_bind_pass }}"
+  REMOTE_HOST_HEADERS:
+    - HTTP_X_FORWARDED_FOR
+  TOWER_URL_BASE: "{{ awx_url }}"
+
 awx_users:
   - first_name: CI
     last_name: Integration
