@@ -72,9 +72,9 @@
                 header_connection:
                   name: Connection
                   value: Upgrade
-            header_x_forwarded_for:
-              name: X-Forwarded-For
-              value: $proxy_add_x_forwarded_for
+                header_x_forwarded_for:
+                  name: X-Forwarded-For
+                  value: $proxy_add_x_forwarded_for
         upstreams:
           freeipa:
             name: freeipa
