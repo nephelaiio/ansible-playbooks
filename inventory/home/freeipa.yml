@@ -7,10 +7,18 @@ ipareplicas:
   hosts:
     kvme.home.nephelai.io:
 
+ipaproxy:
+  hosts:
+    kvmp.home.nephelai.io:
+
 ipaclients:
   children:
     ipaservers:
     ipareplicas:
+
+ipausers:
+  children:
+    online:
 
 freeipa:
   children:

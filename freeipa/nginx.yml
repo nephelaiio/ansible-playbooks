@@ -1,7 +1,7 @@
 ---
 - name: Install freeipa nginx proxy
 
-  hosts: freeipa_proxy
+  hosts: ipaproxy
 
   become: yes
 
@@ -37,12 +37,19 @@
       server_tokens: off
     nginx_http_template:
       default:
+        listen:
+          listen_default:
+            ip: '*'
+            port: 80
         port: 80
         server_name: "{{ acme_certificate_domain }}"
         conf_file_name: "{{ acme_certificate_domain }}.http.conf"
         https_redirect: yes
       freeipa:
-        port: 443
+        listen:
+          listen_default:
+            ip: 'freeipa'
+            port: 443
         server_name: "{{ acme_certificate_domain }}"
         conf_file_name: "{{ acme_certificate_domain }}.https.conf"
         ssl:
