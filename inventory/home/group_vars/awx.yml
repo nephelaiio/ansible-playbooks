@@ -471,6 +471,10 @@ awx_organizations:
             template: awx.configure
             skip_tags:
               - workflows
+          - name: awx.proxy
+            id: awx.proxy
+            template: awx.proxy
+            parent: awx.configure
 
       - name: maas
         state: absent
