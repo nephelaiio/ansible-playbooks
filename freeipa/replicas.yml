@@ -14,3 +14,26 @@
 
     - name: work around ipareplica dns forwarding errors before reboot
       reboot:
+
+    - name: disable hardcoded apache redirects in freeipa vhost
+      replace:
+        path: /etc/httpd/conf.d/ipa-rewrite.conf
+        regexp: '{{ item.regexp }}'
+        replace: '{{ item.replace }}'
+      loop_control:
+        label: "{{ item.regexp }}"
+      loop:
+        - regexp: '^(RewriteRule \^/\$) (https://.*)(/ipa/ui.*)$'
+          replace: '\1 \3'
+        - regexp: '^(RewriteRule \^\/ipa\/\(.*)$'
+          replace: '#\1'
+        - regexp: '^(RewriteCond .*)$'
+          replace: '#\1'
+      become: true
+
+  handlers:
+
+    - name: restart apache
+      service:
+        name: httpd
+        state: restarted
