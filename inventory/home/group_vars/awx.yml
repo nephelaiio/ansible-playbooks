@@ -269,6 +269,16 @@ awx_templates:
       - name: home.vault
         kind: vault
 
+  - name: freeipa.users
+    job_type: run
+    project: playbooks
+    playbook: freeipa/users.yml
+    credentials:
+      - name: home.ssh
+        kind: ssh
+      - name: home.vault
+        kind: vault
+
   - name: pdns.recursors
     job_type: run
     project: pdns
@@ -461,6 +471,10 @@ awx_organizations:
           - name: freeipa.clients
             id: freeipa.clients
             template: freeipa.install.clients
+            parent: freeipa.servers
+          - name: freeipa.users
+            id: freeipa.users
+            template: freeipa.users
             parent: freeipa.servers
 
       - name: awx

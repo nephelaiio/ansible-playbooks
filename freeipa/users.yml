@@ -1,0 +1,32 @@
+---
+- name: Manage freeipa users
+
+  hosts: online
+
+  gather_facts: no
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: create ipa users
+      ipa_user:
+        ipa_user: "{{ ipaadmin_principal }}"
+        ipa_pass: "{{ ipaadmin_password }}"
+        name: "{{ item.user_name }}"
+        password: "{{ item.pass }}"
+        givenname: "{{ item.fist_name }}"
+        sn: "{{ item.last_name }}"
+        telephonenumber: "{{ item.telephonenumber | default(omit) }}"
+        mail: "{{ item.mail }}"
+        kpasswrdexpiration: "20230119235959"
+        loginshell: /bin/bash
+        update_password: always
+      delegate_to: "{{ groups['ipaserver'] | first }}"
+      loop: "{{ ipa_users }}"
+      when:
+        - ipa_users is defined
