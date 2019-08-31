@@ -7,6 +7,8 @@
 
   become: yes
 
+  serial: 1
+
   roles:
 
     - nephelaiio.plugins
@@ -19,14 +21,16 @@
         ipa_pass: "{{ ipaadmin_password }}"
         name: "{{ item.user_name }}"
         password: "{{ item.pass }}"
-        givenname: "{{ item.fist_name }}"
+        givenname: "{{ item.first_name }}"
         sn: "{{ item.last_name }}"
         telephonenumber: "{{ item.telephonenumber | default(omit) }}"
-        mail: "{{ item.mail }}"
-        kpasswrdexpiration: "20230119235959"
+        mail: "{{ item.mail | default(omit) }}"
+        krbpasswordexpiration: "20230119235959"
         loginshell: /bin/bash
         update_password: always
       delegate_to: "{{ groups['ipaserver'] | first }}"
+      loop_control:
+        label: "{{ item.user_name | default('None') }}"
       loop: "{{ ipa_users }}"
       when:
         - ipa_users is defined
