@@ -103,3 +103,8 @@
 
     - name: restart ipa services
       command: "ipactl restart"
+
+    - name: restart apache
+      service:
+        name: httpd
+        state: restarted
