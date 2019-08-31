@@ -48,7 +48,7 @@
       freeipa:
         listen:
           listen_default:
-            ip: 'freeipa'
+            ip: '*'
             port: 443
         server_name: "{{ acme_certificate_domain }}"
         conf_file_name: "{{ acme_certificate_domain }}.https.conf"
