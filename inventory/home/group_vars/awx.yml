@@ -169,7 +169,6 @@ awx_ldap_bind_pass: !vault |
 awx_ldap_domain_dn: "dc={{ ipaserver_domain | split_with('.') | join(',dc=') }}"
 
 awx_settings:
-
   AUTH_LDAP_SERVER_URI: "{{ (groups['ipaserver'] + groups['ipareplicas']) | map('map_format', 'ldap://%s:389') | join(' ') }}"
   AUTH_LDAP_GROUP_TYPE: GroupOfNamesType
   AUTH_LDAP_GROUP_SEARCH:
