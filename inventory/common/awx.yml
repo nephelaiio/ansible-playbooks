@@ -1,2 +1,3 @@
 ---
 awx_url: "https://awx.home.nephelai.io"
+awx_ipa_users_group: awx_users

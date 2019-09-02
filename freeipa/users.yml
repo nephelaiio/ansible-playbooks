@@ -15,16 +15,15 @@
 
   tasks:
 
-    - name: create ipa groups
+    - name: bootstrap ipa groups
       ipa_group:
         ipa_user: "{{ ipaadmin_principal }}"
         ipa_pass: "{{ ipaadmin_password }}"
-        name: "{{ item.group_name }}"
-        groups: "{{ item.groups | default(omit) }}"
-        users: "{{ item.users | default(omit) }}"
+        name: "{{ item.name }}"
+        state: "{{ item.state | default('present') }}"
       loop_control:
-        label: "{{ item.user_name | default('None') }}"
-      loop: "{{ ipa_users }}"
+        label: "{{ item.name | default('None') }}"
+      loop: "{{ ipa_groups }}"
       delegate_to: "{{ groups['ipaserver'] | first }}"
       when:
         - ipa_groups is defined
@@ -42,10 +41,25 @@
         mail: "{{ item.mail | default(omit) }}"
         krbpasswordexpiration: "20230119235959"
         loginshell: /bin/bash
-        update_password: always
+        update_password: "{{ item.update_password | default('on_create') }}"
+        state: "{{ item.state | default('present') }}"
       loop_control:
         label: "{{ item.user_name | default('None') }}"
       loop: "{{ ipa_users }}"
       delegate_to: "{{ groups['ipaserver'] | first }}"
       when:
         - ipa_users is defined
+
+    - name: manage ipa group memberships
+      ipa_group:
+        ipa_user: "{{ ipaadmin_principal }}"
+        ipa_pass: "{{ ipaadmin_password }}"
+        name: "{{ item.name }}"
+        groups: "{{ item.groups | default(omit) }}"
+        user: "{{ item.users | default(omit) }}"
+      loop_control:
+        label: "{{ item.name | default('None') }}"
+      loop: "{{ ipa_groups }}"
+      delegate_to: "{{ groups['ipaserver'] | first }}"
+      when:
+        - ipa_groups is defined
