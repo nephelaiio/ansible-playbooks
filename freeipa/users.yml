@@ -15,11 +15,26 @@
 
   tasks:
 
+    - name: create ipa groups
+      ipa_group:
+        ipa_user: "{{ ipaadmin_principal }}"
+        ipa_pass: "{{ ipaadmin_password }}"
+        name: "{{ item.group_name }}"
+        groups: "{{ item.groups | default(omit) }}"
+        users: "{{ item.users | default(omit) }}"
+      loop_control:
+        label: "{{ item.user_name | default('None') }}"
+      loop: "{{ ipa_users }}"
+      delegate_to: "{{ groups['ipaserver'] | first }}"
+      when:
+        - ipa_groups is defined
+
     - name: create ipa users
       ipa_user:
         ipa_user: "{{ ipaadmin_principal }}"
         ipa_pass: "{{ ipaadmin_password }}"
         name: "{{ item.user_name }}"
+        group: "{{ item.groups | default(omit) }}"
         password: "{{ item.pass }}"
         givenname: "{{ item.first_name }}"
         sn: "{{ item.last_name }}"
@@ -28,9 +43,9 @@
         krbpasswordexpiration: "20230119235959"
         loginshell: /bin/bash
         update_password: always
-      delegate_to: "{{ groups['ipaserver'] | first }}"
       loop_control:
         label: "{{ item.user_name | default('None') }}"
       loop: "{{ ipa_users }}"
+      delegate_to: "{{ groups['ipaserver'] | first }}"
       when:
         - ipa_users is defined
