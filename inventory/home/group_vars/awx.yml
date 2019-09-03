@@ -167,9 +167,10 @@ awx_ldap_bind_pass: !vault |
   6133373132613039390a656564386165386639373962306264623734313232633931653865323732
   36373765396236653765343834376235363038643962663238643966323231313464
 awx_ldap_domain_dn: "dc={{ ipaserver_domain | split_with('.') | join(',dc=') }}"
+awx_ldap_users_group: awx_users
 
 ipa_groups:
-  - name: "{{ awx_ipa_users_group }}"
+  - name: "{{ awx_ldap_users_group }}"
     users:
       - teddyphreak
 ipa_users:
@@ -182,6 +183,7 @@ ipa_users:
 awx_settings:
   AUTH_LDAP_SERVER_URI: "{{ (groups['ipaserver'] + groups['ipareplicas']) | map('map_format', 'ldap://%s:389') | join(' ') }}"
   AUTH_LDAP_GROUP_TYPE: GroupOfNamesType
+  AUTH_LDAP_REQUIRE_GROUP: 'cn={{ awx_ldap_users_group }},cn=users,cn=accounts,{{ awx_ldap_domain_dn }}'
   AUTH_LDAP_GROUP_SEARCH:
     - 'cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}'
     - 'SCOPE_SUBTREE'
