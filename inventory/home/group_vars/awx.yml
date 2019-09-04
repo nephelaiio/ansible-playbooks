@@ -167,10 +167,32 @@ awx_ldap_bind_pass: !vault |
   6133373132613039390a656564386165386639373962306264623734313232633931653865323732
   36373765396236653765343834376235363038643962663238643966323231313464
 awx_ldap_domain_dn: "dc={{ ipaserver_domain | split_with('.') | join(',dc=') }}"
-awx_ldap_users_group: awx_users
 
-ipa_groups:
-  - name: "{{ awx_ldap_users_group }}"
+awx_ldap_connect_users_group: awx_users
+
+awx_ldap_groups:
+  - name: "{{ awx_ldap_connect_users_group }}"
+  - name: nephelai_operators
+    organization: nephelai.io
+    role: execute
+    users: 'cn=awx_nephelai_operators,cn=users,cn=accounts,{{ awx_ldap_domain_dn }}'
+    state: present
+  - name: nephelai_users
+    role: use
+    organization: nephelai.io
+    users: 'cn=nephelai_users,cn=users,cn=accounts,{{ awx_ldap_domain_dn }}'
+    state: present
+  - name: nephelai_admins
+    role: admin
+    organization: nephelai.io
+    users: 'cn=nephelai_admins,cn=users,cn=accounts,{{ awx_ldap_domain_dn }}'
+    state: present
+
+awx_ldap_team_map_groups: "{{ awx_ldap_groups | selectattr('organization', 'defined') | list }}"
+awx_ldap_team_map_names: "{{ awx_ldap_team_map_groups | map(attribute='name') | list }}"
+awx_ldap_team_map_dict: "{{ dict(awx_ldap_team_map_names | zip(awx_ldap_team_map_groups)) }}"
+
+ipa_groups: "{{ awx_ldap_groups }}"
 ipa_users:
   - user_name: "{{ awx_ldap_bind_user }}"
     first_name: AWX
@@ -179,9 +201,11 @@ ipa_users:
     update_password: always
 
 awx_settings:
+
   AUTH_LDAP_SERVER_URI: "{{ (groups['ipaserver'] + groups['ipareplicas']) | map('map_format', 'ldap://%s:389') | join(' ') }}"
   AUTH_LDAP_GROUP_TYPE: GroupOfNamesType
-  AUTH_LDAP_REQUIRE_GROUP: 'cn={{ awx_ldap_users_group }},cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}'
+  AUTH_LDAP_REQUIRE_GROUP: 'cn={{ awx_ldap_connect_users_group }},cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}'
+  AUTH_LDAP_TEAM_MAP: "{{ awx_ldap_team_map_dict }}"
   AUTH_LDAP_GROUP_SEARCH:
     - 'cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}'
     - 'SCOPE_SUBTREE'
@@ -203,6 +227,7 @@ awx_settings:
 awx_users:
 
   - first_name: CI
+    state: absent
     last_name: Integration
     username: "{{ awx_ci_user }}"
     password: "{{ awx_ci_pass }}"
@@ -373,6 +398,8 @@ awx_organizations:
 
   - name: nephelai.io
     state: present
+
+    teams: "{{ awx_ldap_groups | selectattr('organization', 'equals', 'nephelai.io') | }}"
 
     credentials:
 
