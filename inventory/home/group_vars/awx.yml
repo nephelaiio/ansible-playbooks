@@ -171,8 +171,6 @@ awx_ldap_users_group: awx_users
 
 ipa_groups:
   - name: "{{ awx_ldap_users_group }}"
-    users:
-      - teddyphreak
 ipa_users:
   - user_name: "{{ awx_ldap_bind_user }}"
     first_name: AWX
@@ -183,7 +181,7 @@ ipa_users:
 awx_settings:
   AUTH_LDAP_SERVER_URI: "{{ (groups['ipaserver'] + groups['ipareplicas']) | map('map_format', 'ldap://%s:389') | join(' ') }}"
   AUTH_LDAP_GROUP_TYPE: GroupOfNamesType
-  AUTH_LDAP_REQUIRE_GROUP: 'cn={{ awx_ldap_users_group }},cn=users,cn=accounts,{{ awx_ldap_domain_dn }}'
+  AUTH_LDAP_REQUIRE_GROUP: 'cn={{ awx_ldap_users_group }},cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}'
   AUTH_LDAP_GROUP_SEARCH:
     - 'cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}'
     - 'SCOPE_SUBTREE'
@@ -203,6 +201,7 @@ awx_settings:
   TOWER_URL_BASE: "{{ awx_url }}"
 
 awx_users:
+
   - first_name: CI
     last_name: Integration
     username: "{{ awx_ci_user }}"
