@@ -342,23 +342,10 @@ awx_templates:
       - name: home.vault
         kind: vault
 
-  - name: maas.install
-    state: absent
+  - name: upgrade
     job_type: run
-    project: playbooks
-    playbook: maas/install.yml
-    inventory: home
-    credentials:
-      - name: home.ssh
-        kind: ssh
-      - name: home.vault
-        kind: vault
-
-  - name: maas.proxy
-    state: absent
-    job_type: run
-    project: playbooks
-    playbook: maas/nginx.yml
+    project: upgrade
+    playbook: upgrade.yml
     inventory: home
     credentials:
       - name: home.ssh
@@ -420,6 +407,15 @@ awx_organizations:
       - name: freeipa
         scm_type: git
         scm_url: https://github.com/nephelaiio/ansible-playbooks-freeipa.git
+        scm_branch: master
+        scm_delete_on_update: false
+        scm_credential: awx.github
+        scm_update_on_launch: false
+        scm_update_cache_timeout: 60
+        scm_clean: false
+      - name: upgrade
+        scm_type: git
+        scm_url: https://github.com/nephelaiio/ansible-playbooks-upgrade.git
         scm_branch: master
         scm_delete_on_update: false
         scm_credential: awx.github
