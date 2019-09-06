@@ -170,29 +170,20 @@ awx_ldap_domain_dn: "dc={{ ipaserver_domain | split_with('.') | join(',dc=') }}"
 
 awx_ldap_connect_users_group: awx_users
 
-awx_ldap_groups:
-  - name: "{{ awx_ldap_connect_users_group }}"
-  - name: nephelai_operators
-    organization: nephelai.io
-    role: execute
-    users: 'cn=awx_nephelai_operators,cn=users,cn=accounts,{{ awx_ldap_domain_dn }}'
-    state: present
-  - name: nephelai_users
-    role: use
-    organization: nephelai.io
-    users: 'cn=nephelai_users,cn=users,cn=accounts,{{ awx_ldap_domain_dn }}'
-    state: present
-  - name: nephelai_admins
-    role: admin
-    organization: nephelai.io
-    users: 'cn=nephelai_admins,cn=users,cn=accounts,{{ awx_ldap_domain_dn }}'
-    state: present
+awx_ldap_organization_map:
+  nephelai.io:
+    users: 'cn=awx_nephelai_users,cn=users,cn=accounts,{{ awx_ldap_domain_dn }}'
+    remove_users: true
+    admins: 'cn=awx_nephelai_admins,cn=users,cn=accounts,{{ awx_ldap_domain_dn }}'
+    remove_admins: true
 
-awx_ldap_team_map_groups: "{{ awx_ldap_groups | selectattr('organization', 'defined') | list }}"
-awx_ldap_team_map_names: "{{ awx_ldap_team_map_groups | map(attribute='name') | list }}"
-awx_ldap_team_map_dict: "{{ dict(awx_ldap_team_map_names | zip(awx_ldap_team_map_groups)) }}"
+awx_ldap_team_map: {}
 
-ipa_groups: "{{ awx_ldap_groups }}"
+ipa_groups:
+  - name: awx_users
+  - name: awx_nephelai_users
+  - name: awx_nephelai_admins
+
 ipa_users:
   - user_name: "{{ awx_ldap_bind_user }}"
     first_name: AWX
@@ -205,7 +196,8 @@ awx_settings:
   AUTH_LDAP_SERVER_URI: "{{ (groups['ipaserver'] + groups['ipareplicas']) | map('map_format', 'ldap://%s:389') | join(' ') }}"
   AUTH_LDAP_GROUP_TYPE: GroupOfNamesType
   AUTH_LDAP_REQUIRE_GROUP: 'cn={{ awx_ldap_connect_users_group }},cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}'
-  AUTH_LDAP_TEAM_MAP: "{{ awx_ldap_team_map_dict }}"
+  AUTH_LDAP_ORGANIZATION_MAP: "{{ awx_ldap_organization_map }}"
+  AUTH_LDAP_TEAM_MAP: "{{ awx_ldap_team_map }}"
   AUTH_LDAP_GROUP_SEARCH:
     - 'cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}'
     - 'SCOPE_SUBTREE'
@@ -223,16 +215,6 @@ awx_settings:
   REMOTE_HOST_HEADERS:
     - HTTP_X_FORWARDED_FOR
   TOWER_URL_BASE: "{{ awx_url }}"
-
-awx_users:
-
-  - first_name: CI
-    state: absent
-    last_name: Integration
-    username: "{{ awx_ci_user }}"
-    password: "{{ awx_ci_pass }}"
-    email: "{{ awx_ci_email }}"
-    superuser: yes
 
 awx_templates:
 
@@ -399,8 +381,6 @@ awx_organizations:
   - name: nephelai.io
     state: present
 
-    teams: "{{ awx_ldap_groups | selectattr('organization', 'equals', 'nephelai.io') | }}"
-
     credentials:
 
       - name: awx.github
@@ -507,12 +487,14 @@ awx_organizations:
             id: freeipa.replicas
             template: freeipa.install.replicas
             parent: freeipa.servers
-          - name: freeipa.clients
-            id: freeipa.clients
+          - name: freeipa.clients.home
+            id: freeipa.clients.home
+            inventory: home
             template: freeipa.install.clients
             parent: freeipa.servers
-          - name: freeipa.users
+          - name: freeipa.users.home
             id: freeipa.users
+            inventory: home
             template: freeipa.users
             parent: freeipa.servers
 
