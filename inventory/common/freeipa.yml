@@ -1,5 +1,5 @@
 ---
-freeipa_url: "https://freeipa.{{ base_domain }}"
+ipa_url: "https://freeipa.{{ base_domain }}"
 ipaserver_domain: "ipa.{{ base_domain }}"
 ipaserver_realm: "{{ ipaserver_domain | upper }}"
 ipaadmin_principal: admin
