@@ -1,26 +1,26 @@
 ---
-ipaserver:
+ipa_server:
   hosts:
     kvmd.home.nephelai.io:
 
-ipareplicas:
+ipa_replica:
   hosts:
     kvme.home.nephelai.io:
 
-ipaproxy:
+ipa_proxy:
   hosts:
     kvmp.home.nephelai.io:
 
-ipaclients:
+ipa_client:
   children:
-    ipaservers:
-    ipareplicas:
+    ipa_server:
+    ipa_replica:
 
-ipausers:
+ipa_user:
   children:
     online:
 
-freeipa:
+ipa:
   children:
-    ipaserver:
-    ipareplicas:
+    ipa_server:
+    ipa_replicas:
