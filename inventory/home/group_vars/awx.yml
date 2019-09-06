@@ -258,9 +258,9 @@ awx_templates:
 
   - name: freeipa.install.servers
     job_type: run
-    project: playbooks
+    project: freeipa
     inventory: home
-    playbook: freeipa/server.yml
+    playbook: server.yml
     credentials:
       - name: home.ssh
         kind: ssh
@@ -269,9 +269,9 @@ awx_templates:
 
   - name: freeipa.install.replicas
     job_type: run
-    project: playbooks
+    project: freeipa
     inventory: home
-    playbook: freeipa/replicas.yml
+    playbook: replicas.yml
     credentials:
       - name: home.ssh
         kind: ssh
@@ -280,8 +280,8 @@ awx_templates:
 
   - name: freeipa.install.clients
     job_type: run
-    project: playbooks
-    playbook: freeipa/clients.yml
+    project: freeipa
+    playbook: clients.yml
     credentials:
       - name: home.ssh
         kind: ssh
@@ -411,6 +411,15 @@ awx_organizations:
       - name: pdns
         scm_type: git
         scm_url: https://github.com/nephelaiio/ansible-playbooks-pdns.git
+        scm_branch: master
+        scm_delete_on_update: false
+        scm_credential: awx.github
+        scm_update_on_launch: false
+        scm_update_cache_timeout: 60
+        scm_clean: false
+      - name: freeipa
+        scm_type: git
+        scm_url: https://github.com/nephelaiio/ansible-playbooks-freeipa.git
         scm_branch: master
         scm_delete_on_update: false
         scm_credential: awx.github
