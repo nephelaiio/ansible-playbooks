@@ -54,4 +54,3 @@ pdns_recursor_hosts_entries:
     ip: 192.30.253.113
   - name: github.com
     ip: 192.30.253.113
-
