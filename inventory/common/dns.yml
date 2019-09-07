@@ -20,14 +20,6 @@ dns_zones:
     records: []
     cnames: []
 
-resolv_domain: ''
-resolv_nameservers:
-  - 1.1.1.1
-  - 8.8.8.8
-resolv_options:
-  - timeout:2
-  - rotate
-
 pdns_url: "https://pdns.home.nephelai.io"
 pdns_api_key: !vault |
           $ANSIBLE_VAULT;1.1;AES256
@@ -57,3 +49,9 @@ pdns_psql_pass: !vault |
 pdns_domains: "{{ dns_zones.values() | map(attribute='name') | list }}"
 pdns_master_ips: "{{ hostvars.values() | selectattr('pdns_master', 'defined') | selectattr('pdns_master', 'equalto', True) | map(attribute='ansible_default_ipv4') | map(attribute='address') | list }}"
 pdns_records: []
+pdns_recursor_host_entries:
+  - name: www.github.com
+    ip: 192.30.253.113
+  - name: github.com
+    ip: 192.30.253.113
+
