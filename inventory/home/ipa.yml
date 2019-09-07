@@ -13,8 +13,7 @@ ipa_proxy:
 
 ipa_client:
   children:
-    ipa_server:
-    ipa_replica:
+    online:
 
 ipa_user:
   children:
