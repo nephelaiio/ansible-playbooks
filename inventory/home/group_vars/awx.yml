@@ -216,6 +216,15 @@ awx_settings:
     - HTTP_X_FORWARDED_FOR
   TOWER_URL_BASE: "{{ awx_url }}"
 
+awx_users:
+
+  - first_name: CI
+    last_name: Integration
+    username: "{{ awx_ci_user }}"
+    password: "{{ awx_ci_pass }}"
+    email: "{{ awx_ci_email }}"
+    superuser: yes
+
 awx_templates:
 
   - name: Demo Job Template
