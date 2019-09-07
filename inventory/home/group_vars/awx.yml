@@ -193,7 +193,7 @@ ipa_users:
 
 awx_settings:
 
-  AUTH_LDAP_SERVER_URI: "{{ (groups['ipaserver'] + groups['ipareplicas']) | map('map_format', 'ldap://%s:389') | join(' ') }}"
+  AUTH_LDAP_SERVER_URI: "{{ (groups['ipa_server'] + groups['ipa_replica']) | map('map_format', 'ldap://%s:389') | join(' ') }}"
   AUTH_LDAP_GROUP_TYPE: GroupOfNamesType
   AUTH_LDAP_REQUIRE_GROUP: 'cn={{ awx_ldap_connect_users_group }},cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}'
   AUTH_LDAP_ORGANIZATION_MAP: "{{ awx_ldap_organization_map }}"
@@ -271,7 +271,7 @@ awx_templates:
     job_type: run
     project: freeipa
     inventory: home
-    playbook: replicas.yml
+    playbook: replica.yml
     credentials:
       - name: home.ssh
         kind: ssh
@@ -281,7 +281,7 @@ awx_templates:
   - name: freeipa.install.clients
     job_type: run
     project: freeipa
-    playbook: clients.yml
+    playbook: client.yml
     credentials:
       - name: home.ssh
         kind: ssh
