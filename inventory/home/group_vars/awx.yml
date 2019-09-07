@@ -299,8 +299,8 @@ awx_templates:
 
   - name: freeipa.users
     job_type: run
-    project: playbooks
-    playbook: freeipa/users.yml
+    project: freeipa
+    playbook: users.yml
     credentials:
       - name: home.ssh
         kind: ssh
@@ -441,6 +441,7 @@ awx_organizations:
         scm_update_cache_timeout: 60
         scm_clean: false
       - name: playbooks
+        state: absent
         scm_type: git
         scm_url: https://github.com/nephelaiio/ansible-playbooks.git
         scm_branch: master
