@@ -1,4 +1,6 @@
 ---
+upgrade_reboot_host: no
+
 awx_ci_user: ci
 awx_ci_pass: !vault |
   $ANSIBLE_VAULT;1.2;AES256;home
