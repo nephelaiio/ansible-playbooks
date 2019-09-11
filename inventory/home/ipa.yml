@@ -19,3 +19,4 @@ ipa:
   children:
     ipa_server:
     ipa_replica:
+    ipa_user:
