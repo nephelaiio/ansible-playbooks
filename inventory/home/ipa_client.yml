@@ -2,4 +2,4 @@
 plugin: constructed
 strict: False
 groups:
-  online: (not 'offline' in group_names) and (not ipa in group_names)
+  ipa_client: (not 'offline' in group_names) and (not ipa in group_names)
