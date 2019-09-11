@@ -16,6 +16,7 @@ ipareplica_auto_forwarders: yes
 ipareplica_setup_firewalld: no
 ipareplica_allow_zone_overlap: yes
 ipaclient_force_join: yes
+ipauser_host: "{{ ipa_url | urlsplit('hostname') }}"
 ipa_users:
   - user_name: teddyphreak
     first_name: Teodoro
