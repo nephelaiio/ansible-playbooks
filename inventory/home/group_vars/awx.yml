@@ -300,6 +300,18 @@ awx_templates:
       - name: home.vault
         kind: vault
 
+  - name: freeipa.uninstall.clients
+    job_type: run
+    project: freeipa
+    playbook: client.yml
+    extra_vars:
+      ipaclient_uninstall: yes
+    credentials:
+      - name: home.ssh
+        kind: ssh
+      - name: home.vault
+        kind: vault
+
   - name: freeipa.users
     job_type: run
     project: freeipa
@@ -505,11 +517,23 @@ awx_organizations:
             id: freeipa.replicas
             template: freeipa.install.replicas
             parent: freeipa.servers
-          - name: freeipa.clients.home
-            id: freeipa.clients.home
+          - name: freeipa.clients.install.home
+            id: freeipa.clients.install.home
             inventory: home
             template: freeipa.install.clients
             parent: freeipa.servers
+          - name: freeipa.clients.uninstall.home
+            id: freeipa.clients.uninstall.home
+            inventory: home
+            template: freeipa.uninstall.clients
+            parent: freeipa.clients.install.home
+            parent_type: failure
+          - name: freeipa.clients.reinstall.home
+            id: freeipa.clients.reinstall.home
+            inventory: home
+            template: freeipa.install.clients
+            parent: freeipa.clients.uninstall.home
+            parent_type: success
           - name: freeipa.users.home
             id: freeipa.users
             inventory: home
