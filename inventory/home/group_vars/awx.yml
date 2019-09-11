@@ -533,7 +533,7 @@ awx_organizations:
             inventory: home
             template: freeipa.install.clients
             parent: freeipa.clients.uninstall.home
-            parent_type: success
+            parent_type: always
           - name: freeipa.users.home
             id: freeipa.users
             inventory: home
