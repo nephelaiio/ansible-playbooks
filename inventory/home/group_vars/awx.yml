@@ -174,9 +174,9 @@ awx_ldap_connect_users_group: awx_users
 
 awx_ldap_organization_map:
   nephelai.io:
-    users: 'cn=awx_nephelai_users,cn=users,cn=accounts,{{ awx_ldap_domain_dn }}'
+    users: 'cn=awx_nephelai_users,cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}'
     remove_users: true
-    admins: 'cn=awx_nephelai_admins,cn=users,cn=accounts,{{ awx_ldap_domain_dn }}'
+    admins: 'cn=awx_nephelai_admins,cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}'
     remove_admins: true
 
 awx_ldap_team_map: {}
