@@ -189,8 +189,8 @@ awx_ldap_team_template:
   users: "cn={{ awx_ldap_organization_users }},cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}"
   remove: true
 
-ipa_ldap_connect_users: "{{ awx_ldap_organization_map | map('map_format', 'awx_ldap_organization_users') | list }}"
-ipa_ldap_connect_admins: "{{ awx_ldap_organization_map | map('map_format', 'awx_ldap_organization_admins') | list }}"
+ipa_ldap_connect_users: "{{ awx_organizations | map('map_format', awx_ldap_organization_users) | list }}"
+ipa_ldap_connect_admins: "{{ awx_organizations | map('map_format', awx_ldap_organization_admins) | list }}"
 ipa_groups: "{{ [awx_ldap_connect_group] + ipa_ldap_connect_users + ipa_ldap_connect_admins }}"
 
 ipa_users:
