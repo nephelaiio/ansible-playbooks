@@ -1,6 +1,13 @@
 ---
 upgrade_reboot_host: no
 
+nginx_proxy_url: "{{ awx_url }}"
+nginx_proxy_pdns_url: "{{ pdns_url }}"
+nginx_proxy_pdns_api_key: "{{ pdns_api_key }}"
+nginx_proxy_upstream_group: awx_app
+nginx_proxy_aws_accesskey_id: "{{ aws_access_key_id }}"
+nginx_proxy_aws_accesskey_secret: "{{ aws_access_key_secret }}"
+
 awx_ci_user: ci
 awx_ci_pass: !vault |
   $ANSIBLE_VAULT;1.2;AES256;home
@@ -269,9 +276,9 @@ awx_templates:
 
   - name: awx.proxy
     job_type: run
-    project: awx
+    project: nginx
     inventory: home
-    playbook: nginx.yml
+    playbook: proxy.yml
     credentials:
       - name: home.ssh
         kind: ssh
@@ -425,6 +432,67 @@ awx_organizations:
         ssh_key_data: "{{ awx_machine_key }}"
 
     projects:
+
+      - name: nginx
+        scm_type: git
+        scm_url: https://github.com/nephelaiio/ansible-playbooks-nginx.git
+        scm_branch: master
+        scm_delete_on_update: false
+        scm_credential: awx.github
+        scm_update_on_launch: false
+        scm_update_cache_timeout: 60
+        scm_clean: false
+
+      - name: pdns
+        scm_type: git
+        scm_url: https://github.com/nephelaiio/ansible-playbooks-pdns.git
+        scm_branch: master
+        scm_delete_on_update: false
+        scm_credential: awx.github
+        scm_update_on_launch: false
+        scm_update_cache_timeout: 60
+        scm_clean: false
+
+      - name: freeipa
+        scm_type: git
+        scm_url: https://github.com/nephelaiio/ansible-playbooks-freeipa.git
+        scm_branch: master
+        scm_delete_on_update: false
+        scm_credential: awx.github
+        scm_update_on_launch: false
+        scm_update_cache_timeout: 60
+        scm_clean: false
+
+      - name: upgrade
+        scm_type: git
+        scm_url: https://github.com/nephelaiio/ansible-playbooks-upgrade.git
+        scm_branch: master
+        scm_delete_on_update: false
+        scm_credential: awx.github
+        scm_update_on_launch: false
+        scm_update_cache_timeout: 60
+        scm_clean: false
+
+      - name: inventory
+        scm_type: git
+        scm_url: https://github.com/nephelaiio/ansible-playbooks.git
+        scm_branch: master
+        scm_delete_on_update: false
+        scm_credential: awx.github
+        scm_update_on_launch: false
+        scm_update_cache_timeout: 60
+        scm_clean: false
+
+      - name: playbooks
+        state: absent
+        scm_type: git
+        scm_url: https://github.com/nephelaiio/ansible-playbooks.git
+        scm_branch: master
+        scm_delete_on_update: false
+        scm_credential: awx.github
+        scm_update_on_launch: false
+        scm_update_cache_timeout: 60
+        scm_clean: false
 
       - name: awx
         scm_type: git
