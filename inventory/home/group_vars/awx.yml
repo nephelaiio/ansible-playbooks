@@ -279,6 +279,8 @@ awx_templates:
     project: nginx
     inventory: home
     playbook: proxy.yml
+    extra_vars:
+      target_hosts: nginx_proxy
     credentials:
       - name: home.ssh
         kind: ssh
