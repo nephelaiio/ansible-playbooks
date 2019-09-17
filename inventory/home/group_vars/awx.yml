@@ -243,9 +243,6 @@ awx_users:
 
 awx_templates:
 
-  - name: Demo Job Template
-    state: absent
-
   - name: awx.ping
     state: absent
     job_type: run
@@ -410,9 +407,6 @@ awx_schedules:
 
 awx_organizations:
 
-  - name: Demo Organization
-    state: absent
-
   - name: nephelai.io
     state: present
 
@@ -432,8 +426,6 @@ awx_organizations:
 
     projects:
 
-      - name: Demo Project
-        state: absent
       - name: awx
         scm_type: git
         scm_url: https://github.com/nephelaiio/ansible-playbooks-awx.git
@@ -492,8 +484,6 @@ awx_organizations:
 
     inventories:
 
-      - name: Demo Inventory
-        state: absent
       - name: awx
         state: absent
         source: scm
