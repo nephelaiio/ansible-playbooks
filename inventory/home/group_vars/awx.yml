@@ -170,7 +170,9 @@ awx_ldap_bind_pass: !vault |
   36373765396236653765343834376235363038643962663238643966323231313464
 awx_ldap_domain_dn: "dc={{ ipaserver_domain | split_with('.') | join(',dc=') }}"
 
-awx_ldap_connect_group: awx_users
+awx_ldap_connect_group:
+  name: awx_users
+  state: present
 awx_ldap_organization_users: "awx_%s_users"
 awx_ldap_organization_admins: "awx_%s_admins"
 
@@ -189,9 +191,13 @@ awx_ldap_team_template:
   users: "cn={{ awx_ldap_organization_users }},cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}"
   remove: true
 
-ipa_ldap_connect_users: "{{ awx_organizations | map('map_format', awx_ldap_organization_users) | list }}"
-ipa_ldap_connect_admins: "{{ awx_organizations | map('map_format', awx_ldap_organization_admins) | list }}"
-ipa_groups: "{{ [awx_ldap_connect_group] + ipa_ldap_connect_users + ipa_ldap_connect_admins }}"
+ipa_ldap_user_groups: "{{ awx_organizations | map('select_attributes', ['name', 'state']) | map('map_format', ipa_user_group_template) | list }}"
+ipa_user_group_template:
+  name: "{{ awx_ldap_organization_users }}"
+ipa_ldap_admin_groups: "{{ awx_organizations | map('select_attributes', ['name', 'state']) | list }}"
+ipa_admin_group_template:
+  name: "{{ awx_ldap_organization_admins }}"
+ipa_groups: "{{ [awx_ldap_connect_group] + ipa_ldap_user_groups + ipa_ldap_admin_groups }}"
 
 ipa_users:
   - user_name: "{{ awx_ldap_bind_user }}"
@@ -204,7 +210,7 @@ awx_settings:
 
   AUTH_LDAP_SERVER_URI: "{{ (groups['ipa_server'] + groups['ipa_replica']) | map('map_format', 'ldap://%s:389') | join(' ') }}"
   AUTH_LDAP_GROUP_TYPE: GroupOfNamesType
-  AUTH_LDAP_REQUIRE_GROUP: 'cn={{ awx_ldap_connect_group }},cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}'
+  AUTH_LDAP_REQUIRE_GROUP: 'cn={{ awx_ldap_connect_group.name }},cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}'
   AUTH_LDAP_ORGANIZATION_MAP: "{{ awx_ldap_organization_map }}"
   AUTH_LDAP_TEAM_MAP: "{{ awx_ldap_team_map }}"
   AUTH_LDAP_GROUP_TYPE_PARAMS: {}
