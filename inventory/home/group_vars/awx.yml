@@ -418,9 +418,6 @@ awx_schedules:
 
 awx_organizations:
 
-  - name: nephelai.io
-    state: absent
-
   - name: home
     state: present
 
