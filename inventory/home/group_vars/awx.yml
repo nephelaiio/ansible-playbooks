@@ -253,6 +253,9 @@ awx_templates:
     credentials:
       - name: home.ssh
         kind: ssh
+    permissions:
+      - role: execute
+        team: home_users
 
   - name: awx.configure
     job_type: run
