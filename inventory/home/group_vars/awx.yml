@@ -300,9 +300,11 @@ awx_templates:
 
   - name: freeipa.install.proxy
     job_type: run
-    project: freeipa
+    project: nginx
     inventory: home
-    playbook: nginx.yml
+    playbook: proxy.yml
+    extra_vars:
+      target_hosts: ipa_proxy
     credentials:
       - name: home.ssh
         kind: ssh

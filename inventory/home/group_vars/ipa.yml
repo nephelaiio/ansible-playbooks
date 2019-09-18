@@ -28,3 +28,10 @@ ipa_users:
       30666438623132653364373732386663383132666562346366316636663862333536663935386139
       6230623538633839660a316262326436386363656663353433616134323264323235346531336331
       6461
+
+nginx_proxy_url: "{{ ipa_url }}"
+nginx_proxy_aws_accesskey_id: "{{ aws_access_key_id }}"
+nginx_proxy_aws_accesskey_secret: "{{ aws_access_key_secret }}"
+nginx_proxy_pdns_url: "{{ pdns_url }}"
+nginx_proxy_pdns_api_key: "{{ pdns_api_key }}"
+nginx_proxy_upstream_group: ipa
