@@ -184,13 +184,7 @@ awx_ldap_organization_users: "awx_%s_users"
 awx_ldap_organization_admins: "awx_%s_admins"
 
 awx_ldap_organizations: "{{ awx_organizations | rejectattr('state', 'equalto', 'absent') | map(attribute='name') | list }}"
-awx_ldap_organization_map: "{{ awx_ldap_organizations | map('to_dict', awx_ldap_organization_template) | list | list_to_dict('organization', True) }}"
-awx_ldap_organization_template:
-  organization: "%s"
-  users: "cn={{ awx_ldap_organization_users }},cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}"
-  remove_users: true
-  admins: "cn={{ awx_ldap_organization_admins }},cn=groups,cn=accounts,{{ awx_ldap_domain_dn }}"
-  remove_admins: true
+awx_ldap_organization_map: {}
 awx_ldap_team_map: "{{ awx_ldap_organizations | map('to_dict', awx_ldap_team_template) | list | list_to_dict('team', True) }}"
 awx_ldap_team_template:
   team: "%s_users"
