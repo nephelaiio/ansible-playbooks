@@ -606,6 +606,10 @@ awx_organizations:
             id: freeipa.replicas
             template: freeipa.install.replicas
             parent: freeipa.servers
+          - name: freeipa.proxy
+            id: freipa.proxy
+            template: freeipa.install.proxy
+            parent: freeipa.servers
           - name: freeipa.clients.install.home
             id: freeipa.clients.install.home
             inventory: home
@@ -640,16 +644,6 @@ awx_organizations:
             id: awx.proxy
             template: awx.proxy
             parent: awx.configure
-
-      - name: maas
-        state: absent
-        nodes:
-          - name: maas.install
-            id: maas.install
-            template: maas.install
-          - name: maas.proxy
-            id: maas.proxy
-            template: maas.proxy
 
       - name: site
         nodes:
