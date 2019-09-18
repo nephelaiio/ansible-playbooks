@@ -27,7 +27,7 @@ jobs:
       stage: test
     - script:
         - awx-update-projects --host $AWX_URL --user $AWX_USER --pass $AWX_PASS --repo https://github.com/$TRAVIS_REPO_SLUG.git --debug
-        - awx-run-templates --host $AWX_URL --user $AWX_USER --pass $AWX_PASS site --debug
+        - awx-run-templates --host $AWX_URL --user $AWX_USER --pass $AWX_PASS $AWX_JOB --debug
       stage:
         deploy
 
