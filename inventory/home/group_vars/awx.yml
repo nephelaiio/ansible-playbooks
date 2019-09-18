@@ -6,7 +6,7 @@ nginx_proxy_pdns_url: "{{ pdns_url }}"
 nginx_proxy_pdns_api_key: "{{ pdns_api_key }}"
 nginx_proxy_upstream_group: awx_app
 nginx_proxy_aws_accesskey_id: "{{ aws_access_key_id }}"
-nginx_proxy_aws_accesskey_secret: "{{ aws_access_key_secret }}"
+nginx_proxy_aws_accesskey_secret: "{{ aws_secret_access_key }}"
 
 awx_ci_user: ci
 awx_ci_pass: !vault |
