@@ -244,19 +244,6 @@ awx_users:
 
 awx_templates:
 
-  - name: awx.ping
-    state: absent
-    job_type: run
-    project: awx
-    inventory: home
-    playbook: ping.yml
-    credentials:
-      - name: home.ssh
-        kind: ssh
-    permissions:
-      - role: execute
-        team: home_users
-
   - name: awx.configure
     job_type: run
     project: awx
@@ -405,6 +392,9 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+    permissions:
+      - role: execute
+        team: home_users
 
 awx_schedules:
 
@@ -590,6 +580,9 @@ awx_organizations:
             id: pdns.register
             template: pdns.register
             parent: pdns.servers
+        permissions:
+          - role: execute
+            team: home_users
 
       - name: freeipa
         nodes:
@@ -626,6 +619,9 @@ awx_organizations:
             inventory: home
             template: freeipa.users
             parent: freeipa.servers
+        permissions:
+          - role: execute
+            team: home_users
 
       - name: awx
         nodes:
@@ -638,6 +634,9 @@ awx_organizations:
             id: awx.proxy
             template: awx.proxy
             parent: awx.configure
+        permissions:
+          - role: execute
+            team: home_users
 
       - name: site
         nodes:
@@ -655,3 +654,6 @@ awx_organizations:
             template: freeipa
             parent: pdns
             type: workflow_job
+        permissions:
+          - role: execute
+            team: home_users
