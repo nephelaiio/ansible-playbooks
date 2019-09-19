@@ -1,6 +1,4 @@
 ---
-ipaserver_setup_dns: yes
-ipaserver_auto_forwarders: yes
 ipadm_password: !vault |
   $ANSIBLE_VAULT;1.1;AES256
   37613162613266353736373061303865666662663630626562303165313837303365393239333664
@@ -8,14 +6,7 @@ ipadm_password: !vault |
   30386633633738613034663435303235663637333433383966616561386630316636306337636462
   6665393631333564340a333834383037356130383733666132643161613066303865323136333238
   65356433316631383430353034393731313239653238633338376434323035376434
-ipaserver_setup_firewalld: no
-ipaserver_allow_zone_overlap: yes
-ipareplica_setup_ca: yes
-ipareplica_setup_dns: yes
-ipareplica_auto_forwarders: yes
-ipareplica_setup_firewalld: no
-ipareplica_allow_zone_overlap: yes
-ipaclient_force_join: yes
+
 ipa_users_host: "{{ groups['ipa_server'] | first }}"
 ipauser_host: "{{ ipa_users_host }}"
 ipa_users:
