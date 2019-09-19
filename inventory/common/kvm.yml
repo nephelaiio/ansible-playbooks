@@ -1,4 +1,5 @@
 ---
+kvm_state: "{{ state | default('present') }}"
 kvm_image_default: bionic
 kvm_profile_default: small
 
