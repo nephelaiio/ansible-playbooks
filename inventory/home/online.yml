@@ -2,4 +2,4 @@
 plugin: constructed
 strict: no
 groups:
-  online: not 'offline' in group_names
+  online: (kvm_state | default('present')) in ['present']

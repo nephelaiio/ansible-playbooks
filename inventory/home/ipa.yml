@@ -20,6 +20,10 @@ ipa_user:
   children:
     online:
 
+ipa_client:
+  children:
+    online:
+
 ipa:
   children:
     ipa_server:

@@ -1,7 +1,7 @@
 ---
 - name: Configure dhcp reservations
 
-  hosts: all:!foreman_guests:!networking
+  hosts: online
 
   gather_facts: no
 
@@ -26,7 +26,6 @@
       with_items: "{{ groups.dhcp }}"
       when:
         - hw_address is defined
-        - inventory_hostname not in groups.offline
       notify: restart dhcpd
 
   handlers:

@@ -1,5 +1,0 @@
----
-plugin: constructed
-strict: no
-groups:
-  offline: (kvm_state | default('present')) in ['absent', 'poweredoff']
