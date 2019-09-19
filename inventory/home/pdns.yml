@@ -8,3 +8,7 @@ pdns_servers:
   hosts:
     kvmt.home.nephelai.io:
       pdns_master: yes
+
+pdns_register:
+  children:
+    online:

@@ -1,5 +1,5 @@
 ---
 plugin: constructed
-strict: False
+strict: no
 groups:
-  ipa_client: (not 'offline' in group_names) and (not ipa in group_names)
+  ipa_client: (not 'offline' in group_names) and (not 'ipa' in group_names)
