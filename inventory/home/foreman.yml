@@ -1,0 +1,18 @@
+---
+foreman:
+  children:
+    foreman_app:
+    foreman_proxy:
+    foreman_guests:
+
+foreman_app:
+  hosts:
+    kvmf.home.nephelai.io:
+
+foreman_proxy:
+  hosts:
+    kvmf.home.nephelai.io:
+
+foreman_guests:
+  children:
+    nuc:
