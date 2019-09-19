@@ -596,7 +596,9 @@ awx_organizations:
           - name: freeipa.proxy
             id: freipa.proxy
             template: freeipa.install.proxy
-            parent: freeipa.servers
+            parent:
+              - freeipa.servers
+              - freeipa.replicas
           - name: freeipa.clients.install.home
             id: freeipa.clients.install.home
             inventory: home
