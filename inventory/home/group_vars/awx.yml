@@ -654,7 +654,7 @@ awx_organizations:
           - name: freeipa
             id: freeipa
             template: freeipa
-            parent: pdns
+            parent: awx
             type: workflow_job
         permissions:
           - role: execute
