@@ -11,6 +11,11 @@ ipa_proxy:
   hosts:
     kvmp.home.nephelai.io:
 
+ipa_backend:
+  children:
+    ipa_server:
+    ipa_replica:
+
 ipa_user:
   children:
     online:
@@ -19,4 +24,5 @@ ipa:
   children:
     ipa_server:
     ipa_replica:
+    ipa_proxy:
     ipa_user:
