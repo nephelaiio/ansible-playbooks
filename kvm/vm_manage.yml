@@ -65,7 +65,7 @@
           become: yes
 
       when:
-        - state | default(kvm_profile.state) in ['absent', 'recreate']
+        - kvm_state | default(kvm_profile.state) in ['absent', 'recreate']
 
     - name: list vms
       virt:
@@ -257,7 +257,7 @@
         - name: manage vm
           virt:
             name: "{{ guest_name }}"
-            state: "{{ state | default(kvm_profile.state) | regex_replace('recreate', 'running') | regex_replace('present', 'running') }}"
+            state: "{{ kvm_state | default(kvm_profile.state) | regex_replace('recreate', 'running') | regex_replace('present', 'running') }}"
             xml: "{{ domain['content'] | b64encode }}"
 
         - name: autostart vm
@@ -273,7 +273,7 @@
           become: no
 
       when:
-        - state | default(kvm_profile.state) in ['present', 'recreate', 'running']
+        - kvm_state | default(kvm_profile.state) in ['present', 'recreate', 'running']
         - guest_name not in vmlist_query.list_vms
 
   when:
