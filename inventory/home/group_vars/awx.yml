@@ -566,18 +566,14 @@ awx_organizations:
       - name: pdns
         nodes:
           - name: pdns.recursors
-            id: pdns.recursors
             template: pdns.recursors
           - name: pdns.servers
-            id: pdns.servers
             template: pdns.servers
             parent: pdns.recursors
           - name: pdns.records
-            id: pdns.records
             template: pdns.records
             parent: pdns.servers
           - name: pdns.register
-            id: pdns.register
             template: pdns.register
             parent: pdns.servers
         permissions:
@@ -587,35 +583,28 @@ awx_organizations:
       - name: freeipa
         nodes:
           - name: freeipa.servers
-            id: freeipa.servers
             template: freeipa.install.servers
           - name: freeipa.replicas
-            id: freeipa.replicas
             template: freeipa.install.replicas
             parent: freeipa.servers
           - name: freeipa.proxy
-            id: freipa.proxy
             template: freeipa.install.proxy
             parent: freeipa.replicas
           - name: freeipa.clients.install.home
-            id: freeipa.clients.install.home
             inventory: home
             template: freeipa.install.clients
             parent: freeipa.servers
           - name: freeipa.clients.uninstall.home
-            id: freeipa.clients.uninstall.home
             inventory: home
             template: freeipa.uninstall.clients
             parent: freeipa.clients.install.home
             parent_type: failure
           - name: freeipa.clients.reinstall.home
-            id: freeipa.clients.reinstall.home
             inventory: home
             template: freeipa.install.clients
             parent: freeipa.clients.uninstall.home
             parent_type: always
           - name: freeipa.users.home
-            id: freeipa.users
             inventory: home
             template: freeipa.users
             parent: freeipa.servers
@@ -626,12 +615,10 @@ awx_organizations:
       - name: awx
         nodes:
           - name: awx.configure
-            id: awx.configure
             template: awx.configure
             skip_tags:
               - workflows
           - name: awx.proxy
-            id: awx.proxy
             template: awx.proxy
             parent: awx.configure
         permissions:
@@ -641,16 +628,13 @@ awx_organizations:
       - name: site
         nodes:
           - name: pdns
-            id: pdns
             template: pdns
             type: workflow_job
           - name: awx
-            id: awx
             template: awx
             parent: pdns
             type: workflow_job
           - name: freeipa
-            id: freeipa
             template: freeipa
             parent: awx
             type: workflow_job
