@@ -30,4 +30,4 @@ nginx_proxy_upstream_group: ipa_backend
 nginx_proxy_headers_extra:
   header_referer:
     name: Referer
-    value: "{{ nginx_proxy_url }}"
+    value: "{{ groups['ipa_server'] | first }}"
