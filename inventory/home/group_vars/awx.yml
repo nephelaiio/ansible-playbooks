@@ -494,6 +494,7 @@ awx_organizations:
         scm_update_on_launch: false
         scm_update_cache_timeout: 60
         scm_clean: false
+
       - name: pdns
         scm_type: git
         scm_url: https://github.com/nephelaiio/ansible-playbooks-pdns.git
@@ -503,6 +504,7 @@ awx_organizations:
         scm_update_on_launch: false
         scm_update_cache_timeout: 60
         scm_clean: false
+
       - name: freeipa
         scm_type: git
         scm_url: https://github.com/nephelaiio/ansible-playbooks-freeipa.git
@@ -512,6 +514,7 @@ awx_organizations:
         scm_update_on_launch: false
         scm_update_cache_timeout: 60
         scm_clean: false
+
       - name: upgrade
         scm_type: git
         scm_url: https://github.com/nephelaiio/ansible-playbooks-upgrade.git
@@ -521,6 +524,7 @@ awx_organizations:
         scm_update_on_launch: false
         scm_update_cache_timeout: 60
         scm_clean: false
+
       - name: inventory
         scm_type: git
         scm_url: https://github.com/nephelaiio/ansible-playbooks.git
@@ -530,6 +534,7 @@ awx_organizations:
         scm_update_on_launch: false
         scm_update_cache_timeout: 60
         scm_clean: false
+
       - name: playbooks
         state: absent
         scm_type: git
