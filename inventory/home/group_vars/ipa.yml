@@ -8,7 +8,6 @@ ipadm_password: !vault |
   65356433316631383430353034393731313239653238633338376434323035376434
 
 ipa_users_host: "{{ groups['ipa_server'] | first }}"
-ipauser_host: "{{ ipa_users_host }}"
 ipa_users:
   - user_name: teddyphreak
     first_name: Teodoro
