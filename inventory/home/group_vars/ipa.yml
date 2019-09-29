@@ -1,4 +1,13 @@
 ---
+ipaserver_realm: "{{ ipaserver_domain | upper }}"
+ipaadmin_principal: admin
+ipaadmin_password: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  66343537383633383234366462643039363331333338313636383166313663386366346166366236
+  6365346230343564613637666566326237396139616361610a653131646330393231653064623934
+  34623365336563376431653633643561623638653634366564356138353962373864623136336631
+  3633643939393865390a306333336432643262636131363732663938373565633530396536626330
+  31636133346464656465326330623866663561653532646566626136343236306266
 ipadm_password: !vault |
   $ANSIBLE_VAULT;1.1;AES256
   37613162613266353736373061303865666662663630626562303165313837303365393239333664
@@ -6,6 +15,8 @@ ipadm_password: !vault |
   30386633633738613034663435303235663637333433383966616561386630316636306337636462
   6665393631333564340a333834383037356130383733666132643161613066303865323136333238
   65356433316631383430353034393731313239653238633338376434323035376434
+ipaserver_forwarders: "{{ groups['pdns_recursors'] | map('extract', hostvars, 'ansible_host') | list }}"
+ipareplica_forwarders: "{{ ipaserver_forwarders }}"
 
 ipa_users_host: "{{ groups['ipa_server'] | first }}"
 ipa_users:
@@ -25,9 +36,13 @@ nginx_proxy_aws_accesskey_id: "{{ aws_access_key_id }}"
 nginx_proxy_aws_accesskey_secret: "{{ aws_secret_access_key }}"
 nginx_proxy_pdns_url: "{{ pdns_url }}"
 nginx_proxy_pdns_api_key: "{{ pdns_api_key }}"
-nginx_proxy_upstream_group: ipa_backend
-nginx_proxy_upstream_name: freeipa
-nginx_proxy_upstream_scheme: http
+nginx_proxy_upstream_servers: "{{ groups['ipa_backend'] | map('to_dict', nginx_proxy_upstream_params) | list }}"
+nginx_proxy_upstream_params:
+  address: "%s"
+  port: 80
+  weight: 1
+  health_check: max_fails=3 fail_timeout=5s
+
 nginx_proxy_headers_extra:
   header_referer:
     name: Referer
