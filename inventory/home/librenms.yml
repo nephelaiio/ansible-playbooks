@@ -1,4 +1,3 @@
 ---
 librenms:
-  hosts:
-    kvmb.home.nephelai.io:
+  hosts: {}
