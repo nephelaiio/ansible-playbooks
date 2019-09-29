@@ -1,6 +1,6 @@
 ---
 kvm_image_default: bionic
-kvm_profile_default: small
+kvm_profile_default: medium
 
 kvm_images:
   bionic:
@@ -22,7 +22,7 @@ kvm_images:
 kvm_profiles:
   small:
     state: present  # | recreate | absent
-    memory: 2048
+    memory: 1048
     cpu: 2
     image: xenial
     autostart: True
@@ -32,8 +32,8 @@ kvm_profiles:
     network: management
   medium:
     state: present  # | recreate | absent
-    memory: 4096
-    cpu: 4
+    memory: 2048
+    cpu: 2
     image: xenial
     autostart: True
     size: 20G
@@ -42,7 +42,7 @@ kvm_profiles:
     network: management
   large:
     state: present  # | recreate | absent
-    memory: 8192
+    memory: 4096
     cpu: 4
     image: xenial
     autostart: True

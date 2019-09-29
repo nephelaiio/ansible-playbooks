@@ -5,13 +5,10 @@ kvm_hosts:
 
 kvm_guests:
   hosts:
-    kvma.home.nephelai.io:
-    kvmb.home.nephelai.io:
     kvmd.home.nephelai.io:
     kvme.home.nephelai.io:
     kvmf.home.nephelai.io:
     kvmn.home.nephelai.io:
-    kvmo.home.nephelai.io:
     kvmp.home.nephelai.io:
     kvms.home.nephelai.io:
     kvmt.home.nephelai.io:
