@@ -1,5 +1,30 @@
 ---
+foreman_repositories_version: 1.23
+foreman_installer_options:
+  - --enable-foreman
+  - --enable-foreman-cli
+  - --enable-foreman-cli-ansible
+  - --enable-foreman-compute-libvirt
+  - --enable-foreman-compute-ovirt
+  - --enable-foreman-compute-openstack
+  - --enable-foreman-plugin-ansible
+  - --enable-foreman-plugin-default-hostgroup
+  - --enable-foreman-plugin-dhcp-browser
+  - --enable-foreman-plugin-openscap
+  - --enable-foreman-plugin-templates
+  - --no-enable-foreman-proxy
+  - --foreman-configure-epel-repo true 
+  - --foreman-configure-scl-repo true
+  - --foreman-db-adapter postgresql
+  - "--foreman-db-database {{ foreman_db_name }}"
+  - --foreman-db-host localhost
+  - --foreman-db-manage true
+  - --foreman-db-manage-rake true
+  - "--foreman-db-username {{ foreman_db_user }}"
+  - "--foreman-db-password {{ foreman_db_pass }}"
+
 foreman_db_name: foreman
+foreman_db_user: foreman
 foreman_db_pass: !vault |
   $ANSIBLE_VAULT;1.1;AES256
   31303435643031656335653463613337383337363030393135343561613131303232326236373137
