@@ -1,0 +1,46 @@
+---
+- include_tasks: consul.yml
+
+- include_tasks: pdns/delegate.yml
+  when:
+    - traefik_pdns_recursors is defined
+    - traefik_pdns_manage | bool
+
+- name: create consul ui service
+  consul:
+    scheme: http
+    host: localhost
+    port: "{{ consul_ports_http }}"
+    service_name: "{{ consul_service_name }}"
+    service_address: localhost
+    service_port: "{{ consul_ports_http }}"
+    interval: 5s
+    timeout: 2s
+    tags:
+      - "{{ traefik_prefix }}.enable=true"
+
+- include_tasks: pdns/register_consul.yml
+  when:
+    - traefik_service_domain is defined
+    - traefik_pdns_manage | bool
+
+- name: create traefik dashboard service
+  consul:
+    scheme: http
+    host: localhost
+    port: "{{ consul_ports_http }}"
+    service_name: traefik
+    service_address: "{{ traefik_dashboard_address }}"
+    service_port: "{{ traefik_dashboard_port }}"
+    interval: 5s
+    timeout: 2s
+    tags:
+      - "{{ traefik_prefix }}.enable=true"
+      - "{{ traefik_prefix }}.entrypoints=traefik"
+
+- include_tasks: pdns/register_traefik.yml
+  when:
+    - traefik_service_domain is defined
+    - traefik_pdns_manage | bool
+
+- include_tasks: traefik.yml

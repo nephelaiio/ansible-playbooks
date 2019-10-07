@@ -1,0 +1,30 @@
+---
+- name: ensure pdns parameters are set
+  fail:
+    msg: traefik_pdns_url and traefik_pdns_api_key must be set when pdns_domain is defined
+  when: traefik_pdns_url is not defined or traefik_pdns_api_key is not defined
+
+- name: create consul service dns cname
+  uri:
+    url: "{{ traefik_pdns_url }}/api/v1/servers/localhost/zones/{{ pdns_zone }}"
+    method: PATCH
+    body_format: json
+    body:
+      rrsets:
+        - name: "{{ pdns_host }}"
+          type: CNAME
+          ttl: 3600
+          changetype: REPLACE
+          records:
+            - content: "{{ consul_cname }}"
+              disabled: no
+              set-ptr: no
+              comments: []
+    headers:
+      X-API-Key: "{{ traefik_pdns_api_key }}"
+    status_code: 204
+  vars:
+    pdns_zone: "{{ traefik_service_domain | regex_replace('\\.$', '.') }}."
+    pdns_host: "{{ consul_service_name }}.{{ pdns_zone }}"
+    consul_zone: "{{ traefik_consul_domain | regex_replace('\\.$', '.') }}."
+    consul_cname: "consul.service.{{ consul_zone }}"

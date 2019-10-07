@@ -1,0 +1,10 @@
+---
+- src: nephelaiio.plugins
+  version: 1.0.19
+- src: nephelaiio.pip
+  version: 4.0.1
+- src: mrlesmithjr.keepalived
+- src: brianshumate.consul
+  version: v2.5.1
+- src: kibatic.traefik
+  version: 1.7.6

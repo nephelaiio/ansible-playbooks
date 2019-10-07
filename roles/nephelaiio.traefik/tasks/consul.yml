@@ -1,0 +1,18 @@
+---
+- name: manage consul tls acls
+  acl:
+    path: "{{ item }}"
+    entity: "{{ consul_user }}"
+    etype: user
+    permissions: r
+    state: present
+  loop:
+    - "{{ consul_tls_ca_crt }}"
+    - "{{ consul_tls_server_crt }}"
+    - "{{ consul_server_key }}"
+
+- name: install consul
+  include_role:
+    name: brianshumate.consul
+  vars:
+    consul_group_name: "{{ traefik_group_name }}"

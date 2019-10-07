@@ -1,0 +1,87 @@
+---
+consul_autopilot_enable: yes
+consul_autopilot_cleanup_dead_servers: yes
+consul_tls_verify_incoming: yes
+consul_tls_verify_outgoing: yes
+consul_install_upgrade: yes
+consul_enable_local_script_checks: yes
+consul_data_path: /var/consul
+consul_tls_copy_keys: no
+consul_tls_enable: yes
+consul_tls_dir: "{{ traefik_consul_tls_dir }}"
+consul_tls_ca_crt: "{{ traefik_consul_tls_ca_crt }}"
+consul_tls_server_crt: "{{ traefik_consul_tls_server_crt }}"
+consul_server_key: "{{ traefik_consul_tls_server_key }}"
+consul_ports_http: 8500
+consul_node_role: server
+consul_user: consul
+consul_bootstrap: yes
+consul_dnsmasq_enable: yes
+consul_service_name: consul
+ 
+traefik_group_name: traefik
+traefik_pdns_manage: no
+traefik_consul_tls_dir: "/etc/ipa"
+traefik_consul_tls_ca_crt: "/etc/ipa/ca.crt"
+traefik_consul_tls_server_crt: "/etc/ipa/{{ ansible_fqdn }}.crt"
+traefik_consul_tls_server_key: "/etc/ipa/{{ ansible_fqdn }}.key"
+traefik_acme_directory: "https://acme-v02.api.letsencrypt.org/directory"
+traefik_prefix: traefik
+traefik_config_file: /etc/traefik.toml
+traefik_dashboard_address: 127.0.0.1
+traefik_dashboard_port: 8080
+traefik_service_name: traefik
+traefik_config:
+  checknewversion: "true"
+  keeptrailingslash: "true"
+  loglevel: INFO
+  traefiklog:
+    filepath: "/var/log/traefik.log"
+    format: json
+  accesslog:
+    filepath: "/var/log/traefik.access.log"
+    format: json
+  defaultentrypoints:
+    - https
+  entrypoints:
+    http:
+      address: ":80"
+      redirect:
+        entrypoint: https
+    https:
+      address: ":443"
+      tls:
+        minversion: "VersionTLS12"
+    traefik:
+      address: ":{{ traefik_dashboard_port }}"
+  api:
+    dashboard: "true"
+    debug: "true"
+    entrypoint: traefik
+  ping:
+    entrypoint: http
+  acme:
+    email: "acme@{{ traefik_service_domain }}"
+    caserver: "{{ traefik_acme_directory }}"
+    entrypoint: https
+    acmeLogging: "true"
+    storage: "{{ traefik_prefix }}/acme/account"
+    onhostrule: "true"
+    ondemand: "true"
+
+traefik_keepalived_manage: no
+keepalived_config: true
+keepalived_router_info:
+  - name: 'traefik'
+    check_script:
+      - name: 'chk_traefik'
+        script: "[ `curl http://localhost/ping` = 'OK' ]"
+        interval: 2
+        weight: 2
+    master_node: "{{ groups[traefik_group_name] | first }}"
+    router_id: '50'
+    router_pri_backup: '100'
+    router_pri_master: '150'
+    vip_int: "{{ ansible_default_ipv4.interface }}"
+    vip_addresses:
+      - "{{ traefik_cluster_ip }}"

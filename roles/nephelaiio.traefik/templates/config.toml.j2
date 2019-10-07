@@ -1,0 +1,6 @@
+[consul]
+endpoint = "localhost:{{ consul_ports_http }}"
+[consulCatalog]
+endpoint = "localhost:{{ consul_ports_http }}"
+prefix = "{{ traefik_prefix }}"
+domain = "{{ traefik_service_domain }}"
