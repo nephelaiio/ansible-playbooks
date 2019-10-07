@@ -7,10 +7,6 @@ ipa_replica:
   hosts:
     kvme.home.nephelai.io:
 
-ipa_proxy:
-  hosts:
-    kvmp.home.nephelai.io:
-
 ipa_backend:
   children:
     ipa_server:
