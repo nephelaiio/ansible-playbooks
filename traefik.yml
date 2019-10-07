@@ -1,0 +1,10 @@
+---
+- name: Install traefik server
+
+  hosts: traefik
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.traefik

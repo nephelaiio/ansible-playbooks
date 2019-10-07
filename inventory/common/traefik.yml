@@ -1,3 +1,10 @@
 ---
-traefik_release: v1.7
-traefik_target: "lb.{{ base_domain }}"
+traefik_pdns_domain: "{{ base_domain }}"
+traefik_pdns_url: "{{ pdns_url }}"
+traefik_pdns_api_key: "{{ pdns_api_key }}"
+traefik_service_domain: "{{ base_domain }}"
+traefik_consul_domain: "catalog.{{ base_domain }}"
+traefik_cluster_ip: 192.168.5.254
+traefik_pdns_manage: yes
+traefik_keepalived_manage: yes
+traefik_group_name: traefik
