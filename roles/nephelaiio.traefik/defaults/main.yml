@@ -18,6 +18,7 @@ consul_user: consul
 consul_bootstrap: yes
 consul_dnsmasq_enable: yes
 consul_service_name: consul
+consul_raw_key: "{{ traefik_consul_raw_key }}"
  
 traefik_group_name: traefik
 traefik_pdns_manage: no

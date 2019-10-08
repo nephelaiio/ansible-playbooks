@@ -17,6 +17,7 @@ The most common user overridable parameters for the role are
 | ---      | ---                           | ---                                         | ---                                            |
 | *yes*    | traefik_service_domain        | base domain for traefik frontends           | _undefined_                                    |
 | *yes*    | traefik_consul_domain         | base domain for consul dns                  | _undefined_                                    |
+| *yes*    | traefik_consul_raw_key        | consul encryption key                       | _undefined_                                    |
 | no       | traefik_group_name            | inventory group name for traefik hosts      | traefik                                        |
 | no       | traefik_cluster_ip            | keepalived cluster ip                       | _undefined_                                    |
 | no       | traefik_consul_tls_dir        | consul base tls path                        | /etc/ipa                                       |
