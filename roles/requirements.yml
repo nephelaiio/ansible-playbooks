@@ -1,0 +1,6 @@
+---
+- nephelaiio.plugins
+- nephelaiio.pip
+- mrlesmithjr.keepalived
+- brianshumate.consul
+- kibatic.traefik
