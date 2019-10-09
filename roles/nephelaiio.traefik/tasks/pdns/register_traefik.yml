@@ -26,5 +26,5 @@
   vars:
     pdns_zone: "{{ traefik_service_domain | regex_replace('\\.$', '.') }}."
     pdns_host: "{{ traefik_service_name }}.{{ pdns_zone }}"
-    consul_zone: "{{ traefik_service_domain | regex_replace('\\.$', '.') }}."
+    consul_zone: "{{ traefik_consul_domain | regex_replace('\\.$', '.') }}."
     consul_cname: "{{ traefik_service_name }}.service.{{ consul_zone }}"

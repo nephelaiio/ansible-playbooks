@@ -3,7 +3,7 @@
 
   - name: set recursor metadata
     set_fact:
-      pdns_recursor_domains: "{{ traefik_pdns_recursors | default([]) | product([traefik_service_domain | default('traefik')]) | list }}"
+      pdns_recursor_domains: "{{ traefik_pdns_recursors | default([]) | product([traefik_consul_domain | default('traefik')]) | list }}"
 
   - name: query resolver delegations
     uri:

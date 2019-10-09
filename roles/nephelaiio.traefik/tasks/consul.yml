@@ -16,3 +16,17 @@
     name: brianshumate.consul
   vars:
     consul_group_name: "{{ traefik_group_name }}"
+    consul_node_role: server
+    consul_bootstrap_expect: yes
+    consul_dnsmasq_enable: yes
+    consul_node_role: server
+    consul_user: consul
+    consul_install_upgrade: yes
+    consul_autopilot_enable: yes
+    consul_autopilot_cleanup_dead_servers: yes
+    consul_tls_verify_incoming: yes
+    consul_tls_verify_outgoing: yes
+    consul_enable_local_script_checks: yes
+
+- name: execute handlers
+  meta: flush_handlers
