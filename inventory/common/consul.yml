@@ -1,0 +1,2 @@
+---
+consul_service_domain: "{{ base_domain }}"

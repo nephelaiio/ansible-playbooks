@@ -1,46 +1,46 @@
 ---
-- include_tasks: consul.yml
+- name: install traefik kv conf requirements
+  pip:
+    name: python-consul
 
-- include_tasks: pdns/delegate.yml
-  when:
-    - traefik_pdns_recursors is defined
-    - traefik_pdns_manage | bool
-
-- name: create consul ui service
-  consul:
-    scheme: http
-    host: localhost
+- name: reset traefik kv
+  consul_kv:
+    scheme: "{{ consul_client_scheme }}"
+    host: "{{ consul_client_host }}"
     port: "{{ consul_ports_http }}"
-    service_name: "{{ consul_service_name }}"
-    service_address: localhost
-    service_port: "{{ consul_ports_http }}"
-    interval: 5s
-    timeout: 2s
-    tags:
-      - "{{ traefik_prefix }}.enable=true"
+    key: "{{ traefik_prefix }}/"
+    state: absent
+    recurse: yes
+  run_once: yes
 
-- include_tasks: pdns/register_consul.yml
+- name: configure traefik kv
+  consul_kv:
+    scheme: "{{ consul_client_scheme }}"
+    host: "{{ consul_client_address }}"
+    port: "{{ consul_ports_http }}"
+    key: "{{ item.key }}"
+    value: "{{ item.value }}"
+  loop_control:
+    label: "{{ item.key }}"
+  loop: "{{ [traefik_config] | map('to_kv', '/', traefik_prefix) | list | flatten }}"
+  run_once: yes
+  no_log: traefik_nolog | default('yes') | bool
+
+- name: install traefik
+  include_role:
+    name: kibatic.traefik
+  vars:
+    traefik_template: templates/config.toml
+
+- name: register traefik service
+  include_role:
+    name: nephelaiio.consul_service
+  vars:
+    consul_service_name: "{{ traefik_service_name }}"
+    consul_service_port: "{{ traefik_dashboard_port }}"
+    consul_pdns_url: "{{ traefik_pdns_url }}"
+    consul_pdns_api_key: "{{ traefik_pdns_api_key }}"
+    consul_service_tags:
+      - "{{ traefik_prefix }}.enable=true"
   when:
     - traefik_service_domain is defined
-    - traefik_pdns_manage | bool
-
-- name: create traefik dashboard service
-  consul:
-    scheme: http
-    host: localhost
-    port: "{{ consul_ports_http }}"
-    service_name: traefik
-    service_address: "{{ traefik_dashboard_address }}"
-    service_port: "{{ traefik_dashboard_port }}"
-    interval: 5s
-    timeout: 2s
-    tags:
-      - "{{ traefik_prefix }}.enable=true"
-      - "{{ traefik_prefix }}.entrypoints=traefik"
-
-- include_tasks: pdns/register_traefik.yml
-  when:
-    - traefik_service_domain is defined
-    - traefik_pdns_manage | bool
-
-- include_tasks: traefik.yml

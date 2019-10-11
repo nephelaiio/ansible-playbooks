@@ -1,0 +1,6 @@
+---
+consul:
+  hosts:
+    kvmx.home.nephelai.io:
+    kvmy.home.nephelai.io:
+    kvmz.home.nephelai.io:

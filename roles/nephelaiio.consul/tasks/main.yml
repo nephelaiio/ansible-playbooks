@@ -1,0 +1,32 @@
+---
+- name: flush handlers
+  meta: flush_handlers
+
+- include_tasks: pdns.yml
+  when:
+    - consul_pdns_recursors is defined
+    - consul_pdns_manage | bool
+
+- name: manage consul tls acls
+  acl:
+    path: "{{ item }}"
+    entity: "{{ consul_user }}"
+    etype: user
+    permissions: r
+    state: present
+  loop:
+    - "{{ consul_tls_ca_crt }}"
+    - "{{ consul_tls_server_crt }}"
+    - "{{ consul_server_key }}"
+
+- name: register consul service
+  include_role:
+    name: nephelaiio.consul_service
+  vars:
+    consul_scheme: "{{ consul_client_scheme }}"
+    consul_host: "{{ consul_client_address }}"
+    consul_port: "{{ consul_ports_http }}"
+    consul_service_address: "{{ ansible_default_ipv4.address }}"
+    consul_service_port: "{{ consul_ports_http }}"
+  when:
+    - consul_service_domain is defined

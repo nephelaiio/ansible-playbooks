@@ -20,12 +20,3 @@ galaxy_info:
 
 dependencies:
   - role: nephelaiio.plugins
-  - role: nephelaiio.pip
-  - role: brianshumate.consul
-    when: false
-  - role: kibatic.traefik
-    when: false
-  - role: mrlesmithjr.keepalived
-    when:
-      - traefik_cluster_ip is defined
-      - traefik_keepalived_manage | bool

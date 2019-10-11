@@ -1,22 +1,5 @@
 ---
-consul_data_path: /var/consul
-consul_tls_copy_keys: no
-consul_tls_enable: yes
-consul_tls_dir: "{{ traefik_consul_tls_dir }}"
-consul_tls_ca_crt: "{{ traefik_consul_tls_ca_crt }}"
-consul_tls_server_crt: "{{ traefik_consul_tls_server_crt }}"
-consul_server_key: "{{ traefik_consul_tls_server_key }}"
-consul_ports_http: 8500
-consul_raw_key: "{{ traefik_consul_raw_key }}"
-consul_service_name: consul
-
-traefik_group_name: traefik
-traefik_pdns_manage: no
-traefik_consul_tls_dir: "/etc/ipa"
-traefik_consul_tls_ca_crt: "/etc/ipa/ca.crt"
-traefik_consul_tls_server_crt: "/etc/ipa/{{ ansible_fqdn }}.crt"
-traefik_consul_tls_server_key: "/etc/ipa/{{ ansible_fqdn }}.key"
-traefik_consul_domain: "catalog.{{ traefik_service_domain }}"
+# traefik_serviec_domain
 traefik_acme_directory: "https://acme-v02.api.letsencrypt.org/directory"
 traefik_prefix: traefik
 traefik_config_file: /etc/traefik.toml
@@ -61,7 +44,7 @@ traefik_config:
     onhostrule: "true"
     ondemand: "true"
 
-traefik_keepalived_manage: no
+traefik_keepalived_manage: yes
 keepalived_config: true
 keepalived_router_info:
   - name: 'traefik'
@@ -70,10 +53,14 @@ keepalived_router_info:
         script: "[ `curl http://localhost/ping` = 'OK' ]"
         interval: 2
         weight: 2
-    master_node: "{{ groups[traefik_group_name] | first }}"
+    master_node: "{{ play_hosts | first }}"
     router_id: '50'
     router_pri_backup: '100'
     router_pri_master: '150'
     vip_int: "{{ ansible_default_ipv4.interface }}"
     vip_addresses:
       - "{{ traefik_cluster_ip }}"
+
+consul_client_scheme: http
+consul_client_host: localhost
+consul_ports_http: 8500
