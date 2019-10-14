@@ -22,7 +22,7 @@ dependencies:
   - role: brianshumate.consul
     vars:
       consul_domain: "consul.{{ consul_service_domain }}"
-      consul_client_address: "0.0.0.0"
+      consul_client_address: 0.0.0.0
       consul_node_role: server
       consul_bootstrap_expect: yes
       consul_dnsmasq_enable: yes
@@ -32,3 +32,6 @@ dependencies:
       consul_enable_local_script_checks: yes
       consul_user: consul
       consul_data_path: /var/consul
+      consul_acl_master_token: "{{ consul_master_token }}"
+      consul_acl_agent_token: "{{ consul_master_token }}"
+      consul_acl_token: "{{ consul_token }}"

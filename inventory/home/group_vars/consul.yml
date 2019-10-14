@@ -9,3 +9,7 @@ consul_raw_key: !vault |
   39303932393231333063656339653461656366396265666665633530323061363862353164323233
   6635393339343231373137623931333237666434646130663461
 consul_pdns_recursors: "{{ pdns_recursors }}"
+consul_acl_enable: yes
+consul_acl_default_policy: deny
+consul_pdns_url: "{{ pdns_url }}"
+consul_pdns_api_key: "{{ pdns_api_key }}"

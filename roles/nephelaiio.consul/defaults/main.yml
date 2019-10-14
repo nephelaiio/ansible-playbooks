@@ -8,7 +8,6 @@ consul_tls_dir: "/etc/ipa"
 consul_tls_ca_crt: "/etc/ipa/ca.crt"
 consul_tls_server_crt: "/etc/ipa/{{ ansible_fqdn }}.crt"
 consul_server_key: "/etc/ipa/{{ ansible_fqdn }}.key"
-consul_ports_http: 8500
 consul_raw_key: "{{ consul_raw_key }}"
 consul_service_name: consul
 consul_pdns_manage: yes

@@ -6,12 +6,14 @@ consul_service_port: 80
 consul_service_interval: 5s
 consul_service_timeout: 2s
 
-consul_domain: "consul.{{ consul_service_domain }}"
-consul_pdns_domain: "{{ consul_service_domain }}"
-consul_prefix: traefik
-consul_client_scheme: http
-consul_client_address: "consul.service.{{ consul_domain }}"
-consul_ports_http: 8500
+consul_service_traefik_prefix: traefik
+consul_service_subdomain: "consul.{{ consul_service_domain }}"
+consul_service_pdns_domain: "{{ consul_service_domain }}"
+consul_service_client_address: "consul.service.{{ consul_domain }}"
+consul_service_tags:
+  - "{{ consul_service_traefik_prefix }}.enable=true"
+consul_service_token: "{{ consul_ansible_token }}"
 
-# consul_pdns_url
-# consul_pdns_api_key
+# consul_service_master_token
+# consul_service_pdns_url
+# consul_service_pdns_api_key

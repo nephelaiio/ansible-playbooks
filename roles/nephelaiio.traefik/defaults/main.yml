@@ -22,7 +22,7 @@ traefik_config:
     http:
       address: ":80"
       redirect:
-        entrypoint: https
+        entrypoint: "https"
     https:
       address: ":443"
       tls:
@@ -44,23 +44,6 @@ traefik_config:
     onhostrule: "true"
     ondemand: "true"
 
-traefik_keepalived_manage: yes
-keepalived_config: true
-keepalived_router_info:
-  - name: 'traefik'
-    check_script:
-      - name: 'chk_traefik'
-        script: "[ `curl http://localhost/ping` = 'OK' ]"
-        interval: 2
-        weight: 2
-    master_node: "{{ play_hosts | first }}"
-    router_id: '50'
-    router_pri_backup: '100'
-    router_pri_master: '150'
-    vip_int: "{{ ansible_default_ipv4.interface }}"
-    vip_addresses:
-      - "{{ traefik_cluster_ip }}"
-
-consul_client_scheme: http
 consul_client_host: localhost
-consul_ports_http: 8500
+consul_acl_master_token: "{{ consul_master_token }}"
+traefik_systemd_envfile: /etc/default/traefik

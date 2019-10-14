@@ -7,6 +7,67 @@
     - consul_pdns_recursors is defined
     - consul_pdns_manage | bool
 
+- block:
+
+    - name: install consul token requirements
+      pip:
+        name:
+          - python-consul
+          - pyhcl
+
+    - name: create consul agent token
+      consul_acl:
+        host: "{{ ansible_default_ipv4.address }}"
+        token: "{{ consul_agent_token }}"
+        mgmt_token: "{{ consul_acl_master_token }}"
+        name: "{{ ansible_hostname }}"
+        rules:
+          - node: ""
+            policy: write
+          - service: ""
+            policy: write
+          - query: ""
+            policy: write
+          - key: ""
+            policy: write
+          - session: ""
+            policy: write
+      when: consul_agent_token is defined
+
+    - name: create consul token
+      consul_acl:
+        host: "{{ ansible_default_ipv4.address }}"
+        token: "{{ consul_token }}"
+        mgmt_token: "{{ consul_acl_master_token }}"
+        name: default
+        rules:
+          - node: ""
+            policy: read
+          - service: ""
+            policy: read
+      when: consul_token is defined
+
+    - name: create consul ansible token
+      consul_acl:
+        host: "{{ ansible_default_ipv4.address }}"
+        token: "{{ consul_ansible_token }}"
+        mgmt_token: "{{ consul_acl_master_token }}"
+        name: ansible token
+        rules:
+          - node: ""
+            policy: write
+          - service: ""
+            policy: write
+          - query: ""
+            policy: write
+          - key: ""
+            policy: write
+          - session: ""
+            policy: write
+
+  delegate_to: localhost
+  run_once: yes
+
 - name: manage consul tls acls
   acl:
     path: "{{ item }}"
@@ -23,10 +84,10 @@
   include_role:
     name: nephelaiio.consul_service
   vars:
-    consul_scheme: "{{ consul_client_scheme }}"
-    consul_host: "{{ consul_client_address }}"
-    consul_port: "{{ consul_ports_http }}"
+    consul_service_client_address: localhost
     consul_service_address: "{{ ansible_default_ipv4.address }}"
-    consul_service_port: "{{ consul_ports_http }}"
+    consul_service_port: 8500
+  tags:
+    - debug
   when:
     - consul_service_domain is defined

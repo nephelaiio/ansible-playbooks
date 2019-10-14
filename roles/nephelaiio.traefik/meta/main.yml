@@ -21,11 +21,24 @@ galaxy_info:
 dependencies:
   - role: nephelaiio.plugins
   - role: nephelaiio.pip
-  - role: brianshumate.consul
-    when: false
   - role: kibatic.traefik
     when: false
   - role: mrlesmithjr.keepalived
+    vars:
+      keepalived_config: yes
+      keepalived_router_info:
+        - name: 'traefik'
+          check_script:
+            - name: 'chk_traefik'
+              script: "[ `curl http://localhost/ping` = 'OK' ]"
+              interval: 2
+              weight: 2
+          master_node: "{{ play_hosts | first }}"
+          router_id: '50'
+          router_pri_backup: '100'
+          router_pri_master: '150'
+          vip_int: "{{ ansible_default_ipv4.interface }}"
+          vip_addresses:
+            - "{{ traefik_cluster_ip }}"
     when:
       - traefik_cluster_ip is defined
-      - traefik_keepalived_manage | bool

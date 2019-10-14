@@ -11,7 +11,7 @@
     - nephelaiio.consul
     - nephelaiio.traefik
 
-  pre_tasks:
+  tasks:
 
     - block:
 

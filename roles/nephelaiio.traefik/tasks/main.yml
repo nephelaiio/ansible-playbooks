@@ -3,23 +3,49 @@
   pip:
     name: python-consul
 
+- block:
+
+    - name: install trefik token requirements
+      pip:
+        name:
+          - python-consul
+          - pyhcl
+
+    - name: create traefik consul token
+      consul_acl:
+        host: "{{ ansible_default_ipv4.address }}"
+        token: "{{ traefik_consul_token }}"
+        mgmt_token: "{{ consul_acl_master_token }}"
+        name: traefik
+        rules:
+          - key: ""
+            policy: write
+          - session: ""
+            policy: write
+          - service: ""
+            policy: read
+          - node: ""
+            policy: read
+      when: traefik_consul_token is defined
+
+  delegate_to: localhost
+  run_once: yes
+
 - name: reset traefik kv
   consul_kv:
-    scheme: "{{ consul_client_scheme }}"
-    host: "{{ consul_client_host }}"
-    port: "{{ consul_ports_http }}"
+    host: "{{ ansible_default_ipv4.address }}"
     key: "{{ traefik_prefix }}/"
     state: absent
     recurse: yes
+    token: "{{ traefik_consul_token | default(omit) }}"
   run_once: yes
 
 - name: configure traefik kv
   consul_kv:
-    scheme: "{{ consul_client_scheme }}"
-    host: "{{ consul_client_address }}"
-    port: "{{ consul_ports_http }}"
+    host: "{{ ansible_default_ipv4.address }}"
     key: "{{ item.key }}"
     value: "{{ item.value }}"
+    token: "{{ traefik_consul_token | default(omit) }}"
   loop_control:
     label: "{{ item.key }}"
   loop: "{{ [traefik_config] | map('to_kv', '/', traefik_prefix) | list | flatten }}"
@@ -31,15 +57,15 @@
     name: kibatic.traefik
   vars:
     traefik_template: templates/config.toml
+    traefik_systemd_unit_template: templates/systemd.service
 
 - name: register traefik service
   include_role:
     name: nephelaiio.consul_service
   vars:
+    consul_service_client_address: "{{ consul_client_address }}"
     consul_service_name: "{{ traefik_service_name }}"
     consul_service_port: "{{ traefik_dashboard_port }}"
-    consul_pdns_url: "{{ traefik_pdns_url }}"
-    consul_pdns_api_key: "{{ traefik_pdns_api_key }}"
     consul_service_tags:
       - "{{ traefik_prefix }}.enable=true"
   when:

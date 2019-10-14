@@ -8,3 +8,4 @@ netaddr>=0.7.19
 yamllint>=1.8.1
 flake8>=3.3.0
 ansible-tower-cli>=3.3.6
+pyhcl>=0.3.12
