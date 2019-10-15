@@ -5,6 +5,7 @@
 
 - name: "create consul service {{ consul_service_name }}"
   consul:
+    state: "{{ consul_service_state }}"
     host: "{{ consul_service_client_address }}"
     service_name: "{{ consul_service_name }}"
     service_address: "{{ consul_service_address }}"

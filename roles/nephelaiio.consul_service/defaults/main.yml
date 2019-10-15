@@ -1,6 +1,7 @@
 ---
 # consul_service_domain
 # consul_service_name
+consul_service_state: present
 consul_service_address: "{{ ansible_default_ipv4.address }}"
 consul_service_port: 80
 consul_service_interval: 5s
@@ -9,7 +10,7 @@ consul_service_timeout: 2s
 consul_service_traefik_prefix: traefik
 consul_service_subdomain: "consul.{{ consul_service_domain }}"
 consul_service_pdns_domain: "{{ consul_service_domain }}"
-consul_service_client_address: "consul.service.{{ consul_domain }}"
+consul_service_client_address: "consul.service.{{ consul_service_subdomain }}"
 consul_service_tags:
   - "{{ consul_service_traefik_prefix }}.enable=true"
 consul_service_token: "{{ consul_ansible_token }}"
