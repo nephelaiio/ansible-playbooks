@@ -3,10 +3,15 @@
 
   hosts: localhost
 
+  gather_facts: no
+
   tasks:
 
     - name: install requirements
       command: pip install -r requirements.txt
 
-    - name: run ansible galaxy
-      command: ansible-galaxy install -r roles/requirements.yml -p galaxy/ --force
+    - name: install galaxy roles
+      command: ansible-galaxy role install -r roles/requirements.yml -p roles/ --force
+
+    - name: install galaxy collections
+      command: ansible-galaxy collection install -r collections/requirements.yml --force

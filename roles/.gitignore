@@ -1,0 +1,5 @@
+*
+!.gitignore
+!nephelaiio.consul/
+!nephelaiio.consul_service/
+!nephelaiio.traefik/
