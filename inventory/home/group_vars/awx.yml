@@ -260,11 +260,9 @@ awx_templates:
 
   - name: awx.proxy
     job_type: run
-    project: nginx
+    project: home
     inventory: home
-    playbook: proxy.yml
-    extra_vars:
-      target_hosts: awx_proxy
+    playbook: awx/proxy.yml
     credentials:
       - name: home.ssh
         kind: ssh

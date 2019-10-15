@@ -2,7 +2,6 @@
 awx:
   children:
     awx_app:
-    awx_proxy:
 
 awx_app:
   hosts:

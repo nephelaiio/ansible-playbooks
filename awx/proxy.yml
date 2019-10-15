@@ -1,0 +1,18 @@
+---
+- name: Create awx service
+
+  hosts: awx_app
+
+  become: yes
+
+  tasks:
+
+    - name: register traefik service
+      include_role:
+        name: nephelaiio.consul_service
+      vars:
+        consul_service_address: "{{ ansible_default_ipv4.address }}"
+        consul_service_name: awx
+        consul_service_port: "{{ awx_container_port | default('80') }}"
+      when:
+        - traefik_service_domain is defined
