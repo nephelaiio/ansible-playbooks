@@ -43,6 +43,8 @@ traefik_config:
     storage: "{{ traefik_prefix }}/acme/account"
     onhostrule: "true"
     ondemand: "true"
+    httpchallenge:
+      entrypoint: http
 
 consul_client_host: localhost
 consul_acl_master_token: "{{ consul_master_token }}"
