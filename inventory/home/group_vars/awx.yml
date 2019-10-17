@@ -244,6 +244,9 @@ awx_users:
 
 awx_templates:
 
+  - name: Demo Job Template
+    state: absent
+
   - name: awx.configure
     job_type: run
     project: awx
@@ -260,7 +263,7 @@ awx_templates:
 
   - name: awx.proxy
     job_type: run
-    project: home
+    project: inventory
     inventory: home
     playbook: awx/proxy.yml
     credentials:
@@ -408,6 +411,8 @@ awx_organizations:
 
     credentials:
 
+      - name: Demo Credential
+        state: absent
       - name: awx.github
         kind: scm
         username: "{{ awx_github_user }}"
@@ -421,6 +426,9 @@ awx_organizations:
         ssh_key_data: "{{ awx_machine_key }}"
 
     projects:
+
+      - name: Demo Project
+        state: absent
 
       - name: nginx
         scm_type: git

@@ -5,6 +5,5 @@ awx:
 
 awx_app:
   vars:
-    kvm_profile: large
   hosts:
     kvmu.home.nephelai.io:
