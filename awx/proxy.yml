@@ -14,5 +14,6 @@
         consul_service_address: "{{ ansible_default_ipv4.address }}"
         consul_service_name: awx
         consul_service_port: "{{ awx_container_port | default('80') }}"
+        consul_service_cname: "traefik.service.consul.{{ base_domain }}."
       when:
         - traefik_service_domain is defined
