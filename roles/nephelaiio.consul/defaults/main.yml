@@ -1,5 +1,6 @@
 ---
 # consul_service_domain
+consul_dns_zone: "consul.{{ consul_service_domain }}"
 consul_tls_verify_incoming: yes
 consul_tls_verify_outgoing: yes
 consul_tls_copy_keys: no
@@ -13,3 +14,4 @@ consul_service_name: consul
 consul_pdns_manage: yes
 consul_domain_root: "consul.{{ consul_service_domain }}"
 consul_client_address: "{{ ansible_default_ipv4.address }}"
+consul_ports_dns: 8600

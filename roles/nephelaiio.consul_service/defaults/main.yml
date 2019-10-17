@@ -14,6 +14,9 @@ consul_service_client_address: "consul.service.{{ consul_service_subdomain }}"
 consul_service_tags:
   - "{{ consul_service_traefik_prefix }}.enable=true"
 consul_service_token: "{{ consul_ansible_token }}"
+consul_service_pdns_zone: "{{ consul_service_domain | regex_replace('\\.$', '.') }}."
+consul_service_pdns_host: "{{ consul_service_name }}.{{ consul_service_pdns_zone }}"
+consul_service_cname: "{{ consul_service_name }}.service.{{ consul_service_subdomain | regex_replace('\\.$', '.') }}."
 
 # consul_service_master_token
 # consul_service_pdns_url

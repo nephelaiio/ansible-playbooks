@@ -21,11 +21,10 @@ galaxy_info:
 dependencies:
   - role: brianshumate.consul
     vars:
-      consul_domain: "consul.{{ consul_service_domain }}"
+      consul_domain: "{{ consul_dns_zone }}"
       consul_client_address: 0.0.0.0
       consul_node_role: server
       consul_bootstrap_expect: yes
-      consul_dnsmasq_enable: yes
       consul_install_upgrade: yes
       consul_autopilot_enable: yes
       consul_autopilot_cleanup_dead_servers: yes
@@ -35,3 +34,14 @@ dependencies:
       consul_acl_master_token: "{{ consul_master_token }}"
       consul_acl_agent_token: "{{ consul_master_token }}"
       consul_acl_token: "{{ consul_token }}"
+  - role: bertvv.hosts
+    vars:
+      hosts_entries:
+        - name: "{{ consul_dns_zone }}"
+          ip: "{{ ansible_default_ipv4.address }}"
+  - role: bertvv.dnsmasq
+    vars:
+      dnsmasq_upstream_servers:
+        - "/.{{ consul_dns_zone }}/127.0.0.1#{{ consul_ports_dns }}"
+
+

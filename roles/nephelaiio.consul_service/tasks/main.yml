@@ -17,27 +17,22 @@
   tags:
     - debug
 
-- name: "create service pdns cname {{ consul_cname }}"
+- name: "create service pdns cname {{ consul_service_cname }}"
   uri:
-    url: "{{ consul_service_pdns_url }}/api/v1/servers/localhost/zones/{{ pdns_zone }}"
+    url: "{{ consul_service_pdns_url }}/api/v1/servers/localhost/zones/{{ consul_service_pdns_zone }}"
     method: PATCH
     body_format: json
     body:
       rrsets:
-        - name: "{{ pdns_host }}"
+        - name: "{{ consul_service_pdns_host }}"
           type: CNAME
           ttl: 3600
           changetype: REPLACE
           records:
-            - content: "{{ consul_cname }}"
+            - content: "{{ consul_service_cname }}"
               disabled: no
               set-ptr: no
               comments: []
     headers:
       X-API-Key: "{{ consul_service_pdns_api_key }}"
     status_code: 204
-  vars:
-    pdns_zone: "{{ consul_service_domain | regex_replace('\\.$', '.') }}."
-    pdns_host: "{{ consul_service_name }}.{{ pdns_zone }}"
-    consul_zone: "{{ consul_service_subdomain | regex_replace('\\.$', '.') }}."
-    consul_cname: "{{ consul_service_name }}.service.{{ consul_zone }}"
