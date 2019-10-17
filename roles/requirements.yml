@@ -1,6 +1,8 @@
 ---
-- nephelaiio.plugins
-- nephelaiio.pip
-- mrlesmithjr.keepalived
-- brianshumate.consul
-- kibatic.traefik
+- name: nephelaiio.plugins
+- name: nephelaiio.pip
+- name: mrlesmithjr.keepalived
+- name: brianshumate.consul
+- name: kibatic.traefik
+- name: bertvv.hosts
+- name: bertvv.dnsmasq
