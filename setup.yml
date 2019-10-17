@@ -11,7 +11,7 @@
       command: pip install -r requirements.txt
 
     - name: install galaxy roles
-      command: ansible-galaxy role install -r roles/requirements.yml -p roles/ --force
+      command: ansible-galaxy install -r roles/requirements.yml -p roles/ --force
 
     - name: install galaxy collections
       command: ansible-galaxy collection install -r collections/requirements.yml --force
