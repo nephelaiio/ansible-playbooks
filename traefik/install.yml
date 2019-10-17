@@ -1,5 +1,5 @@
 ---
-- name: Install traefik server
+- name: Install traefik cluster
 
   hosts: traefik
 
