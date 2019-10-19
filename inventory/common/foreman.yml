@@ -13,7 +13,7 @@ foreman_installer_options:
   - --enable-foreman-plugin-openscap
   - --enable-foreman-plugin-templates
   - --no-enable-foreman-proxy
-  - --foreman-configure-epel-repo true 
+  - --foreman-configure-epel-repo true
   - --foreman-configure-scl-repo true
   - --foreman-db-adapter postgresql
   - "--foreman-db-database {{ foreman_db_name }}"

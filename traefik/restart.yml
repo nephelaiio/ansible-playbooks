@@ -11,4 +11,3 @@
       service:
         name: traefik
         state: restarted
-
