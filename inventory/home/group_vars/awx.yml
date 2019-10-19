@@ -233,6 +233,12 @@ awx_settings:
     - HTTP_X_FORWARDED_FOR
   TOWER_URL_BASE: "{{ awx_url }}"
 
+awx_teams: "{{ awx_organizations | rejectattr('state', 'equalto', 'absent') | map(attribute='name') | map('to_dict', awx_team_template) | list }}"
+
+awx_team_template:
+  name: "%s_users"
+  organization: "%s"
+
 awx_users:
 
   - first_name: CI
@@ -260,6 +266,9 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+    permissions:
+      - role: execute
+        team: home_users
 
   - name: awx.proxy
     job_type: run
@@ -271,6 +280,9 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+    permissions:
+      - role: execute
+        team: home_users
 
   - name: freeipa.install.servers
     job_type: run
@@ -282,6 +294,9 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+    permissions:
+      - role: execute
+        team: home_users
 
   - name: freeipa.install.proxy
     job_type: run
@@ -295,6 +310,9 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+    permissions:
+      - role: execute
+        team: home_users
 
   - name: freeipa.install.replicas
     job_type: run
@@ -306,6 +324,9 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+    permissions:
+      - role: execute
+        team: home_users
 
   - name: freeipa.install.clients
     job_type: run
@@ -316,6 +337,9 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+    permissions:
+      - role: execute
+        team: home_users
 
   - name: freeipa.uninstall.clients
     job_type: run
@@ -328,6 +352,9 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+    permissions:
+      - role: execute
+        team: home_users
 
   - name: freeipa.users
     job_type: run
@@ -338,6 +365,9 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+    permissions:
+      - role: execute
+        team: home_users
 
   - name: pdns.recursors
     job_type: run
@@ -349,6 +379,9 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+    permissions:
+      - role: execute
+        team: home_users
 
   - name: pdns.servers
     job_type: run
@@ -360,6 +393,9 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+    permissions:
+      - role: execute
+        team: home_users
 
   - name: pdns.records
     job_type: run
@@ -371,6 +407,9 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+    permissions:
+      - role: execute
+        team: home_users
 
   - name: pdns.register
     job_type: run
@@ -382,6 +421,9 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+    permissions:
+      - role: execute
+        team: home_users
 
   - name: upgrade
     job_type: run
@@ -480,17 +522,6 @@ awx_organizations:
         scm_update_cache_timeout: 60
         scm_clean: false
 
-      - name: playbooks
-        state: absent
-        scm_type: git
-        scm_url: https://github.com/nephelaiio/ansible-playbooks.git
-        scm_branch: master
-        scm_delete_on_update: false
-        scm_credential: awx.github
-        scm_update_on_launch: false
-        scm_update_cache_timeout: 60
-        scm_clean: false
-
       - name: awx
         scm_type: git
         scm_url: https://github.com/nephelaiio/ansible-playbooks-awx.git
@@ -532,17 +563,6 @@ awx_organizations:
         scm_clean: false
 
       - name: inventory
-        scm_type: git
-        scm_url: https://github.com/nephelaiio/ansible-playbooks.git
-        scm_branch: master
-        scm_delete_on_update: false
-        scm_credential: awx.github
-        scm_update_on_launch: false
-        scm_update_cache_timeout: 60
-        scm_clean: false
-
-      - name: playbooks
-        state: absent
         scm_type: git
         scm_url: https://github.com/nephelaiio/ansible-playbooks.git
         scm_branch: master

@@ -1,0 +1,6 @@
+---
+ipa_users:
+  - user_name: teddyphreak
+    first_name: Teodoro
+    last_name: Cook
+    pass: "{{ ipa_user_pass_teddyphreak }}"
