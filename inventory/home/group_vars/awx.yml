@@ -572,6 +572,16 @@ awx_organizations:
         scm_update_cache_timeout: 60
         scm_clean: false
 
+      - name: foreman
+        scm_type: git
+        scm_url: https://github.com/nephelaiio/ansible-playbooks-foreman.git
+        scm_branch: master
+        scm_delete_on_update: false
+        scm_credential: awx.github
+        scm_update_on_launch: false
+        scm_update_cache_timeout: 60
+        scm_clean: false
+
     inventories:
 
       - name: awx
