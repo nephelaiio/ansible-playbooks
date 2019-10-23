@@ -1,158 +1,17 @@
 ---
-- name: Install foreman-proxy
+- name: Create proxy service
 
-  hosts: foreman_proxy
+  hosts: foreman_app
 
   become: yes
 
-  vars:
-
-    foreman_proxy_conf_dir: "/etc/foreman-proxy"
-    host_certificate_hostname: "{{ ansible_fqdn }}"
-    host_certificate_chainfile: "{{ foreman_proxy_conf_dir }}/{{ host_certificate_hostname }}.chain.crt"
-    host_certificate_keyfile: "{{ foreman_proxy_conf_dir }}/{{ host_certificate_hostname }}.key"
-    host_certificate_cafile: "{{ foreman_proxy_conf_dir }}/letsencrypt.crt"
-    host_certificate_intcafile: "{{ foreman_proxy_conf_dir }}/letsencrypt.intermediate.crt"
-
-  roles:
-
-    - nephelaiio.plugins
-
   tasks:
 
-    - name: include private variables
-      include_vars:
-        dir: "../{{ variables }}"
-      run_once: yes
-
-    - block:
-
-        - name: install foreman apt key
-          apt_key:
-            url: https://deb.theforeman.org/pubkey.gpg
-            id: 6F8600B9563278F6
-
-        - name: install foreman apt repository
-          apt_repository:
-            repo: "deb http://deb.theforeman.org/ {{ ansible_lsb.codename }} {{ foreman_release }}"
-            state: present
-            update_cache: yes
-
-      when: ansible_os_family == 'Debian'
-
-    - block:
-
-        - name: install epel
-          include_role:
-            name: geerlingguy.repo-epel
-
-        - name: install foreman yum repository
-          yum:
-            name: https://yum.theforeman.org/releases/1.21/el7/x86_64/foreman-release.rpm
-
-        - name: install foreman scl
-          package:
-            name:
-              - foreman-release-scl
-
-      when: ansible_os_family == 'RedHat'
-
-    - name: install foreman packages
-      package:
-        name:
-          - "{{ foreman_proxy_user }}"
-
-    - include_role:
-        name: nephelaiio.acme_certificate_route53
+    - name: register traefik service
+      include_role:
+        name: nephelaiio.consul_service
       vars:
-        acme_certificate_domain: "{{ host_certificate_hostname }}"
-        acme_certificate_cafile: "{{ host_certificate_cafile }}"
-        acme_certificate_intcafile: "{{ host_certificate_intcafile }}"
-        acme_certificate_chainfile: "{{ host_certificate_chainfile }}"
-        acme_certificate_keyfile: "{{ host_certificate_keyfile }}"
-        acme_certificate_add_ca: yes
-        acme_certificate_aws_accesskey_id: "{{ aws_access_key_id }}"
-        acme_certificate_aws_accesskey_secret: "{{ aws_secret_access_key }}"
-        acme_certificate_group_members:
-          - "{{ foreman_proxy_user }}"
-
-    - name: slurp ca file
-      slurp:
-        src: "{{ host_certificate_cafile }}"
-      register: cafile
-
-    - name: slurp intca file
-      slurp:
-        src: "{{ host_certificate_intcafile }}"
-      register: intcafile
-
-    - name: create letsencrypt ca root dir
-      file:
-        state: directory
-        dest: "{{ acme_certificate_storedir }}"
-      delegate_to: "{{ item }}"
-      loop: "{{ groups['foreman_app'] | flatten(levels=1) }}"
-
-    - name: copy letsencrypt root ca file to foreman trust store
-      copy:
-        content: "{{ cafile_content }}"
-        dest: "{{ acme_certificate_storedir }}/{{ host_certificate_cafile | basename }}"
-      vars:
-        cafile_content: "{{ cafile['content'] | b64decode }}"
-      delegate_to: "{{ item }}"
-      loop: "{{ groups['foreman_app'] | flatten(levels=1) }}"
-
-    - name: copy letsencrypt root ca file to foreman trust store
-      copy:
-        content: "{{ intcafile_content }}"
-        dest: "{{ acme_certificate_storedir }}/{{ host_certificate_intcafile | basename }}"
-      vars:
-        intcafile_content: "{{ intcafile['content'] | b64decode }}"
-      delegate_to: "{{ item }}"
-      loop: "{{ groups['foreman_app'] | flatten(levels=1) }}"
-
-    - name: update ca certificates
-      command: update-ca-certificates
-      changed_when: false
-      when: ansible_os_family == 'Debian'
-      delegate_to: "{{ item }}"
-      loop: "{{ groups['foreman_app'] | flatten(levels=1) }}"
-
-    - name: update ca certificates
-      command: update-ca-trust extract
-      changed_when: false
-      when: ansible_os_family == 'RedHat'
-      delegate_to: "{{ item }}"
-      loop: "{{ groups['foreman_app'] | flatten(levels=1) }}"
-
-    - name: manage foreman proxy configuration
-      copy:
-        dest: "{{ foreman_proxy_conf_dir }}/settings.yml"
-        content: |
-          {{ settings_yaml | to_nice_yaml(indent=2) }}
-        mode: 0640
-        owner: "{{ foreman_proxy_user }}"
-        group: "{{ foreman_proxy_group }}"
-      vars:
-        foreman_proxy_ssl_settings:
-          :ssl_ca_file: "{{ acme_os_ca_file }}"
-          :ssl_certificate: "{{ host_certificate_chainfile }}"
-          :ssl_private_key: "{{ host_certificate_keyfile }}"
-        settings_yaml: "{{ foreman_proxy_settings | combine(foreman_proxy_ssl_settings) }}"
-      notify:
-        - restart foreman proxy
-
-    - name: start foreman proxy
-      service:
-        name: foreman-proxy
-        state: started
-        enabled: yes
-
-  handlers:
-
-    - name: restart foreman proxy
-      service:
-        name: foreman-proxy
-        state: restarted
-      delegate_to: "{{ item }}"
-      with_items: "{{ groups['foreman_proxy'] }}"
+        consul_service_address: "{{ ansible_default_ipv4.address }}"
+        consul_service_name: foreman
+        consul_service_port: 80
+        consul_service_cname: "traefik.service.consul.{{ base_domain }}."

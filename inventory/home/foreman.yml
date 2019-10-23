@@ -9,10 +9,6 @@ foreman_app:
   hosts:
     kvmf.home.nephelai.io:
 
-foreman_proxy:
-  hosts:
-    kvmf.home.nephelai.io:
-
 foreman_guests:
   children:
     nuc:

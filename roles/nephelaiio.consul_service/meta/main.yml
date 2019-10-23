@@ -17,3 +17,4 @@ galaxy_info:
 
 dependencies:
   - role: nephelaiio.plugins
+  - role: nephelaiio.pip
