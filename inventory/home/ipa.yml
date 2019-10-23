@@ -18,7 +18,7 @@ ipa_user:
 
 ipa_client:
   children:
-    online:
+    kvm_guests:
 
 ipa:
   children:
