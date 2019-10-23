@@ -3,6 +3,8 @@
 
   hosts: traefik
 
+  serial: 1
+
   become: yes
 
   tasks:
@@ -11,3 +13,7 @@
       service:
         name: traefik
         state: restarted
+
+    - name: pause before next host restart
+      pause:
+        minutes: 2
