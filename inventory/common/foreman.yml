@@ -1,5 +1,6 @@
 ---
 foreman_repositories_version: 1.23
+foreman_url: "https://foreman.{{ base_domain }}"
 foreman_installer_options:
   - --enable-foreman
   - --enable-foreman-cli
@@ -13,6 +14,7 @@ foreman_installer_options:
   - --enable-foreman-plugin-openscap
   - --enable-foreman-plugin-templates
   - --no-enable-foreman-proxy
+  - --foreman-foreman-url {{ foreman_url }}
   - --foreman-configure-epel-repo true
   - --foreman-configure-scl-repo true
   - --foreman-db-adapter postgresql
@@ -20,6 +22,8 @@ foreman_installer_options:
   - --foreman-db-host localhost
   - --foreman-db-manage true
   - --foreman-db-manage-rake true
+  - "--foreman-initial-admin-username {{ foreman_admin_user }}"
+  - "--foreman-initial-admin-password {{ foreman_admin_pass }}"
   - "--foreman-db-username {{ foreman_db_user }}"
   - "--foreman-db-password {{ foreman_db_pass }}"
 
