@@ -425,6 +425,20 @@ awx_templates:
       - role: execute
         team: home_users
 
+  - name: traefik.restart
+    job_type: run
+    project: inventory
+    playbook: traefik/restart.yml
+    inventory: home
+    credentials:
+      - name: home.ssh
+        kind: ssh
+      - name: home.vault
+        kind: vault
+    permissions:
+      - role: execute
+        team: home_users
+
   - name: upgrade
     job_type: run
     project: upgrade
