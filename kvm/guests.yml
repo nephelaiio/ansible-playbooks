@@ -49,8 +49,8 @@
       listen: awx callback
       run_once: yes
 
-    - name: call ansible awx script
-      command: "awx-cli workflow_job launch -h {{ awx_url }} -u {{ awx_ci_user }} -p {{ awx_ci_pass }} {{ awx_callback }}"
+    - name: call awx callback script
+      command: "awx-cli workflow_job launch -W {{ awx_callback }} -h {{ awx_url }} -u {{ awx_ci_user }} -p {{ awx_ci_pass }}"
       when:
         - awx_callback is defined
         - callback_hosts | default([]) != []
