@@ -438,6 +438,34 @@ awx_templates:
       - role: execute
         team: home_users
 
+  - name: foreman.server
+    job_type: run
+    project: foreman
+    playbook: server.yml
+    inventory: home
+    credentials:
+      - name: home.ssh
+        kind: ssh
+      - name: home.vault
+        kind: vault
+    permissions:
+      - role: execute
+        team: home_users
+
+  - name: foreman.proxy
+    job_type: run
+    project: foreman
+    playbook: proxy.yml
+    inventory: home
+    credentials:
+      - name: home.ssh
+        kind: ssh
+      - name: home.vault
+        kind: vault
+    permissions:
+      - role: execute
+        team: home_users
+
 awx_schedules:
 
   - name: awx.proxy
@@ -665,6 +693,17 @@ awx_organizations:
           - role: execute
             team: home_users
 
+      - name: foreman
+        nodes:
+          - name: foreman.server
+            template: foreman.server
+          - name: foreman.proxy
+            template: foreman.proxy
+            parent: foreman.server
+        permissions:
+          - role: execute
+            team: home_users
+
       - name: site
         nodes:
           - name: pdns
@@ -677,6 +716,10 @@ awx_organizations:
           - name: freeipa
             template: freeipa
             parent: awx
+            type: workflow_job
+          - name: foreman
+            template: foreman
+            parent: freeipa
             type: workflow_job
         permissions:
           - role: execute
