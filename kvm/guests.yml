@@ -27,3 +27,34 @@
         ansible_guest_password: "{{ ansible_guest_user.password }}"
         ansible_guest_ssh_key: "{{ ansible_guest_user.pubkey }}"
         img_dir: "{{ playbook_dir }}/../files/kvm"
+
+  handlers:
+
+    - name: wait for host provisioning to complete
+      pause:
+        seconds: 90
+      listen: awx callback
+      run_once: yes
+
+    - name: install callback requirements
+      package:
+        name: python-pip
+      listen: awx callback
+      run_once: yes
+
+    - name: install callback requirements
+      pip:
+        name: ansible-tower-cli
+        state: latest
+      listen: awx callback
+      run_once: yes
+
+    - name: call ansible awx script
+      command: "awx-cli workflow_job launch -h {{ awx_url }} -u {{ awx_ci_user }} -p {{ awx_ci_pass }} {{ awx_callback }}"
+      when:
+        - awx_callback is defined
+        - callback_hosts | default([]) != []
+      no_log: "{{ kvm_nolog | default('yes') }}"
+      listen: awx callback
+      run_once: yes
+      # TODO: add ' -l {{ callback_hosts | join(',') }}' to command once limits are supported for workflows (AWX 8.0.0+)

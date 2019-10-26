@@ -253,6 +253,13 @@
             command: define
             xml: "{{ domain['content'] | b64decode }}"
           when: diskcopy.changed
+          register: vmcreate
+          notify: awx callback
+
+        - name: record changed vms
+          set_fact:
+            callback_hosts: "{{ callback_hosts | default([]) | union([inventory_hostname]) }}"
+          when: vmcreate.changed
 
         - name: manage vm
           virt:
