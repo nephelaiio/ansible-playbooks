@@ -1,0 +1,84 @@
+---
+foreman_repositories_version: 1.23
+foreman_url: "https://foreman.{{ base_domain }}"
+foreman_installer_options:
+  - --enable-foreman
+  - --enable-foreman-cli
+  - --enable-foreman-cli-ansible
+  - --enable-foreman-compute-libvirt
+  - --enable-foreman-compute-ovirt
+  - --enable-foreman-plugin-templates
+  - --enable-foreman-plugin-ansible
+  - --enable-foreman-plugin-cockpit
+  - --enable-foreman-plugin-discovery
+  - --no-enable-foreman-proxy
+  - --foreman-foreman-url {{ foreman_url }}
+  - --foreman-configure-epel-repo true
+  - --foreman-configure-scl-repo true
+  - --foreman-db-adapter postgresql
+  - "--foreman-db-database {{ foreman_db_name }}"
+  - --foreman-db-host localhost
+  - --foreman-db-manage true
+  - --foreman-db-manage-rake true
+  - "--foreman-initial-admin-username {{ foreman_admin_user }}"
+  - "--foreman-initial-admin-password {{ foreman_admin_pass }}"
+  - "--foreman-db-username {{ foreman_db_user }}"
+  - "--foreman-db-password {{ foreman_db_pass }}"
+
+foreman_db_name: foreman
+foreman_db_user: foreman
+foreman_db_pass: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  31303435643031656335653463613337383337363030393135343561613131303232326236373137
+  6566646535396631316132326262646139616565326333340a623764373531326663323037353966
+  63626365623331303463323737633030353237376533633537396661303762343131666663656238
+  3339656630613863630a366366383935616131356436346333656136396264396437613734613366
+  39343838333938396537663933383835623661643736616332633062383837616639
+foreman_admin_user: admin
+foreman_admin_pass: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  30653062303830393833303933316162303435376238656532616361306464636338346538373133
+  3362626134323163366366356366663535616566393833630a386335316436356139663235666362
+  64633263636334323439663331393039303863333866313233613361316361383661386631643937
+  3333313062313839380a656562343632663738326131313963316239643961313735616266366166
+  36353064626139333133346164623839313861336538373739613662393563376337
+foreman_api_user: "{{ foreman_admin_user }}"
+foreman_api_pass: "{{ foreman_admin_pass }}"
+
+foreman_organizations:
+  - nephelai
+
+foreman_locations:
+  - name: home
+    organizations:
+      - nephelai
+
+foreman_media: []
+
+foreman_os:
+  - name: Ubuntu
+    family: Debian
+    architectures:
+      - x86_64
+    major: 18.04
+    release_name: bionic
+    ptable: Preseed default
+    provisioning_templates:
+      - Preseed default
+      - Preseed default finish
+      - Preseed default PXELinux
+    media:
+      - Ubuntu mirror
+  - name: CentOS
+    family: Redhat
+    architectures:
+      - x86_64
+    major: 7
+    ptable: Kickstart custom
+    provisioning_templates:
+      - Kickstart custom
+      - Kickstart default finish
+      - Kickstart default PXELinux
+    media:
+      - CentOS mirror
+
