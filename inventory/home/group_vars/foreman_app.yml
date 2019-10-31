@@ -81,4 +81,3 @@ foreman_os:
       - Kickstart default PXELinux
     media:
       - CentOS mirror
-
