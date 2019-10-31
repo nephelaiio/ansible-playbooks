@@ -1,2 +1,3 @@
 ---
-foreman_location: home
+foreman_locations:
+  - Default Location
