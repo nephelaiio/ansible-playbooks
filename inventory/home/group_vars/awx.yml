@@ -718,10 +718,6 @@ awx_organizations:
             template: freeipa
             parent: awx
             type: workflow_job
-          - name: foreman
-            template: foreman
-            parent: freeipa
-            type: workflow_job
         permissions:
           - role: execute
             team: home_users
