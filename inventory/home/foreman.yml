@@ -16,3 +16,7 @@ foreman_proxy:
 foreman_guests:
   children:
     nuc:
+
+foreman_external_host:
+  children:
+    kvm_guests:
