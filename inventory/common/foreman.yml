@@ -19,3 +19,5 @@ foreman_server_ssl_key: "/etc/puppetlabs/puppet/ssl/private_keys/{{ inventory_ho
 foreman_proxy_ssl_ca: "{{ foreman_server_ssl_ca }}"
 foreman_proxy_ssl_cert: "{{ foreman_server_ssl_cert }}"
 foreman_proxy_ssl_key: "{{ foreman_server_ssl_key }}"
+
+puppet_agent_server: "puppet.{{ base_domain }}"
