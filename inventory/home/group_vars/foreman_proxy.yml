@@ -1,3 +1,35 @@
 ---
+foreman_repositories_version: 1.23
+foreman_installer_options: "{{ foreman_installer_options_base + foreman_installer_options_trusted_hosts }}"
+
+foreman_installer_options_base:
+  - "--no-enable-foreman"
+  - "--no-enable-puppet"
+  - "--enable-foreman-proxy"
+  - "--enable-foreman-proxy-plugin-discovery"
+  - "--foreman-proxy-bind-host 0.0.0.0"
+  - "--foreman-proxy-trusted-hosts localhost"
+  - "--foreman-proxy-puppet false"
+  - "--foreman-proxy-foreman-base-url {{ foreman_url }}"
+  - "--foreman-proxy-register-in-foreman true"
+  - "--foreman-proxy-bmc true"
+  - "--foreman-proxy-dhcp true"
+  - "--foreman-proxy-dns true"
+  - "--foreman-proxy-http true"
+  - "--foreman-proxy-logs true"
+  - "--foreman-proxy-puppet false"
+  - "--foreman-proxy-tftp true"
+  - "--foreman-proxy-oauth-consumer-key {{ foreman_oauth_consumer_key }}"
+  - "--foreman-proxy-oauth-consumer-secret {{ foreman_oauth_consumer_secret }}"
+
+foreman_installer_options_trusted_hosts: "{{ foreman_proxy_trusted_hosts | map('map_format', '--foreman-proxy-trusted-hosts %s') | list }}"
+
+foreman_organizations:
+  - Default Organization
+
 foreman_locations:
   - Default Location
+
+foreman_api_user: "{{ foreman_admin_user }}"
+foreman_api_pass: "{{ foreman_admin_pass }}"
+foreman_proxy_trusted_hosts: "{{ groups['foreman_app'] }}"

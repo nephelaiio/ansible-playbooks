@@ -1,28 +1,47 @@
 ---
 foreman_repositories_version: 1.23
 foreman_installer_options:
-  - --enable-foreman
-  - --enable-foreman-cli
-  - --enable-foreman-cli-ansible
-  - --enable-foreman-compute-libvirt
-  - --enable-foreman-compute-ovirt
-  - --enable-foreman-plugin-templates
-  - --enable-foreman-plugin-ansible
-  - --enable-foreman-plugin-cockpit
-  - --enable-foreman-plugin-discovery
-  - --no-enable-foreman-proxy
-  - --foreman-foreman-url {{ foreman_url }}
-  - --foreman-configure-epel-repo true
-  - --foreman-configure-scl-repo true
-  - --foreman-db-adapter postgresql
+  - "--enable-foreman"
+  - "--enable-foreman-cli"
+  - "--enable-foreman-cli-ansible"
+  - "--enable-foreman-compute-libvirt"
+  - "--enable-foreman-compute-ovirt"
+  - "--enable-foreman-plugin-templates"
+  - "--enable-foreman-plugin-cockpit"
+  - "--enable-foreman-plugin-discovery"
+  - "--foreman-foreman-url {{ foreman_url }}"
+  - "--foreman-configure-epel-repo true"
+  - "--foreman-configure-scl-repo true"
+  - "--foreman-db-adapter postgresql"
   - "--foreman-db-database {{ foreman_db_name }}"
-  - --foreman-db-host localhost
-  - --foreman-db-manage true
-  - --foreman-db-manage-rake true
-  - "--foreman-initial-admin-username {{ foreman_admin_user }}"
-  - "--foreman-initial-admin-password {{ foreman_admin_pass }}"
+  - "--foreman-db-host localhost"
+  - "--foreman-db-manage true"
+  - "--foreman-db-manage-rake true"
   - "--foreman-db-username {{ foreman_db_user }}"
   - "--foreman-db-password {{ foreman_db_pass }}"
+  - "--foreman-initial-admin-username {{ foreman_admin_user }}"
+  - "--foreman-initial-admin-password {{ foreman_admin_pass }}"
+  - "--puppet-autosign true"
+  - "--puppet-autosign-entries '*.{{base_domain}}'"
+  - "--enable-foreman-proxy"
+  - "--foreman-proxy-bmc false"
+  - "--foreman-proxy-dhcp false"
+  - "--foreman-proxy-dns false"
+  - "--foreman-proxy-http false"
+  - "--foreman-proxy-logs false"
+  - "--foreman-proxy-puppet true"
+  - "--foreman-proxy-tftp false"
+  - "--foreman-oauth-active true"
+  - "--foreman-oauth-consumer-key {{ foreman_oauth_consumer_key }}"
+  - "--foreman-oauth-consumer-secret {{ foreman_oauth_consumer_secret }}"
+  - "--foreman-proxy-oauth-consumer-key {{ foreman_oauth_consumer_key }}"
+  - "--foreman-proxy-oauth-consumer-secret {{ foreman_oauth_consumer_secret }}"
+  - "--foreman-server-ssl-ca {{ foreman_server_ssl_ca }}"
+  - "--foreman-server-ssl-cert {{ foreman_server_ssl_cert }}"
+  - "--foreman-server-ssl-key {{ foreman_server_ssl_key }}"
+  - "--foreman-proxy-ssl-ca {{ foreman_proxy_ssl_ca }}"
+  - "--foreman-proxy-ssl-cert {{ foreman_proxy_ssl_cert }}"
+  - "--foreman-proxy-ssl-key {{ foreman_proxy_ssl_key }}"
 
 foreman_db_name: foreman
 foreman_db_user: foreman
