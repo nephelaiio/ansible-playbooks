@@ -33,3 +33,5 @@ foreman_locations:
 foreman_api_user: "{{ foreman_admin_user }}"
 foreman_api_pass: "{{ foreman_admin_pass }}"
 foreman_proxy_trusted_hosts: "{{ groups['foreman_app'] }}"
+
+puppet_agent_server: "{{ groups['foreman_app'] | first }}"
