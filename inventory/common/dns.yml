@@ -48,7 +48,3 @@ pdns_psql_pass: !vault |
   37303865643532393132316630616531323363353531353762373739356231623031
 pdns_domains: "{{ dns_zones.values() | map(attribute='name') | list }}"
 pdns_master_ips: "{{ hostvars.values() | selectattr('pdns_master', 'defined') | selectattr('pdns_master', 'equalto', True) | map(attribute='ansible_default_ipv4') | map(attribute='address') | list }}"
-pdns_records:
-  - name: "{{ puppet_agent_server }}"
-    type: CNAME
-    content: "{{ groups['foreman_app'] | map('extract', hostvars, ['inventory_hostname']) | first }}"

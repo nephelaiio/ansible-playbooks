@@ -10,8 +10,7 @@ nets:
     lb:
       name: management
       range: '192.168.5.65 192.168.5.128'
-    pools:
-      - range: '192.168.5.129 192.168.5.254'
+    dhcp: '192.168.5.128 192.168.5.254'
     reservations: {}
   pxe:
     network: 192.168.3.0
@@ -20,7 +19,7 @@ nets:
     zone: 3.168.192.in-addr.arpa
     bridge: br3
     ns: "{{ pdns_recursors | map('extract', hostvars, 'ansible_host') | list }}"
-    reservations: {}
+    dhcp: '192.168.3.128 192.168.3.254'
 
 openvpn_nets:
   home:

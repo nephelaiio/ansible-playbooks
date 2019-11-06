@@ -20,4 +20,4 @@ foreman_proxy_ssl_ca: "{{ foreman_server_ssl_ca }}"
 foreman_proxy_ssl_cert: "{{ foreman_server_ssl_cert }}"
 foreman_proxy_ssl_key: "{{ foreman_server_ssl_key }}"
 
-puppet_agent_server: "puppet.{{ base_domain }}"
+puppet_agent_server: "{{ groups['foreman_app'] | map('extract', hostvars, ['inventory_hostname']) | first }}"
