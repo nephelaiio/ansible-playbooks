@@ -40,12 +40,6 @@ foreman_installer_options_base:
 
 foreman_installer_options_trusted_hosts: "{{ foreman_proxy_trusted_hosts | map('map_format', '--foreman-proxy-trusted-hosts %s') | list }}"
 
-foreman_organizations:
-  - Default Organization
-
-foreman_locations:
-  - Default Location
-
 foreman_api_user: "{{ foreman_admin_user }}"
 foreman_api_pass: "{{ foreman_admin_pass }}"
 foreman_proxy_trusted_hosts: "{{ groups['foreman_app'] }}"

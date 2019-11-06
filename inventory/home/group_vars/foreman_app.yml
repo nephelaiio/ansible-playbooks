@@ -55,39 +55,19 @@ foreman_db_pass: !vault |
 foreman_api_user: "{{ foreman_admin_user }}"
 foreman_api_pass: "{{ foreman_admin_pass }}"
 
-foreman_organizations:
-  - nephelai
+foreman_ldap_domain: "{{ base_domain }}"
+foreman_ldap_host: "{{ groups['ipa_server'] | first }}"
+foreman_ldap_user: foreman
+foreman_ldap_pass: !vault |
+  $ANSIBLE_VAULT;1.1;AES256
+  61653535653735326535303961333362633965366536346234316239386565323365636263333434
+  6162383966633763656364613166363235323436353966640a366335623532326137353439666661
+  35643066313061623436306265386430383939363634303333373939353838393866353630343139
+  3365393031613030640a333238326433313165376461306630396430363766663832643462393735
+  64313633376466633035303434336432663666393239306263383536363533346662
 
-foreman_locations:
-  - name: home
-    organizations:
-      - nephelai
-
-foreman_media: []
-
-foreman_os:
-  - name: Ubuntu
-    family: Debian
-    architectures:
-      - x86_64
-    major: 18.04
-    release_name: bionic
-    ptable: Preseed default
-    provisioning_templates:
-      - Preseed default
-      - Preseed default finish
-      - Preseed default PXELinux
-    media:
-      - Ubuntu mirror
-  - name: CentOS
-    family: Redhat
-    architectures:
-      - x86_64
-    major: 7
-    ptable: Kickstart custom
-    provisioning_templates:
-      - Kickstart custom
-      - Kickstart default finish
-      - Kickstart default PXELinux
-    media:
-      - CentOS mirror
+ipa_users:
+  - user_name: "{{ foreman_ldap_user }}"
+    first_name: Foreman
+    last_name: Bind
+    pass: "{{ foreman_ldap_pass }}"
