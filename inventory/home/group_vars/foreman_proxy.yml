@@ -2,7 +2,7 @@
 foreman_repositories_version: 1.23
 foreman_installer_options: "{{ foreman_installer_options_base + foreman_installer_options_trusted_hosts }}"
 
-foreman_network_dict: "{{ nets.values() | list_to_dict('network', remove_key=False) }}" 
+foreman_network_dict: "{{ nets.values() | list_to_dict('network', remove_key=False) }}"
 foreman_proxy_iface: "{{ ansible_default_ipv4.interface }}"
 foreman_proxy_network: "{{ foreman_network_dict[ansible_default_ipv4.network] }}"
 
