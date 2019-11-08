@@ -58,8 +58,9 @@ foreman_api_pass: "{{ foreman_admin_pass }}"
 foreman_ldap_domain: "{{ base_domain }}"
 foreman_ldap_host: "{{ groups['ipa_server'] | first }}"
 foreman_ldap_user_base: cn=users,cn=accounts,dc=ipa,dc=home,dc=nephelai,dc=io
-foreman_ldap_group_base: cn=groups,dc=ipa,dc=home,dc=nephelai,dc=io
-foreman_ldap_user: "uid=foreman,{{ foreman_ldap_user_base }}"
+foreman_ldap_group_base: cn=groups,cn=accounts,dc=ipa,dc=home,dc=nephelai,dc=io
+foreman_ldap_cn: "uid={{ foreman_ldap_user }},{{ foreman_ldap_user_base }}"
+foreman_ldap_user: "foreman"
 foreman_ldap_pass: !vault |
   $ANSIBLE_VAULT;1.1;AES256
   61653535653735326535303961333362633965366536346234316239386565323365636263333434
@@ -78,5 +79,5 @@ ipa_users:
     pass: "{{ foreman_ldap_pass }}"
 
 ipa_groups:
-  - name: "{{ foreman_admin_group }}"
-  - name: "{{ foreman_users_group }}"
+  - name: "{{ foreman_ldap_admin_group }}"
+  - name: "{{ foreman_ldap_users_group }}"
