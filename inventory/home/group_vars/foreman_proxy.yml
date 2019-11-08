@@ -37,6 +37,7 @@ foreman_installer_options_base:
   - "--foreman-proxy-tftp true"
   - "--foreman-proxy-oauth-consumer-key {{ foreman_oauth_consumer_key }}"
   - "--foreman-proxy-oauth-consumer-secret {{ foreman_oauth_consumer_secret }}"
+  - "--enable-foreman-proxy-plugin-openscap"
 
 foreman_installer_options_trusted_hosts: "{{ foreman_proxy_trusted_hosts | map('map_format', '--foreman-proxy-trusted-hosts %s') | list }}"
 

@@ -7,6 +7,7 @@ foreman_installer_options:
   - "--enable-foreman-compute-libvirt"
   - "--enable-foreman-compute-ovirt"
   - "--enable-foreman-plugin-templates"
+  - "--enable-foreman-plugin-openscap"
   - "--enable-foreman-plugin-cockpit"
   - "--enable-foreman-plugin-discovery"
   - "--foreman-foreman-url {{ foreman_url }}"
