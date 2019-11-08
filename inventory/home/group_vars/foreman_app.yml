@@ -56,6 +56,7 @@ foreman_db_pass: !vault |
 foreman_api_user: "{{ foreman_admin_user }}"
 foreman_api_pass: "{{ foreman_admin_pass }}"
 
+foreman_ldap_type: free_ipa
 foreman_ldap_domain: "{{ base_domain }}"
 foreman_ldap_host: "{{ groups['ipa_server'] | first }}"
 foreman_ldap_user_base: cn=users,cn=accounts,dc=ipa,dc=home,dc=nephelai,dc=io
