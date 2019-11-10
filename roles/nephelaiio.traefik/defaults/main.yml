@@ -1,5 +1,7 @@
 ---
-# traefik_serviec_domain
+# traefik_service_domain
+traefik_release: 1.7.18
+traefik_update: yes
 traefik_acme_directory: "https://acme-v02.api.letsencrypt.org/directory"
 traefik_prefix: traefik
 traefik_config_file: /etc/traefik.toml

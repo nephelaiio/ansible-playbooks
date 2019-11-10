@@ -58,6 +58,7 @@
   vars:
     traefik_template: templates/config.toml
     traefik_systemd_unit_template: templates/systemd.service
+    traefik_binary_url: "https://github.com/containous/traefik/releases/download/v{{ traefik_release }}/traefik_linux-amd64"
 
 - name: register traefik service
   include_role:
