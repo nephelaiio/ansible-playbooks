@@ -1,6 +1,5 @@
 ---
 foreman_url: "https://foreman.{{ base_domain }}"
-foreman_admin_user: admin
 foreman_admin_pass: !vault |
   $ANSIBLE_VAULT;1.1;AES256
   30653062303830393833303933316162303435376238656532616361306464636338346538373133
