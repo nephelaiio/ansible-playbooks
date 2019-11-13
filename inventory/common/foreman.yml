@@ -25,3 +25,82 @@ foreman_organizations:
   - Default Organization
 foreman_locations:
   - Default Location
+
+foreman_os:
+  - name: Ubuntu
+    family: Debian
+    architecture: x86_64
+    major: 18.04
+    release_name: bionic
+    ptables:
+      - "Preseed default"
+    provisioning_templates:
+      - "Preseed default"
+      - "Preseed default finish"
+      - "Preseed default PXELinux"
+    media:
+      - Ubuntu mirror
+    password_hash: SHA512
+  - name: CentOS
+    family: Redhat
+    architecture: x86_64
+    major: 7
+    ptables:
+      - "Kickstart default"
+    provisioning_templates:
+      - "Kickstart default"
+      - "Kickstart default finish"
+      - "Kickstart default PXELinux"
+    media:
+      - CentOS mirror
+    password_hash: SHA512
+
+foreman_subnet_pxe: "{{ nets.pxe.network }}/{{ nets.pxe.netmask }}"
+
+foreman_hostgroups:
+  - name: Ubuntu Bionic
+    architecture: x86_64
+    operatingsystem: Ubuntu
+    pxe_loader: PXELinux BIOS
+    subnet: "{{ foreman_subnet_pxe | ipaddr('network') }}/{{ foreman_subnet_pxe | ipaddr('prefix') }}"
+    domain: "{{ base_domain }}"
+    root_pass: "{{ users.root.password  | password_hash('sha512') }}"
+    foreman_organizations: "{{ foreman_organizations }}"
+    foreman_locations: "{{ foreman_locations }}"
+    ptable: "Preseed default"
+    group_parameters_attributes:
+      - name: remote_execution_ssh_user
+        value: "{{ users.teddyphreak.username }}"
+      - name: remote_execution_ssh_keys
+        value: "{{ users.teddyphreak.pubkey }}"
+      - name: remote_execution_create_user
+        value: true
+      - name: remote_execution_effective_user_method
+        value: sudo
+      - name: partitioning-vg-name
+        value: ubuntu
+  - name: CentOS7
+    architecture: x86_64
+    operatingsystem: CentOS
+    pxe_loader: PXELinux BIOS
+    subnet: "{{ foreman_subnet_pxe | ipaddr('network') }}/{{ foreman_subnet_pxe | ipaddr('prefix') }}"
+    domain: "{{ base_domain }}"
+    root_pass: "{{ users.root.password  | password_hash('sha512') }}"
+    foreman_organizations: "{{ foreman_organizations }}"
+    foreman_locations: "{{ foreman_locations }}"
+    ptable: "Kickstart default"
+    group_parameters_attributes:
+      - name: selinux-mode
+        value: disabled
+      - name: disable-firewall
+        value: true
+      - name: enable-epel
+        value: false
+      - name: remote_execution_ssh_user
+        value: "{{ users.teddyphreak.username }}"
+      - name: remote_execution_ssh_keys
+        value: "{{ users.teddyphreak.pubkey }}"
+      - name: remote_execution_create_user
+        value: true
+      - name: remote_execution_effective_user_method
+        value: sudo
