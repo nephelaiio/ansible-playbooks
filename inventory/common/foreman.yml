@@ -66,6 +66,7 @@ foreman_hostgroups:
   - name: Ubuntu Bionic
     architecture: x86_64
     operatingsystem: Ubuntu
+    media: Ubuntu mirror
     pxe_loader: PXELinux BIOS
     subnet: "{{ foreman_subnet_pxe | ipaddr('network') }}/{{ foreman_subnet_pxe | ipaddr('prefix') }}"
     domain: "{{ base_domain }}"
@@ -73,6 +74,7 @@ foreman_hostgroups:
     organizations: "{{ foreman_organizations }}"
     locations: "{{ foreman_locations }}"
     ptable: "Preseed default"
+    environment: production
     puppet_proxy: "{{ foreman_server }}"
     puppet_ca_proxy: "{{ foreman_proxy }}"
     openscap_proxy: "{{ foreman_proxy }}"
@@ -82,12 +84,14 @@ foreman_hostgroups:
   - name: CentOS7
     architecture: x86_64
     operatingsystem: CentOS
+    media: CentOS mirror
     pxe_loader: PXELinux BIOS
     subnet: "{{ foreman_subnet_pxe | ipaddr('network') }}/{{ foreman_subnet_pxe | ipaddr('prefix') }}"
     domain: "{{ base_domain }}"
     root_pass: "{{ users.root.password  | password_hash('sha512') }}"
     organizations: "{{ foreman_organizations }}"
     locations: "{{ foreman_locations }}"
+    environment: production
     ptable: "Kickstart default"
     puppet_proxy: "{{ foreman_server }}"
     puppet_ca_proxy: "{{ foreman_proxy }}"
