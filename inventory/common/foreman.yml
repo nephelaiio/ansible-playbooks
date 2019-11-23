@@ -31,7 +31,8 @@ foreman_locations:
 foreman_os:
   - name: Ubuntu
     family: Debian
-    architecture: x86_64
+    architectures:
+      - x86_64
     major: 18.04
     release_name: bionic
     ptables:
@@ -62,10 +63,16 @@ foreman_subnet_pxe: "{{ nets.pxe.network }}/{{ nets.pxe.netmask }}"
 foreman_proxy: "{{ groups['foreman_proxy'] | first }}"
 foreman_server: "{{ groups['foreman_app'] | first }}"
 
+foreman_environments:
+  - name: production
+    locations: "{{ foreman_locations }}"
+    organizations: "{{ foreman_organizations }}"
+
 foreman_hostgroups:
   - name: Ubuntu Bionic
-    architecture: x86_64
-    operatingsystem: Ubuntu
+    architectures:
+      - x86_64
+    operatingsystem: Ubuntu 18.04
     media: Ubuntu mirror
     pxe_loader: PXELinux BIOS
     subnet: "{{ foreman_subnet_pxe | ipaddr('network') }}/{{ foreman_subnet_pxe | ipaddr('prefix') }}"
@@ -76,14 +83,14 @@ foreman_hostgroups:
     ptable: "Preseed default"
     environment: production
     puppet_proxy: "{{ foreman_server }}"
-    puppet_ca_proxy: "{{ foreman_proxy }}"
+    puppet_ca_proxy: "{{ foreman_server }}"
     openscap_proxy: "{{ foreman_proxy }}"
     parameters:
       - name: remote_execution_ssh_user
         value: "{{ users.teddyphreak.username }}"
   - name: CentOS7
     architecture: x86_64
-    operatingsystem: CentOS
+    operatingsystem: CentOS 7
     media: CentOS mirror
     pxe_loader: PXELinux BIOS
     subnet: "{{ foreman_subnet_pxe | ipaddr('network') }}/{{ foreman_subnet_pxe | ipaddr('prefix') }}"
@@ -94,7 +101,7 @@ foreman_hostgroups:
     environment: production
     ptable: "Kickstart default"
     puppet_proxy: "{{ foreman_server }}"
-    puppet_ca_proxy: "{{ foreman_proxy }}"
+    puppet_ca_proxy: "{{ foreman_server }}"
     openscap_proxy: "{{ foreman_proxy }}"
     parameters:
       - name: selinux-mode
