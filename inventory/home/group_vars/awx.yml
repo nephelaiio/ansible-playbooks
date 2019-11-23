@@ -714,13 +714,13 @@ awx_organizations:
             template: awx
             parent: pdns
             type: workflow_job
-          - name: freeipa
-            template: freeipa
-            parent: awx
-            type: workflow_job
           - name: foreman
             template: foreman
             parent: freeipa
+            type: workflow_job
+          - name: freeipa
+            template: freeipa
+            parent: awx
             type: workflow_job
         permissions:
           - role: execute
