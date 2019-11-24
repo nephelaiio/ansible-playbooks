@@ -1,0 +1,5 @@
+---
+plugin: constructed
+strict: no
+groups:
+  nuc: inventory_hostname is search("nuc.*")

@@ -20,3 +20,4 @@ foreman_guests:
 foreman_external_host:
   children:
     kvm_guests:
+    nuc:
