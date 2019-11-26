@@ -6,3 +6,4 @@
 - name: kibatic.traefik
 - name: bertvv.hosts
 - name: bertvv.dnsmasq
+- name: ovirt.engine-setup
