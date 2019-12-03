@@ -47,6 +47,7 @@ traefik_config:
     ondemand: "true"
     httpchallenge:
       entrypoint: http
+  insecureSkipVerify: true
 
 consul_client_host: localhost
 consul_acl_master_token: "{{ consul_master_token }}"
