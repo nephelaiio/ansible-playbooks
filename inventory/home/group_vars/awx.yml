@@ -326,6 +326,7 @@ awx_templates:
     permissions:
       - role: execute
         team: home_users
+    limit: "!ipa_backend"
 
   - name: freeipa.uninstall.clients
     job_type: run
