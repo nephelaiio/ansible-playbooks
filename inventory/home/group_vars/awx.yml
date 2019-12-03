@@ -435,6 +435,7 @@ awx_templates:
         kind: ssh
       - name: home.vault
         kind: vault
+    limit: "!awx"
     permissions:
       - role: execute
         team: home_users
