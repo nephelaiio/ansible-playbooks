@@ -1,8 +1,0 @@
----
-dhcp_primary_port: 647
-dhcp_secondary_port: 847
-dhcp_max_response_delay: 60
-dhcp_max_unacked_updates: 10
-dhcp_load_balance_max_seconds: 3
-dhcp_user: root
-dhcp_group: root
