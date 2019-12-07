@@ -2,8 +2,13 @@
 - name: nephelaiio.plugins
 - name: nephelaiio.pip
 - name: mrlesmithjr.keepalived
+- name: geerlingguy.ntp
 - name: brianshumate.consul
 - name: kibatic.traefik
 - name: bertvv.hosts
 - name: bertvv.dnsmasq
 - name: ovirt.engine-setup
+- name: ovirt.repositories
+- name: ovirt.infra
+  version: 1.1.13
+- name: linux-system-roles.network
