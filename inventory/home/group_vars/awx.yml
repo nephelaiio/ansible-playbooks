@@ -469,6 +469,34 @@ awx_templates:
       - role: execute
         team: home_users
 
+  - name: site.ipv6
+    job_type: run
+    project: foreman
+    playbook: site/ipv6.yml
+    inventory: home
+    credentials:
+      - name: home.ssh
+        kind: ssh
+      - name: home.vault
+        kind: vault
+    permissions:
+      - role: execute
+        team: home_users
+
+  - name: site.ntp
+    job_type: run
+    project: foreman
+    playbook: site/ntp.yml
+    inventory: home
+    credentials:
+      - name: home.ssh
+        kind: ssh
+      - name: home.vault
+        kind: vault
+    permissions:
+      - role: execute
+        team: home_users
+
 awx_schedules:
 
   - name: awx.proxy
@@ -707,11 +735,23 @@ awx_organizations:
           - role: execute
             team: home_users
 
+      - name: provision
+        nodes:
+          - name: site.ipv6
+            template: site.ipv6
+          - name: site.ntp
+            template: site.ntp
+            parent: site.ipv6
+
       - name: site
         nodes:
+          - name: provision
+            template: provision
+            type: workflow_job
           - name: pdns
             template: pdns
             type: workflow_job
+            parent: provision
           - name: awx
             template: awx
             parent: pdns

@@ -1,9 +1,7 @@
 ---
 - name: Disable ipv6
 
-  hosts: "{{ ipv6_hosts }}"
-
-  ignore_unreachable: yes
+  hosts: "{{ provision_hosts | default('online') }}"
 
   become: yes
 

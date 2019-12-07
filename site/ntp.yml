@@ -1,9 +1,7 @@
 ---
 - name: Configure ntp
 
-  hosts: "{{ ntp_hosts }}"
-
-  ignore_unreachable: yes
+  hosts: "{{ provision_hosts | default('online') }}"
 
   become: yes
 
