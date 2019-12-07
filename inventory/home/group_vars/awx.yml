@@ -471,7 +471,7 @@ awx_templates:
 
   - name: site.ipv6
     job_type: run
-    project: foreman
+    project: inventory
     playbook: site/ipv6.yml
     inventory: home
     credentials:
@@ -485,7 +485,7 @@ awx_templates:
 
   - name: site.ntp
     job_type: run
-    project: foreman
+    project: inventory
     playbook: site/ntp.yml
     inventory: home
     credentials:
@@ -583,46 +583,6 @@ awx_organizations:
       - name: awx
         scm_type: git
         scm_url: https://github.com/nephelaiio/ansible-playbooks-awx.git
-        scm_branch: master
-        scm_delete_on_update: false
-        scm_credential: awx.github
-        scm_update_on_launch: false
-        scm_update_cache_timeout: 60
-        scm_clean: false
-
-      - name: pdns
-        scm_type: git
-        scm_url: https://github.com/nephelaiio/ansible-playbooks-pdns.git
-        scm_branch: master
-        scm_delete_on_update: false
-        scm_credential: awx.github
-        scm_update_on_launch: false
-        scm_update_cache_timeout: 60
-        scm_clean: false
-
-      - name: freeipa
-        scm_type: git
-        scm_url: https://github.com/nephelaiio/ansible-playbooks-freeipa.git
-        scm_branch: master
-        scm_delete_on_update: false
-        scm_credential: awx.github
-        scm_update_on_launch: false
-        scm_update_cache_timeout: 60
-        scm_clean: false
-
-      - name: upgrade
-        scm_type: git
-        scm_url: https://github.com/nephelaiio/ansible-playbooks-upgrade.git
-        scm_branch: master
-        scm_delete_on_update: false
-        scm_credential: awx.github
-        scm_update_on_launch: false
-        scm_update_cache_timeout: 60
-        scm_clean: false
-
-      - name: inventory
-        scm_type: git
-        scm_url: https://github.com/nephelaiio/ansible-playbooks.git
         scm_branch: master
         scm_delete_on_update: false
         scm_credential: awx.github
