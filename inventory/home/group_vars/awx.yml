@@ -470,6 +470,7 @@ awx_templates:
         team: home_users
 
   - name: site.ipv6
+    state: absent
     job_type: run
     project: inventory
     playbook: site/ipv6.yml
@@ -697,8 +698,6 @@ awx_organizations:
 
       - name: provision
         nodes:
-          - name: site.ipv6
-            template: site.ipv6
           - name: site.ntp
             template: site.ntp
             parent: site.ipv6
