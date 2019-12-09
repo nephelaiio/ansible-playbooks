@@ -58,3 +58,11 @@
       listen: awx callback
       run_once: yes
       # TODO: add ' -l {{ callback_hosts | join(',') }}' to command once limits are supported for workflows (AWX 8.0.0+)
+
+    - name: uninstall callback requirements
+      pip:
+        name:
+          - ansible-tower-cli
+          - urllib3
+        state: absent
+      listen: awx callback
