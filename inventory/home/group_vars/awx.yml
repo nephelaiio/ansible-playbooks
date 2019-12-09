@@ -700,7 +700,6 @@ awx_organizations:
         nodes:
           - name: site.ntp
             template: site.ntp
-            parent: site.ipv6
 
       - name: site
         nodes:
