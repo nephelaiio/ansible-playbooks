@@ -46,6 +46,7 @@
       pip:
         name: ansible-tower-cli
         state: latest
+      delegate_to: localhost
       listen: awx callback
       run_once: yes
 
@@ -55,14 +56,7 @@
         - awx_callback is defined
         - callback_hosts | default([]) != []
       no_log: "{{ kvm_nolog | default('yes') }}"
+      delegate_to: localhost
       listen: awx callback
       run_once: yes
       # TODO: add ' -l {{ callback_hosts | join(',') }}' to command once limits are supported for workflows (AWX 8.0.0+)
-
-    - name: uninstall callback requirements
-      pip:
-        name:
-          - ansible-tower-cli
-          - urllib3
-        state: absent
-      listen: awx callback
