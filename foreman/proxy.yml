@@ -1,5 +1,5 @@
 ---
-- name: Create proxy service
+- name: Create reverse proxy for foreman app
 
   hosts: foreman_app
 
@@ -13,5 +13,9 @@
       vars:
         consul_service_address: "{{ ansible_default_ipv4.address }}"
         consul_service_name: foreman
-        consul_service_port: 80
+        consul_service_port: 443
         consul_service_cname: "traefik.service.consul.{{ base_domain }}."
+        consul_service_tags:
+          - traefik.protocol=https
+          - traefik.frontend.passHostHeader=true
+          - traefik.enable=true
