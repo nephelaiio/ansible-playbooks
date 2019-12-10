@@ -691,11 +691,8 @@ awx_organizations:
 
       - name: provision
         nodes:
-          - name: site.upgrade
-            template: upgrade
           - name: site.ntp
             template: site.ntp
-            parent: site.upgrade
 
       - name: site
         nodes:
