@@ -39,4 +39,6 @@ ipa_users:
 
 ipa_groups:
   - name: "{{ foreman_ldap_admin_group }}"
+    user:
+      - teddyphreak
   - name: "{{ foreman_ldap_users_group }}"
