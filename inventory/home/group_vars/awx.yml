@@ -698,6 +698,7 @@ awx_organizations:
             template: foreman.server
           - name: foreman.register
             template: foreman.register
+            parent: foreman.server
           - name: foreman.proxy
             template: foreman.proxy
             parent: foreman.register
