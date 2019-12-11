@@ -448,6 +448,20 @@ awx_templates:
       - role: execute
         team: home_users
 
+  - name: foreman.register
+    job_type: run
+    project: foreman
+    playbook: register.yml
+    inventory: home
+    credentials:
+      - name: home.ssh
+        kind: ssh
+      - name: home.vault
+        kind: vault
+    permissions:
+      - role: execute
+        team: home_users
+
   - name: foreman.proxy
     job_type: run
     project: foreman
@@ -682,9 +696,11 @@ awx_organizations:
         nodes:
           - name: foreman.server
             template: foreman.server
+          - name: foreman.register
+            template: foreman.register
           - name: foreman.proxy
             template: foreman.proxy
-            parent: foreman.server
+            parent: foreman.register
         permissions:
           - role: execute
             team: home_users
