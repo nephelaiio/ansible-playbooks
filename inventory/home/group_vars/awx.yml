@@ -710,6 +710,9 @@ awx_organizations:
         nodes:
           - name: site.ntp
             template: site.ntp
+        permissions:
+          - role: execute
+            team: home_users
 
       - name: site
         nodes:
