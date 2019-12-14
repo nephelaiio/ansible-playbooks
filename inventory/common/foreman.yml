@@ -28,6 +28,26 @@ foreman_organizations:
 foreman_locations:
   - Default Location
 
+foreman_ptables:
+  - name: Kickstart custom
+    layout: |
+      <%#
+      kind: ptable
+      name: Kickstart custom
+      model: Ptable
+      oses:
+      - CentOS
+      - Fedora
+      - RedHat
+      %>
+      <%
+        partitioning_disk = host_param('install-disk') ? '--drives=' + host_param('install-disk') : ''
+      -%>
+      zerombr
+      clearpart <%= partitioning_disk %> --initlabel --all
+      autopart
+    os_family: Redhat
+
 foreman_os:
   - name: Ubuntu
     family: Debian
@@ -99,7 +119,7 @@ foreman_hostgroups:
     organizations: "{{ foreman_organizations }}"
     locations: "{{ foreman_locations }}"
     environment: production
-    ptable: "Kickstart default"
+    ptable: "Kickstart custom"
     puppet_proxy: "{{ foreman_server }}"
     puppet_ca_proxy: "{{ foreman_server }}"
     openscap_proxy: "{{ foreman_proxy }}"
@@ -122,3 +142,5 @@ foreman_hostgroups:
         value: sudo
       - name: partitioning-vg-name
         value: ubuntu
+      - name: install-disk
+        value: /dev/nvme0n1p1
