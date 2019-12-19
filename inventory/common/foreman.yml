@@ -143,4 +143,4 @@ foreman_hostgroups:
       - name: partitioning-vg-name
         value: ubuntu
       - name: install-disk
-        value: /dev/nvme0n1p1
+        value: /dev/nvme0n1
