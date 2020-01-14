@@ -1,9 +1,13 @@
 ---
 ovirt_engine:
+  vars:
+    reboot_timeout: 240
   hosts:
     nucx.home.nephelai.io:
 
 ovirt_hosts:
+  vars:
+    reboot_timeout: 240
   hosts:
     nuca.home.nephelai.io:
     nucb.home.nephelai.io:
