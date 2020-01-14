@@ -12,3 +12,7 @@
 - name: ovirt.infra
   version: 1.1.13
 - name: linux-system-roles.network
+- name: gluster.infra
+  src: https://github.com/gluster/gluster-ansible-infra.git
+- name: gluster.cluster
+  src: https://github.com/gluster/gluster-ansible-cluster.git

@@ -1,0 +1,10 @@
+---
+ovirt_engine:
+  hosts:
+    nucx.home.nephelai.io:
+
+ovirt_hosts:
+  hosts:
+    nuca.home.nephelai.io:
+    nucb.home.nephelai.io:
+    nucc.home.nephelai.io:

@@ -1,0 +1,19 @@
+---
+- name: Configure ovirt cluster
+
+  hosts: ovirt_engine
+
+  become: yes
+
+  pre_tasks:
+
+    - name: Manage ovirt datacenter
+      ovirt_datacenter:
+        auth: "{{ ovirt_auth }}"
+        name: "{{ ovirt_data_center }}"
+
+    - name: Manage ovirt cluster
+      ovirt_cluster:
+        auth: "{{ ovirt_auth }}"
+        name: "{{ ovirt_cluster }}"
+        data_center: Default

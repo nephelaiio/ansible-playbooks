@@ -1,0 +1,64 @@
+---
+- name: Install ovirt engine
+
+  hosts: ovirt_engine
+
+  become: yes
+
+  vars:
+
+    ovirt_engine_setup_version: '4.3'
+
+  roles:
+
+    - ovirt.repositories
+
+  tasks:
+
+    - name: register traefik service
+      include_role:
+        name: nephelaiio.consul_service
+      vars:
+        consul_service_address: "{{ ansible_default_ipv4.address }}"
+        consul_service_name: ovirt
+        consul_service_port: 443
+        consul_service_cname: "traefik.service.consul.{{ base_domain }}."
+        consul_service_tags:
+          - traefik.protocol=https
+          - traefik.frontend.passHostHeader=true
+          - traefik.enable=true
+
+    - name: install ovirt engine
+      include_role:
+        name: ovirt.engine-setup
+
+    - name: upgrade ovirt engine
+      include_role:
+        name: ovirt.engine-setup
+      vars:
+        ovirt_engine_setup_perform_upgrade: yes
+
+    - name: install ovirt engine aaa extension
+      package:
+        name: ovirt-engine-extension-aaa-ldap-setup
+
+    - name: disable ovirt-engine ssl validation
+      lineinfile:
+        path: /etc/ovirt-engine/engine.conf.d/11-setup-sso.conf
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      loop_control:
+        label: "{{ item.line }}"
+      loop:
+        - regexp: "^ENGINE_SSO_SERVICE_SSL_VERIFY_HOST="
+          line: "ENGINE_SSO_SERVICE_SSL_VERIFY_HOST=false"
+        - regexp: "^ENGINE_SSO_SERVICE_SSL_VERIFY_CHAIN="
+          line: "ENGINE_SSO_SERVICE_SSL_VERIFY_CHAIN=false"
+      notify: restart ovirt engine
+
+  handlers:
+
+    - name: restart ovirt engine
+      service:
+        name: ovirt-engine
+        state: restarted
