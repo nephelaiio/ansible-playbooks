@@ -1,5 +1,5 @@
 ---
-awx_release: 9.0.1
+awx_release: 9.1.0
 upgrade_reboot_host: no
 
 nginx_proxy_url: "{{ awx_url }}"
