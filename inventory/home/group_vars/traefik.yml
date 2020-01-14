@@ -1,5 +1,5 @@
 ---
-traefik_release: 1.7.18
+traefik_release: 1.7.20
 traefik_update: yes
 traefik_pdns_url: "{{ pdns_url }}"
 traefik_consul_token: !vault |
