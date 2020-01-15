@@ -19,3 +19,5 @@ inventory/artifacts/
 /credentials/**
 /library/**
 /inventory/credentials/kube_user.creds
+kubernetes/kubespray
+kubernetes/rook

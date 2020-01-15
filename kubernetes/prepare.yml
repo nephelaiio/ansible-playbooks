@@ -7,10 +7,6 @@
 
   tasks:
 
-    - name: include private variables
-      include_vars:
-        dir: "../{{ variables }}"
-
     - name: clone kubespray repository
       git:
         repo: https://github.com/kubernetes-incubator/kubespray.git
@@ -26,4 +22,5 @@
         force: yes
 
     - name: install kubespray requirements
-      command: "pip install -r {{ kubespray_root }}/requirements.txt"
+      pip:
+        requirements: "{{ playbook_dir }}/{{ kubespray_root }}/requirements.txt"
