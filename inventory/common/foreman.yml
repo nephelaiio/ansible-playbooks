@@ -89,7 +89,7 @@ foreman_environments:
     organizations: "{{ foreman_organizations }}"
 
 foreman_hostgroups:
-  - name: Ubuntu Bionic
+  - name: bionic
     architectures:
       - x86_64
     operatingsystem: Ubuntu 18.04
@@ -108,7 +108,7 @@ foreman_hostgroups:
     parameters:
       - name: remote_execution_ssh_user
         value: "{{ users.teddyphreak.username }}"
-  - name: CentOS7
+  - name: nuc
     architecture: x86_64
     operatingsystem: CentOS 7
     media: CentOS mirror
