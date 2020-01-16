@@ -1,9 +1,3 @@
 ---
 kubeadm_enabled: yes
 k8s_cluster_name: "kube.{{ base_domain }}"
-
-kubespray_version: v2.12.0
-kubespray_root: ./kubespray
-
-rook_version: v1.2.1
-rook_root: ./rook
