@@ -1,1 +1,2 @@
-../../../common/pdns.yml
+---
+pdns_register_state: "{{ kvm_state | default('present') }}"

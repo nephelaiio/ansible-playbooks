@@ -1,1 +1,5 @@
-../../../common/backup.yml
+---
+backup_host: backup.home.nephelai.io
+backup_root: /backups
+backup_export_root: "{{ nfs_export_root }}/backups"
+backup_bin_root: /usr/sbin

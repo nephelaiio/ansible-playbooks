@@ -1,4 +1,0 @@
----
-snmp_community: nephelaiio
-snmp_contact: "{{ users.teddyphreak.email }}"
-snmp_version: 2c

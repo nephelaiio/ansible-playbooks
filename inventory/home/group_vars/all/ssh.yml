@@ -1,1 +1,2 @@
-../../../common/ssh.yml
+---
+pipelining: no

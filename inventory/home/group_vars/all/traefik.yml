@@ -1,1 +1,4 @@
-../../../common/traefik.yml
+---
+traefik_cluster_ip: 192.168.5.254
+traefik_service_domain: "{{ base_domain }}"
+traefik_consul_domain: "consul.{{ traefik_service_domain }}"

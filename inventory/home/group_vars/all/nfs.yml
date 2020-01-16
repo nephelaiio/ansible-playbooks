@@ -1,1 +1,2 @@
-../../../common/nfs.yml
+---
+nfs_export_root: /opt/exports
