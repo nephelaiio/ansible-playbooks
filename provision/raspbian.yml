@@ -1,15 +1,16 @@
 ---
 - name: create raspbian images
 
-  hosts: localhost
+  hosts: raspbian
+
+  gather_facts: no
 
   become: yes
 
   vars:
 
-    raspbian_inventory_group: raspberry
-    raspbian_user_name: teddyphreak
-    raspbian_user_pubkey: "{{ users[raspbian_user_name].pubkey }}"
+    raspbian_inventory_group: raspbian
+    raspbian_user_pubkey: "{{ users.teddyphreak.pubkey }}"
     raspbian_user_id: 1000
     raspbian_group_id: 1000
     raspbian_image_path: "{{ playbook_dir }}/../files/images"
@@ -20,51 +21,49 @@
 
   tasks:
 
-    - name: include private variables
-      include_vars:
-        dir: "../{{ variables }}"
+    - block:
 
-    - name: install requirements
-      package:
-        name: unzip
-      become: yes
+        - name: install requirements
+          apt:
+            name: unzip
 
-    - name: create temporary directory
-      tempfile:
-        state: directory
-        prefix: raspbian
-      register: tmpdir
-      changed_when: false
+        - name: create temporary directory
+          tempfile:
+            state: directory
+            prefix: raspbian
+          register: tmpdir
+          changed_when: false
 
-    - name: define raspbian image archive
-      set_fact:
-        raspbian_local_image: "/tmp/{{ raspbian_image_url | urlsplit('path') | basename }}"
+        - name: define raspbian image archive
+          set_fact:
+            raspbian_local_image: "/tmp/{{ raspbian_image_url | urlsplit('path') | basename }}"
 
-    - name: fetch raspbian source image
-      get_url:
-        url: "{{ raspbian_image_url }}"
-        dest: "{{ raspbian_local_image | realpath }}"
+        - name: fetch raspbian source image
+          get_url:
+            url: "{{ raspbian_image_url }}"
+            dest: "{{ raspbian_local_image | realpath }}"
 
-    - name: create raspbian images
-      include_tasks: raspbian/image_create.yml
-      vars:
-        raspbian_host:
-          hostname: "{{ hostitem }}"
-          ifaces:
-            - name: eth0
-              method: static
-              ip-address: "{{ hostvars[hostitem]['ansible_host'] }}"
-              prefix: "{{ nets.home.netmask }}"
-              gateway: "{{ nets.home.router }}"
-        raspbian_source_image: "{{ raspbian_local_image }}"
-        raspbian_target_path: "{{ raspbian_image_path | realpath }}"
-      loop_control:
-        loop_var: hostitem
-      with_items: "{{ groups[raspbian_inventory_group] }}"
-      become: yes
+        - name: create raspbian images
+          include_tasks: raspbian/image_create.yml
+          vars:
+            raspbian_host:
+              hostname: "{{ hostitem }}"
+              ifaces:
+                - name: eth0
+                  method: static
+                  ip-address: "{{ hostvars[hostitem]['ansible_host'] }}"
+                  prefix: "{{ hostvars[hostitem]['host_netmask'] }}"
+                  gateway: "{{ hostvars[hostitem]['host_gateway'] }}"
+            raspbian_source_image: "{{ raspbian_local_image }}"
+            raspbian_target_path: "{{ raspbian_image_path | realpath }}"
+          loop_control:
+            loop_var: hostitem
+          loop: "{{ groups[raspbian_inventory_group] }}"
 
-    - name: remove temporary directory
-      file:
-        path: "{{ tmpdir.path }}"
-        state: absent
-      changed_when: false
+        - name: remove temporary directory
+          file:
+            path: "{{ tmpdir.path }}"
+            state: absent
+          changed_when: false
+
+      delegate_to: localhost

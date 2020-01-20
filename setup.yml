@@ -16,6 +16,5 @@
     - name: install galaxy collections
       command: ansible-galaxy collection install -r collections/requirements.yml --force
 
-
     - name: install kubespray requirements
       command: pip install -r kubernetes/kubespray/requirements.txt

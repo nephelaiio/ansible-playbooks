@@ -19,7 +19,7 @@
     state: directory
   loop_control:
     loop_var: dir
-  with_items:
+  loop:
     - "{{ root_dir }}"
     - "{{ boot_dir }}"
 
@@ -119,7 +119,7 @@
     dest: "{{ tmpdir_dest.path }}/etc/network/interfaces.d/{{ iface.name }}"
   loop_control:
     loop_var: iface
-  with_items: "{{ raspbian_host.ifaces }}"
+  loop: "{{ raspbian_host.ifaces }}"
   become: yes
 
 - name: configure ssh autostart
@@ -159,7 +159,7 @@
     warn: no
   loop_control:
     loop_var: mntitem
-  with_items:
+  loop:
     - "{{ tmpdir_dest.path }}/boot"
     - "{{ tmpdir_dest.path }}"
   become: yes
@@ -168,7 +168,7 @@
   file:
     path: "{{ tmpitem }}"
     state: absent
-  with_items:
+  loop:
     - "{{ tmpdir_dest.path }}"
   loop_control:
     loop_var: tmpitem

@@ -1,0 +1,7 @@
+---
+raspbian:
+  hosts:
+    rpia.home.nephelai.io:
+    rpib.home.nephelai.io:
+    rpic.home.nephelai.io:
+    rpid.home.nephelai.io:
