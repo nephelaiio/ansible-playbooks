@@ -106,9 +106,19 @@ foreman_hostgroups:
     puppet_ca_proxy: "{{ foreman_server }}"
     openscap_proxy: "{{ foreman_proxy }}"
     parameters:
+      - name: partitioning-method
+        value: lvm
       - name: remote_execution_ssh_user
-        value: "{{ users.teddyphreak.username }}"
-  - name: nuc
+        value: root
+      - name: remote_execution_ssh_keys
+        value: "{{ users.teddyphreak.pubkey }}"
+      - name: remote_execution_create_user
+        value: true
+      - name: partitioning-vg-name
+        value: ubuntu
+      - name: additional-packages
+        value: python python3
+  - name: centos7
     architecture: x86_64
     operatingsystem: CentOS 7
     media: CentOS mirror
@@ -140,7 +150,7 @@ foreman_hostgroups:
         value: true
       - name: remote_execution_effective_user_method
         value: sudo
-      - name: partitioning-vg-name
-        value: ubuntu
       - name: install-disk
         value: /dev/nvme0n1
+      - name: additional-packages
+        value: python python3
