@@ -1,0 +1,15 @@
+---
+rancher:
+  children:
+    rancher_control:
+    rancher_workers:
+
+rancher_control:
+  hosts:
+    nucx.home.nephelai.io:
+
+rancher_workers:
+  hosts:
+    nuca.home.nephelai.io:
+    nucb.home.nephelai.io:
+    nucc.home.nephelai.io:

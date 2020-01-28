@@ -1,6 +1,7 @@
 ---
 - name: nephelaiio.plugins
 - name: nephelaiio.pip
+- name: nephelaiio.docker
 - name: mrlesmithjr.keepalived
 - name: geerlingguy.ntp
 - name: brianshumate.consul

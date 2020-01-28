@@ -1,0 +1,48 @@
+---
+- name: install keepalived in worker nodes
+
+  hosts: rancher_workers
+
+  become: yes
+
+  vars:
+
+    keepalived_config: yes
+    keepalived_router_info:
+      - name: 'k8s'
+        master_node: "{{ play_hosts | first }}"
+        router_id: '50'
+        router_pri_backup: '100'
+        router_pri_master: '150'
+        vip_int: "{{ ansible_default_ipv4.interface }}"
+        vip_addresses:
+          - "{{ rancher_cluster_ip }}"
+
+  roles:
+
+    - mrlesmithjr.keepalived
+
+
+
+- name: install keepalived in controller nodes
+
+  hosts: rancher_control
+
+  become: yes
+
+  vars:
+
+    keepalived_config: yes
+    keepalived_router_info:
+      - name: 'k8s'
+        master_node: "{{ play_hosts | first }}"
+        router_id: '50'
+        router_pri_backup: '100'
+        router_pri_master: '150'
+        vip_int: "{{ ansible_default_ipv4.interface }}"
+        vip_addresses:
+          - "{{ rancher_cluster_ip }}"
+
+  roles:
+
+    - mrlesmithjr.keepalived

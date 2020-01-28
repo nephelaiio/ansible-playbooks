@@ -1,0 +1,15 @@
+nodes:
+  - address: nucx.home.nephelai.io
+    role: ['controlplane', 'etcd']
+    user: teddyphreak
+  - address: nuca.home.nephelai.io
+    role: ['worker']
+    user: teddyphreak
+  - address: nucb.home.nephelai.io
+    role: ['worker']
+    user: teddyphreak
+  - address: nucc.home.nephelai.io
+    role: ['worker']
+    user: teddyphreak
+network:
+  plugin: flannel

@@ -13,19 +13,23 @@
     CLOSED: [2019-04-18 Thu 00:50]
 
 * infrastructure tests
-** TODO install kubernetes on bare metal
-** TODO install freeipa server
+** DONE install kubernetes on bare metal
+   CLOSED: [2020-01-25 sáb 00:49]
+** DONE install freeipa server
+   CLOSED: [2020-01-25 sáb 00:39]
+** DONE install traefik lb
+   CLOSED: [2020-01-25 sáb 00:39]
+** DONE install awx
+   CLOSED: [2020-01-25 sáb 00:39]
+** DONE refactor awx configuration management to use tower_* modules
+   CLOSED: [2020-01-25 sáb 00:39]
+** TODO install rancher server
 ** TODO install keycloack iam service
-** TODO install traefik lb
-** TODO install awx
-** TODO refactor awx configuration management to use tower_* modules
 ** TODO install harbor registry
 ** TODO install quay registry
 ** TODO install dex iam service
 ** TODO install gluu iam service
 ** TODO install openstack
-** TODO install kubernetes on open stack
-
 * release management
 ** DONE clean up travis ci test failures
    CLOSED: [2019-05-02 Thu 22:18]
@@ -74,11 +78,15 @@
 ** TODO try podman for ansible playbook tests with molecule :2.8:
 *** create letsencrypt + route53 dns challenge role
 
-** TODO try foreman ansible modules :2.8:
+** DONE try foreman ansible modules :2.8:
+   CLOSED: [2020-01-25 sáb 00:39]
 
 * marketing
 ** TODO create blog
-
+* CI
+** TODO fix CI failures for ansible-playbooks 2020/01/24
+** TODO fix CI failures for ansible-role-bind 2020/01/24
+** TODO fix CI failures for ansible-role-chefdk 2020/01/24
 * chores
 ** DONE finish application AA008VU22X
    CLOSED: [2019-04-22 Mon 23:17]

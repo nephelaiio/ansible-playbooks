@@ -1,0 +1,10 @@
+---
+- name: install docker
+
+  hosts: rancher
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.docker
