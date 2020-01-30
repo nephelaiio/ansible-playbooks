@@ -9,3 +9,4 @@ yamllint>=1.8.1
 flake8>=3.3.0
 ansible-tower-cli>=3.3.6
 pyhcl>=0.3.12
+openshift>=0.10.1

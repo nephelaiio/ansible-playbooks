@@ -1,6 +1,7 @@
 ---
 - name: nephelaiio.plugins
 - name: nephelaiio.pip
+- name: nephelaiio.docker
 - name: mrlesmithjr.keepalived
 - name: geerlingguy.ntp
 - name: brianshumate.consul
@@ -16,3 +17,5 @@
   src: https://github.com/gluster/gluster-ansible-infra.git
 - name: gluster.cluster
   src: https://github.com/gluster/gluster-ansible-cluster.git
+- name: mhutter.docker-systemd-service
+  src: https://github.com/nephelaiio/ansible-role-docker-systemd-service.git
