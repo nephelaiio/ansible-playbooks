@@ -42,6 +42,7 @@
           get_url:
             url: "{{ raspbian_image_url }}"
             dest: "{{ raspbian_local_image | realpath }}"
+          run_once: yes
 
         - name: create raspbian images
           include_tasks: raspbian/image_create.yml
@@ -59,11 +60,5 @@
           loop_control:
             loop_var: hostitem
           loop: "{{ groups[raspbian_inventory_group] }}"
-
-        - name: remove temporary directory
-          file:
-            path: "{{ tmpdir.path }}"
-            state: absent
-          changed_when: false
 
       delegate_to: localhost

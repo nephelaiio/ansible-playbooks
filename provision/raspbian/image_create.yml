@@ -31,20 +31,20 @@
 - name: register target raspbian iso file
   set_fact:
     dest_img: "{{ raspbian_target_path }}/{{ raspbian_host.hostname }}.img"
-
-- name: unarchive raspbian image
-  unarchive:
-    src: "{{ raspbian_source_image }}"
-    dest: "{{ dest_img | dirname }}"
-    remote_src: yes
-    list_files: yes
-  register: raspbian_img
+    img_ext: "{{ (raspbian_source_image | splitext)[-1] }}"
 
 - name: copy raspbian source image
   copy:
-    src: "{{ dest_img | dirname }}/{{ raspbian_img.files[0] }}"
-    dest: "{{ dest_img }}"
+    src: "{{ raspbian_source_image }}"
+    dest: "{{ dest_img }}{{ img_ext }}"
     remote_src: yes
+
+- name: unarchive raspbian image
+  unarchive:
+    src: "{{ dest_img }}{{ img_ext }}"
+    dest: "{{ dest_img | dirname }}"
+    remote_src: yes
+    list_files: yes
 
 - name: inspect raspbian root partition offset
   shell: "parted {{ dest_img }} -m unit B print | awk -F':' '/ext4/ { print $2 }' | awk -F'B' '{ print $1 }'"
@@ -66,7 +66,6 @@
   command: "mount -o offset={{ raspbian_root_offset }},sizelimit={{ raspbian_root_size }} {{ dest_img }} {{ tmpdir_dest.path }}"
   args:
     warn: no
-  become: yes
 
 - name: inspect raspbian boot partition offset
   shell: "parted {{ dest_img }} -m unit B print | awk -F':' '/fat32/ { print $2 }' | awk -F'B' '{ print $1 }'"
@@ -88,7 +87,6 @@
   command: "mount -o offset={{ raspbian_boot_offset }},sizelimit={{ raspbian_boot_size }} {{ dest_img }} {{ tmpdir_dest.path }}/boot"
   args:
     warn: no
-  become: yes
 
 - name: set hostname
   copy:
@@ -96,7 +94,6 @@
     content: "{{ raspbian_host.hostname | split_with('.') | head }}"
     force: yes
     mode: 0644
-  become: yes
 
 - name: update hosts file
   lineinfile:
@@ -104,14 +101,18 @@
     regexp: "^127.0.1.1"
     line: "127.0.1.1       {{ raspbian_host.hostname }} {{ raspbian_host.hostname | split_with('.') | first }}"
     insertafter: EOF
-  become: yes
 
 - name: disable mac based interface naming
-  lineinfile:
-    path: "{{ tmpdir_dest.path }}/boot/cmdline.txt"
-    line: "net.ifnames=0"
-    insertafter: EOF
-  become: yes
+  file:
+    state: link
+    src: "/dev/null"
+    dest: "{{ tmpdir_dest.path }}/etc/systemd/network/99-default.link"
+    force: yes
+
+- name: create interface configuration directory
+  file:
+    state: directory
+    dest: "{{ tmpdir_dest.path }}/etc/network/interfaces.d"
 
 - name: configure interfaces
   template:
@@ -120,13 +121,11 @@
   loop_control:
     loop_var: iface
   loop: "{{ raspbian_host.ifaces }}"
-  become: yes
 
 - name: configure ssh autostart
   file:
     path: "{{ tmpdir_dest.path }}/boot/ssh"
     state: touch
-  become: yes
 
 - name: create ssh user directory
   file:
@@ -135,7 +134,6 @@
     owner: "{{ raspbian_user_id | default(1000) }}"
     group: "{{ raspbian_group_id | default(1000) }}"
     mode: 0700
-  become: yes
 
 - name: copy ssh user key
   copy:
@@ -144,14 +142,12 @@
     owner: "{{ raspbian_user_id | default(1000) }}"
     group: "{{ raspbian_group_id | default(1000) }}"
     mode: 0600
-  become: yes
 
 - name: disable ssh password logins
   lineinfile:
     regexp: '^#?PasswordAuthentication'
     line: "PasswordAuthentication no"
     dest: "{{ tmpdir_dest.path }}/etc/ssh/sshd_config"
-  become: yes
 
 - name: unmount raspbian target image
   command: "umount {{ mntitem }}"
@@ -162,7 +158,6 @@
   loop:
     - "{{ tmpdir_dest.path }}/boot"
     - "{{ tmpdir_dest.path }}"
-  become: yes
 
 - name: remove temporary directories
   file:
