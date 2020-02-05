@@ -47,4 +47,4 @@ pdns_psql_pass: !vault |
   3630633265313830300a386366353232646164346365336533323735366434396131353563626338
   37303865643532393132316630616531323363353531353762373739356231623031
 pdns_domains: "{{ dns_zones.values() | map(attribute='name') | list }}"
-pdns_master_ips: "{{ hostvars.values() | selectattr('pdns_master', 'defined') | selectattr('pdns_master', 'equalto', True) | map(attribute='ansible_default_ipv4') | map(attribute='address') | list }}"
+pdns_master_ips: "{{ hostvars.values() | selectattr('pdns_master', 'defined') | selectattr('pdns_master', 'equalto', True) | map(attribute='ansible_host') | list }}"
