@@ -1,0 +1,24 @@
+---
+rke_release: v1.0.4
+rke_helm_release: v3.0.3
+rke_kubectl_release: v1.17.0
+rke_metallb_release: v0.8.3
+rke_cert_manager_release: v0.13.0
+rke_nginx_release: 0.28.0
+rke_certmanager_release: v0.13.0
+rke_toweroperator_release: master
+
+rke_metallb_ips: "{{ nets.pxe.lb.range | regex_replace(' ', '-') }}"
+rke_control_hosts: "{{ groups['rke_control'] }}"
+rke_worker_hosts: "{{ groups['rke_workers'] }}"
+rke_externaldns_namespace: "external-dns"
+rke_metallb_namespace: "metallb-system"
+rke_hello_namespace: "hello"
+rke_pdns_url: "{{ pdns_url }}"
+rke_pdns_api_key: "{{ pdns_api_key }}"
+rke_base_domain: "{{ base_domain }}"
+rke_certmanager_issuer_name: "{{ rke_base_domain }}"
+rke_certmanager_acme_email: "{{ acme_certificate_email }}"
+rke_certmanager_route53_region: "{{ aws_region }}"
+rke_certmanager_route53_accesskeyid: "{{ aws_access_key_id }}"
+rke_certmanager_route53_accesskeysecret: "{{ aws_secret_access_key }}"

@@ -1,0 +1,51 @@
+---
+nodes:
+{% for control in rke_control_hosts %}
+  - address: "{{ control }}"
+    user: "{{ rke_install_user }}"
+    role:
+      - controlplane
+      - etcd
+{% endfor %}
+{% for worker in rke_worker_hosts %}
+  - address: "{{ worker }}"
+    user: "{{ rke_install_user }}"
+    role:
+      - worker
+{% endfor %}
+
+# If set to true, RKE will not fail when unsupported Docker version
+# are found
+ignore_docker_version: false
+
+# Cluster level SSH private key
+# Used if no ssh information is set for the node
+ssh_key_path: ~/.ssh/id_rsa
+
+# Set the name of the Kubernetes cluster  
+cluster_name: "{{ rke_cluster_name | default('rke') }}"
+
+# Kubernetes Authorization mode
+# Use `mode: rbac` to enable RBAC
+# Use `mode: none` to disable authorization
+authorization:
+  mode: rbac
+
+# Specify network plugin-in (canal, calico, flannel, weave, or none)
+network:
+  plugin: calico
+
+# Specify DNS provider (coredns or kube-dns)
+dns:
+  provider: coredns
+
+# Currently only nginx ingress provider is supported.
+# To disable ingress controller, set `provider: none`
+# `node_selector` controls ingress placement and is optional
+ingress:
+  provider: none
+
+addons_include: 
+ - https://raw.githubusercontent.com/google/metallb/{{ rke_metallb_release }}/manifests/metallb.yaml
+ - https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-{{ rke_nginx_release }}/deploy/static/mandatory.yaml
+ - https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-{{ rke_nginx_release }}/deploy/static/provider/cloud-generic.yaml

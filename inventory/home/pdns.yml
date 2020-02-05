@@ -5,9 +5,10 @@ pdns_recursors:
     kvms.home.nephelai.io:
 
 pdns_servers:
+  vars:
+    pdns_master: yes
   hosts:
     kvmt.home.nephelai.io:
-      pdns_master: yes
 
 pdns_register:
   children:

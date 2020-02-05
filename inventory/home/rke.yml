@@ -1,0 +1,15 @@
+---
+rke:
+  children:
+    rke_control:
+    rke_workers:
+
+rke_control:
+  hosts:
+    nucx.home.nephelai.io:
+
+rke_workers:
+  hosts:
+    nuca.home.nephelai.io:
+    nucb.home.nephelai.io:
+    nucc.home.nephelai.io:

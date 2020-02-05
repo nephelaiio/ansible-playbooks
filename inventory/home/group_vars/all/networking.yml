@@ -20,6 +20,9 @@ nets:
     bridge: br3
     ns: "{{ pdns_recursors | map('extract', hostvars, 'ansible_host') | list }}"
     dhcp: '192.168.3.128 192.168.3.254'
+    lb:
+      name: pxe
+      range: '192.168.3.193 192.168.3.254'
 
 openvpn_nets:
   home:

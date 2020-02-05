@@ -1,0 +1,170 @@
+---
+- name: bootstrap rke cluster
+
+  hosts: rke_control
+
+  vars:
+
+    rke_install_user: "{{ lookup('env', 'USER') }}"
+    rke_cluster_dir: /opt/rke
+    rke_bin: /usr/local/bin/rke
+    kubectl_bin: /usr/local/bin/kubectl
+    helm_bin: /usr/local/bin/helm
+    rke_bin_url: "https://github.com/rancher/rke/releases/download/{{ rke_release }}/rke_linux-amd64"
+    kubectl_bin_url: "https://storage.googleapis.com/kubernetes-release/release/{{ rke_kubectl_release }}/bin/linux/amd64/kubectl"
+    helm_bin_url: "https://get.helm.sh/helm-{{ rke_helm_release }}-linux-amd64.tar.gz"
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: create cluster directory
+      file:
+        state: directory
+        path: "{{ rke_cluster_dir }}"
+        owner: "{{ rke_install_user }}"
+        mode: 0750
+      become: yes
+
+    - name: install rke
+      get_url:
+        url: "{{ rke_bin_url }}"
+        dest: "{{ rke_bin }}"
+        mode: 0755
+
+    - name: install kubectl
+      get_url:
+        url: "{{ kubectl_bin_url }}"
+        dest: "{{ kubectl_bin }}"
+        mode: 0755
+      become: yes
+
+    - name: create helm tempdir
+      tempfile:
+        state: directory
+        prefix: helm
+      register: helm_tmpdir
+      changed_when: false
+
+    - name: download helm bundle
+      unarchive:
+        src: "{{ helm_bin_url }}"
+        dest: "{{ helm_tmpdir.path }}"
+        remote_src: yes
+      changed_when: false
+
+    - name: install helm
+      copy:
+        src: "{{ helm_tmpdir.path }}/linux-amd64/helm"
+        dest: "{{ helm_bin }}"
+        remote_src: yes
+      become: yes
+
+    - name: destroy helm tempdir
+      file:
+        state: absent
+        path: "{{ helm_tmpdir.path }}"
+      changed_when: false
+
+    - block:
+
+        - name: create ssh key dir
+          file:
+            path: ~/.ssh
+            state: directory
+            mode: 0700
+
+        - name: create ssh keypair
+          openssh_keypair:
+            path: ~/.ssh/id_rsa
+
+        - name: slurp ssh public key
+          slurp:
+            src: ~/.ssh/id_rsa.pub
+          register: rke_pubkey
+
+        - name: deploy rke
+          command: rke up
+          args:
+            chdir: "{{ rke_cluster_dir }}"
+          retries: 2
+          register: rke_deploy_result
+          until: rke_deploy_result.rc == 0
+          tags:
+            - rke
+
+        - name: slurp kubectl config
+          slurp:
+            src: "{{ rke_cluster_dir }}/kube_config_cluster.yml"
+          register: rke_kubectl_config
+
+      run_once: yes
+
+    - name: manage kubectl config directory
+      file:
+        path: ~/.kube
+        state: directory
+
+    - name: configure kubectl
+      copy:
+        dest: "~/.kube/config"
+        content: "{{ rke_kubectl_config['content'] | b64decode }}"
+        owner: "{{ rke_install_user }}"
+        mode: 0600
+      changed_when: false
+
+    - name: install required pips
+      pip:
+        name: openshift
+
+    - name: build rke templates
+      template:
+        src: "{{ item }}"
+        dest: "{{ rke_cluster_dir }}/{{ item | basename | regex_replace('\\.j2', '') }}"
+      loop: "{{ lookup('fileglob', 'templates/*.j2', wantlist=True) }}" 
+
+    - block:
+
+        - name: query helm releases
+          command: helm list --all-namespaces -o json
+          register: helm_release_query
+          changed_when: false
+
+        - name: register helm releases
+          set_fact:
+            rke_helm_releases: "{{ helm_release_query.stdout | from_json | map(attribute='name') | list }}"
+
+        - name: create cert-manager namespace
+          k8s:
+            state: present
+            definition: |
+              ---
+              apiVersion: v1
+              kind: Namespace
+              metadata:
+                name: cert-manager
+
+        - name: add cert-manager helm repo
+          command: helm repo add jetstack https://charts.jetstack.io
+          changed_when: false
+
+        - name: update helm repos
+          command: helm repo update
+          changed_when: false
+
+        - name: deploy cert-manager helm chart
+          command: "helm {{ helm_action }} cert-manager --namespace cert-manager --version {{ rke_cert_manager_release }} jetstack/cert-manager --set 'extraArgs={--dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53}'"
+          vars:
+            helm_action: "{{ 'upgrade' if 'cert-manager' in rke_helm_releases else 'install' }}"
+
+        - name: apply rke manifests
+          command: "kubectl apply -f {{ manifest }}"
+          vars:
+            manifest: "{{ rke_cluster_dir }}/{{ item | basename | regex_replace('\\.j2', '') }}"
+          loop: "{{ lookup('fileglob', 'templates/*.manifest.yml.j2', wantlist=True) }}" 
+          tags:
+            - manifests
+
+      run_once: yes
