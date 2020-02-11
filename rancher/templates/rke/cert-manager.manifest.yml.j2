@@ -18,7 +18,7 @@ spec:
     server: https://acme-v02.api.letsencrypt.org/directory
     email: {{ rke_certmanager_acme_email }}
     privateKeySecretRef:
-      name: letsencrypt-staging
+      name: letsencrypt-production
     solvers:
       - selector:
           dnsZones:

@@ -17,8 +17,11 @@ rke_hello_namespace: "hello"
 rke_pdns_url: "{{ pdns_url }}"
 rke_pdns_api_key: "{{ pdns_api_key }}"
 rke_base_domain: "{{ base_domain }}"
-rke_certmanager_issuer_name: "{{ rke_base_domain }}"
+rke_certmanager_issuer_name: "{{ base_domain }}"
 rke_certmanager_acme_email: "{{ acme_certificate_email }}"
 rke_certmanager_route53_region: "{{ aws_region }}"
 rke_certmanager_route53_accesskeyid: "{{ aws_access_key_id }}"
 rke_certmanager_route53_accesskeysecret: "{{ aws_secret_access_key }}"
+
+rke_install_user: "{{ lookup('env', 'USER') }}"
+rke_cluster_dir: /opt/rke

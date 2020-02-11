@@ -5,8 +5,7 @@
 
   vars:
 
-    rke_install_user: "{{ lookup('env', 'USER') }}"
-    rke_cluster_dir: /opt/rke
+    rke_manifest_dir: "{{ rke_cluster_dir }}/manifests"
     rke_bin: /usr/local/bin/rke
     kubectl_bin: /usr/local/bin/kubectl
     helm_bin: /usr/local/bin/helm
@@ -20,12 +19,15 @@
 
   tasks:
 
-    - name: create cluster directory
+    - name: create cluster directory structure
       file:
         state: directory
-        path: "{{ rke_cluster_dir }}"
+        path: "{{ item }}"
         owner: "{{ rke_install_user }}"
         mode: 0750
+      loop:
+        - "{{ rke_cluster_dir }}"
+        - "{{ rke_manifest_dir }}"
       become: yes
 
     - name: install rke
@@ -122,8 +124,10 @@
     - name: build rke templates
       template:
         src: "{{ item }}"
-        dest: "{{ rke_cluster_dir }}/{{ item | basename | regex_replace('\\.j2', '') }}"
-      loop: "{{ lookup('fileglob', 'templates/*.j2', wantlist=True) }}" 
+        dest: "{{ rke_manifest_dir }}/{{ item | basename | regex_replace('\\.j2', '') }}"
+        owner: "{{ rke_install_user }}"
+        mode: 0640
+      loop: "{{ lookup('fileglob', 'templates/rke/*.j2', wantlist=True) }}" 
 
     - block:
 
@@ -162,8 +166,8 @@
         - name: apply rke manifests
           command: "kubectl apply -f {{ manifest }}"
           vars:
-            manifest: "{{ rke_cluster_dir }}/{{ item | basename | regex_replace('\\.j2', '') }}"
-          loop: "{{ lookup('fileglob', 'templates/*.manifest.yml.j2', wantlist=True) }}" 
+            manifest: "{{ rke_manifest_dir }}/{{ item | basename | regex_replace('\\.j2', '') }}"
+          loop: "{{ lookup('fileglob', 'templates/rke/*.manifest.yml.j2', wantlist=True) }}" 
           tags:
             - manifests
 

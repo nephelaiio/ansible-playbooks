@@ -1,4 +1,6 @@
 ---
+rke_rancher_url: "https://rancher.{{ base_domain }}"
+rancher_acme_email: "{{ acme_certificate_email }}"
 rancher_ldap_user: rancher
 rancher_ldap_pass: !vault |
   $ANSIBLE_VAULT;1.1;AES256
