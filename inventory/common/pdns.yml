@@ -1,0 +1,3 @@
+---
+pdns_register_state: "{{ kvm_state | default('present') }}"
+pdns_url: "https://pdns.{{ base_domain }}"
