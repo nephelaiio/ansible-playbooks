@@ -1,0 +1,18 @@
+---
+kvm_hosts:
+  hosts:
+    localhost:
+
+kvm_guests:
+  vars:
+    kvm_host: localhost
+  hosts:
+    kvma.wpn.nephelai.io:
+    kvmb.wpn.nephelai.io:
+    kvmc.wpn.nephelai.io:
+    kvmd.wpn.nephelai.io:
+    kvme.wpn.nephelai.io:
+    kvmf.wpn.nephelai.io:
+    kvmm.wpn.nephelai.io:
+    kvmn.wpn.nephelai.io:
+    kvmo.wpn.nephelai.io:
