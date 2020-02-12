@@ -5,6 +5,7 @@ rke_kubectl_release: v1.17.0
 rke_metallb_release: v0.8.3
 rke_cert_manager_release: v0.13.0
 rke_nginx_release: 0.28.0
+rke_rook_release: v1.2.4
 rke_certmanager_release: v0.13.0
 rke_toweroperator_release: master
 

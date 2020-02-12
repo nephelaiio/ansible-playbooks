@@ -1,0 +1,23 @@
+---
+- name: Deploy rook operator
+
+  hosts: rke_control
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - block:
+
+        - name: apply rook common manifest
+          command: "kubectl apply -f https://raw.githubusercontent.com/rook/rook/{{ rke_rook_release }}/cluster/examples/kubernetes/ceph/common.yaml"
+
+        - name: apply rook operator manifest
+          command: "kubectl apply -f https://raw.githubusercontent.com/rook/rook/{{ rke_rook_release }}/cluster/examples/kubernetes/ceph/operator.yaml"
+
+        - name: create rook cluster
+          command: "kubectl apply -f https://raw.githubusercontent.com/rook/rook/{{ rke_rook_release }}/cluster/examples/kubernetes/ceph/cluster.yaml"
+
+      run_once: yes
