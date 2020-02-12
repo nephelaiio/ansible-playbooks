@@ -16,7 +16,6 @@
 
     - block:
 
-
         - name: create cluster directory structure
           file:
             state: directory
