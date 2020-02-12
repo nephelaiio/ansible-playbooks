@@ -1,0 +1,9 @@
+---
+base_domain: wpn.nephelai.io
+dns_zones:
+  ovirt:
+    name: "{{ base_domain }}"
+    hostmaster: "master@{{ base_domain }}"
+    ns: "{{ groups['pdns_servers'] }}"
+    records: []
+    cnames: []

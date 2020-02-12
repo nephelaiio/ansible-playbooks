@@ -1,0 +1,15 @@
+---
+kvm_host: localhost
+kvm_guest_pubkey: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC9HjY8eJ2yHMDKOGS4yt1wMxmwej6Bv7JTw0vIVSna5akXtle4ckFsM1PqApwNpYYvzOcuqd5xQAbUXUDDuxOzTepQfN7L2OEPS2NiQQ6KCSNyigHYDWUX2iHi47Ov8jxNpXwFuTtcF3Orh+U6qunlRIEzWHuEkA9XM0vDremCbqQlawIemp/NZiNvLj1kOoDHE1WcRuL3fz+z2bVN8nuCnZ5ebWnjHMFtrPVqRZzXjpJd183CEI6EfkYluJRzqVGwDEdoh5Ms017fqSjrmQXT4N5R5MhA/CMW1Kc69cVj1zTpwXkxOahv0mf3uzDKgQw1RjJnkFn7ZsFWqDJmGdTf ansible@nephelaiio
+kvm_guest_pass: password
+kvm_base_domain: "{{ base_domain }}"
+kvm_networks:
+  ovirt:
+    network: 10.50.19.0
+    netmask: 255.255.255.0
+    router: 10.50.19.1
+    zone: 19.50.10.in-addr.arpa
+    bridge: br19
+    ns:
+      - 8.8.8.8
+      - 1.1.1.1

@@ -1,0 +1,20 @@
+---
+pdns_recursors:
+  hosts:
+    kvmn.wpn.nephelai.io:
+    kvms.wpn.nephelai.io:
+
+pdns_servers:
+  vars:
+    pdns_master: yes
+  hosts:
+    kvmt.wpn.nephelai.io:
+
+pdns_register:
+  children:
+    online:
+
+pdns:
+  children:
+    pdns_recursors:
+    pdns_servers:
