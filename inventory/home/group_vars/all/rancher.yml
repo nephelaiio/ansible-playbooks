@@ -12,6 +12,6 @@ rancher_ldap_pass: !vault |
 
 ipa_users:
   - user_name: "{{ rancher_ldap_user }}"
-    first_name: Foreman
+    first_name: Rancher
     last_name: Bind
     pass: "{{ rancher_ldap_pass }}"
