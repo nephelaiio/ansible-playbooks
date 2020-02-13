@@ -1,3 +1,18 @@
 ---
-pdns_register_state: "{{ kvm_state | default('present') }}"
+# pdns api url
 pdns_url: "https://pdns.{{ base_domain }}"
+
+# toggle to force registration of host fqdns to pdns host
+pdns_register_state: "{{ kvm_state | default('present') }}"
+
+# default domain for resolvers
+pdns_recursor_resolv_domain: "{{ base_domain }}"
+
+# list of resolvers
+pdns_recursors: "{{ groups['pdns_recursors'] }}"
+
+# pdns server db user
+pdns_psql_user: pdns
+
+# pdns server ips
+pdns_master_ips: "{{ hostvars.values() | selectattr('pdns_master', 'defined') | selectattr('pdns_master', 'equalto', True) | map(attribute='ansible_host') | list }}"
