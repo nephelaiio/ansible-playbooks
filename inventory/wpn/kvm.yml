@@ -5,12 +5,6 @@ kvm_hosts:
 
 kvm_guests:
   hosts:
-    kvma.wpnops.biz:
-    kvmb.wpnops.biz:
-    kvmc.wpnops.biz:
-    kvmd.wpnops.biz:
-    kvme.wpnops.biz:
-    kvmf.wpnops.biz:
     kvma.wpn.nephelai.io:
     kvmb.wpn.nephelai.io:
     kvmc.wpn.nephelai.io:

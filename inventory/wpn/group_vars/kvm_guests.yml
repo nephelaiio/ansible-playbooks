@@ -9,5 +9,5 @@ kvm_networks:
     zone: 19.50.10.in-addr.arpa
     bridge: br19
     ns:
-      - 8.8.8.8
-      - 1.1.1.1
+      - 10.50.11.21
+      - 10.50.11.22
