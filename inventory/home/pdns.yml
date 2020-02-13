@@ -13,3 +13,8 @@ pdns_servers:
 pdns_register:
   children:
     online:
+
+pdns:
+  children:
+    pdns_recursors:
+    pdns_servers:
