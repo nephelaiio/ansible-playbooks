@@ -1,9 +1,7 @@
 ---
-- name: nephelaiio.plugins
-- name: nephelaiio.pip
-- name: nephelaiio.docker
-- name: mrlesmithjr.keepalived
 - name: geerlingguy.ntp
+- name: geerlingguy.repo-epel
+- name: mrlesmithjr.keepalived
 - name: brianshumate.consul
 - name: kibatic.traefik
 - name: bertvv.hosts
@@ -11,7 +9,9 @@
 - name: ovirt.engine-setup
 - name: ovirt.repositories
 - name: ovirt.infra
-  version: 1.1.13
+- name: nephelaiio.plugins
+- name: nephelaiio.pip
+- name: nephelaiio.docker
 - name: linux-system-roles.network
 - name: gluster.infra
   src: https://github.com/gluster/gluster-ansible-infra.git
