@@ -3,6 +3,17 @@
   pip:
     name: python-consul
 
+- name: gather service facts
+  service_facts:
+
+- name: disable systemd-resolved
+  systemd:
+    name: systemd-resolved
+    state: stopped
+    enabled: no
+    masked: yes
+  when: "'systemd-resolved.service' in ansible_facts.services"
+
 - block:
 
     - name: install trefik token requirements

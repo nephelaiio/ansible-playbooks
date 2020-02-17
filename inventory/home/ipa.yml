@@ -8,6 +8,8 @@ ipa_replica:
     kvme.home.nephelai.io:
 
 ipa_backend:
+  vars:
+    kvm_state: absent
   children:
     ipa_server:
     ipa_replica:
@@ -24,5 +26,4 @@ ipa:
   children:
     ipa_server:
     ipa_replica:
-    ipa_proxy:
     ipa_user:
