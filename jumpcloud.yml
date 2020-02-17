@@ -1,0 +1,12 @@
+---
+- name: Deploy jumpcloud agents
+
+  hosts: jumpcloud
+
+  become: yes
+
+  roles:
+
+     - role: inviqa.jumpcloud
+       vars:
+         jumpcloud_displayName: "{{ ansible_fqdn }}"

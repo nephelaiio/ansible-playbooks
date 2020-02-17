@@ -1,0 +1,5 @@
+---
+jumpcloud:
+  children:
+    nuc:
+    kvm_guests:

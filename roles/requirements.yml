@@ -13,6 +13,7 @@
 - name: nephelaiio.pip
 - name: nephelaiio.docker
 - name: linux-system-roles.network
+- name: inviqa.jumpcloud
 - name: gluster.infra
   src: https://github.com/gluster/gluster-ansible-infra.git
 - name: gluster.cluster
