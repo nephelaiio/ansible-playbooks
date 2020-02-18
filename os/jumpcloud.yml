@@ -1,5 +1,5 @@
 ---
-- name: Deploy jumpcloud agents
+- name: Deploy jumpcloud agent
 
   hosts: jumpcloud
 
