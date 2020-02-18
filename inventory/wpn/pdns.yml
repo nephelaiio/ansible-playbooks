@@ -1,12 +1,13 @@
 ---
 pdns_recursors:
-  hosts:
-    kvmn.wpn.nephelai.io:
-    kvms.wpn.nephelai.io:
+  hosts: {}
 
 pdns_servers:
   vars:
     pdns_master: yes
+    pdns_recursor_ips:
+      - 10.50.11.21
+      - 10.50.11.22
   hosts:
     kvmt.wpn.nephelai.io:
 
