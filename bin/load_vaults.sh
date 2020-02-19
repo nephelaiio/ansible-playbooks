@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-ANSIBLE_VAULT_IDENTITY_DIR="{{ ansible_vault_identity_dir }}"
+ANSIBLE_VAULT_IDENTITY_DIR=".ansible_vault"
 ANSIBLE_VAULT_IDENTITY_LIST=""
 for vault_file in $(ls ~/${ANSIBLE_VAULT_IDENTITY_DIR}); do
     vault_name="$(basename $vault_file)"

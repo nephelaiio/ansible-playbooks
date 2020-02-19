@@ -7,10 +7,6 @@
 
   gather_facts: no
 
-  vars:
-
-    ansible_vault_identity_dir: .ansible_vault
-
   tasks:
 
     - name: create vault directory
@@ -22,7 +18,7 @@
         path: "{{ lookup('env', 'HOME') }}/.bashrc"
         marker: "#-- ANSIBLE MANAGED BLOCK: ansible-vault --#"
         backup: yes
-        block: "{{ lookup('template', 'bash/vaultrc.j2') }}"
+        block: "{{ lookup('file', 'bin/load_vaults.sh') }}"
 
 
 - name: Install project prerequisites
