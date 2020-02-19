@@ -5,6 +5,7 @@ KO=1
 OK=0
 TRUE=0
 FALSE=1
+DEBUG=${FALSE}
 
 function help {
     echo "$0 OPTIONS <playbook> [ <playbook> ... ]"
