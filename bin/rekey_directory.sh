@@ -121,8 +121,12 @@ if [ ${REKEY_FORCE} -eq ${TRUE} ]; then
     debug "Generating new vault password"
     echo "$(genxkpass)" > "${TMPVAULT}"
 else
-    debug "cp ${VAULT_PASS_FILE}" "${TMPVAULT}"
-    cp "${VAULT_PASS_FILE}" "${TMPVAULT}"
+    if [ -f "${VAULT_PASS_FILE}" ]; then
+        cp "${VAULT_PASS_FILE}" "${TMPVAULT}"
+    else
+        echo "missing vault password file ${VAULT_PASS_FILE} ... aborting"
+        exit ${KO}
+    fi
 fi
 
 debug "Inspecting files [${REKEY_FILES}]"
