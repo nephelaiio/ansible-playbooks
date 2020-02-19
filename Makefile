@@ -1,23 +1,19 @@
+inventories := $(shell find ./inventory -mindepth 1 -maxdepth 1 -type d | xargs -L 1 basename)
+decrypt := $(addsuffix _decrypt, $(inventories))
+key := $(addsuffix _key, $(inventories))
+rekey := $(addsuffix _rekey, $(inventories))
+
 setup:
 	ansible-playbook setup.yml
 
-home_decrypt:
-	bin/decrypt_directory.sh inventory/home
+$(decrypt):
+	bin/decrypt_directory.sh --directory inventory/$(patsubst %_decrypt,%,$@)
 
-home_key:
-	bin/rekey_directory.sh --vault-id home
+$(key):
+	bin/rekey_directory.sh --vault-id inventory/$(patsubst %_key,%,$@)
 
-home_rekey:
-	bin/rekey_directory.sh --vault-id home --rekey
-
-common_decrypt:
-	bin/decrypt_directory.sh inventory/common
-
-common_key:
-	bin/rekey_directory.sh --vault-id home
-
-common_rekey:
-	bin/rekey_directory.sh --vaut-id common --rekey
+$(rekey):
+	bin/rekey_directory.sh --vault-id inventory/$(patsubst %_rekey,%,$@) --rekey
 
 load_vaults:
 	bin/load_vaults.sh
