@@ -1,4 +1,30 @@
 ---
+- name: Manage user environment
+
+  hosts: localhost
+
+  connection: local
+
+  gather_facts: no
+
+  vars:
+
+    ansible_vault_identity_dir: .ansible_vault
+
+  tasks:
+
+    - name: create vault directory
+      file:
+        name: "{{ lookup('env', 'HOME') }}/{{ ansible_vault_identity_dir }}"
+
+    - name: manage vault identity list global variables
+      blockinfile:
+        path: "{{ lookup('env', 'HOME') }}/.bashrc"
+        marker: "#-- ANSIBLE MANAGED BLOCK: ansible-vault --#"
+        backup: yes
+        block: "{{ lookup('template', 'bash/vaultrc.j2') }}"
+
+
 - name: Install project prerequisites
 
   hosts: localhost
