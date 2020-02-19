@@ -1,22 +1,22 @@
 setup:
 	ansible-playbook setup.yml
 
-decrypt_home:
+home_decrypt:
 	bin/decrypt_directory.sh inventory/home
 
-key_home:
+home_key:
 	bin/rekey_directory.sh --vault-id home
 
-rekey_home:
+home_rekey:
 	bin/rekey_directory.sh --vault-id home --rekey
 
-decrypt_comon:
+common_decrypt:
 	bin/decrypt_directory.sh inventory/common
 
-key_common:
+common_key:
 	bin/rekey_directory.sh --vault-id home
 
-rekey_common:
+common_rekey:
 	bin/rekey_directory.sh --vaut-id common --rekey
 
 load_vaults:
