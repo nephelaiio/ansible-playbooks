@@ -6,6 +6,8 @@ OK=0
 VAULT_PASS_ID=$1
 REKEY_DIR="inventory/${VAULT_PASS_ID}"
 VAULT_PASS_FILE="$HOME/.ansible_vault/${VAULT_PASS_ID}"
+VAULT_PASS_DIR="$(dirname ${VAULT_PASS_FILE})"
+VAULT_PASS_BASENAME="$(basename ${VAULT_PASS_FILE})"
 VAULT_VERIFY=0
 TMPROOT=temp
 
@@ -16,7 +18,7 @@ genxkpass() {
 TMPDIR=$(mktemp -d --tmpdir=${TMPROOT})
 REKEY_FILES=$(find "${REKEY_DIR}" -name "*.yml" -type f)
 
-TMPVAULT="${TMPDIR}/vaults/$(basename ${VAULT_PASS_FILE})"
+TMPVAULT="${TMPDIR}/vaults/${VAULT_PASS_BASENAME}"
 mkdir "$(dirname ${TMPVAULT})"
 echo "$(genxkpass)" > "${TMPVAULT}"
 
@@ -44,13 +46,24 @@ for file_name in $REKEY_FILES; do
 
             fi
 
-            decrypted=$(echo "${encrypted}" | ansible-vault decrypt --vault-password-file "${VAULT_PASS_FILE}")
-            if [ $? -ne 0 ]; then
-                echo "error decrypting secret ${var_name} from file ${file_name}"
+            decrypt_success=1
+            for vault_pass_file in ${VAULT_PASS_FILE} $(find "${VAULT_PASS_DIR}/" -name ".${VAULT_PASS_BASENAME}*" -type f); do
+
+                echo trying ${vault_pass_file}
+                decrypted=$(echo "${encrypted}" | ansible-vault decrypt)
+                if [ $? -ne 0 ]; then
+                    continue;
+                else
+                    decrypt_success=0
+                fi
+
+            done
+            if [ $decrypt_success -ne 0 ]; then
+                echo "error decrypting secret ${var_name} from files ${file_name}*"
                 exit "${KO}"
             fi
 
-            recrypted=$(echo "${decrypted}" | ansible-vault encrypt_string --encrypt-vault-id "${VAULT_PASS_ID}" --vault-password-file ${TMPVAULT})
+            recrypted=$(echo "${decrypted}" | ansible-vault encrypt_string --encrypt-vault-id "${VAULT_PASS_ID}" --vault-password-file "${TMPVAULT}")
             if [ $? -ne 0 ]; then
                 echo "error encrypting secret ${var_name} from file ${file_name}"
                 exit "${KO}"
@@ -59,6 +72,7 @@ for file_name in $REKEY_FILES; do
             echo "---" > "${TMPFILE}"
             echo "${var_name}: ${recrypted}" >> "${TMPFILE}"
             yq m -x -i "${file_name}" "${TMPFILE}" -I 2
+            echo -e "---\n$(cat ${file_name})" > "${file_name}"
 
         done
 
@@ -66,8 +80,7 @@ for file_name in $REKEY_FILES; do
 
 done
 
-if [ -f "${VAULT_PASS_FILE}" ]; then
-    mv "${VAULT_PASS_FILE}" "${VAULT_PASS_FILE}.$(date +%Y%m%d%H%M%S)"
-fi
+mv "${VAULT_PASS_FILE}" "${VAULT_PASS_DIR}/.${VAULT_PASS_BASENAME}.$(date +%Y%m%d%H%M%S)"
+mv "${TMPVAULT}" "${VAULT_PASS_FILE}"
 
 rm -rf ${TMPDIR}

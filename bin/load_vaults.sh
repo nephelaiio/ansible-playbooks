@@ -1,10 +1,13 @@
 #!/usr/bin/env bash
 
-ANSIBLE_VAULT_IDENTITY_DIR="$HOME/.ansible_vault"
-ANSIBLE_VAULT_IDENTITY_LIST=()
-for f in "${ANSIBLE_VAULT_IDENTITY_DIR}/*"; do
-    vault_name="$(basename $f)"
-    ANSIBLE_VAULT_IDENTITY_LIST+=${vault_name}@${ANSIBLE_VAULT_IDENTITY_DIR}/${vault_name}
+ANSIBLE_VAULT_IDENTITY_DIR=".ansible_vault"
+ANSIBLE_VAULT_IDENTITY_LIST=""
+for vault_file in $(ls ~/${ANSIBLE_VAULT_IDENTITY_DIR}); do
+    vault_name="$(basename $vault_file)"
+    if [ -z ${ANSIBLE_VAULT_IDENTITY_LIST} ]; then
+        ANSIBLE_VAULT_IDENTITY_LIST="${vault_name}@~/${ANSIBLE_VAULT_IDENTITY_DIR}/${vault_name}"
+    else
+        ANSIBLE_VAULT_IDENTITY_LIST="${ANSIBLE_VAULT_IDENTITY_LIST},${vault_name}@~/${ANSIBLE_VAULT_IDENTITY_DIR}/${vault_name}"
+    fi
 done
-ANSIBLE_VAULT_IDENTITY_LIST=$(IFS=,; echo "${ANSIBLE_VAULT_IDENTITY_LIST[*]}")
 export ANSIBLE_VAULT_IDENTITY_LIST
