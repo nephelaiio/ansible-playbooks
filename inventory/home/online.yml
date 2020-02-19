@@ -2,4 +2,4 @@
 plugin: constructed
 strict: no
 groups:
-  online: (kvm_state | default('present')) in ['present'] and (raspbian_state | default('present')) in ['present']
+  online: (kvm_state | default('present')) in ['present'] and (rpi_state | default('present')) in ['present']

@@ -1,8 +1,9 @@
 ---
 awx:
+  vars:
+    kvm_state: absent
   children:
     awx_app:
 
 awx_app:
-  hosts:
-    kvmu.home.nephelai.io:
+  hosts: {}
