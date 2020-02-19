@@ -49,8 +49,7 @@ for file_name in $REKEY_FILES; do
             decrypt_success=1
             for vault_pass_file in ${VAULT_PASS_FILE} $(find "${VAULT_PASS_DIR}/" -name ".${VAULT_PASS_BASENAME}*" -type f); do
 
-                echo trying ${vault_pass_file}
-                decrypted=$(echo "${encrypted}" | ansible-vault decrypt)
+                decrypted=$(echo "${encrypted}" | ansible-vault decrypt --vault-id "${VAULT_PASS_ID}@${vault_pass_file}" 2>/dev/null)
                 if [ $? -ne 0 ]; then
                     continue;
                 else
