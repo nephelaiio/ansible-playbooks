@@ -44,7 +44,7 @@ check_requirement curl
 REKEY_FORCE=${FALSE}
 VAULT_VERIFY=${FALSE}
 TMPROOT=temp
-TMPDIR=$(mktemp -d --tmpdir=${TMPROOT})
+TMPDIR=$(mktemp -d --tmpdir=${TMPROOT} --suffix=.rekey)
 
 # parse options (https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash)
 POSITIONAL=()
@@ -92,7 +92,7 @@ set -- "${POSITIONAL[@]}" # restore positional parameters
 
 # validate options
 if [ -z "${ANSIBLE_VAULT_IDENTITY_DIR}" ]; then
-    ANSIBLE_VAULT_IDENTITY_DIR=".ansible_vault"
+    ANSIBLE_VAULT_IDENTITY_DIR="${HOME}/.ansible_vault"
 fi
 if [ -z "${VAULT_PASS_ID}" ]; then
     echo "--vault-id <vault id> option is required"
@@ -105,32 +105,39 @@ fi
 
 # set derived values
 REKEY_DIR="inventory/${VAULT_PASS_ID}"
-VAULT_PASS_FILE="$HOME/${ANSIBLE_VAULT_IDENTITY_DIR}/${VAULT_PASS_ID}"
+VAULT_PASS_FILE="${ANSIBLE_VAULT_IDENTITY_DIR}/${VAULT_PASS_ID}"
 REKEY_FILES=$(find "${REKEY_DIR}" -name "*.yml" -type f)
-TMPVAULT="${TMPDIR}/vaults/$(basename ${VAULT_PASS_FILE})"
+GENVAULT="${TMPDIR}/new/$(basename ${VAULT_PASS_FILE})"
 
+debug "Verify vault password directory $(dirname ${VAULT_PASS_FILE})"
 if [ ! -d "$(dirname ${VAULT_PASS_FILE})" ]; then
     mkdir "$(dirname ${VAULT_PASS_FILE})"
     debug "Created vault password file directory $(dirname ${VAULT_PASS_FILE})"
 fi
 
-debug "Generating temp vault password file"
-
-mkdir "$(dirname ${TMPVAULT})"
+debug "Generating new vault password file"
+mkdir "$(dirname ${GENVAULT})"
 if [ ${REKEY_FORCE} -eq ${TRUE} ]; then
     debug "Generating new vault password"
-    echo "$(genxkpass)" > "${TMPVAULT}"
+    echo "$(genxkpass)" > "${GENVAULT}"
 else
     if [ -f "${VAULT_PASS_FILE}" ]; then
-        cp "${VAULT_PASS_FILE}" "${TMPVAULT}"
+        cp "${VAULT_PASS_FILE}" "${GENVAULT}"
     else
         echo "missing vault password file ${VAULT_PASS_FILE} ... aborting"
         exit ${KO}
     fi
 fi
 
-debug "Inspecting files [${REKEY_FILES}]"
+debug "Creating working copy of vault file dir [${ANSIBLE_VAULT_IDENTITY_DIR}]"
+TMPVAULTS="${TMPDIR}/vaults"
+mkdir "${TMPVAULTS}"
+VAULT_NAMES=$(find "${ANSIBLE_VAULT_IDENTITY_DIR}/" -type f | xargs -L 1 basename)
+for vault_name in ${VAULT_NAMES}; do
+    cp -a "${ANSIBLE_VAULT_IDENTITY_DIR}/${vault_name}" "${TMPVAULTS}/${vault_name}"
+done
 
+debug "Inspecting files [${REKEY_FILES}]"
 for file_name in $REKEY_FILES; do
 
     REKEY_VARS=$(egrep "^[^ ].*:\s+\!vault" "${file_name}" -h | cut -d ':' -f 1)
@@ -140,10 +147,9 @@ for file_name in $REKEY_FILES; do
         for var_name in ${REKEY_VARS}; do
 
             debug "Processing ${file_name}:${var_name}"
-            TMPFILE="${TMPDIR}/$(basename "${file_name}")"
             encrypted=$(yq r "${file_name}" "${var_name}")
             if [ $? -ne 0 ]; then
-                echo "error decrypting secret ${var_name} from file ${file_name}"
+                echo "error retrieving secret ${var_name} from file ${file_name}"
                 exit "${KO}"
             fi
 
@@ -156,21 +162,36 @@ for file_name in $REKEY_FILES; do
 
             fi
 
-            decrypted=$(echo "${encrypted}" | ansible-vault decrypt --vault-id "${VAULT_PASS_ID}@${VAULT_PASS_FILE}")
-            if [ $? -ne 0 ]; then
-                echo "error decrypting secret ${var_name} from file ${file_name}"
+            decrypt_success=${KO}
+            debug Processing vaults [${VAULT_NAMES}]
+            for vault in ${VAULT_NAMES}; do
+
+                debug "Processing ${file_name}:${var_name} with vault ${vault}"
+                decrypted=$(echo "${encrypted}" | ansible-vault decrypt --vault-id "${vault}@${TMPVAULTS}/${vault}" 2>/dev/null)
+                if [ $? -ne 0 ]; then
+                    continue;
+                else
+                    decrypt_success=${OK}
+                fi
+
+            done
+            if [ $decrypt_success -ne ${OK} ]; then
+                echo "error decrypting secret ${var_name} from ${file_name}"
                 exit "${KO}"
             fi
 
-            recrypted=$(echo "${decrypted}" | ansible-vault encrypt_string --encrypt-vault-id "${VAULT_PASS_ID}" --vault-password-file ${TMPVAULT})
+            recrypted=$(echo "${decrypted}" | ansible-vault encrypt_string --encrypt-vault-id "${VAULT_PASS_ID}" --vault-password-file ${GENVAULT})
             if [ $? -ne 0 ]; then
                 echo "error encrypting secret ${var_name} from file ${file_name}"
                 exit "${KO}"
             fi
 
+            TMPFILE="${TMPDIR}/$(basename "${file_name}")"
             echo "---" > "${TMPFILE}"
             echo "${var_name}: ${recrypted}" >> "${TMPFILE}"
             yq m -x -i "${file_name}" "${TMPFILE}" -I 2
+
+            echo "${file_name}:${var_name}:${recrypted}"
 
         done
 
@@ -182,7 +203,7 @@ if [ ${REKEY_FORCE} -eq ${TRUE} ]; then
     if [ -f "${VAULT_PASS_FILE}" ]; then
         mv "${VAULT_PASS_FILE}" "${VAULT_PASS_FILE}.$(date +%Y%m%d%H%M%S)"
     fi
-    mv "${TMPVAULT}" "${VAULT_PASS_FILE}"
+    mv "${GENVAULT}" "${VAULT_PASS_FILE}"
 fi
 
 rm -rf ${TMPDIR}
