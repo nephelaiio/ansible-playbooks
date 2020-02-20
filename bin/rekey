@@ -56,6 +56,7 @@ function genxkpass() {
 check_requirement ansible-vault
 check_requirement yq
 check_requirement curl
+check_requirement egrep
 
 # set default values
 REKEY_FORCE=${FALSE}
@@ -86,7 +87,7 @@ do
             shift # past value
             ;;
         --var)
-            REKEY_VARS="$2"
+            REKEY_VAR="$2"
             shift # past argument
             shift # past value
             ;;
@@ -177,8 +178,11 @@ done
 debug Inspecting files [${REKEY_FILES}]
 for file_name in $REKEY_FILES; do
 
-    if [ -z "${REKEY_VARS}" ]; then
+    debug "Processing file ${file_name}"
+    if [ -z "${REKEY_VAR}" ]; then
         REKEY_VARS=$(egrep "^[^ ].*:\s+\!vault" "${file_name}" -h | cut -d ':' -f 1)
+    else
+        REKEY_VARS="${REKEY_VAR}"
     fi
 
     if [ "${REKEY_VARS}" != "" ]; then
@@ -244,8 +248,13 @@ for file_name in $REKEY_FILES; do
             echo "---" > "${TMPFILE}"
             echo "${var_name}: ${recrypted}" >> "${TMPFILE}"
             yq m -x -i "${file_name}" "${TMPFILE}" -I 2
+            echo "Writing ${file_name}"
+            echo "---" > "${TMPFILE}"
+            cat "${file_name}" >> "${TMPFILE}"
+            mv "${TMPFILE}" "${file_name}"
 
-            echo "${file_name}:${var_name}:\n${recrypted}"
+            echo "${file_name}:${var_name}:"
+            echo "          ${recrypted}"
 
         done
 
