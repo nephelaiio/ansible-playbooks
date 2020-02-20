@@ -7,13 +7,13 @@ setup:
 	ansible-playbook setup.yml
 
 $(decrypt): load_vaults
-	bin/decrypt_directory.sh --directory inventory/$(patsubst %_decrypt,%,$@)
+	bin/decrypt --directory inventory/$(patsubst %_decrypt,%,$@)
 
 $(key): load_vaults
-	bin/rekey_directory.sh --vault-id $(patsubst %_key,%,$@)
+	bin/rekey --vault-id $(patsubst %_key,%,$@)
 
 $(rekey): load_vaults
-	bin/rekey_directory.sh --vault-id $(patsubst %_rekey,%,$@)
+	bin/rekey --vault-id $(patsubst %_rekey,%,$@)
 
 load_vaults:
-	bin/load_vaults.sh
+	bin/env

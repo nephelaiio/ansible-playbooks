@@ -107,7 +107,6 @@ for file_name in $DECRYPT_FILES; do
 
         for var_name in ${DECRYPT_VARS}; do
 
-            debug "Processing ${file_name}:${var_name}"
             encrypted=$(yq r "${file_name}" "${var_name}")
             if [ $? -ne 0 ]; then
                 echo "error retrieving secret ${var_name} from file ${file_name}"
@@ -119,12 +118,15 @@ for file_name in $DECRYPT_FILES; do
             for vault in ${VAULT_NAMES}; do
 
                 debug "Processing ${file_name}:${var_name} with vault ${vault}"
-                decrypted=$(echo "${encrypted}" | ansible-vault decrypt --vault-id "${vault}@${TMPVAULTS}/${vault}" 2>/dev/null)
+                decrypted=$(
+                    echo "${encrypted}" |
+                        ansible-vault decrypt --vault-id "${vault}@${TMPVAULTS}/${vault}" 2>/dev/null
+                         )
                 if [ $? -ne 0 ]; then
                     continue;
                 else
                     decrypt_success=${OK}
-                    debug "found matching vault id ${vault}:$(cat ${TMPVAULTS}/${vault}) for ${file_name}:${var_name}"
+                    debug "Found matching vault id ${vault}:$(cat ${TMPVAULTS}/${vault}) for ${file_name}:${var_name}"
                     break;
                 fi
 
