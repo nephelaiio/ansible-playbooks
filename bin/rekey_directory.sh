@@ -71,6 +71,11 @@ do
             shift # past argument
             shift # past value
             ;;
+        --directory)
+            REKEY_DIR="$2"
+            shift # past argument
+            shift # past value
+            ;;
         --rekey)
             REKEY_FORCE=${TRUE}
             shift # past argument
@@ -106,13 +111,16 @@ if [ -z "${VAULT_PASS_ID}" ]; then
     echo "--vault-id <vault id> option is required"
     exit ${KO}
 fi
+if [ -z "${REKEY_DIR}" ]; then
+    REKEY_DIR="inventory/${VAULT_PASS_ID}"
+    exit ${KO}
+fi
 if [ ${#POSITIONAL[@]} -gt 0 ]; then
     echo "Unknown positional arguments ${POSITIONAL[@]}"
     exit ${KO}
 fi
 
 # set derived values
-REKEY_DIR="inventory/${VAULT_PASS_ID}"
 VAULT_PASS_FILE="${ANSIBLE_VAULT_IDENTITY_DIR}/${VAULT_PASS_ID}"
 REKEY_FILES=$(find "${REKEY_DIR}" -name "*.yml" -type f)
 GENVAULT="${TMPDIR}/new/$(basename ${VAULT_PASS_FILE})"
