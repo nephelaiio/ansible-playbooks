@@ -24,6 +24,14 @@ function debug {
     fi
 }
 
+# see https://stackoverflow.com/a/25288289/6860267
+pushd () {
+    command pushd "$@" > /dev/null
+}
+popd () {
+    command popd "$@" > /dev/null
+}
+
 function check_requirement {
     cmd=$1
     command -v "${cmd}" >/dev/null 2>&1 || {
@@ -180,13 +188,15 @@ for file_name in $REKEY_FILES; do
                 exit "${KO}"
             fi
 
-            recrypted=$(echo "${decrypted}" | ansible-vault encrypt_string --encrypt-vault-id "${VAULT_PASS_ID}" --vault-password-file ${GENVAULT})
+            pushd "$(dirname ${GENVAULT})"
+            recrypted=$(echo "${decrypted}" | ansible-vault encrypt_string --encrypt-vault-id "${VAULT_PASS_ID}" --vault-password-file $(basename ${GENVAULT}))
             if [ $? -ne 0 ]; then
                 echo "error encrypting secret ${var_name} from file ${file_name}"
                 exit "${KO}"
             fi
+            popd
 
-            TMPFILE="${TMPDIR}/$(basename "${file_name}")"
+            TMPFILE="${TMPDIR}/$(basename ${file_name})"
             echo "---" > "${TMPFILE}"
             echo "${var_name}: ${recrypted}" >> "${TMPFILE}"
             yq m -x -i "${file_name}" "${TMPFILE}" -I 2
