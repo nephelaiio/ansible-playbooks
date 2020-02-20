@@ -120,6 +120,7 @@ for file_name in $DECRYPT_FILES; do
                     continue;
                 else
                     decrypt_success=${OK}
+                    debug "found matching vault id ${vault} for ${file_name}:${var_name}"
                     break;
                 fi
 
