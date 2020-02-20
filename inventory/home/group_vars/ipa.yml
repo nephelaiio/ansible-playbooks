@@ -35,39 +35,3 @@ nginx_proxy_headers_extra:
   header_referer:
     name: Referer
     value: "https://{{ groups['ipa_server'] | first }}/ipa/ui"
-ipaserver_realm: "{{ ipaserver_domain | upper }}"
-ipaadmin_principal: admin
-ipaadmin_password: !vault |
-  $ANSIBLE_VAULT;1.2;AES256;home
-  63663066646562373062643431353231303930393365323133313532346266393138363264326534
-  3366633136623836373537326131333639653634363033330a316137366334383930373830373237
-  34633338653035306163313633633165373736326232623831646339623230306163666361623731
-  6336373730386637320a333063323331626465613932316333363330613365653833663565366237
-  38353862353762323462616636396564333962666239316632313039356662333064
-ipadm_password: !vault |
-  $ANSIBLE_VAULT;1.2;AES256;home
-  38336163383235636331623766643266643662313563393963373231626136633561353735666533
-  3765633138323564393161373666666163326338313665650a326463356666653966313562393734
-  64666166656635376638333136316434323732623330383965646538376439626665363832623266
-  3332303837323434640a323963613863333766386361613138616662353838656138393930346666
-  62383832643561633765623664653665633166613736346563393466323032393134
-ipaserver_forwarders: "{{ groups['pdns_recursors'] | map('extract', hostvars, 'ansible_host')
-  | list }}"
-ipareplica_forwarders: "{{ ipaserver_forwarders }}"
-ipa_users_host: "{{ groups['ipa_server'] | first }}"
-nginx_proxy_url: "{{ ipa_url }}"
-nginx_proxy_aws_accesskey_id: "{{ aws_access_key_id }}"
-nginx_proxy_aws_accesskey_secret: "{{ aws_secret_access_key }}"
-nginx_proxy_pdns_url: "{{ pdns_url }}"
-nginx_proxy_pdns_api_key: "{{ pdns_api_key }}"
-nginx_proxy_upstream_servers: "{{ groups['ipa_backend'] | map('to_dict', nginx_proxy_upstream_params)
-  | list }}"
-nginx_proxy_upstream_params:
-  address: "%s"
-  port: 80
-  weight: 1
-  health_check: max_fails=3 fail_timeout=5s
-nginx_proxy_headers_extra:
-  header_referer:
-    name: Referer
-    value: "https://{{ groups['ipa_server'] | first }}/ipa/ui"
