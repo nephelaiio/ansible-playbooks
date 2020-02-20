@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+
+ANSIBLE_VAULT_ID_MATCH=${TRUE}
+unset ANSIBLE_VAULT_IDENTITY_LIST
+unset ANSIBLE_VAULT_PASSWORD_FILE
+
 # global definitions
 KO=1
 OK=0
@@ -113,7 +118,6 @@ if [ -z "${VAULT_PASS_ID}" ]; then
 fi
 if [ -z "${REKEY_DIR}" ]; then
     REKEY_DIR="inventory/${VAULT_PASS_ID}"
-    exit ${KO}
 fi
 if [ ${#POSITIONAL[@]} -gt 0 ]; then
     echo "Unknown positional arguments ${POSITIONAL[@]}"
@@ -153,7 +157,7 @@ for vault_name in ${VAULT_NAMES}; do
     cp -a "${ANSIBLE_VAULT_IDENTITY_DIR}/${vault_name}" "${TMPVAULTS}/${vault_name}"
 done
 
-debug "Inspecting files [${REKEY_FILES}]"
+debug Inspecting files [${REKEY_FILES}]
 for file_name in $REKEY_FILES; do
 
     REKEY_VARS=$(egrep "^[^ ].*:\s+\!vault" "${file_name}" -h | cut -d ':' -f 1)
@@ -217,6 +221,7 @@ for file_name in $REKEY_FILES; do
 
 done
 
+debug "Replacing vault file ${VAULT_PASS_FILE} with newly generated secret"
 if [ ${REKEY_FORCE} -eq ${TRUE} ]; then
     if [ -f "${VAULT_PASS_FILE}" ]; then
         mv "${VAULT_PASS_FILE}" "${VAULT_PASS_FILE}.$(date +%Y%m%d%H%M%S)"

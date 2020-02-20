@@ -11,7 +11,7 @@
 
     - name: create vault directory
       file:
-        name: "{{ lookup('env', 'HOME') }}/{{ ansible_vault_identity_dir }}"
+        name: "{{ lookup('env', 'HOME') }}/.ansible_vault"
 
     - name: manage vault identity list global variables
       blockinfile:

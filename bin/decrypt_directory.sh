@@ -7,6 +7,10 @@ TRUE=0
 FALSE=1
 DEBUG=${FALSE}
 
+ANSIBLE_VAULT_ID_MATCH=${TRUE}
+unset ANSIBLE_VAULT_IDENTITY_LIST
+unset ANSIBLE_VAULT_PASSWORD_FILE
+
 function help {
     echo "$0 OPTIONS <playbook> [ <playbook> ... ]"
     echo
@@ -120,7 +124,7 @@ for file_name in $DECRYPT_FILES; do
                     continue;
                 else
                     decrypt_success=${OK}
-                    debug "found matching vault id ${vault} for ${file_name}:${var_name}"
+                    debug "found matching vault id ${vault}:$(cat ${TMPVAULTS}/${vault}) for ${file_name}:${var_name}"
                     break;
                 fi
 
