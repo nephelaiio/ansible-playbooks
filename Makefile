@@ -10,10 +10,10 @@ $(decrypt): load_vaults
 	bin/decrypt --directory inventory/$(patsubst %_decrypt,%,$@)
 
 $(key): load_vaults
-	bin/rekey --vault-id $(patsubst %_key,%,$@)
+	bin/rekey --vault-id $(patsubst %_key,%,$@) --directory inventory/$(patsubst %_key,%,$@)
 
 $(rekey): load_vaults
-	bin/rekey --vault-id $(patsubst %_rekey,%,$@)
+	bin/rekey --vault-id $(patsubst %_rekey,%,$@) --directory inventory/$(patsubst %_rekey,%,$@)
 
 load_vaults:
 	bin/env
