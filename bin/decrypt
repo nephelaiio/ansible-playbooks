@@ -135,7 +135,7 @@ for file_name in $DECRYPT_FILES; do
                 echo "error decrypting secret ${var_name} from ${file_name}"
                 exit "${KO}"
             else
-                echo "${file_name}:${var_name}:${decrypted}"
+                echo "${file_name}:${var_name}: ${decrypted}"
             fi
 
         done
