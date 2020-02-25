@@ -1,4 +1,4 @@
 ---
 snmp_community: nephelaiio
-snmp_contact: "{{ users.teddyphreak.email }}"
+snmp_contact: "root@{{ base_domain }}"
 snmp_version: 2c

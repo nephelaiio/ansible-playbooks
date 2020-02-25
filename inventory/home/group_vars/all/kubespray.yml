@@ -1,3 +1,0 @@
----
-kubeadm_enabled: yes
-k8s_cluster_name: "kube.{{ base_domain }}"

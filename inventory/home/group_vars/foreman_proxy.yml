@@ -53,7 +53,7 @@ foreman_os:
   password_hash: SHA512
 foreman_subnet_pxe: "{{ nets.pxe.network }}/{{ nets.pxe.netmask }}"
 foreman_proxy: "{{ groups['foreman_proxy'] | first }}"
-foreman_server: "{{ groups['foreman_app'] | first }}"
+foreman_server: "{{ groups['foreman_server'] | first }}"
 foreman_environments:
 - name: production
   locations: "{{ foreman_locations }}"
@@ -82,7 +82,7 @@ foreman_hostgroups:
   - name: remote_execution_ssh_user
     value: root
   - name: remote_execution_ssh_keys
-    value: "{{ users.teddyphreak.pubkey }}"
+    value: "{{ users.root.pubkey }}"
   - name: remote_execution_create_user
     value: true
   - name: partitioning-vg-name
@@ -115,9 +115,9 @@ foreman_hostgroups:
     value: false
     parameter_type: boolean
   - name: remote_execution_ssh_user
-    value: "{{ users.teddyphreak.username }}"
+    value: "{{ users.root.username }}"
   - name: remote_execution_ssh_keys
-    value: "{{ users.teddyphreak.pubkey }}"
+    value: "{{ users.root.pubkey }}"
   - name: remote_execution_create_user
     value: true
   - name: remote_execution_effective_user_method

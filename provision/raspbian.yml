@@ -10,7 +10,7 @@
   vars:
 
     raspbian_inventory_group: raspbian
-    raspbian_user_pubkey: "{{ users.teddyphreak.pubkey }}"
+    raspbian_user_pubkey: "{{ users.root.pubkey }}"
     raspbian_user_id: 1000
     raspbian_group_id: 1000
     raspbian_image_path: "{{ playbook_dir }}/../files/images"
