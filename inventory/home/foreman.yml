@@ -1,11 +1,11 @@
 ---
 foreman:
   children:
-    foreman_app:
+    foreman_server:
     foreman_proxy:
     foreman_guests:
 
-foreman_app:
+foreman_server:
   hosts:
     kvmf.home.nephelai.io:
 
@@ -15,9 +15,4 @@ foreman_proxy:
 
 foreman_guests:
   children:
-    nuc:
-
-foreman_external_host:
-  children:
     kvm_guests:
-    nuc:

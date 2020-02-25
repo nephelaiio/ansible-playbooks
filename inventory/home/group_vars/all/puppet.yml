@@ -1,0 +1,2 @@
+---
+puppet_agent_server: "{{ groups['foreman_server'] | first }}"
