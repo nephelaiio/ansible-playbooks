@@ -5,6 +5,7 @@ kvm_hosts:
 
 kvm_guests:
   hosts:
+    kvma.home.nephelai.io:
     kvmf.home.nephelai.io:
     kvmg.home.nephelai.io:
     kvmn.home.nephelai.io:

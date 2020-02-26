@@ -1,0 +1,6 @@
+---
+ansible:
+  vars:
+    kvm_guest_user: "{{ lookup('env', 'USER') }}"
+  hosts:
+    kvma.home.nephelai.io:

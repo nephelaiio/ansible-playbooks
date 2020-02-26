@@ -9,28 +9,25 @@
 
     - nephelaiio.plugins
 
-  vars:
-
-    nfs_export_dirs:
-      - "{{ backup_export_root }} *(rw,no_subtree_check,no_root_squash)"
-
   tasks:
 
-    - name: include private variables
-      include_vars:
-        dir: "{{ variables }}"
-
-    - name: create backup target
+    - name: create backup targets
       file:
-        path: "{{ nfs_export_root }}"
-        mode: 0666
+        path: "{{ item.path }}"
         state: directory
+        owner: "{{ item.owner | default(omit) }}"
+        group: "{{ item.group | default(omit) }}"
+        mode: "{{ item.mode | default(omit) }}"
+      loop: "{{ nfs_export_data }}"
+
+    - name: build export entries
+      set_fact:
+        nfs_exports: "{{ (nfs_exports | default([])) + [item.path + ' ' + item.options] }}"
+      loop: "{{ nfs_export_data }}"
 
     - name: install and configure nfs
       include_role:
         name: nephelaiio.nfs
-      vars:
-        nfs_exports: "{{ nfs_export_dirs }}"
 
     - name: export filesystems
       command: exportfs -a
@@ -49,7 +46,7 @@
               ttl: 3600
               changetype: REPLACE
               records:
-                - content: "{{ ansible_default_ipv4.address }}"
+                - content: "{{ ansible_host | default(ansible_default_ipv4.address) }}"
                   disabled: no
                   comments: []
         headers:

@@ -1,5 +1,7 @@
 ---
-backup_host: backup.home.nephelai.io
-backup_root: /backups
-backup_export_root: "{{ nfs_export_root }}/backups"
-backup_bin_root: /usr/sbin
+backup_host: "backup.{{ base_domain }}"
+kvm_mounts:
+  - path: /backup
+    source: "{{ backup_host }}:/backup"
+    fstype: nfs4
+    options: "*(rw,no_subtree_check,no_root_squash)"

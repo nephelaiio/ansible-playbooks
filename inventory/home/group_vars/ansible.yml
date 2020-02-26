@@ -1,0 +1,7 @@
+---
+kvm_mounts:
+  - path: /home
+    source: "{{ backup_host }}:/home"
+    fstype: nfs4
+    options: "*(rw,no_subtree_check,no_root_squash)"
+      
