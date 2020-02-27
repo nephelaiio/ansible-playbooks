@@ -15,7 +15,7 @@
 
     - name: manage vault identity list global variables
       blockinfile:
-        path: "{{ lookup('env', 'HOME') }}/.bashrc"
+        path: "{{ lookup('env', 'HOME') }}/.profile"
         marker: "#-- ANSIBLE MANAGED BLOCK: ansible-vault --#"
         backup: yes
         block: "{{ lookup('file', 'bin/env') }}"
