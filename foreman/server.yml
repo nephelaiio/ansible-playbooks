@@ -1,0 +1,41 @@
+- name: Install foreman server
+
+  hosts: foreman_server
+
+  become: yes
+
+  pre_tasks:
+
+    - name: install apache
+      package:
+        name: httpd
+
+    - name: update foreman pdns record
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ foreman_fqdn_zone }}"
+        method: PATCH
+        return_content: yes
+        body_format: json
+        body:
+          rrsets:
+            - name: "{{ foreman_fqdn_host }}"
+              type: A
+              ttl: 3600
+              changetype: REPLACE
+              records:
+                - content: "{{ ansible_host | default(ansible_default_ipv4.address) }}"
+                  disabled: no
+                  comments: []
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
+      vars:
+        foreman_host: "{{ foreman_url | urlsplit('hostname') }}"
+        foreman_fqdn_host: "{{ foreman_host | regex_replace('\\.$', '') }}."
+        foreman_fqdn_zone: "{{ foreman_host.split('.')[1:] | join('.') }}"
+
+  roles:
+
+    - nephelaiio.acme_certificate_route53
+    - nephelaiio.foreman.repo
+    - nephelaiio.foreman.server

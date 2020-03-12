@@ -31,6 +31,20 @@ foreman_installer_extra_options:
   - "--foreman-oauth-active true"
   - "--foreman-oauth-consumer-key {{ foreman_oauth_consumer_key }}"
   - "--foreman-oauth-consumer-secret {{ foreman_oauth_consumer_secret }}"
+  - "--foreman-server-ssl-cert {{ acme_certificate_certfile }}"
+  - "--foreman-server-ssl-chain {{ acme_certificate_chainfile }}"
+  - "--foreman-server-ssl-key {{ acme_certificate_keyfile }}"
+  - "--foreman-proxy-ssl-ca /etc/puppetlabs/puppet/ssl/certs/ca.pem"
+  - "--foreman-proxy-ssl-cert /etc/puppetlabs/puppet/ssl/certs/{{ inventory_hostname }}.pem"
+  - "--foreman-proxy-ssl-key /etc/puppetlabs/puppet/ssl/private_keys/{{ inventory_hostname }}.pem"
+  - "--foreman-proxy-oauth-consumer-key {{ foreman_oauth_consumer_key }}"
   - "--foreman-proxy-oauth-consumer-key {{ foreman_oauth_consumer_key }}"
   - "--foreman-proxy-oauth-consumer-secret {{ foreman_oauth_consumer_secret }}"
   - "--foreman-proxy-foreman-base-url {{ foreman_url }}"
+
+acme_certificate_domain: "{{ foreman_url | urlsplit('hostname') }}"
+acme_certificate_certfile: "/etc/httpd/{{ foreman_url | urlsplit('hostname') }}.crt"
+acme_certificate_chainfile: "/etc/httpd/{{ foreman_url | urlsplit('hostname') }}.chain.crt"
+acme_certificate_keyfile: "/etc/httpd/{{ foreman_url | urlsplit('hostname') }}.key"
+acme_certificate_group_members:
+  - nginx

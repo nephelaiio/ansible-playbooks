@@ -1,23 +1,30 @@
 ---
-- name: geerlingguy.ntp
-- name: geerlingguy.repo-epel
-- name: mrlesmithjr.keepalived
-- name: brianshumate.consul
-- name: kibatic.traefik
-- name: bertvv.hosts
-- name: bertvv.dnsmasq
-- name: ovirt.engine-setup
-- name: ovirt.repositories
-- name: ovirt.infra
-- name: nephelaiio.plugins
-- name: nephelaiio.pip
-- name: nephelaiio.nfs
-- name: nephelaiio.docker
-- name: linux-system-roles.network
-- name: inviqa.jumpcloud
-- name: gluster.infra
-  src: https://github.com/gluster/gluster-ansible-infra.git
-- name: gluster.cluster
-  src: https://github.com/gluster/gluster-ansible-cluster.git
-- name: mhutter.docker-systemd-service
-  src: https://github.com/nephelaiio/ansible-role-docker-systemd-service.git
+roles:
+  - name: nginxinc.nginx
+  - name: geerlingguy.ntp
+  - name: geerlingguy.repo-epel
+  - name: mrlesmithjr.keepalived
+  - name: brianshumate.consul
+  - name: kibatic.traefik
+  - name: bertvv.hosts
+  - name: bertvv.dnsmasq
+  - name: ovirt.engine-setup
+  - name: ovirt.repositories
+  - name: ovirt.infra
+  - name: nephelaiio.plugins
+  - name: nephelaiio.pip
+  - name: nephelaiio.nfs
+  - name: nephelaiio.docker
+  - name: nephelaiio.acme_certificate_route53
+  - name: linux-system-roles.network
+  - name: inviqa.jumpcloud
+  - name: gluster.infra
+    src: https://github.com/gluster/gluster-ansible-infra.git
+  - name: gluster.cluster
+    src: https://github.com/gluster/gluster-ansible-cluster.git
+  - name: mhutter.docker-systemd-service
+    src: https://github.com/nephelaiio/ansible-role-docker-systemd-service.git
+
+collections:
+  - name: nephelaiio.foreman
+    source: https://github.com/nephelaiio/ansible-playbooks-foreman.git
