@@ -1,0 +1,19 @@
+---
+- name: Install ovirt engine
+
+  hosts: ovirt_engine
+
+  tasks:
+
+    - name: register traefik service
+      include_role:
+        name: nephelaiio.consul_service
+      vars:
+        consul_service_address: "{{ ansible_default_ipv4.address }}"
+        consul_service_name: ovirt
+        consul_service_port: 443
+        consul_service_cname: "traefik.service.consul.{{ base_domain }}."
+        consul_service_tags:
+          - traefik.protocol=https
+          - traefik.frontend.passHostHeader=true
+          - traefik.enable=true

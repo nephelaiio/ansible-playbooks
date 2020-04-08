@@ -11,22 +11,40 @@
 
   roles:
 
+    - nephelaiio.plugins
     - ovirt.repositories
 
   tasks:
 
-    - name: register traefik service
-      include_role:
-        name: nephelaiio.consul_service
+    - name: update ovirt pdns record
+      uri:
+        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ ovirt_fqdn_zone }}"
+        method: PATCH
+        return_content: yes
+        body_format: json
+        body:
+          rrsets:
+            - name: "{{ ovirt_fqdn_host }}"
+              type: A
+              ttl: 3600
+              changetype: REPLACE
+              records:
+                - content: "{{ ansible_default_ipv4.address }}"
+                  disabled: no
+                  comments: []
+        headers:
+          X-API-Key: "{{ pdns_api_key }}"
+        status_code: 204
       vars:
-        consul_service_address: "{{ ansible_default_ipv4.address }}"
-        consul_service_name: ovirt
-        consul_service_port: 443
-        consul_service_cname: "traefik.service.consul.{{ base_domain }}."
-        consul_service_tags:
-          - traefik.protocol=https
-          - traefik.frontend.passHostHeader=true
-          - traefik.enable=true
+        ovirt_fqdn_host: "{{ ovirt_url | urlsplit('hostname') | regex_replace('\\.$', '') }}."
+        ovirt_fqdn_zone: "{{ ovirt_fqdn_host | split_with('.') | tail | join('.') }}"
+      register: pdns_zones_query
+
+    - name: disable firewalld
+      service:
+        name: firewalld
+        state: stopped
+        enabled: no
 
     - name: install ovirt engine
       include_role:
