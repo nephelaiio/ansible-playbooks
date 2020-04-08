@@ -1,5 +1,6 @@
 ---
 foreman_url: "https://foreman.{{ base_domain }}"
+foreman_admin_user: admin
 foreman_admin_pass: !vault |
   $ANSIBLE_VAULT;1.2;AES256;home
   35303265356535666338333932333439393932376562373131306465616236363039616565386230
@@ -26,7 +27,8 @@ foreman_oauth_consumer_secret: !vault |
 
 foreman_pdns_api_key: "{{ pdns_api_key }}"
 foreman_pdns_url: "{{ pdns_url }}"
-
 foreman_dhcp_nameservers: "{{ groups['pdns_recursors'] | map('extract', hostvars, ['ansible_host']) | list }}"
 foreman_dhcp_from: 64
 foreman_dhcp_to: 96
+foreman_api_user: "{{ foreman_admin_user }}"
+foreman_api_pass: "{{ foreman_admin_pass }}"

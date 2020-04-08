@@ -1,18 +1,7 @@
 ---
-foreman:
-  children:
-    foreman_server:
-    foreman_proxy:
-    foreman_guests:
-
-foreman_server:
-  hosts:
-    kvmf.home.nephelai.io:
-
-foreman_proxy:
-  hosts:
-    kvmg.home.nephelai.io:
-
-foreman_guests:
-  children:
-    kvm_guests:
+plugin: foreman
+url: https://foreman.home.nephelai.io
+user: admin
+password: Apn3@d1v3r
+validate_certs: False
+group_prefix: ""

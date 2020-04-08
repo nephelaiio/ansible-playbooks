@@ -24,7 +24,3 @@ roles:
     src: https://github.com/gluster/gluster-ansible-cluster.git
   - name: mhutter.docker-systemd-service
     src: https://github.com/nephelaiio/ansible-role-docker-systemd-service.git
-
-collections:
-  - name: nephelaiio.foreman
-    source: https://github.com/nephelaiio/ansible-playbooks-foreman.git
