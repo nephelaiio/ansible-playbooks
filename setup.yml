@@ -37,3 +37,4 @@
 
     - name: install galaxy collections
       command: ansible-galaxy collection install -r role/requirements.yml --force
+      when: false
