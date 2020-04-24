@@ -5,3 +5,4 @@ user: admin
 password: Apn3@d1v3r
 validate_certs: False
 group_prefix: ""
+foreman_backup_dir: "{{ backup_base_path }}"
