@@ -33,3 +33,4 @@ foreman_dhcp_from: 64
 foreman_dhcp_to: 96
 foreman_api_user: "{{ foreman_admin_user }}"
 foreman_api_pass: "{{ foreman_admin_pass }}"
+foreman_backup_dir: "{{ backup_base_path }}"
