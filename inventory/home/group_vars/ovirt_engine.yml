@@ -3,7 +3,12 @@ ovirt_engine_setup_admin_password: "{{ ovirt_admin_password }}"
 ovirt_engine_setup_db_password: "{{ ovirt_admin_password }}"
 ovirt_engine_setup_fqdn: "{{ ovirt_url | urlsplit('hostname') }}"
 ovirt_engine_setup_organization: "{{ base_domain }}"
-ovirt_engine_setup_firewall_manager: ''
 ovirt_engine_setup_wait_running_tasks: yes
 ovirt_engine_setup_version: '4.3'
 ovirt_engine_setup_product_type: ovirt
+ovirt_logical_networks:
+  - name: ovirt
+    data_center: "{{ ovirt_data_center }}"
+    vlan_tag: 3
+    vm_network: yes
+    wait: yes

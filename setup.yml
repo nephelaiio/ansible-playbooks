@@ -29,7 +29,14 @@
 
   tasks:
 
-    - name: install requirements
+    - name: install package requirements
+      package:
+        name:
+          - libcurl4-openssl-dev
+          - libxml2-dev
+      become: yes
+
+    - name: install pip requirements
       command: pip install -r requirements.txt
 
     - name: install galaxy roles

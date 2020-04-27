@@ -12,3 +12,4 @@ pyhcl>=0.3.12
 openshift>=0.10.1
 xkcdpass>=1.17.3
 ovirt-engine-sdk-python>=4.3.0
+libselinux>=0.2.1
