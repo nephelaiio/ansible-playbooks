@@ -2,6 +2,26 @@
 raspbian:
   hosts:
     rpia.home.nephelai.io:
+      ansible_user: pi
+      rpi_state: offline
+      ansible_host: 192.168.5.200
+      host_netmask: 255.255.255.0
+      host_gateway: 192.168.5.1
     rpib.home.nephelai.io:
+      ansible_user: pi
+      rpi_state: offline
+      ansible_host: 192.168.5.201
+      host_netmask: 255.255.255.0
+      host_gateway: 192.168.5.1
     rpic.home.nephelai.io:
+      ansible_user: pi
+      rpi_state: offline
+      ansible_host: 192.168.5.202
+      host_netmask: 255.255.255.0
+      host_gateway: 192.168.5.1
     rpid.home.nephelai.io:
+      ansible_user: pi
+      rpi_state: offline
+      ansible_host: 192.168.5.203
+      host_netmask: 255.255.255.0
+      host_gateway: 192.168.5.1

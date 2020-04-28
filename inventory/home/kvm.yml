@@ -6,8 +6,30 @@ kvm_hosts:
 kvm_guests:
   hosts:
     kvma.home.nephelai.io:
+      ansible_python_interpreter: /usr/bin/python3
+      kvm_profile: large
+      memory: 8192
+      hw_address: 7a:85:56:fb:6d:eb
+      ansible_host: 192.168.5.100
+      kvm_image: bionic
     kvmf.home.nephelai.io:
-    kvmg.home.nephelai.io:
+      kvm_profile: large
+      memory: 8192
+      hw_address: 7a:85:56:fb:6d:d0
+      ansible_host: 192.168.5.105
+      kvm_image: centos7
     kvmn.home.nephelai.io:
+      ansible_python_interpreter: /usr/bin/python3
+      hw_address: 7a:85:56:fb:6d:d4
+      ansible_host: 192.168.5.114
+      kvm_image: bionic
     kvms.home.nephelai.io:
+      ansible_python_interpreter: /usr/bin/python3
+      hw_address: 7a:85:56:fb:6d:d5
+      ansible_host: 192.168.5.119
+      kvm_image: bionic
     kvmt.home.nephelai.io:
+      ansible_python_interpreter: /usr/bin/python3
+      hw_address: 7a:85:56:fb:6d:d6
+      ansible_host: 192.168.5.120
+      kvm_image: bionic
