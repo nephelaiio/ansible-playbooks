@@ -14,5 +14,9 @@ ovirt_engine:
   hosts:
     nucx.home.nephelai.io:
 
-ovirt_templates:
+ovirt_guests:
   hosts:
+    ovma.home.nephelai.io:
+      ansible_host: 192.168.3.11
+      vm_profile: small
+      vm_network: ovirt

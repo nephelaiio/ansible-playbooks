@@ -28,3 +28,6 @@ ipa_users:
   first_name: Ovirt
   last_name: Bind
   pass: "{{ ovirt_admin_password }}"
+
+ovirt_disk_default_size: 10GiB
+ovirt_storage_domain: hosted_storage

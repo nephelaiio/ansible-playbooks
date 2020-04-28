@@ -1,0 +1,92 @@
+- name: Create ovirt centos guests
+
+  hosts: ovirt_guests
+
+  gather_facts: no
+
+  vars:
+
+    ovirt_state_default: running
+    engine_fqdn: "{{ ovirt_auth.url | urlsplit('hostname') }}"
+    engine_user: "{{ ovirt_auth.username }}"
+    engine_password: "{{ ovirt_auth.password }}"
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - block:
+
+        - name: install ovirt sdk
+          pip:
+            name: ovirt-engine-sdk-python
+          changed_when: false
+          run_once: yes
+          become: yes
+
+        - name: set vm profile facts
+          set_fact:
+            vm_profile_template: "{{ ovirt_profiles[hostvars[inventory_hostname].vm_profile | default(default_vm_profile)] }}"
+            vm_attr_defaults:
+              name: "{{ inventory_hostname }}"
+              vm_state: "{{ ovirt_state_default }}"
+            vm_hostvars: "{{ hostvars[inventory_hostname] }}"
+          tags:
+            - always
+
+        - name: set vm profile
+          set_fact:
+            vm: "{{ vm_profile_template | combine(vm_attr_defaults, vm_hostvars, recursive=true) }}"
+          tags:
+            - always
+
+        - ovirt_template_info:
+            auth: "{{ ovirt_auth }}"
+          register: ovirt_template_query
+
+        - debug:
+            var: ovirt_template_query
+
+        - name: create ovirt vm
+          ovirt_vm:
+            name: "{{ ovirt_vm.name }}"
+            cluster: "{{ ovirt_vm.cluster }}"
+            auth: "{{ ovirt_vm.ovirt_auth }}"
+            state: present
+            cloud_init: "{{ ovirt_vm.cloud_init }}"
+            cpu_cores: "{{ ovirt_vm.vm_cpu }}"
+            high_availability: "{{ ovirt_vm.high_availability }}"
+            template: "{{ ovirt_vm.template }}"
+            operating_system: "{{ ovirt_vm.ovirt_os | default('other_linux') }}"
+            type: server
+            serial_console: yes
+            wait: yes
+          vars:
+            ovirt_vm: "{{ vm | combine(vm_attrs) }}"
+            vm_network: "{{ nets[vm.vm_network] }}"
+            vm_attrs:
+              state: "{{ vm.vm_state }}"
+              cluster: "{{ vm.ovirt_cluster }}"
+              cores: "{{ vm.vm_cpu }}"
+              memory: "{{ vm.vm_memory }}"
+              template: "{{ vm.vm_template | default(ovirt_template_default) }}"
+              high_availability: true
+              cloud_init:
+                host_name: "{{ vm.inventory_hostname }}"
+                timezone: "{{ vm.ovirt_guest_timezone }}"
+                user_name: "{{ vm.ovirt_guest_user }}"
+                root_password: "{{ vm.ovirt_guest_pass }}"
+                authorized_ssh_keys: "{{ vm.ovirt_guest_pubkey }}"
+                regenerate_ssh_keys: true
+                dns_servers: "{{ vm_network.ns | join(' ') }}"
+                nic_boot_protocol: static
+                nic_ip_address: "{{ vm.ansible_host }}"
+                nic_netmask: "{{ vm_network.netmask }}"
+                nic_gateway: "{{ vm_network.router }}"
+                nic_on_boot: yes
+          no_log: "{{ ovirt_nolog | default(true) }}"
+          when: vm.vm_state in ['present', 'running']
+
+      delegate_to: localhost
