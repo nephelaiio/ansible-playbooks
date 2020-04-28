@@ -8,11 +8,3 @@ ovirt_profiles:
   small:
     vm_cpu: 2
     vm_memory: 2GiB
-    vm_disks:
-      - size: "{{ ovirt_disk_default_size }}"
-        name: "{{ inventory_hostname }}"
-        storage_domain: "{{ ovirt_storage_domain }}"
-        interface: virtio_scsi
-        bootable: yes
-        activate: yes
-        format: cow

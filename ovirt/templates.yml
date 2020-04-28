@@ -18,49 +18,16 @@
 
   tasks:
 
-    - name: manage ovirt bionic-20200425 template
+    - name: manage ovirt templates
       include_role:
         name: ovirt.image-template
       vars:
-        template_name: bionic-20200425
-        qcow_url: https://cloud-images.ubuntu.com/bionic/20200425/bionic-server-cloudimg-amd64.img
-        template_disk_storage: "{{ ovirt_storage_domain }}"
-        template_disk_format: cow
-        template_cluster: Default
-        template_type: server
-
-    - name: manage ovirt focal-20200424 template
-      include_role:
-        name: ovirt.image-template
-      vars:
-        template_name: focal-20200424
-        qcow_url: https://cloud-images.ubuntu.com/focal/20200424/focal-server-cloudimg-amd64.img
-        template_disk_storage: "{{ ovirt_storage_domain }}"
-        template_disk_format: cow
-        template_cluster: Default
-        template_type: server
-      when: false
-
-    - name: manage ovirt centos7-1907 template
-      include_role:
-        name: ovirt.image-template
-      vars:
-        template_name: centos7-1907
-        qcow_url: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud-1907.qcow2
-        template_disk_storage: "{{ ovirt_storage_domain }}"
-        template_disk_format: cow
-        template_cluster: Default
-        template_type: server
-      when: false
-
-    - name: manage ovirt centos8-1911 template
-      include_role:
-        name: ovirt.image-template
-      vars:
-        template_name: centos8-1911
-        qcow_url: https://cloud.centos.org/centos/8/x86_64/images/CentOS-8-GenericCloud-8.1.1911-20200113.3.x86_64.qcow2
-        template_disk_storage: "{{ ovirt_storage_domain }}"
-        template_cluster: Default
-        template_type: server
-        template_disk_format: cow
-      when: false
+        template_name: "{{ item.key }}"
+        qcow_url: "{{ item.value.url }}"
+        template_disk_storage: "{{ item.value.domain }}"
+        template_disk_format: "{{ item.value.format | default('cow') }}"
+        template_cluster: "{{ item.value.cluster | default('Default') }}"
+        template_type: "{{ item.value.type | default('server') }}"
+      loop_control:
+        label: "{{ item.key }}"
+      loop: "{{ ovirt_templates | dict2items }}" 
