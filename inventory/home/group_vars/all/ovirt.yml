@@ -29,20 +29,22 @@ ipa_users:
   last_name: Bind
   pass: "{{ ovirt_admin_password }}"
 
-ovirt_disk_default_size: 10GiB
 ovirt_templates:
   bionic-20200425:
     url: https://cloud-images.ubuntu.com/bionic/20200425/bionic-server-cloudimg-amd64.img
     storage_domain: hosted_storage
     iface: ens3
     agent: ovirt-guest-agent
+    cluster: Default
   focal-20200424:
     url: https://cloud-images.ubuntu.com/focal/20200424/focal-server-cloudimg-amd64.img
     storage_domain: hosted_storage
     iface: ens3
     agent: qemu-guest-agent
+    cluster: Default
   centos7-1907:
     url: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud-1907.qcow2
     storage_domain: hosted_storage
     iface: eth0
     agent: ovirt-guest-agent
+    cluster: Default
