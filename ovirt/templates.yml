@@ -25,7 +25,7 @@
       vars:
         template_name: "{{ item.key }}"
         qcow_url: "{{ item.value.url }}"
-        template_disk_storage: "{{ item.value.domain }}"
+        template_disk_storage: "{{ item.value.storage_domain }}"
         template_disk_format: "{{ item.value.format | default('cow') }}"
         template_cluster: "{{ item.value.cluster }}"
         template_type: "{{ item.value.type | default('server') }}"
