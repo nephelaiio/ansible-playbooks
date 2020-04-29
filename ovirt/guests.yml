@@ -39,12 +39,36 @@
           tags:
             - always
 
+        - block:
+
+            - name: stop ovirt vm
+              ovirt_vm:
+                name: "{{ vm.name }}"
+                cluster: "{{ vm.ovirt_cluster }}"
+                auth: "{{ vm.ovirt_auth }}"
+                state: stopped
+                wait: yes
+
+            - name: destroy ovirt vm
+              ovirt_vm:
+                name: "{{ vm.name }}"
+                cluster: "{{ vm.ovirt_cluster }}"
+                auth: "{{ vm.ovirt_auth }}"
+                state: absent
+                wait: yes
+
+            - name: wait for vms to be destroyed
+              pause:
+                seconds: 5
+
+          when: vm.vm_state | default('present') == 'recreate'
+
         - name: create ovirt vm
           ovirt_vm:
             name: "{{ ovirt_vm.name }}"
             cluster: "{{ ovirt_vm.cluster }}"
             auth: "{{ ovirt_vm.ovirt_auth }}"
-            state: "{{ ovirt_vm.vm_state }}"
+            state: "{{ ovirt_vm.state }}"
             cloud_init: "{{ ovirt_vm.cloud_init }}"
             cpu_cores: "{{ ovirt_vm.vm_cpu }}"
             high_availability: "{{ ovirt_vm.high_availability }}"
@@ -59,7 +83,7 @@
             vm_network: "{{ nets[vm.vm_network] }}"
             vm_template: "{{ vm.vm_template | default(ovirt_template_default) }}"
             vm_attrs:
-              state: "{{ vm.vm_state }}"
+              state: "{{ (vm.vm_state != 'recreate') | ternary(vm.vm_state, 'running') }}"
               cluster: "{{ vm.ovirt_cluster }}"
               cores: "{{ vm.vm_cpu }}"
               memory: "{{ vm.vm_memory }}"
@@ -96,7 +120,7 @@
           vars:
             vm_network: "{{ nets[vm.vm_network] }}"
           no_log: "{{ ovirt_nolog | default(true) }}"
-          when: vm.vm_state in ['present', 'running']
+          when: vm.vm_state in ['present', 'running', 'recreate']
 
       delegate_to: localhost
 
