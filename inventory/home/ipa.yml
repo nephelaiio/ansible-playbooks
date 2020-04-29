@@ -9,7 +9,7 @@ ipa_replica:
 
 ipa_backend:
   vars:
-    kvm_state: absent
+    vm_state: absent
   children:
     ipa_server:
     ipa_replica:

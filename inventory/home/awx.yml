@@ -1,7 +1,7 @@
 ---
 awx:
   vars:
-    kvm_state: absent
+    vm_state: absent
   children:
     awx_app:
 

@@ -1,5 +1,5 @@
 ---
 consul:
   vars:
-    kvm_state: absent
+    vm_state: absent
   hosts: {}

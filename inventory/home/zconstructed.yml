@@ -1,0 +1,6 @@
+---
+plugin: constructed
+strict: no
+groups:
+  online: (vm_state | default('present')) in ['present', 'running'] and (rpi_state | default('present')) in ['present']
+  nuc: inventory_hostname is search("nuc.*")

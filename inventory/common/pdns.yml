@@ -1,7 +1,7 @@
 # pdns api url
 pdns_url: "https://pdns.{{ base_domain }}"
 # toggle to force registration of host fqdns to pdns host
-pdns_register_state: "{{ kvm_state | default('present') }}"
+pdns_register_state: "{{ vm_state | default('present') }}"
 # default domain for resolvers
 pdns_recursor_resolv_domain: "{{ base_domain }}"
 # list of resolvers
