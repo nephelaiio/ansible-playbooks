@@ -19,16 +19,33 @@
 
   tasks:
 
+    - name: destroy ovirt templates
+      ovirt_template:
+        auth: "{{ ovirt_auth }}"
+        name: "{{ ovirt_template_item.key }}"
+        state: absent
+      vars:
+        ovirt_template_defaults:
+          template_state: "{{ template_state | default('present') }}"
+        ovirt_template_item: "{{ ovirt_template_defaults | combine(item) }}"
+      loop_control:
+        label: "{{ item.key }}"
+      loop: "{{ ovirt_templates | dict2items }}"
+      when: ovirt_template_item.template_state in ['absent', 'recreate']
+
     - name: manage ovirt templates
       include_role:
         name: ovirt.image-template
       vars:
-        template_name: "{{ item.key }}"
-        qcow_url: "{{ item.value.url }}"
-        template_disk_storage: "{{ item.value.storage_domain }}"
-        template_disk_format: "{{ item.value.format | default('cow') }}"
-        template_cluster: "{{ item.value.cluster }}"
-        template_type: "{{ item.value.type | default('server') }}"
+        template_name: "{{ ovirt_template_item.key }}"
+        qcow_url: "{{ ovirt_template_item.value.url }}"
+        template_disk_format: "{{ ovirt_template_item.value.format | default('cow') }}"
+        template_cluster: "{{ ovirt_template_item.value.cluster }}"
+        template_type: "{{ ovirt_template_item.value.type | default('server') }}"
+        ovirt_template_defaults:
+          template_state: "{{ template_state | default('present') }}"
+        ovirt_template_item: "{{ ovirt_template_defaults | combine(item) }}"
       loop_control:
         label: "{{ item.key }}"
       loop: "{{ ovirt_templates | dict2items }}" 
+      when: ovirt_template_item.template_state in ['present', 'recreate']
