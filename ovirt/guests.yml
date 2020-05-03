@@ -39,6 +39,15 @@
           tags:
             - always
 
+        - name: query storage domains
+          ovirt_storage_domain_info:
+            auth: "{{ ovirt_auth }}"
+          register: ovirt_storage_domains
+
+        - name: build storage domain dict
+          set_fact:
+            ovirt_storage_domain_dict: "{{ ovirt_storage_domains.ovirt_storage_domains | list_to_dict('id') }}"
+
         - block:
 
             - name: stop ovirt vm
@@ -61,7 +70,7 @@
               pause:
                 seconds: 5
 
-          when: vm.vm_state | default('present') == 'recreate'
+          when: vm.vm_state | default(ovirt_state_default) == 'recreate'
 
         - name: create ovirt vm
           ovirt_vm:
@@ -107,60 +116,115 @@
                 nic_gateway: "{{ vm_network.router }}"
                 nic_name: "{{ ovirt_templates[vm_template].iface }}"
                 nic_on_boot: yes
+                custom_script: "{{ ovirt_templates[vm.vm_template].custom_script if 'custom_script' in ovirt_templates[vm.vm_template] else '' }}"
+          register: ovirt_create
           no_log: "{{ ovirt_nolog | default(true) }}"
 
-        - name: manage vm nic network
-          ovirt_nic:
-            state: plugged
-            name: nic1
-            vm: "{{ vm.name }}"
-            auth: "{{ vm.ovirt_auth }}"
-            network: "{{ vm_network.name }}"
-            profile: "{{ vm_network.name }}"
-          vars:
-            vm_network: "{{ nets[vm.vm_network] }}"
-          no_log: "{{ ovirt_nolog | default(true) }}"
-          when: vm.vm_state in ['present', 'running', 'recreate']
+        - block:
+
+            - name: manage vm nic network
+              ovirt_nic:
+                state: plugged
+                name: nic1
+                vm: "{{ vm.name }}"
+                auth: "{{ vm.ovirt_auth }}"
+                network: "{{ vm_network.name }}"
+                profile: "{{ vm_network.name }}"
+              vars:
+                vm_network: "{{ nets[vm.vm_network] }}"
+              no_log: "{{ ovirt_nolog | default(true) }}"
+
+            - name: query vm disk
+              ovirt_disk_info:
+                auth: "{{ vm.ovirt_auth }}"
+                pattern: "vm_names={{ vm.name }}"
+              register: ovirt_vm_disks
+
+            - name: resize disk
+              ovirt_disk:
+                state: present
+                storage_domain: "{{ ovirt_storage_domain_dict[ovirt_domain_target.id].name }}"
+                id: "{{ ovirt_disk_target.id }}"
+                size: "{{ vm.vm_disk }}"
+                auth: "{{ vm.ovirt_auth }}"
+                vm_name: "{{ vm.name }}"
+              vars:
+                ovirt_disk_target: "{{ ovirt_vm_disks.ovirt_disks | first }}"
+                ovirt_domain_target: "{{ ovirt_disk_target.storage_domains | first }}"
+              when: "'vm_disk' in vm"
+              notify: resize disk
+
+          when: (vm.vm_state | default(ovirt_state_default)) in ['present', 'running', 'recreate']
 
       delegate_to: localhost
 
-    - name: wait for provisioning to complete
-      wait_for_connection:
-
-    - name: gather facts
-      setup:
-
     - block:
 
-        - name: install ovirt guest agent apt package
-          apt:
-            name: "{{ ovirt_templates[vm_template].agent }}"
-            update_cache: yes
+        - name: wait for provisioning to complete
+          wait_for_connection:
 
-      when:
-        - ansible_os_family | lower == 'debian'
-        - "'agent' in ovirt_templates[vm_template]"
-      become: yes
+        - name: clean up nameserver configuration
+          lineinfile:
+            path: /etc/resolv.conf
+            state: absent
+            regexp: '10\.0\.2\.3'
 
-    - block:
+        - name: gather facts
+          setup:
+
+        - name: uninstall cloud init
+          package:
+            name: cloud-init
+            state: absent
+          retries: 3
+          register: package_install
+          delay: 180
+          until: not package_install.failed
 
         - name: install epel
           yum:
             name: epel-release
+          when: ansible_os_family | lower == 'redhat'
 
-        - name: install ovirt guest agent yum package
-          yum:
-            name: "{{ ovirt_templates[vm_template].agent }}"
+        - name: install ovirt guest agent
+          package:
+            name: qemu-guest-agent
 
-      when:
-        - ansible_os_family | lower == 'redhat'
-        - "'agent' in ovirt_templates[vm_template]"
+        - name: start ovirt guest agent
+          service:
+            name: qemu-guest-agent
+            state: started
+            enabled: yes
+
+        - name: group provisioned hosts
+          group_by:
+            key: "ovirt_{{ 'changed' if (ovirt_create.changed | bool) else 'noop' }}"
+
+        - name: record provisioned hosts
+          set_stats:
+            data:
+              dynamic_provisioning: "{{ groups['ovirt_changed'] | default([]) }}"
+              aggregate: yes
+          run_once: yes
+
+      when: (vm_state | default(ovirt_state_default)) in ['present', 'running', 'recreate']
       become: yes
 
-    - name: start ovirt guest agent
-      service:
-        name: "{{ ovirt_templates[vm_template].agent }}"
-        state: started
-        enabled: yes
+  handlers:
+
+    - name: growpart
+      command: growpart /dev/vda 1
+      listen: resize disk
       become: yes
 
+    - name: resize2fs
+      command: resize2fs /dev/vda1
+      listen: resize disk
+      when: ansible_os_family | lower == 'debian'
+      become: yes
+
+    - name: xfs_growfs
+      command: xfs_growfs /dev/vda1
+      listen: resize disk
+      when: ansible_os_family | lower == 'redhat'
+      become: yes
