@@ -1,15 +1,23 @@
 ---
 ipa_server:
   hosts:
-    kvmd.home.nephelai.io:
+    ovma.home.nephelai.io:
+      vm_template: centos7-1907
+      ansible_host: 192.168.3.11
+      vm_profile: small
+      vm_network: ovirt
+      vm_disk: 20GiB
 
 ipa_replica:
   hosts:
-    kvme.home.nephelai.io:
+    ovmb.home.nephelai.io:
+      vm_template: centos7-1907
+      ansible_host: 192.168.3.12
+      vm_profile: small
+      vm_network: ovirt
+      vm_disk: 20GiB
 
 ipa_backend:
-  vars:
-    vm_state: absent
   children:
     ipa_server:
     ipa_replica:
