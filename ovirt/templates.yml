@@ -33,7 +33,28 @@
       loop: "{{ ovirt_templates | dict2items }}"
       when: ovirt_template_item.template_state in ['absent', 'recreate']
 
-    - name: manage ovirt templates
+    - name: manage ovirt templates with explicit storage domain allocation
+      include_role:
+        name: ovirt.image-template
+      vars:
+        template_name: "{{ ovirt_template_item.key }}"
+        qcow_url: "{{ ovirt_template_item.value.url }}"
+        template_disk_format: "{{ ovirt_template_item.value.format | default('cow') }}"
+        template_disk_storage: "{{ ovirt_template_item.storage_domain }}"
+        template_cluster: "{{ ovirt_template_item.value.cluster }}"
+        template_type: "{{ ovirt_template_item.value.type | default('server') }}"
+        ovirt_template_defaults:
+          template_state: "{{ template_state | default('present') }}"
+        ovirt_template_item: "{{ ovirt_template_defaults | combine(ovirt_template_overrides) }}"
+      loop_control:
+        loop_var: ovirt_template_overrides
+        label: "{{ ovirt_template_overrides.key }}"
+      loop: "{{ ovirt_templates | dict2items }}"
+      when:
+        - "'storage_domain' in ovirt_template_item"
+        - ovirt_template_item.template_state in ['present', 'recreate']
+
+    - name: manage ovirt templates without explicit storage domain allocation
       include_role:
         name: ovirt.image-template
       vars:
@@ -44,9 +65,11 @@
         template_type: "{{ ovirt_template_item.value.type | default('server') }}"
         ovirt_template_defaults:
           template_state: "{{ template_state | default('present') }}"
-        ovirt_template_item: "{{ ovirt_template_defaults | combine(ovirt_template_overrides }}"
+        ovirt_template_item: "{{ ovirt_template_defaults | combine(ovirt_template_overrides) }}"
       loop_control:
         loop_var: ovirt_template_overrides
-        label: "{{ item.key }}"
-      loop: "{{ ovirt_templates | dict2items }}" 
-      when: ovirt_template_item.template_state in ['present', 'recreate']
+        label: "{{ ovirt_template_overrides.key }}"
+      loop: "{{ ovirt_templates | dict2items }}"
+      when:
+        - not 'storage_domain' in ovirt_template_item
+        - ovirt_template_item.template_state in ['present', 'recreate']
