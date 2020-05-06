@@ -1,0 +1,55 @@
+---
+- name: Configure ovirt nfs storage
+
+  hosts: ovirt_nfs
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - name: create ovirt targets
+      file:
+        path: "{{ item.path }}"
+        state: directory
+        owner: "{{ item.owner | default(omit) }}"
+        group: "{{ item.group | default(omit) }}"
+        mode: "{{ item.mode | default(omit) }}"
+      loop: "{{ nfs_export_data }}"
+
+    - name: build export entries
+      set_fact:
+        nfs_exports: "{{ (nfs_exports | default([])) + [item.path + ' ' + item.options] }}"
+      loop: "{{ nfs_export_data }}"
+
+    - name: install and configure nfs
+      include_role:
+        name: nephelaiio.nfs
+
+    - name: export filesystems
+      command: exportfs -a
+      changed_when: false
+
+    - block:
+
+        - name: install pip requirements
+          pip:
+            name: ovirt-engine-sdk-python
+
+        - name: register storage domains
+          ovirt_storage_domain:
+            name: "{{ ansible_fqdn }}"
+            host: "{{ item.0 }}"
+            data_center: "{{ ovirt_data_center }}"
+            auth: "{{ ovirt_auth }}"
+            nfs:
+              address: "{{ ansible_default_ipv4.address }}"
+              path: "{{ item.1.path }}"
+          loop_control:
+            label: "{{ item.0 }}:{{ item.1.path }}"
+          loop: "{{ groups['ovirt_hosts'] | product(nfs_export_data) | list }}"
+
+      delegate_to: localhost
