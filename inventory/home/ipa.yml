@@ -2,7 +2,7 @@
 ipa_server:
   hosts:
     ovma.home.nephelai.io:
-      vm_template: centos7-1907
+      vm_template: nucx-centos7-1907
       ansible_host: 192.168.3.11
       vm_profile: small
       vm_network: ovirt
@@ -11,7 +11,7 @@ ipa_server:
 ipa_replica:
   hosts:
     ovmb.home.nephelai.io:
-      vm_template: centos7-1907
+      vm_template: nucx-centos7-1907
       ansible_host: 192.168.3.12
       vm_profile: small
       vm_network: ovirt
