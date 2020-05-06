@@ -44,8 +44,9 @@
         template_type: "{{ ovirt_template_item.value.type | default('server') }}"
         ovirt_template_defaults:
           template_state: "{{ template_state | default('present') }}"
-        ovirt_template_item: "{{ ovirt_template_defaults | combine(item) }}"
+        ovirt_template_item: "{{ ovirt_template_defaults | combine(ovirt_template_overrides }}"
       loop_control:
+        loop_var: ovirt_template_overrides
         label: "{{ item.key }}"
       loop: "{{ ovirt_templates | dict2items }}" 
       when: ovirt_template_item.template_state in ['present', 'recreate']
