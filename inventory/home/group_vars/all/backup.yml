@@ -6,3 +6,9 @@ kvm_mounts:
     source: "{{ backup_host }}:/backup"
     fstype: nfs4
     options: "*(rw,no_subtree_check,no_root_squash)"
+nfs_export_data:
+  - path: "{{ backup_base_path }}"
+    options: "*(rw,no_subtree_check,no_root_squash)"
+  - path: /home
+    options: "*(rw,no_subtree_check,no_root_squash)"
+
