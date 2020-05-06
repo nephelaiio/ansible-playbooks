@@ -40,13 +40,15 @@
             - always
 
         - name: query storage domains
-          ovirt_storage_domain_info:
+          ovirt_storage_domain_facts:
             auth: "{{ ovirt_auth }}"
-          register: ovirt_storage_domains
+          register: ovirt_storage_domaininfo
 
         - name: build storage domain dict
           set_fact:
             ovirt_storage_domain_dict: "{{ ovirt_storage_domains.ovirt_storage_domains | list_to_dict('id') }}"
+          vars:
+            ovirt_storage_domains: "{{ ovirt_storage_domaininfo.ansible_facts if 'ansible_facts' in ovirt_storage_domaininfo else ovirt_storage_domaininfo }}"
 
         - block:
 
@@ -135,10 +137,10 @@
               no_log: "{{ ovirt_nolog | default(true) }}"
 
             - name: query vm disk
-              ovirt_disk_info:
+              ovirt_disk_facts:
                 auth: "{{ vm.ovirt_auth }}"
                 pattern: "vm_names={{ vm.name }}"
-              register: ovirt_vm_disks
+              register: ovirt_vm_diskinfo
 
             - name: resize disk
               ovirt_disk:
@@ -149,6 +151,7 @@
                 auth: "{{ vm.ovirt_auth }}"
                 vm_name: "{{ vm.name }}"
               vars:
+                ovirt_vm_disks: "{{ ovirt_vm_diskinfo.ansible_facts if 'ansible_facts' in ovirt_vm_diskinfo else ovirt_vm_diskinfo }}"
                 ovirt_disk_target: "{{ ovirt_vm_disks.ovirt_disks | first }}"
                 ovirt_domain_target: "{{ ovirt_disk_target.storage_domains | first }}"
               when: "'vm_disk' in vm"
