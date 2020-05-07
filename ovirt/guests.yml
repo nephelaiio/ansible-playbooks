@@ -172,15 +172,22 @@
               when: "'vm_disk' in vm"
               notify: resize disk
 
-            - name: create ovirt vm
+            - name: start ovirt vm
               ovirt_vm:
                 name: "{{ ovirt_vm.name }}"
                 cluster: "{{ ovirt_vm.cluster }}"
                 auth: "{{ ovirt_vm.ovirt_auth }}"
                 state: running
+                cloud_init: "{{ ovirt_vm.cloud_init }}"
+                cpu_cores: "{{ ovirt_vm.vm_cpu }}"
+                high_availability: "{{ ovirt_vm.high_availability }}"
+                operating_system: "{{ ovirt_vm.ovirt_os | default('other_linux') }}"
+                nics: "{{ ovirt_vm.nics }}"
                 type: server
+                serial_console: yes
                 wait: yes
-              when: vm.vm_state in ['running', 'recreate']
+              register: ovirt_create
+              when: vm.vm_state != 'present'
               no_log: "{{ ovirt_nolog | default(true) }}"
 
           when: (vm.vm_state | default(ovirt_state_default)) in ['present', 'running', 'recreate']
