@@ -6,12 +6,12 @@ kvm_hosts:
 kvm_guests:
   hosts:
     kvma.home.nephelai.io:
-      ansible_python_interpreter: /usr/bin/python3
+      ansible_python_interpreter: /usr/libexec/platform-python
       kvm_profile: large
       memory: 8192
       hw_address: 7a:85:56:fb:6d:eb
       ansible_host: 192.168.5.100
-      kvm_image: bionic
+      kvm_image: centos8
     kvmf.home.nephelai.io:
       kvm_profile: large
       memory: 8192

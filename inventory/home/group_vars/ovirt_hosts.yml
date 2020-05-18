@@ -1,7 +1,7 @@
 ---
 ovirt_pvs:
   - /dev/sda2
-ovirt_register_host: yes
+ovirt_register_host: no
 ovirt_host_network_iface: eno1
 ovirt_host_networks:
   - name: ovirt

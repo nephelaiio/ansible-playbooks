@@ -12,7 +12,7 @@ ovirt_hosts:
 
 ovirt_engine:
   hosts:
-    nucx.home.nephelai.io:
+    kvma.home.nephelai.io:
 
 ovirt_nfs:
   children:

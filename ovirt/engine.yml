@@ -9,6 +9,10 @@
 
   tasks:
 
+    - name: install firewall
+      yum:
+        name: firewalld
+
     - name: enable firewall
       service:
         name: firewalld

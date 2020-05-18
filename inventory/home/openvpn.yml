@@ -4,5 +4,4 @@ openvpn:
     openvpn_home:
 
 openvpn_home:
-  hosts:
-    kvma.home.nephelai.io:
+  hosts: { }

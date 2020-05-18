@@ -2,6 +2,6 @@
 plugin: constructed
 strict: no
 groups:
-  online: (vm_state | default('present')) in ['present', 'running'] and (rpi_state | default('present')) in ['present']
+  online: (not 'inventory' in group_names) and (vm_state | default('present')) in ['present', 'running'] and (rpi_state | default('present')) in ['present']
   nuc: inventory_hostname is search("nuc.*")
   ovirt_guests: inventory_hostname is search("ovm.*")
