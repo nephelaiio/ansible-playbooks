@@ -15,62 +15,70 @@
 
     resolv_netplan_config_file: "/etc/netplan/{{ ansible_default_ipv4.alias }}.yaml"
     resolv_iface: "{{ ansible_default_ipv4 }}"
-    resolv_ipaddr: "{{ (ansible_default_ipv4.address + '/' + ansible_default_ipv4.netmask) | ipv4 }}"
+    resolv_ipaddr: "{{ (resolv_iface.address + '/' + resolv_iface.netmask) | ipv4 }}"
+    resolv_nameservers: "{{ groups['pdns_recursors'] | map('extract', hostvars, ['ansible_host']) | list }}"
 
   tasks:
 
-    - name: retrieve package fats
-      package_facts:
+    - debug:
+        var: resolv_nameservers
 
     - block:
 
-        - name: find existing netplan files
-          find:
-            paths: "{{ netplan_config_file | dirname }}"
-            patterns: "*.yml,*.yaml"
-          register: netplan_query
+        - name: retrieve package facts
+          package_facts:
 
-        - name: define netplan configuration
-          copy:
-            dest: "{{ netplan_config_file }}"
-            content: |
-              ---
-              {{ network_config }}
-          vars:
-            network_config: |
-              network:
-                version: 2
-                ethernets:
-                  {{ netplan_iface.alias }}:
-                    match:
-                      macaddress: {{ netplan_iface.macaddress }}
-                    addresses:
-                      - {{ netplan_ipaddr }}
-                    gateway4: {{ netplan_iface.gateway }}
-                    nameservers:
-                      search:
-                        - {{ base_domain }}
-                      addresses: {{ netplan_nameservers | to_yaml }}
-          notify: restart networking
+        - block:
 
-        - name: remove existing netplan files
-          file:
-            path: "{{ netplan_file }}"
-            state: absent
-          become: true
-          loop_control:
-            loop_var: netplan_file
-          with_items: "{{ netplan_query.files | map(attribute='path') | list }}"
-          when:
-            - netplan_file != netplan_config_file
-          notify: restart networking
+            - name: find existing netplan files
+              find:
+                paths: "{{ resolv_netplan_config_file | dirname }}"
+                patterns: "*.yml,*.yaml"
+              register: netplan_query
 
-      when: package_facts.packages | intersect(['netplan.io']) | length > 0
+            - name: define netplan configuration
+              copy:
+                dest: "{{ resolv_netplan_config_file }}"
+                content: |
+                  ---
+                  {{ network_config }}
+              vars:
+                network_config: |
+                  network:
+                    version: 2
+                    ethernets:
+                      {{ resolv_iface.alias }}:
+                        match:
+                          macaddress: {{ resolv_iface.macaddress }}
+                        addresses:
+                          - {{ resolv_ipaddr }}
+                        gateway4: {{ resolv_iface.gateway }}
+                        nameservers:
+                          search:
+                            - {{ base_domain }}
+                          addresses: {{ resolv_nameservers | to_yaml }}
+              notify: restart networking
 
-    - name: manage resolv.conf
-      include_role:
-        name: ahuffman.resolv
-      when: package_facts.packages | intersect(['netplan.io']) | length == 0
+            - name: remove existing netplan files
+              file:
+                path: "{{ netplan_file }}"
+                state: absent
+              become: true
+              loop_control:
+                loop_var: netplan_file
+              with_items: "{{ netplan_query.files | map(attribute='path') | list }}"
+              when:
+                - netplan_file != resolv_netplan_config_file
+              notify: restart networking
+
+          when: packages | intersect(['netplan.io']) | length > 0
+
+        - name: manage resolv.conf
+          include_role:
+            name: ahuffman.resolv
+          when: packages | intersect(['netplan.io']) | length == 0
+
+      when: dns_manage | default('yes')
 
   handlers:
 

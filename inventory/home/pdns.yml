@@ -18,3 +18,7 @@ pdns:
   children:
     pdns_recursors:
     pdns_servers:
+
+pdns_clients:
+  children:
+    online:

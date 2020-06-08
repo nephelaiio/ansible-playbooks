@@ -10,4 +10,4 @@ pdns_psql_pass: !vault |
 pdns_domains:
   - "{{ base_domain }}"
   - "{{ nets.management.zone }}"
-  - "{{ nets.pxe.zone }}"
+  - "{{ nets.ovirt.zone }}"
