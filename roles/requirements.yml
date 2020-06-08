@@ -1,6 +1,7 @@
 ---
 roles:
   - name: nginxinc.nginx
+  - name: ahuffman.resolv
   - name: geerlingguy.ntp
   - name: geerlingguy.repo-epel
   - name: mrlesmithjr.keepalived
@@ -18,7 +19,6 @@ roles:
   - name: nephelaiio.acme_certificate_route53
   - name: linux-system-roles.network
   - name: linux-system-roles.cockpit
-  - name: inviqa.jumpcloud
   - name: gluster.infra
     src: https://github.com/gluster/gluster-ansible-infra.git
   - name: gluster.cluster

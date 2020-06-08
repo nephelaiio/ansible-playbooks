@@ -25,7 +25,7 @@
 
   hosts: localhost
 
-  gather_facts: no
+  connection: local
 
   tasks:
 
@@ -35,12 +35,13 @@
           - libcurl4-openssl-dev
           - libxml2-dev
       become: yes
+      when: false
 
     - name: install pip requirements
       command: pip install -r requirements.txt
 
     - name: install galaxy roles
-      command: ansible-galaxy role install -r roles/requirements.yml --force
+      command: ansible-galaxy install -r roles/requirements.yml --force
 
     - name: install galaxy collections
       command: ansible-galaxy collection install -r role/requirements.yml --force
