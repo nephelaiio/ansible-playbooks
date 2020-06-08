@@ -5,11 +5,7 @@ rke:
     rke_workers:
 
 rke_control:
-  hosts:
-    nucx.home.nephelai.io:
+  hosts: {}
 
 rke_workers:
-  hosts:
-    nuca.home.nephelai.io:
-    nucb.home.nephelai.io:
-    nucc.home.nephelai.io:
+  hosts: {}
