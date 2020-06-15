@@ -1,0 +1,98 @@
+- name: Deploy ovirt gluster storage nodes
+
+  hosts: ovirt_hosts_gluster
+
+  become: yes
+
+  vars:
+
+    ovirt_host_ips: "{{ groups['ovirt_hosts'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | list  }}"
+    ovirt_datastore_name: data
+    ovirt_datastore_path: /mnt/gluster/data
+    ovirt_datastore_brick: "{{ ovirt_datastore_path }}/brick"
+    ovirt_pvs:
+      - /dev/sda
+    ovirt_vgname: vg_ovirt
+    ovirt_tpname: tp_ovirt
+    ovirt_tpsize: '464G'
+    ovirt_tpmdsize: '8G'
+    gluster_owner_gid: '36'
+    gluster_owner_uid: '36'
+    gluster_infra_fw_enabled: no
+
+  tasks:
+
+    - name: create gluster mount directories
+      file:
+        path: "{{ item }}"
+        state: directory
+      loop:
+        - "{{ ovirt_datastore_path | dirname }}"
+        - "{{ ovirt_datastore_path }}"
+        - "{{ ovirt_datastore_brick | dirname }}"
+        - "{{ ovirt_datastore_brick }}"
+      when: ovirt_gluster_enable
+      tags:
+        - volume
+
+    - name: configure gluster
+      include_role:
+        name: gluster.infra
+      vars:
+        gluster_infra_disktype: JBOD
+        gluster_infra_volume_groups:
+          - vgname: "{{ ovirt_vgname }}"
+            pvname: "{{ [ovirt_pvs] | flatten | join_with(',') }}"
+        gluster_infra_thinpools:
+          - vgname: "{{ ovirt_vgname }}"
+            thinpoolname: "{{ ovirt_tpname }}"
+            poolmetadatasize: "{{ ovirt_tpmdsize }}"
+        gluster_infra_lv_logicalvols:
+          - vgname: "{{ ovirt_vgname }}"
+            thinpool: "{{ ovirt_tpname }}"
+            lvname: "{{ ovirt_datastore_name }}"
+            lvsize: "{{ ovirt_tpsize }}"
+        gluster_infra_mount_devices:
+          - path: "{{ ovirt_datastore_path }}"
+            vgname: "{{ ovirt_vgname }}"
+            lvname: "{{ ovirt_datastore_name }}"
+        fstrim_service:
+          enabled: yes
+          schedule:
+            hour: "{{ range(1, 4) | random() }}"
+
+    - name: install gluster service
+      package:
+        name: glusterfs-server
+
+    - name: start glusterd
+      service:
+        name: glusterd
+        state: started
+        enabled: yes
+
+    - name: create gluster firewall rule
+      firewalld:
+        service: glusterfs
+        permanent: yes
+        state: enabled
+      tags:
+        - cockpit
+        - firewall
+      notify: restart firewalld
+
+    - meta: flush_handlers
+
+    - name: create gluster volume
+      gluster_volume:
+        volume: "{{ ovirt_datastore_name }}"
+        state: present
+        bricks: "{{ ovirt_datastore_brick }}"
+        cluster: "{{ ovirt_host_ips }}"
+        replicas: 3
+        options:
+          storage.owner-gid: "{{ gluster_owner_gid }}"
+          storage.owner-uid: "{{ gluster_owner_uid }}"
+      run_once: yes
+      tags:
+        - volume

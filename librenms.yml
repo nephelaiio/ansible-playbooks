@@ -1,4 +1,0 @@
----
-- import_playbook: librenms/install.yml
-
-- import_playbook: librenms/register.yml

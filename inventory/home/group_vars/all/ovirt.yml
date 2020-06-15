@@ -1,8 +1,7 @@
 ---
 ovirt_url: https://ovirt.home.nephelai.io
-ovirt_repositories_ovirt_release_rpm: http://resources.ovirt.org/pub/yum-repo/ovirt-release44-pre.rpm
-ovirt_cluster: Default
-ovirt_data_center: Default
+ovirt_repositories_ovirt_release_rpm:
+  - http://resources.ovirt.org/pub/yum-repo/ovirt-release43.rpm
 ovirt_user_name: root
 ovirt_gluster_enable: no
 ovirt_user_pass: !vault |

@@ -1,0 +1,29 @@
+---
+- name: Manage local storage domains
+
+  hosts: ovirt_hosts_local
+
+  become: yes
+
+  vars:
+
+    ovirt_localfs_path: /var/lib/machines
+
+  tasks:
+
+    - name: Create local storage domain path
+      file:
+        state: directory
+        path: "{{ ovirt_localfs_path }}"
+        owner: vdsm
+        group: kvm
+        mode: 0750
+
+    - name: Manage local storage domain
+      ovirt_storage_domain:
+        auth: "{{ ovirt_auth }}"
+        name: "{{ ovirt_storage_domain }}"
+        host: "{{ inventory_hostname }}"
+        data_center: "{{ ovirt_data_center }}"
+        localfs:
+          path: "{{ ovirt_localfs_path }}"

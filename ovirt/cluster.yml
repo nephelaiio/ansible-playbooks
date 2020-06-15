@@ -11,12 +11,17 @@
       ovirt_datacenter:
         auth: "{{ ovirt_auth }}"
         name: "{{ ovirt_data_center }}"
+        local: yes
+      when: ovirt_data_center is defined
 
-    - name: Manage ovirt cluster
+    - name: Manage ovirt clusters
       ovirt_cluster:
         auth: "{{ ovirt_auth }}"
         name: "{{ ovirt_cluster }}"
-        data_center: Default
+        data_center: "{{ ovirt_data_center }}"
+      when:
+        - ovirt_data_center is defined
+        - ovirt_cluster is defined
 
     - name: Manage ovirt logical networks
       ovirt_network:
@@ -29,22 +34,6 @@
       loop_control:
         label: "{{ item.name }}"
       loop: "{{ ovirt_logical_networks }}"
-
-
-
-- name: Configure ovirt cluster
-
-  hosts: ovirt_hosts
-
-  become: yes
-
-  tasks:
-
-    - name: Manage ovirt host networks
-      ovirt_host_network:
-        auth: "{{ ovirt_auth }}"
-        name: "{{ ansible_fqdn }}"
-        bond: "{{ ovirt_host_network_bond | default(omit) }}"
-        interface: "{{ ovirt_host_network_iface | default(ansible_default_ipv4.interface) }}"
-        networks: "{{ ovirt_host_networks }}"
-        sync_networks: yes
+      when:
+        - ovirt_data_center is defined
+        - ovirt_logical_networks is defined

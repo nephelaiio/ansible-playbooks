@@ -5,12 +5,10 @@
 
   become: yes
 
-  serial: 1
-
   tasks:
 
     - name: install firewall
-      yum:
+      package:
         name: firewalld
 
     - name: enable firewall
@@ -21,14 +19,73 @@
       tags:
         - firewall
 
+    - name: enable http connections
+      firewalld:
+        service: http
+        permanent: yes
+        state: enabled
+
+    - name: enable https connections
+      firewalld:
+        service: https
+        permanent: yes
+        state: enabled
+
     - name: manage selinux state
       selinux:
         policy: targeted
         state: permissive
       notify: reboot node
 
+    - name: disable ipv6
+      sysctl:
+        name: net.ipv6.conf.all.disable_ipv6
+        value: 1
+        sysctl_set: yes
+      notify: reboot node
+
+    - name: disable ipv6
+      sysctl:
+        name: net.ipv6.conf.default.disable_ipv6
+        value: 1
+        sysctl_set: yes
+      notify: reboot node
+
     - name: flush handlers
       meta: flush_handlers
+
+    - block:
+
+        - name: disable built-in postgresql module
+          command: dnf -yq module disable postgresql
+          args:
+            warn: false
+          changed_when: false
+
+        - name: enable java packages module
+          command: dnf -yq module enable javapackages-runtime
+          args:
+            warn: false
+          changed_when: false
+
+        - name: install java packages module
+          command: dnf -yq module install javapackages-runtime
+          args:
+            warn: false
+          changed_when: false
+
+      tags:
+        - install
+      when:
+        - ansible_os_family == 'RedHat'
+        - (ansible_distribution_major_version | int) == 8
+
+    - name: install requirements
+      yum:
+        name:
+          - "https://download.postgresql.org/pub/repos/yum/reporpms/EL-{{ ansible_distribution_major_version }}-{{ ansible_machine }}/pgdg-redhat-repo-latest.noarch.rpm"
+      tags:
+        - install
 
   handlers:
 
@@ -87,6 +144,9 @@
     - name: install ovirt engine
       include_role:
         name: ovirt.engine-setup
+        apply:
+          tags:
+            - install
 
     - name: upgrade ovirt engine
       include_role:
@@ -113,6 +173,9 @@
       notify: restart ovirt engine
 
   handlers:
+
+    - name: reboot node
+      reboot:
 
     - name: restart ovirt engine
       service:

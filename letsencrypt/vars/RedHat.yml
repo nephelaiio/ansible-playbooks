@@ -1,3 +1,0 @@
----
-acme_certificate_storedir: /etc/pki/ca-trust/source/anchors
-acme_os_ca_file: /etc/pki/tls/certs/ca-bundle.crt

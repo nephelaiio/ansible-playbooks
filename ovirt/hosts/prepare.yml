@@ -1,0 +1,32 @@
+---
+- name: Prepare ovirt host os
+
+  hosts: ovirt_hosts
+
+  become: yes
+
+  serial: 1
+
+  tasks:
+
+    - name: enable firewall
+      service:
+        name: firewalld
+        state: started
+        enabled: yes
+      tags:
+        - firewall
+
+    - name: manage selinux state
+      selinux:
+        policy: targeted
+        state: permissive
+      notify: reboot node
+
+    - name: flush handlers
+      meta: flush_handlers
+
+  handlers:
+
+    - name: reboot node
+      reboot:
