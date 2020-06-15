@@ -30,11 +30,9 @@ ipa_users:
   pass: "{{ ovirt_admin_password }}"
 
 ovirt_templates:
-  default-bionic-current:
+  bionic-current:
     url: https://cloud-images.ubuntu.com/bionic/current/bionic-server-cloudimg-amd64.img
     iface: ens3
-    cluster: Default
-    storage_domain: hosted_storage
     custom_script: |
       packages:
         - aptitude
@@ -47,11 +45,9 @@ ovirt_templates:
         - nfs-common
       package_update: true
 
-  default-focal-current:
+  focal-current:
     url: https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
     iface: ens3
-    cluster: Default
-    storage_domain: hosted_storage
     custom_script: |
       packages:
         - aptitude
@@ -62,57 +58,9 @@ ovirt_templates:
         - nfs-common
       package_update: true
 
-  default-centos7-1907:
+  centos7-1907:
     url: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud-1907.qcow2
     iface: eth0
-    cluster: Default
-    storage_domain: hosted_storage
-    custom_script: |
-      packages:
-        - python
-        - python3
-        - python-pip
-        - python3-pip
-        - nfs-utils
-      package_update: true
-
-  nucx-bionic-current:
-    url: https://cloud-images.ubuntu.com/bionic/current/bionic-server-cloudimg-amd64.img
-    iface: ens3
-    cluster: Default
-    storage_domain: nucx-ovirt
-    custom_script: |
-      packages:
-        - aptitude
-        - python-apt
-        - python3-apt
-        - python-pip
-        - python3-pip
-        - python-minimal
-        - python3-minimal
-        - nfs-common
-      package_update: true
-
-  nucx-focal-current:
-    url: https://cloud-images.ubuntu.com/focal/current/focal-server-cloudimg-amd64.img
-    iface: ens3
-    cluster: Default
-    storage_domain: nucx-ovirt
-    custom_script: |
-      packages:
-        - aptitude
-        - python3
-        - python3-apt
-        - python3-pip
-        - python-is-python3
-        - nfs-common
-      package_update: true
-
-  nucx-centos7-1907:
-    url: https://cloud.centos.org/centos/7/images/CentOS-7-x86_64-GenericCloud-1907.qcow2
-    iface: eth0
-    cluster: Default
-    storage_domain: nucx-ovirt
     custom_script: |
       packages:
         - python

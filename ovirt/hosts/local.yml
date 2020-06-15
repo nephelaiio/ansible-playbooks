@@ -5,9 +5,12 @@
 
   become: yes
 
+  serial: 1
+
   vars:
 
     ovirt_localfs_path: /var/lib/machines
+    ovirt_localiso_path: /var/lib/iso
 
   tasks:
 
@@ -25,5 +28,24 @@
         name: "{{ ovirt_storage_domain }}"
         host: "{{ inventory_hostname }}"
         data_center: "{{ ovirt_data_center }}"
+        domain_function: data
         localfs:
           path: "{{ ovirt_localfs_path }}"
+
+    - name: Create local iso path
+      file:
+        state: directory
+        path: "{{ ovirt_localiso_path }}"
+        owner: vdsm
+        group: kvm
+        mode: 0750
+
+    - name: Manage local iso domain
+      ovirt_storage_domain:
+        auth: "{{ ovirt_auth }}"
+        name: "{{ ovirt_iso_domain }}"
+        host: "{{ inventory_hostname }}"
+        data_center: "{{ ovirt_data_center }}"
+        domain_function: iso
+        localfs:
+          path: "{{ ovirt_localiso_path }}"

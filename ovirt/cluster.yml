@@ -7,6 +7,18 @@
 
   tasks:
 
+    - name: Remove Default ovirt datacenter
+      ovirt_datacenter:
+        auth: "{{ ovirt_auth }}"
+        name: Default
+        state: absent
+
+    - name: Remove Default ovirt cluster
+      ovirt_cluster:
+        auth: "{{ ovirt_auth }}"
+        name: Default
+        state: absent
+
     - name: Manage ovirt datacenter
       ovirt_datacenter:
         auth: "{{ ovirt_auth }}"
