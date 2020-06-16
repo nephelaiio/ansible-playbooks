@@ -76,10 +76,8 @@
 
         - name: query existing vm definition
           ovirt_vm_facts:
-            pattern: "name={{ vm.name }} and cluster={{ ovirt_templates[vm_template].cluster }}"
+            pattern: "name={{ vm.name }}"
             auth: "{{ ovirt_auth }}"
-          vars:
-            vm_template: "{{ vm.vm_template | default(ovirt_template_default) }}"
           register: ovirt_vm_stateinfo
 
         - name: set desired vm state
@@ -90,7 +88,8 @@
           vars:
             ovirt_vm_create_state: "{{ ovirt_vm_stateinfo.ansible_facts.ovirt_vms if 'ansible_facts' in ovirt_vm_stateinfo else ovirt_vm_stateinfo }}"
             vm_network: "{{ nets[vm.vm_network] }}"
-            vm_template: "{{ vm.vm_template | default(ovirt_template_default) }}"
+            vm_template: "{{ vm.ovirt_cluster }}-{{ vm.vm_template }}"
+            vm_templatedef: "{{ ovirt_templates[vm.vm_template] }}"
             vm_attrs:
               state: "{{ (vm.vm_state != 'recreate') | ternary(vm.vm_state, 'running') }}"
               cluster: "{{ vm.ovirt_cluster }}"
@@ -114,9 +113,9 @@
                 nic_ip_address: "{{ vm.ansible_host }}"
                 nic_netmask: "{{ vm_network.netmask }}"
                 nic_gateway: "{{ vm_network.router }}"
-                nic_name: "{{ ovirt_templates[vm_template].iface }}"
+                nic_name: "{{ vm_templatedef.iface }}"
                 nic_on_boot: yes
-                custom_script: "{{ ovirt_templates[vm.vm_template].custom_script if 'custom_script' in ovirt_templates[vm.vm_template] else '' }}"
+                custom_script: "{{ vm_templatedef.custom_script if 'custom_script' in vm_templatedef else '' }}"
           no_log: "{{ ovirt_nolog | default(true) }}"
 
         - name: create ovirt vm

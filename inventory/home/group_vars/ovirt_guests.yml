@@ -1,5 +1,4 @@
 ---
-ovirt_template_default: bionic-20200425
 ovirt_guest_user: ansible
 ovirt_guest_pass: "{{ users[ovirt_guest_user].password }}"
 ovirt_guest_pubkey: "{{ users[ovirt_guest_user].pubkey }}"
