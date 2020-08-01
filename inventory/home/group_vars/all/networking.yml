@@ -1,5 +1,6 @@
 ---
 nets:
+
   management:
     name: management
     network: 192.168.5.0
@@ -13,6 +14,7 @@ nets:
       range: '192.168.5.65 192.168.5.128'
     dhcp: '192.168.5.128 192.168.5.254'
     reservations: {}
+
   ovirt:
     name: ovirt
     network: 192.168.3.0

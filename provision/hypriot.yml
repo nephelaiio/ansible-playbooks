@@ -1,0 +1,138 @@
+---
+- name: create hypriot customization files files
+
+  hosts: hypriot
+
+  gather_facts: no
+
+  vars:
+
+    hypriot_target_path: "{{ playbook_dir }}/../files/hypriot"
+
+  roles:
+
+    - nephelaiio.plugins
+
+  tasks:
+
+    - block:
+
+        - block:
+
+            - name: scan hypriot flash releases
+              uri:
+                url: https://api.github.com/repos/hypriot/flash/releases
+                return_content: yes
+              register: hypriot_flash_releases
+              changed_when: false
+
+            - name: determine latest release for hypriot flash 
+              set_fact:
+                hypriot_flash_latest: "{{ (hypriot_flash_releases.json | first).tag_name }}"
+
+            - name: "install hypriot flash tool {{ hypriot_flash_release | default(hypriot_flash_latest) }}"
+              get_url:
+                url: "https://github.com/hypriot/flash/releases/download/{{ hypriot_flash_release | default(hypriot_flash_latest) }}/flash"
+                owner: root
+                group: root
+                mode: 775
+                dest: /usr/local/bin/flash
+              become: yes
+
+            - name: scan hypriot os releases
+              uri:
+                url: https://api.github.com/repos/hypriot/image-builder-rpi/releases
+                return_content: yes
+              register: hypriot_os_releases
+              changed_when: false
+
+            - block:
+
+                - name: fetch explicit release for hypriot os
+                  set_fact:
+                    hypriot_os_targets: "{{ hypriot_os_releases.json | selectattr('tag_name', 'equalto', hypriot_os_release) | list }}"  
+
+                - name: verify hypriot os explicit release
+                  fail:
+                    msg: "hypriot release {{ hypriot_os_release }} not found"
+                  when: hypriot_os_targets | length == 0
+
+                - name: set hypriot explicit target release
+                  set_fact:
+                    hypriot_os_explicit: "{{ hypriot_os_releases.json | selectattr('tag_name', 'equalto', hypriot_os_release) | list }}"  
+
+              when: hypriot_os_release is defined
+
+            - name: determine latest release for hypriot os 
+              set_fact:
+                hypriot_os_latest: "{{ hypriot_os_releases.json | first }}"
+
+            - name: determine latest release for hypriot os 
+              set_fact:
+                hypriot_os_target: "{{ hypriot_os_explicit | default(hypriot_os_latest) }}"
+
+            - name: extract hypriot os urls
+              set_fact:
+                hypriot_os_urls: "{{ hypriot_os_target.assets | list }}"
+
+            - name: extract hypriot os metadata
+              set_fact:
+                hypriot_os_target_url: "{{ hypriot_os_urls | selectattr('browser_download_url', 'match', '.*zip$') | first }}"
+                hypriot_os_checksum_url: "{{ hypriot_os_urls | selectattr('browser_download_url', 'match', '.*[^(zip)]$') | first }}"
+
+            - name: download hypriot checksum
+              uri:
+                url: "{{ hypriot_os_checksum_url.browser_download_url }}"
+                return_content: yes
+              register: hypriot_os_checksum
+              changed_when: false
+
+            - debug:
+                msg: "{{ ' '.split(hypriot_os_checksum.content) }}"
+
+            - fail:
+
+            - name: "download hypriot os {{ hypriot_os_target.tag_name }}"
+              get_url:
+                url: "{{ hypriot_os_target_url.browser_download_url }}"
+                dest: "{{ hypriot_target_path }}"
+                checksum: "{{ checksum_algo }}:{{ checksum_digest }}"
+              vars:
+                checksum_algo: "{{ hypriot_os_checksum_url.browser_download_url | urlsplit('path') | splitext | last | regex_replace('\\.', '') }}"
+                checksum_digest: "{{ hypriot_os_checksum.content | split | first }}"
+
+            - name: create tempdir
+              tempfile:
+                state: directory
+                prefix: hypriot
+              register: hypriot_tmpdir
+              changed_when: false
+
+            - name: create target directory
+              file:
+                path: "{{ hypriot_target_path }}"
+                state: directory
+
+          run_once: yes
+
+        - name: create hypriot user-data files
+          copy:
+            dest: "{{ hypriot_target_path }}/{{ inventory_hostname }}.user-data.yml"
+            content: |
+              placeholder
+
+        - name: create hypriot meta-data files
+          copy:
+            dest: "{{ hypriot_target_path }}/{{ inventory_hostname }}.meta-data.yml"
+            content: |
+              placeholder
+
+      delegate_to: localhost
+
+      rescue:
+
+        - name: destroy tempdir
+          file:
+            state: absent
+            path: "{{ hypriot_tmpdir.path }}"
+          changed_when: false
