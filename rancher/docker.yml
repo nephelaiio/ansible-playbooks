@@ -1,13 +1,16 @@
 ---
 - name: install docker
 
-  hosts: rke
+  hosts: rke_docker
 
   become: yes
 
-  roles:
+  vars:
 
-    - nephelaiio.docker
+    docker_packages:
+      - docker
+      - docker-ce
+      - docker.io
 
   pre_tasks:
 
@@ -15,7 +18,16 @@
       package:
         name: python3-pip
 
+    - name: gather package data
+      package_facts:
+        manager: auto
+
   tasks:
+
+    - name: install docker
+      include_role:
+        name: nephelaiio.docker
+      when: (ansible_facts.packages.keys() | list | intersect(docker_packages) | length) == 0
 
     - name: disable active swap volume
       shell: swapoff -a
