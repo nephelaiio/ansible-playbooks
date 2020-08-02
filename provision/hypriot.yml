@@ -8,6 +8,9 @@
   vars:
 
     hypriot_target_path: "{{ playbook_dir }}/../files/hypriot"
+    hypriot_ip: "{{ ansible_host }}/{{ nets[host_network].netmask }}"
+    hypriot_gw: "{{ nets[host_network].router }}"
+    hypriot_ns: "{{ nets[host_network].ns }}"
 
   roles:
 
@@ -87,11 +90,6 @@
               register: hypriot_os_checksum
               changed_when: false
 
-            - debug:
-                msg: "{{ ' '.split(hypriot_os_checksum.content) }}"
-
-            - fail:
-
             - name: "download hypriot os {{ hypriot_os_target.tag_name }}"
               get_url:
                 url: "{{ hypriot_os_target_url.browser_download_url }}"
@@ -99,14 +97,7 @@
                 checksum: "{{ checksum_algo }}:{{ checksum_digest }}"
               vars:
                 checksum_algo: "{{ hypriot_os_checksum_url.browser_download_url | urlsplit('path') | splitext | last | regex_replace('\\.', '') }}"
-                checksum_digest: "{{ hypriot_os_checksum.content | split | first }}"
-
-            - name: create tempdir
-              tempfile:
-                state: directory
-                prefix: hypriot
-              register: hypriot_tmpdir
-              changed_when: false
+                checksum_digest: "{{ hypriot_os_checksum.content.split(' ') | first }}"
 
             - name: create target directory
               file:
@@ -119,20 +110,63 @@
           copy:
             dest: "{{ hypriot_target_path }}/{{ inventory_hostname }}.user-data.yml"
             content: |
-              placeholder
+              #cloud-config
+              hostname: "{{ inventory_hostname.split('.') | first }}"
+              manage_etc_hosts: true
 
-        - name: create hypriot meta-data files
-          copy:
-            dest: "{{ hypriot_target_path }}/{{ inventory_hostname }}.meta-data.yml"
-            content: |
-              placeholder
+              resize_rootfs: true
+              growpart:
+                  mode: auto
+                  devices: ["/"]
+                  ignore_growroot_disabled: false
+
+              users:
+                  - name: {{ hypriot_user_name }}
+                    sudo: ALL=(ALL) NOPASSWD:ALL
+                    shell: /bin/bash
+                    groups: users,docker,video
+                    plain_text_passwd: {{ hypriot_user_pass }}
+                    ssh_authorized_keys:
+                        - {{ hypriot_user_pubkey }}
+                    lock_passwd: false
+                    ssh_pwauth: false
+                    chpasswd: { expire: false }
+
+              package_update: false
+              package_upgrade: false
+              package_reboot_if_required: true
+              packages:
+                  - ntp
+
+              locale: "en_US.UTF-8"
+              timezone: "{{ timezone }}"
+
+              power_state:
+                mode: reboot
+
+              {% if host_network is defined -%}
+              write_files:
+                  - path: /etc/network/interfaces
+                    content: |
+                      auto lo
+                      iface lo inet loopback
+
+                      auto eth0
+                      iface eth0 inet static
+                          address {{ hypriot_ip | ipaddr('address') }}
+                          netmask {{ hypriot_ip | ipaddr('netmask') }}
+                          gateway {{ hypriot_gw }}
+                          dns-search {{ base_domain }}
+                          {% for ns in hypriot_ns -%}
+                          dns-nameserver  {{ ns }}
+                          {% endfor -%}
+              {%- endif -%}
+          tags:
+            - templates
+
+        - name: echo installation instructions
+          debug:
+            msg: "run command 'flash --hostname {{ inventory_hostname.split(' ') | first }} --userdata {{ hypriot_target_path }}/{{ inventory_hostname }}.user-data.yml {{ hypriot_target_path }}/{{ hypriot_os_target_url.browser_download_url | urlsplit('path') | basename }}"
+
 
       delegate_to: localhost
-
-      rescue:
-
-        - name: destroy tempdir
-          file:
-            state: absent
-            path: "{{ hypriot_tmpdir.path }}"
-          changed_when: false

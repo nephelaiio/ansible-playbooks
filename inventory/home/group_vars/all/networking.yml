@@ -10,8 +10,10 @@ nets:
     bridge: br1
     ns: "{{ pdns_recursors | map('extract', hostvars, 'ansible_host') | list }}"
     lb:
-      name: management
-      range: '192.168.5.65 192.168.5.128'
+      k8s:
+        range: '192.168.5.93 192.168.5.128'
+      rancher:
+        range: '192.168.5.65 192.168.5.92'
     dhcp: '192.168.5.128 192.168.5.254'
     reservations: {}
 

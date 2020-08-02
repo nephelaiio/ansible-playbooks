@@ -1,3 +1,4 @@
 ---
 hypriot_user_pubkey: "{{ users.ansible.pubkey }}"
-hypriot_user_name: "{{ users.ansible.pubkey }}"
+hypriot_user_name: "{{ users.ansible.username }}"
+hypriot_user_pass: "{{ users.ansible.password }}"
