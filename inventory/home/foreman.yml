@@ -1,7 +1,0 @@
----
-plugin: foreman
-url: https://foreman.home.nephelai.io
-user: admin
-password: Apn3@d1v3r
-validate_certs: False
-group_prefix: ""

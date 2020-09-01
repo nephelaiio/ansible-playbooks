@@ -13,30 +13,36 @@ kvm_guests:
       ansible_host: 192.168.5.100
       kvm_image: bionic
     kvmb.home.nephelai.io:
+      vm_state: absent
       ansible_python_interpreter: /usr/libexec/platform-python
       kvm_profile: large
       memory: 8192
       hw_address: 7a:85:56:fb:6d:ec
       ansible_host: 192.168.5.101
       kvm_image: centos7
+      kvm_state: absent
     kvmf.home.nephelai.io:
       kvm_profile: large
       memory: 8192
       hw_address: 7a:85:56:fb:6d:d0
       ansible_host: 192.168.5.105
       kvm_image: centos7
+      kvm_state: absent
     kvmn.home.nephelai.io:
       ansible_python_interpreter: /usr/bin/python3
       hw_address: 7a:85:56:fb:6d:d4
       ansible_host: 192.168.5.114
       kvm_image: bionic
+      kvm_state: absent
     kvms.home.nephelai.io:
       ansible_python_interpreter: /usr/bin/python3
       hw_address: 7a:85:56:fb:6d:d5
       ansible_host: 192.168.5.119
       kvm_image: bionic
+      kvm_state: absent
     kvmt.home.nephelai.io:
       ansible_python_interpreter: /usr/bin/python3
       hw_address: 7a:85:56:fb:6d:d6
       ansible_host: 192.168.5.120
       kvm_image: bionic
+      kvm_state: absent

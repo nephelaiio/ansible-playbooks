@@ -1,5 +1,5 @@
 ---
-foreman_release: 2.0
+foreman_release: 2.1
 foreman_url: "https://foreman.{{ base_domain }}"
 foreman_admin_user: admin
 foreman_admin_pass: !vault |
