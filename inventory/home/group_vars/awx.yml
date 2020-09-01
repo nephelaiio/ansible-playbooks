@@ -145,151 +145,6 @@ awx_templates:
   permissions:
   - role: execute
     team: home_users
-- name: pdns.recursors
-  job_type: run
-  project: pdns
-  playbook: recursor.yml
-  inventory: home
-  credentials:
-  - name: home.ssh
-    kind: ssh
-  - name: home.vault
-    kind: vault
-  permissions:
-  - role: execute
-    team: home_users
-- name: pdns.servers
-  job_type: run
-  project: pdns
-  playbook: server.yml
-  inventory: home
-  credentials:
-  - name: home.ssh
-    kind: ssh
-  - name: home.vault
-    kind: vault
-  permissions:
-  - role: execute
-    team: home_users
-- name: pdns.records
-  job_type: run
-  project: pdns
-  playbook: records.yml
-  inventory: home
-  credentials:
-  - name: home.ssh
-    kind: ssh
-  - name: home.vault
-    kind: vault
-  permissions:
-  - role: execute
-    team: home_users
-- name: pdns.register
-  job_type: run
-  project: pdns
-  playbook: register.yml
-  inventory: home
-  credentials:
-  - name: home.ssh
-    kind: ssh
-  - name: home.vault
-    kind: vault
-  permissions:
-  - role: execute
-    team: home_users
-- name: traefik.restart
-  job_type: run
-  project: inventory
-  playbook: traefik/restart.yml
-  inventory: home
-  credentials:
-  - name: home.ssh
-    kind: ssh
-  - name: home.vault
-    kind: vault
-  permissions:
-  - role: execute
-    team: home_users
-- name: upgrade
-  job_type: run
-  project: upgrade
-  playbook: upgrade.yml
-  inventory: home
-  credentials:
-  - name: home.ssh
-    kind: ssh
-  - name: home.vault
-    kind: vault
-  limit: "!awx"
-  permissions:
-  - role: execute
-    team: home_users
-- name: foreman.server
-  job_type: run
-  project: foreman
-  playbook: server.yml
-  inventory: home
-  credentials:
-  - name: home.ssh
-    kind: ssh
-  - name: home.vault
-    kind: vault
-  permissions:
-  - role: execute
-    team: home_users
-- name: foreman.register
-  job_type: run
-  project: foreman
-  playbook: register.yml
-  inventory: home
-  credentials:
-  - name: home.ssh
-    kind: ssh
-  - name: home.vault
-    kind: vault
-  permissions:
-  - role: execute
-    team: home_users
-- name: foreman.proxy
-  job_type: run
-  project: foreman
-  playbook: proxy.yml
-  inventory: home
-  credentials:
-  - name: home.ssh
-    kind: ssh
-  - name: home.vault
-    kind: vault
-  permissions:
-  - role: execute
-    team: home_users
-- name: site.ipv6
-  state: absent
-  job_type: run
-  project: inventory
-  playbook: site/ipv6.yml
-  inventory: home
-  credentials:
-  - name: home.ssh
-    kind: ssh
-  - name: home.vault
-    kind: vault
-  permissions:
-  - role: execute
-    team: home_users
-- name: site.ntp
-  job_type: run
-  project: inventory
-  playbook: site/ntp.yml
-  inventory: home
-  credentials:
-  - name: home.ssh
-    kind: ssh
-  - name: home.vault
-    kind: vault
-  permissions:
-  - role: execute
-    team: home_users
 
 awx_schedules:
 - name: awx.proxy
@@ -320,15 +175,6 @@ awx_organizations:
   - name: nginx
     scm_type: git
     scm_url: https://github.com/nephelaiio/ansible-playbooks-nginx.git
-    scm_branch: master
-    scm_delete_on_update: false
-    scm_credential: awx.github
-    scm_update_on_launch: false
-    scm_update_cache_timeout: 60
-    scm_clean: false
-  - name: pdns
-    scm_type: git
-    scm_url: https://github.com/nephelaiio/ansible-playbooks-pdns.git
     scm_branch: master
     scm_delete_on_update: false
     scm_credential: awx.github
@@ -371,15 +217,6 @@ awx_organizations:
     scm_update_on_launch: false
     scm_update_cache_timeout: 60
     scm_clean: false
-  - name: foreman
-    scm_type: git
-    scm_url: https://github.com/nephelaiio/ansible-playbooks-foreman.git
-    scm_branch: master
-    scm_delete_on_update: false
-    scm_credential: awx.github
-    scm_update_on_launch: false
-    scm_update_cache_timeout: 60
-    scm_clean: false
   inventories:
   - name: awx
     state: absent
@@ -399,22 +236,6 @@ awx_organizations:
     update_on_launch: false
     update_on_project_update: true
   workflows:
-  - name: pdns
-    nodes:
-    - name: pdns.recursors
-      template: pdns.recursors
-    - name: pdns.servers
-      template: pdns.servers
-      parent: pdns.recursors
-    - name: pdns.records
-      template: pdns.records
-      parent: pdns.servers
-    - name: pdns.register
-      template: pdns.register
-      parent: pdns.servers
-    permissions:
-    - role: execute
-      team: home_users
   - name: freeipa
     nodes:
     - name: freeipa.servers
@@ -458,19 +279,6 @@ awx_organizations:
     permissions:
     - role: execute
       team: home_users
-  - name: foreman
-    nodes:
-    - name: foreman.server
-      template: foreman.server
-    - name: foreman.register
-      template: foreman.register
-      parent: foreman.server
-    - name: foreman.proxy
-      template: foreman.proxy
-      parent: foreman.register
-    permissions:
-    - role: execute
-      team: home_users
   - name: provision
     nodes:
     - name: site.ntp
@@ -483,17 +291,9 @@ awx_organizations:
     - name: provision
       template: provision
       type: workflow_job
-    - name: pdns
-      template: pdns
-      type: workflow_job
-      parent: provision
     - name: awx
       template: awx
-      parent: pdns
-      type: workflow_job
-    - name: foreman
-      template: foreman
-      parent: freeipa
+      parent: provision
       type: workflow_job
     - name: freeipa
       template: freeipa

@@ -8,7 +8,9 @@ nets:
     router: 192.168.5.1
     zone: 5.168.192.in-addr.arpa
     bridge: br1
-    ns: "{{ pdns_recursors | map('extract', hostvars, 'ansible_host') | list }}"
+    ns:
+      - 1.1.1.1
+      - 8.8.8.8
     lb:
       k8s:
         range: '192.168.5.93 192.168.5.128'
@@ -17,24 +19,13 @@ nets:
     dhcp: '192.168.5.128 192.168.5.254'
     reservations: {}
 
-  ovirt:
-    name: ovirt
-    network: 192.168.3.0
-    netmask: 255.255.255.0
-    router: 192.168.3.1
-    zone: 3.168.192.in-addr.arpa
-    bridge: br3
-    ns: "{{ pdns_recursors | map('extract', hostvars, 'ansible_host') | list }}"
-    dhcp: '192.168.3.128 192.168.3.254'
-    lb:
-      name: pxe
-      range: '192.168.3.193 192.168.3.254'
-
 openvpn_nets:
   home:
     network: 10.8.0.0
     netmask: 255.255.255.0
-    ns: "{{ pdns_recursors }}"
+    ns:
+      - 1.1.1.1
+      - 8.8.8.8
   aws:
     network: 10.7.0.0
     netmask: 255.255.255.0
