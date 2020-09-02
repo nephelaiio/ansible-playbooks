@@ -33,26 +33,5 @@
       command: exportfs -a
       changed_when: false
 
-    - name: update backup pdns record
-      uri:
-        url: "{{ pdns_url }}/api/v1/servers/localhost/zones/{{ backup_fqdn_zone }}"
-        method: PATCH
-        return_content: yes
-        body_format: json
-        body:
-          rrsets:
-            - name: "{{ backup_fqdn_host }}"
-              type: A
-              ttl: 3600
-              changetype: REPLACE
-              records:
-                - content: "{{ ansible_host | default(ansible_default_ipv4.address) }}"
-                  disabled: no
-                  comments: []
-        headers:
-          X-API-Key: "{{ pdns_api_key }}"
-        status_code: 204
-      vars:
-        backup_fqdn_host: "{{ backup_host }}."
-        backup_fqdn_zone: "{{ backup_host | split_with('.') | tail | join('.') }}"
-      register: pdns_zones_query
+    - fail:
+        msg: add dns update task for route53
