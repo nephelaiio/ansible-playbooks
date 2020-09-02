@@ -1,5 +1,5 @@
 ---
-backup_host: "backup.{{ base_domain }}"
+backup_host: 192.168.5.1
 backup_base_path: /backup
 kvm_mounts:
   - path: "{{ backup_base_path }}"
