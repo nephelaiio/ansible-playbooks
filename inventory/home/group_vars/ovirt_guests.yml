@@ -1,9 +1,0 @@
----
-ovirt_guest_user: ansible
-ovirt_guest_pass: "{{ users[ovirt_guest_user].password }}"
-ovirt_guest_pubkey: "{{ users[ovirt_guest_user].pubkey }}"
-ovirt_guest_timezone: UTC
-ovirt_profiles:
-  small:
-    vm_cpu: 2
-    vm_memory: 2GiB

@@ -1,6 +1,0 @@
----
-nfs_export_data:
-  - path: /ovirt
-    owner: 36
-    group: 36
-    options: "*(rw,no_subtree_check)"

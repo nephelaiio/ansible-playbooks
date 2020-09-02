@@ -1,7 +1,0 @@
----
-ovirt_hostname: "{{ inventory_hostname }}"
-ovirt_hostname_short: "{{ ovirt_hostname.split('.') | first }}"
-ovirt_cluster: "{{ ovirt_hostname_short }}"
-ovirt_data_center: "{{ ovirt_hostname_short }}"
-ovirt_storage_domain: "{{ ovirt_hostname_short }}"
-ovirt_iso_domain: "iso{{ ovirt_hostname_short[-1] }}"
