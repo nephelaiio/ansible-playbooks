@@ -18,7 +18,9 @@ roles:
   - name: nephelaiio.docker
   - name: nephelaiio.acme_certificate_route53
   - name: linux-system-roles.network
+    src: https://github.com/linux-system-roles/network.git
   - name: linux-system-roles.cockpit
+    src: https://github.com/linux-system-roles/cockpit.git
   - name: gluster.infra
     src: https://github.com/gluster/gluster-ansible-infra.git
   - name: gluster.cluster
