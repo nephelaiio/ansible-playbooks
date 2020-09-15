@@ -1,17 +1,16 @@
 ---
 nodes:
-{% for control in rke_control_hosts %}
-  - address: "{{ control }}"
+{% for host in ((rke_control_hosts + rke_worker_hosts) | unique) %}
+  - address: "{{ hostvars[host]['ansible_host'] }}"
     user: "{{ rke_install_user }}"
     role:
+{% if host in rke_control_hosts %}
       - controlplane
       - etcd
-{% endfor %}
-{% for worker in rke_worker_hosts %}
-  - address: "{{ worker }}"
-    user: "{{ rke_install_user }}"
-    role:
+{% endif %}
+{% if host in rke_worker_hosts %}
       - worker
+{% endif %}
 {% endfor %}
 
 # If set to true, RKE will not fail when unsupported Docker version
@@ -20,7 +19,7 @@ ignore_docker_version: false
 
 # Cluster level SSH private key
 # Used if no ssh information is set for the node
-ssh_key_path: ~/.ssh/id_rsa
+ssh_key_path: {{ rke_ssh_key }}
 
 # Set the name of the Kubernetes cluster  
 cluster_name: "{{ rke_cluster_name | default('rke') }}"

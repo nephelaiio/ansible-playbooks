@@ -1,11 +1,17 @@
 ---
 rke:
-  children:
-    rke_control:
-    rke_workers:
+  hosts:
+    nuca.home.nephelai.io:
+      ansible_host: 192.168.5.70
+    nucb.home.nephelai.io:
+      ansible_host: 192.168.5.71
+    nucc.home.nephelai.io:
+      ansible_host: 192.168.5.72
 
 rke_control:
-  hosts: {}
+  children:
+    rke:
 
 rke_workers:
-  hosts: {}
+  children:
+    rke:

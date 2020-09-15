@@ -1,0 +1,21 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: "{{ rke_metallb_namespace }}"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: "{{ rke_metallb_namespace }}"
+  name: config
+data:
+  config: |
+    address-pools:
+{% for pool in rke_metallb_pools %}
+      - name: {{ pool.name }}
+        protocol: {{ pool.protocol | default('layer2') }}
+        addresses:
+          - {{ pool.range }}
+{% endfor %}

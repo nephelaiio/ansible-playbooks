@@ -6,18 +6,82 @@
   vars:
 
     rke_manifest_dir: "{{ rke_cluster_dir }}/manifests"
+    rke_install_user: "{{ ansible_ssh_user }}"
+    rke_cluster_dir: /opt/rke
+    rke_ssh_key: ~/.ssh/id_rsa
     rke_bin: /usr/local/bin/rke
     kubectl_bin: /usr/local/bin/kubectl
     helm_bin: /usr/local/bin/helm
     rke_bin_url: "https://github.com/rancher/rke/releases/download/{{ rke_release }}/rke_linux-amd64"
     kubectl_bin_url: "https://storage.googleapis.com/kubernetes-release/release/{{ rke_kubectl_release }}/bin/linux/amd64/kubectl"
     helm_bin_url: "https://get.helm.sh/helm-{{ rke_helm_release }}-linux-amd64.tar.gz"
-
+    docker_packages_helpers:
+      - python3-docker
   roles:
 
     - nephelaiio.plugins
 
+  pre_tasks:
+
+    - name: gather package data
+      package_facts:
+        manager: auto
+
+    - name: install package prerequisites
+      package:
+        name: open-iscsi
+      tags:
+        - always
+
   tasks:
+
+    - name: get play username
+      command: whoami
+      register: rke_install_user_query
+      changed_when: false
+      tags:
+        - always
+
+    - name: set install username
+      set_fact:
+        rke_install_user: "{{ rke_install_user_query.stdout }}"
+      tags:
+        - always
+
+    - block:
+
+        - name: install docker
+          include_role:
+            name: nephelaiio.docker
+            apply:
+              become: yes
+              tags:
+                - docker
+          when: "'docker-ce' not in ansible_facts.packages"
+
+        - name: disable active swap volume
+          shell: swapoff -a
+          tags:
+            - skip_ansible_lint
+
+        - name: disable swap fstab entry
+          lineinfile:
+            state: absent
+            path: /etc/fstab
+            regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+
+        - name: configure docker access for rke install user
+          user:
+            append: yes
+            name: "{{ rke_install_user }}"
+            group: docker
+          become: yes
+          tags:
+            - user
+
+      become: yes
+      tags:
+        - docker
 
     - name: create cluster directory structure
       file:
@@ -29,6 +93,8 @@
         - "{{ rke_cluster_dir }}"
         - "{{ rke_manifest_dir }}"
       become: yes
+      tags:
+        - always
 
     - name: install rke
       get_url:
@@ -70,22 +136,42 @@
         path: "{{ helm_tmpdir.path }}"
       changed_when: false
 
+    - name: build rke cluster file
+      template:
+        src: rke/cluster.yml.j2
+        dest: "{{ rke_cluster_dir }}/cluster.yml"
+        owner: "{{ rke_install_user }}"
+        mode: 0640
+      tags:
+        - rke
+
+    - name: create ssh key dir
+      file:
+        path: ~/.ssh
+        state: directory
+        mode: 0700
+
+    - name: create ssh keypair
+      openssh_keypair:
+        path: "{{ rke_ssh_key }}"
+      register: rke_publickey
+
+    - name: slurp ssh public key
+      slurp:
+        src: ~/.ssh/id_rsa.pub
+      register: rke_pubkey
+
+    - name: distribute ssh public keys
+      authorized_key:
+        comment: "{{ item }}"
+        user: "{{ rke_install_user }}"
+        key: "{{ rke_publickey.public_key }}"
+      loop: "{{ groups['rke'] }}"
+      loop_control:
+        label: "{{ rke_install_user }}@{{ ansible_fqdn }} -> {{ item }}"
+      delegate_to: "{{ item }}"
+
     - block:
-
-        - name: create ssh key dir
-          file:
-            path: ~/.ssh
-            state: directory
-            mode: 0700
-
-        - name: create ssh keypair
-          openssh_keypair:
-            path: ~/.ssh/id_rsa
-
-        - name: slurp ssh public key
-          slurp:
-            src: ~/.ssh/id_rsa.pub
-          register: rke_pubkey
 
         - name: deploy rke
           command: rke up
@@ -96,6 +182,13 @@
           until: rke_deploy_result.rc == 0
           tags:
             - rke
+
+        - name: slurp rkestate
+          slurp:
+            src: "{{ rke_cluster_dir }}/cluster.rkestate"
+          register: rke_rkestate
+          tags:
+            - always
 
         - name: slurp kubectl config
           slurp:
@@ -108,6 +201,15 @@
       file:
         path: ~/.kube
         state: directory
+
+    - name: distribute rkestate
+      copy:
+        dest: "{{ rke_cluster_dir }}/cluster.rkestate"
+        content: "{{ rke_rkestate['content'] | b64decode }}"
+        owner: "{{ rke_install_user }}"
+        mode: 0640
+      tags:
+        - configure
 
     - name: configure kubectl
       copy:
@@ -127,7 +229,7 @@
         dest: "{{ rke_manifest_dir }}/{{ item | basename | regex_replace('\\.j2', '') }}"
         owner: "{{ rke_install_user }}"
         mode: 0640
-      loop: "{{ lookup('fileglob', 'templates/rke/*.j2', wantlist=True) }}" 
+      loop: "{{ lookup('fileglob', 'templates/rke/*.j2.yml', wantlist=True) }}"
 
     - block:
 
