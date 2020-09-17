@@ -1,0 +1,87 @@
+---
+- name: Install localhost requirements
+
+  hosts: localhost
+
+  become: yes
+
+  tasks:
+
+    - name: install requirements
+      package:
+        name:
+          - syslinux
+          - genisoimage
+          - isomd5sum
+          - createrepo
+
+- name: Create centos bare-metal installers
+
+  hosts: centos_installer
+
+  gather_facts: no
+
+  connection: local
+
+  serial: 1
+
+  become: yes
+
+  vars:
+
+    centos_installer_target_dir: "{{ playbook_dir }}/../files/centos"
+    centos_image_cache: "{{ centos_installer_target_dir }}/{{ centos_installer_image_url | urlsplit('path') | basename }}"
+
+  pre_tasks:
+
+    - name: gather localhost facts
+      setup:
+      delegate_to: localhost
+      run_once: yes
+
+  tasks:
+
+    - block:
+
+        - name: create target directory
+          file:
+            dest: "{{ centos_installer_target_dir }}"
+            state: directory
+          run_once: yes
+
+        - debug:
+            var: centos_installer_image_url
+
+        - name: cache installer file
+          get_url:
+            url: "{{ centos_installer_image_url }}"
+            dest: "{{ centos_image_cache }}"
+          run_once: yes
+
+        - name: remap source installer url
+          set_fact:
+            centos_installer_image_url: "file:///{{ centos_image_cache }}"
+          become: yes
+
+        - name: create centos bare-metal intaller iso
+          import_role:
+            name: nephelaiio.centos-installer
+          vars:
+            centos_installer_baseurl: "{{ centos_base_url | default('') }}"
+            centos_installer_username: "{{ centos_user_name }}"
+            centos_installer_password: "{{ centos_user_pass | password_hash('sha512') }}"
+            centos_installer_sshkey: "{{ centos_user_pubkey }}"
+            centos_installer_hostname: "{{ inventory_hostname }}"
+            centos_installer_ks_keyboard: 'us'
+            centos_installer_interface:
+              static: true
+              ipaddress: "{{ ansible_host }}"
+              network: "{{ nets[centos_network].network }}"
+              netmask: "{{ nets[centos_network].netmask }}"
+              gateway: "{{ nets[centos_network].router }}"
+              nameservers: "{{ nets[centos_network].ns }}"
+            centos_installer_packages: []
+            centos_installer_ks_partitioning: "{{ centos_ks_partitioning | default('autopart') }}"
+          become: yes
+
+      delegate_to: localhost

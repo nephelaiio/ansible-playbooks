@@ -1,0 +1,87 @@
+---
+- name: Install localhost requirements
+
+  hosts: localhost
+
+  become: yes
+
+  tasks:
+
+    - name: install requirements
+      package:
+        name:
+          - syslinux
+          - syslinux-utils
+          - openssh-client
+          - genisoimage
+          - p7zip-full
+
+
+- name: Create ubuntu bare-metal installers
+
+  hosts: ubuntu_installer
+
+  connection: local
+
+  gather_facts: no
+
+  serial: 1
+
+  become: yes
+
+  vars:
+
+    ubuntu_installer_image_src: "{{ ubuntu_installer_image_url }}"
+    ubuntu_installer_target_dir: "{{ playbook_dir }}/../files/ubuntu"
+    ubuntu_image_cache: "{{ ubuntu_installer_target_dir }}/{{ ubuntu_installer_image_url | urlsplit('path') | basename }}"
+
+  pre_tasks:
+
+    - name: gather localhost facts
+      setup:
+      delegate_to: localhost
+      run_once: yes
+
+  tasks:
+
+    - block:
+
+        - name: create target directory
+          file:
+            dest: "{{ ubuntu_installer_target_dir }}"
+            state: directory
+          run_once: yes
+
+        - name: cache installer file
+          get_url:
+            url: "{{ ubuntu_installer_image_src }}"
+            dest: "{{ ubuntu_image_cache }}"
+          run_once: yes
+
+        - name: remap source installer url
+          set_fact:
+            ubuntu_installer_image_url: "file:///{{ ubuntu_image_cache }}"
+          become: yes
+
+        - name: create ubuntu bare-metal intaller iso
+          import_role:
+            name: nephelaiio.ubuntu-installer
+          vars:
+            ubuntu_installer_baseurl: "{{ ubuntu_base_url | default('') }}"
+            ubuntu_installer_username: "{{ ubuntu_user_name }}"
+            ubuntu_installer_password: "{{ ubuntu_user_pass | password_hash('sha512') }}"
+            ubuntu_installer_sshkey: "{{ ubuntu_user_pubkey }}"
+            ubuntu_installer_hostname: "{{ inventory_hostname }}"
+            ubuntu_seed_file: ubuntu.seed
+            ubuntu_installer_interface:
+              static: true
+              ipaddress: "{{ ansible_host }}"
+              network: "{{ nets[ubuntu_network].network }}"
+              netmask: "{{ nets[ubuntu_network].netmask }}"
+              gateway: "{{ nets[ubuntu_network].router }}"
+              nameservers: "{{ nets[ubuntu_network].ns }}"
+            ubuntu_installer_packages: []
+            ubuntu_partman_method: lvm
+          become: yes
+
+      delegate_to: localhost

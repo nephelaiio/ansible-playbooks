@@ -1,8 +1,4 @@
 ---
-- import_playbook: kvm.yml
+- import_playbook: ubuntu.yml
 
-- import_playbook: provision/raspbian.yml
-
-- import_playbook: provision/aws.yml
-
-- import_playbook: dns.yml
+- import_playbook: centos.yml
