@@ -46,15 +46,15 @@ metadata:
   namespace: {{ rke_hello_namespace }}
   name: hello
   annotations:
-    kubernetes.io/ingress.class: "nginx"
-    cert-manager.io/cluster-issuer: "{{ rke_certmanager_issuer_name }}"
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: {{ rke_certmanager_issuer_name }}
 spec:
   tls:
     - hosts:
-      - "hello.{{ rke_base_domain }}"
-      secretName: "hello.{{ rke_base_domain }}"
+        - hello.home.nephelai.io
+      secretName: hello.home.nephelai.io
   rules:
-    - host: hello.{{ rke_base_domain }}
+    - host: hello.home.nephelai.io
       http:
         paths:
           - backend:

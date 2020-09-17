@@ -6,7 +6,6 @@
   vars:
 
     rke_manifest_dir: "{{ rke_cluster_dir }}/manifests"
-    rke_install_user: "{{ ansible_ssh_user }}"
     rke_cluster_dir: /opt/rke
     rke_ssh_key: ~/.ssh/id_rsa
     rke_bin: /usr/local/bin/rke
@@ -17,6 +16,7 @@
     helm_bin_url: "https://get.helm.sh/helm-{{ rke_helm_release }}-linux-amd64.tar.gz"
     docker_packages_helpers:
       - python3-docker
+
   roles:
 
     - nephelaiio.plugins
@@ -30,6 +30,7 @@
     - name: install package prerequisites
       package:
         name: open-iscsi
+      become: yes
       tags:
         - always
 
@@ -61,6 +62,7 @@
 
         - name: disable active swap volume
           shell: swapoff -a
+          become: yes
           tags:
             - skip_ansible_lint
 
@@ -69,6 +71,7 @@
             state: absent
             path: /etc/fstab
             regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+          become: yes
 
         - name: configure docker access for rke install user
           user:
@@ -79,7 +82,6 @@
           tags:
             - user
 
-      become: yes
       tags:
         - docker
 
@@ -101,6 +103,7 @@
         url: "{{ rke_bin_url }}"
         dest: "{{ rke_bin }}"
         mode: 0755
+      become: yes
 
     - name: install kubectl
       get_url:
@@ -127,6 +130,7 @@
       copy:
         src: "{{ helm_tmpdir.path }}/linux-amd64/helm"
         dest: "{{ helm_bin }}"
+        mode: 0755
         remote_src: yes
       become: yes
 
@@ -229,7 +233,9 @@
         dest: "{{ rke_manifest_dir }}/{{ item | basename | regex_replace('\\.j2', '') }}"
         owner: "{{ rke_install_user }}"
         mode: 0640
-      loop: "{{ lookup('fileglob', 'templates/rke/*.j2.yml', wantlist=True) }}"
+      loop: "{{ lookup('fileglob', 'templates/manifests/*.j2.yml', wantlist=True) | sort }}"
+      tags:
+        - manifests
 
     - block:
 
@@ -237,10 +243,14 @@
           command: helm list --all-namespaces -o json
           register: helm_release_query
           changed_when: false
+          tags:
+            - manifests
 
         - name: register helm releases
           set_fact:
             rke_helm_releases: "{{ helm_release_query.stdout | from_json | map(attribute='name') | list }}"
+          tags:
+            - manifests
 
         - name: create cert-manager namespace
           k8s:
@@ -251,25 +261,73 @@
               kind: Namespace
               metadata:
                 name: cert-manager
+          tags:
+            - manifests
 
         - name: add cert-manager helm repo
           command: helm repo add jetstack https://charts.jetstack.io
           changed_when: false
+          tags:
+            - manifests
 
         - name: update helm repos
           command: helm repo update
           changed_when: false
+          tags:
+            - manifests
 
         - name: deploy cert-manager helm chart
-          command: "helm {{ helm_action }} cert-manager --namespace cert-manager --version {{ rke_cert_manager_release }} jetstack/cert-manager --set 'extraArgs={--dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53}'"
+          command: "helm {{ helm_action }} cert-manager --namespace cert-manager --version {{ rke_cert_manager_release }} jetstack/cert-manager --set 'extraArgs={--dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53}' --set installCRDs=true"
           vars:
             helm_action: "{{ 'upgrade' if 'cert-manager' in rke_helm_releases else 'install' }}"
+          tags:
+            - manifests
+
+        - name: apply external manifests
+          k8s:
+            state: present
+            definition: "{{ lookup('url', item, split_lines=False) }}"
+          loop: "{{ rke_external_manifests }}"
+          run_once: yes
+          tags:
+            - manifests
+
+        - name: verify metallb secret
+          command: "kubectl get secret memberlist -n {{ rke_metallb_namespace }}"
+          changed_when: false
+          ignore_errors: true
+          register: rke_metallb_secret_query
+          tags:
+            - always
+            - metallb
+
+        - block:
+
+            - name: generate metallb secret string
+              command: openssl rand -base64 128
+              changed_when: false
+              register: rke_metallb_secret
+              tags:
+                - manifests
+                - metallb
+
+            - name: create metallb secret
+              command: "kubectl create secret generic -n {{ rke_metallb_namespace }} memberlist --from-literal=secretkey=\"{{ rke_metallb_secret.stdout }}\""
+              tags:
+                - manifests
+                - metallb
+
+          when: rke_metallb_secret_query is failed
 
         - name: apply rke manifests
           command: "kubectl apply -f {{ manifest }}"
           vars:
             manifest: "{{ rke_manifest_dir }}/{{ item | basename | regex_replace('\\.j2', '') }}"
-          loop: "{{ lookup('fileglob', 'templates/rke/*.manifest.yml.j2', wantlist=True) }}" 
+          register: kubectl_apply
+          loop: "{{ lookup('fileglob', 'templates/manifests/*.j2.yml', wantlist=True) | sort }}"
+          retries: 3
+          delay: 15
+          until: kubectl_apply.rc == 0
           tags:
             - manifests
 

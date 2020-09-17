@@ -22,7 +22,7 @@ spec:
     solvers:
       - selector:
           dnsZones:
-            - home.wpnops.net
+            - home.nephelai.io
         dns01:
           route53:
             region: us-east-1

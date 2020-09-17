@@ -32,7 +32,10 @@ authorization:
 
 # Specify network plugin-in (canal, calico, flannel, weave, or none)
 network:
-  plugin: calico
+  flannel_iface: {{ ansible_default_ipv4.interface }}
+  plugin: flannel
+  options:
+    flannel_backend_type: vxlan
 
 # Specify DNS provider (coredns or kube-dns)
 dns:

@@ -1,15 +1,13 @@
 ---
-rke_release: v1.0.4
-rke_helm_release: v3.0.3
-rke_kubectl_release: v1.17.0
-rke_metallb_release: v0.8.3
-rke_cert_manager_release: v0.13.0
-rke_nginx_release: 0.28.0
-rke_rook_release: v1.2.4
-rke_certmanager_release: v0.13.0
-rke_toweroperator_release: master
+rke_release: v1.1.7
+rke_helm_release: v3.3.1
+rke_kubectl_release: v1.19.1
+rke_metallb_release: v0.9.3
+rke_cert_manager_release: v1.0.1
+rke_nginx_release: v0.35.0
+rke_externaldns_release: v0.7.3
 
-rke_metallb_ips: "{{ nets.pxe.lb.range | regex_replace(' ', '-') }}"
+rke_metallb_ips: "{{ nets.management.lb.range | regex_replace(' ', '-') }}"
 rke_control_hosts: "{{ groups['rke_control'] }}"
 rke_worker_hosts: "{{ groups['rke_workers'] }}"
 rke_externaldns_namespace: "external-dns"
@@ -26,3 +24,8 @@ rke_certmanager_route53_accesskeysecret: "{{ aws_secret_access_key }}"
 rke_metallb_pools:
   - name: metallb
     range: "{{ rke_metallb_ips }}"
+
+rke_external_manifests:
+  - "https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-{{ rke_nginx_release }}/deploy/static/provider/cloud/deploy.yaml"
+  - "https://raw.githubusercontent.com/metallb/metallb/{{ rke_metallb_release }}/manifests/namespace.yaml"
+  - "https://raw.githubusercontent.com/metallb/metallb/{{ rke_metallb_release }}/manifests/metallb.yaml"

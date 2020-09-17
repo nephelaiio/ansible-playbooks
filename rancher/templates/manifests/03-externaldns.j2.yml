@@ -41,8 +41,9 @@ kind: Secret
 metadata:
   name: externaldns-route53
 data:
-  access-key: "{{ aws_access_key_id }}"
-  access-secret: "{{ aws_secret_access_key }}"
+  accessKey: "{{ aws_access_key_id | b64encode }}"
+  accessSecret: "{{ aws_secret_access_key | b64encode }}"
+type: Opaque
 
 ---
 apiVersion: apps/v1
@@ -77,9 +78,9 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: externaldns-route53
-                  key: access-key
+                  key: accessKey
             - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: externaldns-route53
-                  key: access-secret
+                  key: accessSecret
