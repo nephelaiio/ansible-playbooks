@@ -6,6 +6,8 @@ rke_metallb_release: v0.9.3
 rke_cert_manager_release: v1.0.1
 rke_nginx_release: v0.35.0
 rke_externaldns_release: v0.7.3
+rke_longhorn_release: v1.0.2
+rke_awx_operator_release: devel
 
 rke_metallb_ips: "{{ nets.management.lb.range | regex_replace(' ', '-') }}"
 rke_control_hosts: "{{ groups['rke_control'] }}"
@@ -29,3 +31,5 @@ rke_external_manifests:
   - "https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-{{ rke_nginx_release }}/deploy/static/provider/cloud/deploy.yaml"
   - "https://raw.githubusercontent.com/metallb/metallb/{{ rke_metallb_release }}/manifests/namespace.yaml"
   - "https://raw.githubusercontent.com/metallb/metallb/{{ rke_metallb_release }}/manifests/metallb.yaml"
+  - "https://raw.githubusercontent.com/longhorn/longhorn/{{ rke_longhorn_release }}/deploy/longhorn.yaml"
+  - "https://raw.githubusercontent.com/ansible/awx-operator/{{ rke_awx_operator_release }}/deploy/awx-operator.yaml"

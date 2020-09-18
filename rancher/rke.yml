@@ -227,13 +227,46 @@
       pip:
         name: openshift
 
-    - name: build rke templates
+    - name: gather target manifest data
+      set_fact:
+        rke_target_templates: "{{ (rke_target_templates | default ([])) + [rke_target_template] }}"
+      vars:
+        rke_target_template:
+          src: "{{ item }}"
+          dest: "{{ rke_manifest_dir }}/{{ item | basename | regex_replace('\\.j2', '') }}"
+      loop: "{{ lookup('fileglob', 'templates/manifests/*.j2.yml', wantlist=True) | sort }}"
+      tags:
+        - manifests
+
+    - name: list previous templates
+      find:
+        paths: "{{ rke_manifest_dir }}"
+        recurse: false
+        file_type: file
+      register: rke_manifest_query
+      tags:
+        - manifests
+
+    - name: purge stale templates
+      file:
+        dest: "{{ item.path }}"
+        state: absent
+      when: item.path not in rke_target_templates | map(attribute='dest')
+      loop_control:
+        label: "{{ item.path }}"
+      loop: "{{ rke_manifest_query.files }}"
+      tags:
+        - manifests
+
+    - name: build rke manifest templates
       template:
-        src: "{{ item }}"
-        dest: "{{ rke_manifest_dir }}/{{ item | basename | regex_replace('\\.j2', '') }}"
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
         owner: "{{ rke_install_user }}"
         mode: 0640
-      loop: "{{ lookup('fileglob', 'templates/manifests/*.j2.yml', wantlist=True) | sort }}"
+      loop_control:
+        label: "{{ item.dest }}"
+      loop: "{{ rke_target_templates }}"
       tags:
         - manifests
 
@@ -320,14 +353,11 @@
           when: rke_metallb_secret_query is failed
 
         - name: apply rke manifests
-          command: "kubectl apply -f {{ manifest }}"
-          vars:
-            manifest: "{{ rke_manifest_dir }}/{{ item | basename | regex_replace('\\.j2', '') }}"
+          command: "kubectl apply -f {{ item.dest }}"
           register: kubectl_apply
-          loop: "{{ lookup('fileglob', 'templates/manifests/*.j2.yml', wantlist=True) | sort }}"
-          retries: 3
-          delay: 15
-          until: kubectl_apply.rc == 0
+          loop_control:
+            label: "{{ item.dest }}"
+          loop: "{{ rke_target_templates }}"
           tags:
             - manifests
 
