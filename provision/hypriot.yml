@@ -29,7 +29,7 @@
               register: hypriot_flash_releases
               changed_when: false
 
-            - name: determine latest release for hypriot flash 
+            - name: determine latest release for hypriot flash
               set_fact:
                 hypriot_flash_latest: "{{ (hypriot_flash_releases.json | first).tag_name }}"
 
@@ -53,7 +53,7 @@
 
                 - name: fetch explicit release for hypriot os
                   set_fact:
-                    hypriot_os_targets: "{{ hypriot_os_releases.json | selectattr('tag_name', 'equalto', hypriot_os_release) | list }}"  
+                    hypriot_os_targets: "{{ hypriot_os_releases.json | selectattr('tag_name', 'equalto', hypriot_os_release) | list }}"
 
                 - name: verify hypriot os explicit release
                   fail:
@@ -62,15 +62,15 @@
 
                 - name: set hypriot explicit target release
                   set_fact:
-                    hypriot_os_explicit: "{{ hypriot_os_releases.json | selectattr('tag_name', 'equalto', hypriot_os_release) | list }}"  
+                    hypriot_os_explicit: "{{ hypriot_os_releases.json | selectattr('tag_name', 'equalto', hypriot_os_release) | list }}"
 
               when: hypriot_os_release is defined
 
-            - name: determine latest release for hypriot os 
+            - name: determine latest release for hypriot os
               set_fact:
                 hypriot_os_latest: "{{ hypriot_os_releases.json | first }}"
 
-            - name: determine latest release for hypriot os 
+            - name: determine latest release for hypriot os
               set_fact:
                 hypriot_os_target: "{{ hypriot_os_explicit | default(hypriot_os_latest) }}"
 
@@ -167,6 +167,5 @@
         - name: echo installation instructions
           debug:
             msg: "run command 'flash --hostname {{ inventory_hostname.split(' ') | first }} --userdata {{ hypriot_target_path }}/{{ inventory_hostname }}.user-data.yml {{ hypriot_target_path }}/{{ hypriot_os_target_url.browser_download_url | urlsplit('path') | basename }}"
-
 
       delegate_to: localhost
