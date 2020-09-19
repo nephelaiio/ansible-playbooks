@@ -1,0 +1,19 @@
+---
+rpi:
+  hosts:
+    rpia.home.nephelai.io:
+      rpi_state: offline
+      ansible_host: 192.168.5.200
+      host_network: management
+    rpib.home.nephelai.io:
+      rpi_state: offline
+      ansible_host: 192.168.5.201
+      host_network: management
+    rpic.home.nephelai.io:
+      rpi_state: offline
+      ansible_host: 192.168.5.202
+      host_network: management
+    rpid.home.nephelai.io:
+      rpi_state: offline
+      ansible_host: 192.168.5.203
+      host_network: management

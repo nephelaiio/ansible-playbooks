@@ -9,3 +9,7 @@ ubuntu:
     ubuntu_installer_disk: /dev/nvme0n1
   children:
     nuc:
+
+ubuntu_pi:
+  children:
+    rpi:
