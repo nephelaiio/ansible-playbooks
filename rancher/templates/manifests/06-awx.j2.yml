@@ -5,7 +5,7 @@ metadata:
   name: {{ rke_awx_namespace | default('awx') }}
 
 ---
-apiVersion: awx.ansible.com/v1
+apiVersion: awx.ansible.com/v1beta1
 kind: AWX
 metadata:
   name: {{ rke_awx_deployment | default('awx') }}
@@ -20,7 +20,7 @@ spec:
   tower_postgres_storage_class: longhorn
 
 ---
-apiVersion: networking.k8s.io/v1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   namespace: {{ rke_awx_namespace | default('awx') }}
