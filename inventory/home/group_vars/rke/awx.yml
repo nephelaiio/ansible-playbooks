@@ -4,7 +4,8 @@ rke_awx_namespace: awx
 
 awx_admin_username: admin
 
-awx_hostname: awx.home.nephelai.io
+awx_hostname: "{{ awx_url | urlsplit('hostname') }}"
+awx_public_hostname: "{{ awx_public_url | urlsplit('hostname') }}"
 
 awx_admin_email: !vault |
   $ANSIBLE_VAULT;1.2;AES256;home

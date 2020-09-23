@@ -1,20 +1,14 @@
-* meta
-** DONE learn org mode
-   CLOSED: [2019-04-18 Thu 23:18]
-*** DONE install org mode
-    CLOSED: [2019-04-16 Tue 23:49]
-*** DONE configure projectile integration
-    CLOSED: [2019-04-16 Tue 23:50]
-*** DONE create deadlines
-    CLOSED: [2019-04-17 Wed 00:04] DEADLINE: <2019-04-17 Wed>
-*** DONE manage tags
-    CLOSED: [2019-04-17 Wed 00:08]
-*** DONE configure agenda integration
-    CLOSED: [2019-04-18 Thu 00:50]
-
 * cloud infrastructure
-** deploy cloud openldap
-** deploy cloud certificate authority server
+** TODO deploy cloudflare argo loadbalancer to home k8s
+** TODO publish awx as awx.nephelai.io
+** integrate awx to jumpcloud
+** create test postgresql service to home k8s
+** deploy metabase to k8s
+** integrate metabase with jumpcloud
+** deploy strimzi to k8s
+** deploy cassandra to k8s
+** create a hello kubernetes operator
+** test longhorn nfs backups
 * infrastructure tests
 ** DONE install kubernetes on bare metal
    CLOSED: [2020-02-24 lun 20:42]
@@ -33,9 +27,8 @@
 ** DONE refactor awx configuration management to use tower_* modules
    CLOSED: [2020-02-25 mar 20:57]
 
-** TODO install keycloack iam service
-** TODO install openstack
-** TODO create role testing vm
+** DONE create role testing vm
+   CLOSED: [2020-09-19 sáb 22:45]
 * release management
 ** DONE clean up travis ci test failures
    CLOSED: [2019-05-02 Thu 22:18]
@@ -90,8 +83,4 @@
 ** TODO refactor ansible-playbooks as ansible collection
 * marketing
 ** TODO create blog
-
-* chores
-** DONE finish application AA008VU22X
-   CLOSED: [2019-04-22 Mon 23:17]
 

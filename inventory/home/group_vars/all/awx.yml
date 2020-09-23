@@ -1,5 +1,6 @@
 ---
 awx_url: "https://awx.home.nephelai.io"
+awx_public_url: "https://awx.nephelai.io"
 awx_container_port: 80
 awx_callback: site
 awx_ci_user: admin

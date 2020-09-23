@@ -41,3 +41,67 @@ spec:
             backend:
               serviceName: '{{ rke_awx_deployment | default("awx") }}-service'
               servicePort: 80
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "{{ awx_public_hostname }}"
+  namespace: "{{ rke_awx_namespace | default('awx') }}"
+type: Opaque
+data:
+  cert.pem: "{{ cloudflare_argo_cert | b64encode }}"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: "{{ rke_awx_deployment | default('awx') }}"
+  name: "{{ rke_awx_deployment | default('awx') }}-argo"
+  namespace: "{{ rke_awx_namespace | default('awx') }}"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: argo
+  template:
+    metadata:
+      labels:
+        app: argo
+    spec:
+      containers:
+        - name: tunnel
+          image: docker.io/cloudflare/cloudflared:2020.8.0
+          imagePullPolicy: Always
+          command: ["cloudflared", "tunnel"]
+          args:
+            - --url=http://{{ rke_awx_deployment | default("awx") }}-service.{{ rke_awx_namespace | default('awx') }}:80
+            - --hostname={{ awx_public_hostname }}
+            - --origincert=/etc/cloudflared/cert.pem
+            - --no-autoupdate
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            limits:
+              cpu: 100m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - mountPath: /etc/cloudflared
+              name: "{{ rke_awx_deployment | default('awx') }}-secret"
+              readOnly: true
+      terminationGracePeriodSeconds: 60
+      volumes:
+        - name: "{{ rke_awx_deployment | default('awx') }}-secret"
+          secret:
+            secretName: "{{ awx_public_hostname }}"
