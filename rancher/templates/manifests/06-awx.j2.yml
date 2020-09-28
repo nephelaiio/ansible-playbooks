@@ -18,6 +18,8 @@ spec:
   tower_broadcast_websocket_secret: {{ awx_websocket_secret }}
   tower_ingress_type: none
   tower_postgres_storage_class: longhorn
+  tower_task_image: "ansible/awx:{{ awx_release }}"
+  tower_web_image: "ansible/awx:{{ awx_release }}"
 
 ---
 apiVersion: networking.k8s.io/v1beta1
