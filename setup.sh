@@ -51,6 +51,11 @@ done
 
 # perform local role install
 sudo apt install -y libvirt-dev
+
+# upgrade pip
+pip install --upgrade pip
+
+# install requirements
 pip install -r requirements.txt
 if [ -f roles/requirements.yml ] ; then
     ansible-galaxy install -r roles/requirements.yml --force
