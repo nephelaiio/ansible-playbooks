@@ -7,3 +7,5 @@ nuc:
       ansible_host: 192.168.5.71
     nucc.home.nephelai.io:
       ansible_host: 192.168.5.72
+    nucz.home.nephelai.io:
+      ansible_host: 192.168.5.73
