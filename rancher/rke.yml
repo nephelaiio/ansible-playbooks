@@ -361,4 +361,29 @@
           tags:
             - manifests
 
+        - name: list storage classes
+          k8s_info:
+            kind: StorageClass
+          register: storage_class_query
+          tags:
+            - storage
+
+        - name: register helm releases
+          set_fact:
+            rke_storage_classes: "{{ storage_class_query.resources | map(attribute='metadata') | map(attribute='name') | list  }}"
+          tags:
+            - storage
+
+        - name: set longhorn as default storage provider
+          k8s:
+            name: longhorn
+            kind: StorageClass
+            definition:
+              metadata:
+                annotations:
+                  storageclass.kubernetes.io/is-default-class: "true"
+          when: "'longhorn' in rke_storage_classes"
+          tags:
+            - storage
+
       run_once: yes
