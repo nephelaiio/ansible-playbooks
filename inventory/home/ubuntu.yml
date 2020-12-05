@@ -6,7 +6,6 @@ ubuntu:
     ubuntu_user_name: "{{ users.ansible.username }}"
     ubuntu_user_pass: "{{ users.ansible.password }}"
     ubuntu_network: management
-    ubuntu_installer_disk: /dev/nvme0n1
   children:
     nuc:
 

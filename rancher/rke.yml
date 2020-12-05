@@ -5,8 +5,6 @@
 
   vars:
 
-    rke_manifest_dir: "{{ rke_cluster_dir }}/manifests"
-    rke_cluster_dir: /opt/rke
     rke_ssh_key: ~/.ssh/id_rsa
     rke_bin: /usr/local/bin/rke
     kubectl_bin: /usr/local/bin/kubectl

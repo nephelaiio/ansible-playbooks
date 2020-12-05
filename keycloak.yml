@@ -1,0 +1,87 @@
+---
+- name: deploy keycloak to rke
+
+  hosts: keycloak
+
+  gather_facts: no
+
+  vars:
+
+    keycloak_manifest_dir: "{{ rke_manifest_dir }}/keycloak"
+
+  tasks:
+
+    - block:
+
+        - name: get play username
+          command: whoami
+          register: rke_install_user_query
+          changed_when: false
+          tags:
+            - always
+
+        - name: set install username
+          set_fact:
+            rke_install_user: "{{ rke_install_user_query.stdout }}"
+          tags:
+            - always
+
+        - name: create manifest dir
+          file:
+            path: "{{ keycloak_manifest_dir }}"
+            state: directory
+
+        - name: add codecentric helm repo
+          command: helm repo add codecentric https://codecentric.github.io/helm-charts
+          changed_when: false
+
+        - name: add bitnami helm repo
+          command: helm repo add bitnami https://charts.bitnami.com/bitnami
+          changed_when: false
+
+        - name: update helm repos
+          command: helm repo update
+          changed_when: false
+
+        - name: query helm releases
+          command: "helm list -n {{ keycloak_namespace }} -o json"
+          register: helm_release_query
+          changed_when: false
+
+        - name: register helm releases
+          set_fact:
+            rke_helm_releases: "{{ helm_release_query.stdout | from_json | map(attribute='name') | list }}"
+
+        - name: build keycloak value template
+          template:
+            src: keycloak/values.j2.yml
+            dest: "{{ keycloak_manifest_dir }}/values.yml"
+            owner: "{{ rke_install_user }}"
+            mode: 0640
+          tags:
+            - manifests
+
+        - name: build keycloak manifest template
+          template:
+            src: keycloak/manifest.j2.yml
+            dest: "{{ keycloak_manifest_dir }}/manifest.yml"
+            owner: "{{ rke_install_user }}"
+            mode: 0640
+          tags:
+            - manifests
+
+        - name: deploy keycloak helm chart
+          command: >-
+            helm {{ helm_action }} {{ keycloak_deployment }} codecentric/keycloak
+            --namespace {{ keycloak_namespace }}
+            --create-namespace
+            -f {{ keycloak_manifest_dir }}/values.yml
+          vars:
+            helm_action: "{{ 'upgrade' if 'keycloak' in rke_helm_releases else 'install' }}"
+
+        - name: apply keycloak manifest
+          command: "kubectl apply -f {{ keycloak_manifest_dir }}/manifest.yml"
+          tags:
+            - manifests
+
+      run_once: yes

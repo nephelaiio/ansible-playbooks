@@ -9,6 +9,9 @@ rke_externaldns_release: v0.7.3
 rke_longhorn_release: v1.0.2
 rke_awx_operator_release: devel
 
+rke_manifest_dir: "{{ rke_cluster_dir }}/manifests"
+rke_cluster_dir: /opt/rke
+
 rke_metallb_ips: "{{ nets.management.lb.range | regex_replace(' ', '-') }}"
 rke_control_hosts: "{{ groups['rke_control'] }}"
 rke_worker_hosts: "{{ groups['rke_workers'] }}"
@@ -32,4 +35,3 @@ rke_external_manifests:
   - "https://raw.githubusercontent.com/metallb/metallb/{{ rke_metallb_release }}/manifests/namespace.yaml"
   - "https://raw.githubusercontent.com/metallb/metallb/{{ rke_metallb_release }}/manifests/metallb.yaml"
   - "https://raw.githubusercontent.com/longhorn/longhorn/{{ rke_longhorn_release }}/deploy/longhorn.yaml"
-  - "https://raw.githubusercontent.com/ansible/awx-operator/{{ rke_awx_operator_release }}/deploy/awx-operator.yaml"
