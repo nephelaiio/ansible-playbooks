@@ -1,13 +1,12 @@
 ---
-rke_release: v1.1.7
-rke_helm_release: v3.3.1
+rke_release: v1.2.3
+rke_helm_release: v3.4.1
 rke_kubectl_release: v1.19.1
 rke_metallb_release: v0.9.3
-rke_cert_manager_release: v1.0.1
+rke_cert_manager_release: v1.1.0
 rke_nginx_release: v0.35.0
-rke_externaldns_release: v0.7.3
+rke_externaldns_release: v0.7.4
 rke_longhorn_release: v1.0.2
-rke_awx_operator_release: devel
 
 rke_manifest_dir: "{{ rke_cluster_dir }}/manifests"
 rke_cluster_dir: /opt/rke

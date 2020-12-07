@@ -351,8 +351,9 @@
           when: rke_metallb_secret_query is failed
 
         - name: apply rke manifests
-          command: "kubectl apply -f {{ item.dest }}"
-          register: kubectl_apply
+          k8s:
+            state: present
+            src: "{{ item.dest }}"
           loop_control:
             label: "{{ item.dest }}"
           loop: "{{ rke_target_templates }}"
