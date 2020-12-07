@@ -16,4 +16,6 @@ nuc_tall:
       ansible_host: 192.168.5.72
 
 nuc_short:
-  hosts: {}
+  hosts:
+    nucz.home.nephelai.io:
+      ansible_host: 192.168.5.73
