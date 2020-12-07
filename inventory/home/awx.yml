@@ -1,9 +1,4 @@
 ---
 awx:
-  vars:
-    vm_state: absent
   children:
-    awx_app:
-
-awx_app:
-  hosts: {}
+    rke_control:

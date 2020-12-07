@@ -1,4 +1,5 @@
 ---
+awx_operator_release: devel
 awx_admin_user: root
 awx_admin_pass: !vault |
   $ANSIBLE_VAULT;1.2;AES256;home
