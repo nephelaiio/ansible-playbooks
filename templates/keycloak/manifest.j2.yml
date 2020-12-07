@@ -32,8 +32,10 @@ spec:
           imagePullPolicy: Always
           command: ["cloudflared", "tunnel"]
           args:
-            - --url=http://{{ keycloak_deployment }}-http.{{ keycloak_namespace }}:80
+            - --url=https://{{ keycloak_deployment }}-http.{{ keycloak_namespace }}:8443
             - --hostname={{ keycloak_public_hostname }}
+            - --no-tls-verify
+            - --origin-server-name=localhost
             - --origincert=/etc/cloudflared/cert.pem
             - --no-autoupdate
           env:
