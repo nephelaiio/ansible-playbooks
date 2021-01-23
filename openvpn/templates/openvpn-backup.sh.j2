@@ -1,6 +1,0 @@
-#!/usr/bin/env bash
-
-#{{ ansible_managed }}
-
-/bin/tar cvzf {{ backup_path }}/$(date +%Y%m%d-%H%M%S).{{ backup_identifier }}.tgz {{ backup_source }}
-/usr/bin/find {{ backup_path }}/ -name "*\.{{ backup_identifier }}.tgz" -ctime +{{ retention_days }} -delete

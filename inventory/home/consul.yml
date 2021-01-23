@@ -1,5 +1,0 @@
----
-consul:
-  vars:
-    vm_state: absent
-  hosts: {}

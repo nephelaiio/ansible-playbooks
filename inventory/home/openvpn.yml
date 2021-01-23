@@ -1,7 +1,0 @@
----
-openvpn:
-  children:
-    openvpn_home:
-
-openvpn_home:
-  hosts: { }

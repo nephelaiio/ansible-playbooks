@@ -1,4 +1,0 @@
----
-kvm_guest_pubkey: "{{ users.root.pubkey }}"
-kvm_guest_pass: "{{ users.root.password }}"
-kvm_networks: "{{ nets }}"
