@@ -13,7 +13,6 @@
           - syslinux
           - genisoimage
           - isomd5sum
-          - createrepo
 
 - name: Create centos bare-metal installers
 
@@ -65,7 +64,7 @@
 
         - name: create centos bare-metal intaller iso
           import_role:
-            name: nephelaiio.centos-installer
+            name: nephelaiio.centos_installer
           vars:
             centos_installer_baseurl: "{{ centos_base_url | default('') }}"
             centos_installer_username: "{{ centos_user_name }}"

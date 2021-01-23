@@ -16,8 +16,8 @@ roles:
   - name: nephelaiio.pip
   - name: nephelaiio.nfs
   - name: nephelaiio.docker
-  - name: nephelaiio.centos-installer
-  - name: nephelaiio.ubuntu-installer
+  - name: nephelaiio.centos_installer
+  - name: nephelaiio.ubuntu_installer
   - name: nephelaiio.acme_certificate_route53
   - name: linux-system-roles.network
     src: https://github.com/linux-system-roles/network.git

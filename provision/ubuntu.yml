@@ -65,7 +65,7 @@
 
         - name: create ubuntu bare-metal intaller iso
           import_role:
-            name: nephelaiio.ubuntu-installer
+            name: nephelaiio.ubuntu_installer
           vars:
             ubuntu_installer_baseurl: "{{ ubuntu_base_url | default('') }}"
             ubuntu_installer_username: "{{ ubuntu_user_name }}"

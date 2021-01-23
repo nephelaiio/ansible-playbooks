@@ -1,4 +1,4 @@
 ---
-- import_playbook: ubuntu.yml
+- import_playbook: provision/ubuntu.yml
 
-- import_playbook: centos.yml
+- import_playbook: provision/centos.yml
