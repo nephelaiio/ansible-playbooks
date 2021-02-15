@@ -75,7 +75,8 @@
           user:
             append: yes
             name: "{{ rke_install_user }}"
-            group: docker
+            groups:
+              - docker
           become: yes
           tags:
             - user
@@ -275,15 +276,26 @@
           register: helm_release_query
           changed_when: false
           tags:
-            - manifests
+            - helm
 
-        - name: register helm releases
-          set_fact:
-            rke_helm_releases: "{{ helm_release_query.stdout | from_json | map(attribute='name') | list }}"
+        - name: add helm repos
+          command: "helm repo add {{ item }}"
+          loop:
+            - jetstack https://charts.jetstack.io
+            - longhorn https://charts.longhorn.io
+            - bitnami https://charts.bitnami.com/bitnami
+            - ingress-nginx https://kubernetes.github.io/ingress-nginx
+          changed_when: false
           tags:
-            - manifests
+            - helm
 
-        - name: create cert-manager namespace
+        - name: update helm repos
+          command: helm repo update
+          changed_when: false
+          tags:
+            - helm
+
+        - name: create namespaces
           k8s:
             state: present
             definition: |
@@ -291,46 +303,62 @@
               apiVersion: v1
               kind: Namespace
               metadata:
-                name: cert-manager
+                name: {{ item }}
+          loop:
+            - cert-manager
+            - longhorn-system
           tags:
-            - manifests
+            - helm
 
-        - name: add cert-manager helm repo
-          command: helm repo add jetstack https://charts.jetstack.io
-          changed_when: false
+        - name: register helm releases
+          set_fact:
+            rke_helm_releases: "{{ helm_release_query.stdout | from_json | map(attribute='name') | list }}"
           tags:
-            - manifests
-
-        - name: update helm repos
-          command: helm repo update
-          changed_when: false
-          tags:
-            - manifests
+            - helm
 
         - name: deploy cert-manager helm chart
-          command: "helm {{ helm_action }} cert-manager --namespace cert-manager --version {{ rke_cert_manager_release }} jetstack/cert-manager --set 'extraArgs={--dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53}' --set installCRDs=true"
+          command: "helm {{ helm_action }} {{ helm_deployment }} --namespace cert-manager jetstack/cert-manager --set 'extraArgs={--dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53}' --set installCRDs=true"
           vars:
-            helm_action: "{{ 'upgrade' if 'cert-manager' in rke_helm_releases else 'install' }}"
+            helm_deployment: cert-manager
+            helm_action: "{{ 'upgrade' if helm_deployment in rke_helm_releases else 'install' }}"
           tags:
-            - manifests
+            - helm
+            - certmanager
 
-        - name: apply external manifests
-          k8s:
-            state: present
-            definition: "{{ lookup('url', item, split_lines=False) }}"
-          loop: "{{ rke_external_manifests }}"
-          run_once: yes
+        - name: deploy longhorn helm chart
+          command: "helm {{ helm_action }} {{ helm_deployment }} longhorn/longhorn --namespace longhorn-system"
+          vars:
+            helm_deployment: longhorn
+            helm_action: "{{ 'upgrade' if helm_deployment in rke_helm_releases else 'install' }}"
           tags:
-            - manifests
+            - helm
+            - longhorn
+
+        - name: deploy metallb helm chart
+          command: "helm {{ helm_action }} {{ helm_deployment }} bitnami/metallb"
+          vars:
+            helm_deployment: metallb
+            helm_action: "{{ 'upgrade' if helm_deployment in rke_helm_releases else 'install' }}"
+          tags:
+            - helm
+            - metallb
+
+        - name: deploy nginx helm chart
+          command: "helm {{ helm_action }} {{ helm_deployment }} ingress-nginx/ingress-nginx"
+          vars:
+            helm_deployment: ingress-nginx
+            helm_action: "{{ 'upgrade' if helm_deployment in rke_helm_releases else 'install' }}"
+          tags:
+            - helm
+            - nginx
 
         - name: verify metallb secret
-          command: "kubectl get secret memberlist -n {{ rke_metallb_namespace }}"
+          command: "kubectl get secret memberlist -n default"
           changed_when: false
           ignore_errors: true
           register: rke_metallb_secret_query
           tags:
             - always
-            - metallb
 
         - block:
 
@@ -343,7 +371,7 @@
                 - metallb
 
             - name: create metallb secret
-              command: "kubectl create secret generic -n {{ rke_metallb_namespace }} memberlist --from-literal=secretkey=\"{{ rke_metallb_secret.stdout }}\""
+              command: "kubectl create secret generic -n default memberlist --from-literal=secretkey=\"{{ rke_metallb_secret.stdout }}\""
               tags:
                 - manifests
                 - metallb

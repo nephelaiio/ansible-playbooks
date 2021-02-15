@@ -60,3 +60,67 @@ spec:
           - backend:
               serviceName: hello
               servicePort: 80
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: hello-secret
+  namespace: {{ rke_hello_namespace }}
+type: Opaque
+data:
+  cert.pem: "{{ cloudflare_argo_cert | b64encode }}"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hello
+  name: hello-argo
+  namespace: {{ rke_hello_namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: argo
+  template:
+    metadata:
+      labels:
+        app: argo
+    spec:
+      containers:
+        - name: tunnel
+          image: docker.io/cloudflare/cloudflared:2020.8.0
+          imagePullPolicy: Always
+          command: ["cloudflared", "tunnel"]
+          args:
+            - --url=http://hello-service.{{ rke_hello_namespace }}:80
+            - --hostname=hello.nephelai.io
+            - --origincert=/etc/cloudflared/cert.pem
+            - --no-autoupdate
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            limits:
+              cpu: 100m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - mountPath: /etc/cloudflared
+              name: hello-secret-vol
+              readOnly: true
+      terminationGracePeriodSeconds: 60
+      volumes:
+        - name: hello-secret-vol
+          secret:
+            secretName: hello-secret

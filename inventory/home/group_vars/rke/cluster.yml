@@ -1,12 +1,9 @@
 ---
-rke_release: v1.2.3
-rke_helm_release: v3.4.1
-rke_kubectl_release: v1.19.1
-rke_metallb_release: v0.9.3
-rke_cert_manager_release: v1.1.0
-rke_nginx_release: v0.35.0
-rke_externaldns_release: v0.7.4
-rke_longhorn_release: v1.0.2
+rke_release: v1.2.5
+rke_helm_release: v3.5.2
+rke_kubectl_release: v1.20.2
+rke_externaldns_release: v0.7.6
+rke_longhorn_release: v1.1.0
 
 rke_manifest_dir: "{{ rke_cluster_dir }}/manifests"
 rke_cluster_dir: /opt/rke
@@ -31,6 +28,3 @@ rke_metallb_pools:
 
 rke_external_manifests:
   - "https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-{{ rke_nginx_release }}/deploy/static/provider/cloud/deploy.yaml"
-  - "https://raw.githubusercontent.com/metallb/metallb/{{ rke_metallb_release }}/manifests/namespace.yaml"
-  - "https://raw.githubusercontent.com/metallb/metallb/{{ rke_metallb_release }}/manifests/metallb.yaml"
-  - "https://raw.githubusercontent.com/longhorn/longhorn/{{ rke_longhorn_release }}/deploy/longhorn.yaml"

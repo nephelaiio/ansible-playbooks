@@ -46,8 +46,3 @@ dns:
 # `node_selector` controls ingress placement and is optional
 ingress:
   provider: none
-
-addons_include: 
- - https://raw.githubusercontent.com/google/metallb/{{ rke_metallb_release }}/manifests/metallb.yaml
- - https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-{{ rke_nginx_release }}/deploy/static/mandatory.yaml
- - https://raw.githubusercontent.com/kubernetes/ingress-nginx/nginx-{{ rke_nginx_release }}/deploy/static/provider/cloud-generic.yaml
