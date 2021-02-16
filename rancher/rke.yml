@@ -31,9 +31,6 @@
       become: yes
       tags:
         - always
-
-  tasks:
-
     - name: get play username
       command: whoami
       register: rke_install_user_query
@@ -46,6 +43,9 @@
         rke_install_user: "{{ rke_install_user_query.stdout }}"
       tags:
         - always
+
+
+  tasks:
 
     - block:
 
@@ -271,112 +271,44 @@
 
     - block:
 
-        - name: query helm releases
-          command: helm list --all-namespaces -o json
-          register: helm_release_query
-          changed_when: false
-          tags:
-            - helm
-
         - name: add helm repos
-          command: "helm repo add {{ item }}"
+          community.kubernetes.helm_repository:
+            name: "{{ item.name }}"
+            repo_url: "{{ item.url }}"
+          loop_control:
+            label: "{{ item.name }}"
           loop:
-            - jetstack https://charts.jetstack.io
-            - longhorn https://charts.longhorn.io
-            - bitnami https://charts.bitnami.com/bitnami
-            - ingress-nginx https://kubernetes.github.io/ingress-nginx
-          changed_when: false
-          tags:
-            - helm
-
-        - name: update helm repos
-          command: helm repo update
-          changed_when: false
-          tags:
-            - helm
-
-        - name: create namespaces
-          k8s:
-            state: present
-            definition: |
-              ---
-              apiVersion: v1
-              kind: Namespace
-              metadata:
-                name: {{ item }}
-          loop:
-            - cert-manager
-            - longhorn-system
-          tags:
-            - helm
-
-        - name: register helm releases
-          set_fact:
-            rke_helm_releases: "{{ helm_release_query.stdout | from_json | map(attribute='name') | list }}"
+            - name: jetstack
+              url: https://charts.jetstack.io
+            - name: longhorn
+              url: https://charts.longhorn.io
+            - name: bitnami
+              url: https://charts.bitnami.com/bitnami
           tags:
             - helm
 
         - name: deploy cert-manager helm chart
-          command: "helm {{ helm_action }} {{ helm_deployment }} --namespace cert-manager jetstack/cert-manager --set 'extraArgs={--dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53}' --set installCRDs=true"
-          vars:
-            helm_deployment: cert-manager
-            helm_action: "{{ 'upgrade' if helm_deployment in rke_helm_releases else 'install' }}"
+          community.kubernetes.helm:
+            name: cert-manager
+            chart_ref: jetstack/cert-manager
+            release_namespace: cert-manager
+            create_namespace: yes
+            release_values:
+              installCRDs: true
+              extraArgs:
+                - "--dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53"
+          when: false
           tags:
-            - helm
             - certmanager
 
         - name: deploy longhorn helm chart
-          command: "helm {{ helm_action }} {{ helm_deployment }} longhorn/longhorn --namespace longhorn-system"
-          vars:
-            helm_deployment: longhorn
-            helm_action: "{{ 'upgrade' if helm_deployment in rke_helm_releases else 'install' }}"
+          community.kubernetes.helm:
+            name: longhorn
+            chart_ref: longhorn/longhorn
+            release_namespace: longhorn-system
+            create_namespace: yes
           tags:
-            - helm
             - longhorn
-
-        - name: deploy metallb helm chart
-          command: "helm {{ helm_action }} {{ helm_deployment }} bitnami/metallb"
-          vars:
-            helm_deployment: metallb
-            helm_action: "{{ 'upgrade' if helm_deployment in rke_helm_releases else 'install' }}"
-          tags:
-            - helm
-            - metallb
-
-        - name: deploy nginx helm chart
-          command: "helm {{ helm_action }} {{ helm_deployment }} ingress-nginx/ingress-nginx"
-          vars:
-            helm_deployment: ingress-nginx
-            helm_action: "{{ 'upgrade' if helm_deployment in rke_helm_releases else 'install' }}"
-          tags:
-            - helm
-            - nginx
-
-        - name: verify metallb secret
-          command: "kubectl get secret memberlist -n default"
-          changed_when: false
-          ignore_errors: true
-          register: rke_metallb_secret_query
-          tags:
-            - always
-
-        - block:
-
-            - name: generate metallb secret string
-              command: openssl rand -base64 128
-              changed_when: false
-              register: rke_metallb_secret
-              tags:
-                - manifests
-                - metallb
-
-            - name: create metallb secret
-              command: "kubectl create secret generic -n default memberlist --from-literal=secretkey=\"{{ rke_metallb_secret.stdout }}\""
-              tags:
-                - manifests
-                - metallb
-
-          when: rke_metallb_secret_query is failed
 
         - name: apply rke manifests
           k8s:
@@ -393,13 +325,13 @@
             kind: StorageClass
           register: storage_class_query
           tags:
-            - storage
+            - longhorn
 
-        - name: register helm releases
+        - name: register storage classes
           set_fact:
             rke_storage_classes: "{{ storage_class_query.resources | map(attribute='metadata') | map(attribute='name') | list  }}"
           tags:
-            - storage
+            - longhorn
 
         - name: set longhorn as default storage provider
           k8s:
@@ -411,6 +343,6 @@
                   storageclass.kubernetes.io/is-default-class: "true"
           when: "'longhorn' in rke_storage_classes"
           tags:
-            - storage
+            - longhorn
 
       run_once: yes

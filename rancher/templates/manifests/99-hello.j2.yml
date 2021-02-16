@@ -95,7 +95,7 @@ spec:
           imagePullPolicy: Always
           command: ["cloudflared", "tunnel"]
           args:
-            - --url=http://hello-service.{{ rke_hello_namespace }}:80
+            - --url=http://hello.{{ rke_hello_namespace }}.svc.cluster.local:80
             - --hostname=hello.nephelai.io
             - --origincert=/etc/cloudflared/cert.pem
             - --no-autoupdate

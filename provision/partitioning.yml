@@ -1,0 +1,68 @@
+---
+- name: Manage host partitioning
+
+  hosts: kvm
+
+  become: yes
+
+  vars:
+
+    partition_resize_mount: '/'
+
+  tasks:
+
+    - block:
+
+        - name: install rpm package requirements
+          yum:
+            name:
+              - cloud-utils-growpart
+              - e2fsprogs
+              - xfsprogs
+          when: (ansible_os_family | lower) == 'redhat'
+
+        - name: install deb package requirements
+          apt:
+            name:
+              - cloud-guest-utils
+              - e2fsprogs
+              - xfsprogs
+          when: (ansible_os_family | lower) == 'debian'
+
+        - name: filter partition metadata
+          set_fact:
+            partition_target: "{{ ansible_mounts | selectattr('mount', 'equalto', partition_resize_mount) | list | first }}"
+
+        - name: filter device metadata
+          set_fact:
+            partition_device: "/dev/{{ item.key }}"
+            partition_number: "{{ _partition_name | regex_replace('^' + item.key, '') }}"
+          vars:
+            _partition_name: "{{ partition_target.device | regex_replace('^/dev/', '') }}"
+          loop_control:
+            label: "{{ item.key }}"
+          loop: "{{ ansible_devices | dict2items }}"
+          when: item.value.partitions is search(_partition_name)
+
+        - name: check partition resize status
+          command: "growpart --dry-run {{ partition_device }} {{ partition_number }}"
+          register: growpart_dryrun
+          changed_when: false
+          failed_when: false
+
+        - block:
+
+            - name: resize partition
+              command: "growpart {{ partition_device }} {{ partition_number }}"
+
+          when: growpart_dryrun.rc == 0
+
+        - name: resize ext partition
+          command: "resize2fs {{ partition_target.device }}"
+          when: partition_target.fstype is regex('^ext')
+
+        - name: resize xfs partition
+          command: "xfs_growfs -d {{ partition_resize_mount }}"
+          when: partition_target.fstype == 'xfs'
+
+      when: partitioning_autosize | bool
