@@ -2,7 +2,6 @@
 rke_release: v1.2.5
 rke_helm_release: v3.5.2
 rke_kubectl_release: v1.20.2
-rke_externaldns_release: v0.7.6
 rke_longhorn_release: v1.1.0
 
 rke_manifest_dir: "{{ rke_cluster_dir }}/manifests"
@@ -11,7 +10,6 @@ rke_cluster_dir: /opt/rke
 rke_control_hosts: "{{ groups['rke_control'] }}"
 rke_worker_hosts: "{{ groups['rke_workers'] }}"
 rke_externaldns_namespace: "external-dns"
-rke_hello_namespace: "hello"
 rke_pdns_url: "{{ pdns_url }}"
 rke_pdns_api_key: "{{ pdns_api_key }}"
 rke_certmanager_issuer_name: "{{ base_domain }}"
