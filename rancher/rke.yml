@@ -61,6 +61,7 @@
         - name: disable active swap volume
           shell: swapoff -a
           become: yes
+          changed_when: false
           tags:
             - skip_ansible_lint
 
@@ -141,7 +142,7 @@
 
     - name: build rke cluster file
       template:
-        src: rke/cluster.yml.j2
+        src: templates/rke/cluster.yml.j2
         dest: "{{ rke_cluster_dir }}/cluster.yml"
         owner: "{{ rke_install_user }}"
         mode: 0640
@@ -226,49 +227,6 @@
       pip:
         name: openshift
 
-    - name: gather target manifest data
-      set_fact:
-        rke_target_templates: "{{ (rke_target_templates | default ([])) + [rke_target_template] }}"
-      vars:
-        rke_target_template:
-          src: "{{ item }}"
-          dest: "{{ rke_manifest_dir }}/{{ item | basename | regex_replace('\\.j2', '') }}"
-      loop: "{{ lookup('fileglob', 'templates/manifests/*.j2.yml', wantlist=True) | sort }}"
-      tags:
-        - manifests
-
-    - name: list previous templates
-      find:
-        paths: "{{ rke_manifest_dir }}"
-        recurse: false
-        file_type: file
-      register: rke_manifest_query
-      tags:
-        - manifests
-
-    - name: purge stale templates
-      file:
-        dest: "{{ item.path }}"
-        state: absent
-      when: item.path not in rke_target_templates | map(attribute='dest')
-      loop_control:
-        label: "{{ item.path }}"
-      loop: "{{ rke_manifest_query.files }}"
-      tags:
-        - manifests
-
-    - name: build rke manifest templates
-      template:
-        src: "{{ item.src }}"
-        dest: "{{ item.dest }}"
-        owner: "{{ rke_install_user }}"
-        mode: 0640
-      loop_control:
-        label: "{{ item.dest }}"
-      loop: "{{ rke_target_templates }}"
-      tags:
-        - manifests
-
     - block:
 
         - name: add helm repos
@@ -278,71 +236,90 @@
           loop_control:
             label: "{{ item.name }}"
           loop:
-            - name: jetstack
-              url: https://charts.jetstack.io
-            - name: longhorn
-              url: https://charts.longhorn.io
-            - name: bitnami
-              url: https://charts.bitnami.com/bitnami
+            - name: sealed-secrets
+              url: https://bitnami-labs.github.io/sealed-secrets
           tags:
             - helm
 
-        - name: deploy cert-manager helm chart
+        - name: deploy sealed secrets helm chart
           community.kubernetes.helm:
-            name: cert-manager
-            chart_ref: jetstack/cert-manager
-            release_namespace: cert-manager
-            create_namespace: yes
-            release_values:
-              installCRDs: true
-              extraArgs:
-                - "--dns01-recursive-nameservers=8.8.8.8:53,1.1.1.1:53"
-          when: false
-          tags:
-            - certmanager
-
-        - name: deploy longhorn helm chart
-          community.kubernetes.helm:
-            name: longhorn
-            chart_ref: longhorn/longhorn
-            release_namespace: longhorn-system
-            create_namespace: yes
+            name: sealed-secrets-controller
+            chart_ref: sealed-secrets/sealed-secrets
+            release_namespace: kube-system
           tags:
             - longhorn
 
-        - name: apply rke manifests
-          k8s:
-            state: present
-            src: "{{ item.dest }}"
-          loop_control:
-            label: "{{ item.dest }}"
-          loop: "{{ rke_target_templates }}"
-          tags:
-            - manifests
+      run_once: yes
 
-        - name: list storage classes
-          k8s_info:
-            kind: StorageClass
-          register: storage_class_query
-          tags:
-            - longhorn
+    - name: set argocd metadata
+      set_fact:
+        rke_argocd_dir: "{{ rke_manifest_dir }}/argocd"
 
-        - name: register storage classes
-          set_fact:
-            rke_storage_classes: "{{ storage_class_query.resources | map(attribute='metadata') | map(attribute='name') | list  }}"
-          tags:
-            - longhorn
+    - block:
 
-        - name: set longhorn as default storage provider
-          k8s:
-            name: longhorn
-            kind: StorageClass
-            definition:
-              metadata:
-                annotations:
-                  storageclass.kubernetes.io/is-default-class: "true"
-          when: "'longhorn' in rke_storage_classes"
-          tags:
-            - longhorn
+        - name: create argocd manifest directory
+          file:
+            state: directory
+            path: "{{ rke_argocd_dir }}"
+            owner: "{{ rke_install_user }}"
+            mode: 0750
 
+        - name: create argocd namespace manifest
+          template:
+            src: argocd/namespace.j2.yml
+            dest: "{{ rke_argocd_dir }}/namespace.yml"
+
+        - name: retrieve argocd manifest
+          get_url:
+            url: "{{ rke_argocd_manifest }}"
+            dest: "{{ rke_argocd_dir }}/argocd.yml"
+            force: yes
+
+        - name: create argocd argo tunnel template
+          template:
+            src: argocd/argo.j2.yml
+            dest: "{{ rke_argocd_dir }}/cloudflare.yml"
+          vars:
+            target_deployment: argocd
+            target_namespace: "{{ rke_argocd_namespace }}"
+            target_hostname: "{{ rke_argocd_hostname }}"
+            target_url: https://argocd-server.default.svc.cluster.local:443
+
+        - name: deploy argocd tunnel
+          command: "kubectl {{ kubectl_cmd }} -f {{ item }}"
+          vars:
+            kubectl_cmd: "{{ (rke_argocd_state != 'absent') | ternary('apply', 'delete')  }}"
+          loop:
+            - "{{ rke_argocd_dir }}/namespace.yml"
+            - "{{ rke_argocd_dir }}/argocd.yml"
+            - "{{ rke_argocd_dir }}/cloudflare.yml"
+
+      when: rke_argocd_state != 'absent'
+
+    - name: remove argocd manifests
+      file:
+        path: "{{ item }}"
+        state: "{{ rke_argocd_state }}"
+      loop:
+        - "{{ rke_argocd_dir }}/namespace.yml"
+        - "{{ rke_argocd_dir }}/argocd.yml"
+        - "{{ rke_argocd_dir }}/cloudflare.yml"
+      when: rke_argocd_state == 'absent'
+
+    - name: remove stale manifests
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ rke_manifest_dir }}/argocd.yml"
+        - "{{ rke_manifest_dir }}/cloudflare.yml"
+
+    - name: manage argocd deployment
+      command: "kubectl {{ kubectl_cmd }} -f {{ item }}"
+      vars:
+        kubectl_cmd: "{{ (rke_argocd_state != 'absent') | ternary('apply', 'delete')  }}"
+      loop:
+        - "{{ rke_argocd_dir }}/namespace.yml"
+        - "{{ rke_argocd_dir }}/argocd.yml"
+        - "{{ rke_argocd_dir }}/cloudflare.yml"
       run_once: yes

@@ -1,0 +1,65 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: "{{ target_deployment }}-argo-secret"
+  namespace: "{{ target_namespace }}"
+type: Opaque
+data:
+  cert.pem: "{{ cloudflare_argo_cert | b64encode }}"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: "{{ target_deployment }}"
+  name: "{{ target_deployment }}-argo"
+  namespace: "{{ target_namespace }}"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: argo
+  template:
+    metadata:
+      labels:
+        app: argo
+    spec:
+      containers:
+        - name: tunnel
+          image: docker.io/cloudflare/cloudflared:2021.3.5
+          imagePullPolicy: Always
+          command: ["cloudflared", "tunnel"]
+          args:
+            - --url={{ target_url }}
+            - --hostname={{ target_hostname }}
+            - --no-tls-verify
+            - --origin-server-name=localhost
+            - --origincert=/etc/cloudflared/cert.pem
+            - --no-autoupdate
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          resources:
+            limits:
+              cpu: 100m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - mountPath: /etc/cloudflared
+              name: "{{ target_deployment }}-argo-vol"
+              readOnly: true
+      terminationGracePeriodSeconds: 60
+      volumes:
+        - name: "{{ target_deployment }}-argo-vol"
+          secret:
+            secretName: "{{ target_deployment }}-argo-secret"

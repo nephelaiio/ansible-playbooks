@@ -1,7 +1,7 @@
 ---
-rke_release: v1.2.5
-rke_helm_release: v3.5.2
-rke_kubectl_release: v1.20.2
+rke_release: v1.2.6
+rke_helm_release: v3.5.3
+rke_kubectl_release: v1.20.5
 rke_longhorn_release: v1.1.0
 
 rke_manifest_dir: "{{ rke_cluster_dir }}/manifests"
@@ -17,3 +17,13 @@ rke_certmanager_acme_email: "{{ acme_certificate_email }}"
 rke_certmanager_route53_region: "{{ aws_region }}"
 rke_certmanager_route53_accesskeyid: "{{ aws_access_key_id }}"
 rke_certmanager_route53_accesskeysecret: "{{ aws_secret_access_key }}"
+
+rke_olm_release: v0.17.0
+rke_olm_manifests:
+  - "https://github.com/operator-framework/operator-lifecycle-manager/releases/download/{{ rke_olm_release }}/crds.yaml"
+  - "https://github.com/operator-framework/operator-lifecycle-manager/releases/download/{{ rke_olm_release }}/olm.yaml"
+
+rke_argocd_state: present
+rke_argocd_namespace: argocd
+rke_argocd_manifest: https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+rke_argocd_hostname: argo.nephelai.io
