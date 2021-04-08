@@ -1,0 +1,21 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: keycloak
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Keycloak
+
+  sourceRepos:
+    - '*'
+
+  destinations:
+    - namespace: keycloak
+      server: https://kubernetes.default.svc
+
+  # Enables namespace orphaned resource monitoring.
+  orphanedResources:
+    warn: false
