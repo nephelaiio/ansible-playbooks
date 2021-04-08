@@ -283,16 +283,19 @@
             target_deployment: argocd
             target_namespace: "{{ rke_argocd_namespace }}"
             target_hostname: "{{ rke_argocd_hostname }}"
-            target_url: https://argocd-server.default.svc.cluster.local:443
+            target_url: "https://argocd-server.{{ rke_argocd_namespace }}.svc.cluster.local:443"
 
         - name: deploy argocd tunnel
-          command: "kubectl {{ kubectl_cmd }} -f {{ item }}"
+          command: "kubectl {{ kubectl_cmd }} -f {{ item.manifest }} -n {{ item.namespace }}"
           vars:
             kubectl_cmd: "{{ (rke_argocd_state != 'absent') | ternary('apply', 'delete')  }}"
           loop:
-            - "{{ rke_argocd_dir }}/namespace.yml"
-            - "{{ rke_argocd_dir }}/argocd.yml"
-            - "{{ rke_argocd_dir }}/cloudflare.yml"
+            - manifest: "{{ rke_argocd_dir }}/namespace.yml"
+              namespace: default
+            - manifest: "{{ rke_argocd_dir }}/argocd.yml"
+              namespace: "{{ rke_argocd_namespace }}"
+            - manifest: "{{ rke_argocd_dir }}/cloudflare.yml"
+              namespace: "{{ rke_argocd_namespace }}"
 
       when: rke_argocd_state != 'absent'
 
@@ -314,12 +317,45 @@
         - "{{ rke_manifest_dir }}/argocd.yml"
         - "{{ rke_manifest_dir }}/cloudflare.yml"
 
-    - name: manage argocd deployment
-      command: "kubectl {{ kubectl_cmd }} -f {{ item }}"
-      vars:
-        kubectl_cmd: "{{ (rke_argocd_state != 'absent') | ternary('apply', 'delete')  }}"
-      loop:
-        - "{{ rke_argocd_dir }}/namespace.yml"
-        - "{{ rke_argocd_dir }}/argocd.yml"
-        - "{{ rke_argocd_dir }}/cloudflare.yml"
+    - block:
+
+        - name: remove argocd deployment
+          command: "kubectl {{ kubectl_cmd }} -f {{ item.manifest }} -n {{ item.namespace }}"
+          vars:
+            kubectl_cmd: "{{ (rke_argocd_state != 'absent') | ternary('apply', 'delete')  }}"
+          loop:
+            - manifest: "{{ rke_argocd_dir }}/namespace.yml"
+              namespace: default
+            - manifest: "{{ rke_argocd_dir }}/argocd.yml"
+              namespace: "{{ rke_argocd_namespace }}"
+            - manifest: "{{ rke_argocd_dir }}/cloudflare.yml"
+              namespace: "{{ rke_argocd_namespace }}"
+          when: rke_argocd_state == 'absent'
+
+        - name: list argo manifests
+          find:
+            paths: "{{ playbook_dir }}/manifests/argocd"
+            patterns:
+              - ".*\\.yml$"
+              - ".*\\.j2.yml$"
+              - ".*\\.yml.j2$"
+            use_regex: true
+            recurse: true
+          delegate_to: localhost
+          register: argo_manifests
+          tags:
+            - argo
+
+        - name: create argo manifests
+          k8s:
+            state: "{{ k8s_state }}"
+            definition: "{{ lookup('template', item) | from_yaml }}"
+          vars:
+            k8s_state: "{{ (item | basename) is match('^_.*') | ternary('absent', 'present') }}"
+          loop_control:
+            label: "{{ item | basename | regex_replace('^_', '') }}"
+          loop: "{{ argo_manifests.files | map(attribute='path') | list }}"
+          tags:
+            - argo
+
       run_once: yes

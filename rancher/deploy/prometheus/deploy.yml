@@ -416,6 +416,7 @@ metadata:
     heritage: Helm
   name: prometheus-alertmanager
   namespace: default
+  storageClassName: longhorn
 spec:
   accessModes:
     - ReadWriteOnce
@@ -435,6 +436,7 @@ metadata:
     heritage: Helm
   name: prometheus-server
   namespace: default
+  storageClassName: longhorn
 spec:
   accessModes:
     - ReadWriteOnce
