@@ -10,12 +10,12 @@ spec:
   project: default
 
   source:
-    repoURL: https://github.com/nephelaiio/ansible-playbooks.git
-    targetRevision: HEAD
-    path: rancher/deploy/prometheus
+    repoURL: https://github.com/prometheus-community/helm-charts.git
+    targetRevision: kube-prometheus-stack-14.5.0
+    path: charts/kube-prometheus-stack
 
-    directory:
-      recurse: true
+    helm:
+      releaseName: prometheus
 
   destination:
     server: https://kubernetes.default.svc
@@ -24,19 +24,11 @@ spec:
     automated:
       prune: true
       selfHeal: true
-      allowEmpty: false
     syncOptions:
       - Validate=false
-      - CreateNamespace=true
     retry:
       limit: 5
       backoff:
         duration: 5s
         factor: 2
         maxDuration: 3m
-
-  ignoreDifferences:
-    - group: apps
-      kind: Deployment
-      jsonPointers:
-        - /spec/replicas

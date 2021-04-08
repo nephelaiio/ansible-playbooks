@@ -1,0 +1,29 @@
+---
+# see https://argoproj.github.io/argo-cd/operator-manual/argocd-cm.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-cm
+  namespace: "{{ rke_argocd_namespace }}"
+  labels:
+    app.kubernetes.io/name: argocd-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  url: https://{{ rke_argocd_hostname }}
+  statusbadge.enabled: "true"
+  users.session.duration: "24h"
+
+  # Non-standard and private Helm repositories (deprecated in 1.3).
+  repositories: |
+    - type: helm
+      url: https://storage.googleapis.com/istio-prerelease/daily-build/master-latest-daily/charts
+      name: istio.io
+    - type: helm
+      url: https://prometheus-community.github.io/helm-charts
+      name: prometheus-community
+    - type: helm
+      url: https://kubernetes.github.io/kube-state-metrics
+      name: kube-state-metrics
+    - type: helm
+      url: https://grafana.github.io/helm-charts
+      name: grafana

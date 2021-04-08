@@ -269,15 +269,20 @@
             src: argocd/namespace.j2.yml
             dest: "{{ rke_argocd_dir }}/namespace.yml"
 
-        - name: retrieve argocd manifest
+        - name: retrieve argocd install manifest
           get_url:
             url: "{{ rke_argocd_manifest }}"
-            dest: "{{ rke_argocd_dir }}/argocd.yml"
+            dest: "{{ rke_argocd_dir }}/install.yml"
             force: yes
+
+        - name: create argocd configmap manifest
+          template:
+            src: argocd/configmap.j2.yml
+            dest: "{{ rke_argocd_dir }}/configmap.yml"
 
         - name: create argocd argo tunnel template
           template:
-            src: argocd/argo.j2.yml
+            src: argocd/cloudflare.j2.yml
             dest: "{{ rke_argocd_dir }}/cloudflare.yml"
           vars:
             target_deployment: argocd
@@ -285,17 +290,22 @@
             target_hostname: "{{ rke_argocd_hostname }}"
             target_url: "https://argocd-server.{{ rke_argocd_namespace }}.svc.cluster.local:443"
 
-        - name: deploy argocd tunnel
+        - name: deploy argocd
           command: "kubectl {{ kubectl_cmd }} -f {{ item.manifest }} -n {{ item.namespace }}"
           vars:
             kubectl_cmd: "{{ (rke_argocd_state != 'absent') | ternary('apply', 'delete')  }}"
+          loop_control:
+            label: "{{ item.manifest }}"
           loop:
             - manifest: "{{ rke_argocd_dir }}/namespace.yml"
               namespace: default
-            - manifest: "{{ rke_argocd_dir }}/argocd.yml"
+            - manifest: "{{ rke_argocd_dir }}/install.yml"
+              namespace: "{{ rke_argocd_namespace }}"
+            - manifest: "{{ rke_argocd_dir }}/configmap.yml"
               namespace: "{{ rke_argocd_namespace }}"
             - manifest: "{{ rke_argocd_dir }}/cloudflare.yml"
               namespace: "{{ rke_argocd_namespace }}"
+          run_once: yes
 
       when: rke_argocd_state != 'absent'
 
@@ -305,31 +315,27 @@
         state: "{{ rke_argocd_state }}"
       loop:
         - "{{ rke_argocd_dir }}/namespace.yml"
-        - "{{ rke_argocd_dir }}/argocd.yml"
-        - "{{ rke_argocd_dir }}/cloudflare.yml"
+        - "{{ rke_argocd_dir }}/install.yml"
+        - "{{ rke_argocd_dir }}/configmap.yml"
       when: rke_argocd_state == 'absent'
-
-    - name: remove stale manifests
-      file:
-        path: "{{ item }}"
-        state: absent
-      loop:
-        - "{{ rke_manifest_dir }}/argocd.yml"
-        - "{{ rke_manifest_dir }}/cloudflare.yml"
 
     - block:
 
-        - name: remove argocd deployment
+        - name: undeploy argocd
           command: "kubectl {{ kubectl_cmd }} -f {{ item.manifest }} -n {{ item.namespace }}"
           vars:
             kubectl_cmd: "{{ (rke_argocd_state != 'absent') | ternary('apply', 'delete')  }}"
+          loop_control:
+            label: "{{ item.manifest }}"
           loop:
-            - manifest: "{{ rke_argocd_dir }}/namespace.yml"
-              namespace: default
-            - manifest: "{{ rke_argocd_dir }}/argocd.yml"
-              namespace: "{{ rke_argocd_namespace }}"
             - manifest: "{{ rke_argocd_dir }}/cloudflare.yml"
               namespace: "{{ rke_argocd_namespace }}"
+            - manifest: "{{ rke_argocd_dir }}/configmap.yml"
+              namespace: "{{ rke_argocd_namespace }}"
+            - manifest: "{{ rke_argocd_dir }}/install.yml"
+              namespace: "{{ rke_argocd_namespace }}"
+            - manifest: "{{ rke_argocd_dir }}/namespace.yml"
+              namespace: default
           when: rke_argocd_state == 'absent'
 
         - name: list argo manifests
@@ -346,7 +352,7 @@
           tags:
             - argo
 
-        - name: create argo manifests
+        - name: manage argo manifests
           k8s:
             state: "{{ k8s_state }}"
             definition: "{{ lookup('template', item) | from_yaml }}"

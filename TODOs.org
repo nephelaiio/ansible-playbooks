@@ -1,19 +1,22 @@
 * cloud infrastructure
 ** DONE deploy cloudflare argo loadbalancer to home k8s
 ** DONE publish argocd as argo.nephelai.io
-** TODO Deploy prometheus to k8s cluster
+** DONE Deploy prometheus to k8s cluster
+** TODO integrate argo with Okta
 ** TODO set up secrets management for argocd
-** TODO publish keycloak as auth.nephelai.io
-** TODO integrate keycloak to jumpcloud ldap
+** NO publish keycloak as auth.nephelai.io
+** NO integrate keycloak to jumpcloud ldap
 ** TODO publish awx as awx.nephelai.io
-** TODO integrate awx with keycloak
+** TODO integrate awx with okta
+** NO integrate awx with keycloak
+** TODO Deploy kasten to k8s
 ** TODO create test postgresql service to home k8s
 ** TODO deploy metabase to k8s
-** TODO integrate metabase with keycloak
+** NO integrate metabase with keycloak
 ** TODO deploy strimzi to k8s
 ** TODO deploy cassandra to k8s
 ** TODO create a hello kubernetes operator
-** TODO test longhorn nfs backups
+** NO test longhorn nfs backups
 * infrastructure tests
 ** DONE install kubernetes on bare metal
    CLOSED: [2020-02-24 lun 20:42]
@@ -88,4 +91,5 @@
 ** TODO refactor ansible-playbooks as ansible collection
 * marketing
 ** TODO create blog
-
+* why are runners taking too long to execute
+* train wpn devs to manage dns records

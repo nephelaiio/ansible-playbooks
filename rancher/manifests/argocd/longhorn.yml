@@ -27,7 +27,6 @@ spec:
       selfHeal: true
       allowEmpty: false
     syncOptions:
-      - Validate=false
       - CreateNamespace=true
     retry:
       limit: 5
@@ -35,9 +34,3 @@ spec:
         duration: 5s
         factor: 2
         maxDuration: 3m
-
-  ignoreDifferences:
-    - group: apps
-      kind: Deployment
-      jsonPointers:
-        - /spec/replicas
