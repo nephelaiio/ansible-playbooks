@@ -1,0 +1,45 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgres-operator
+  namespace: "{{ rke_argocd_namespace }}"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/zalando/postgres-operator.git
+    targetRevision: "{{ rke_longhorn_release }}"
+    path: charts/postgres-operator
+
+    helm:
+      releaseName: postgres-operator
+      valueFiles:
+        - values-crd.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - Validate=false
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      jsonPointers:
+        - /spec/replicas
