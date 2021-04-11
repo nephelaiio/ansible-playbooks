@@ -2,7 +2,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: longhorn
+  name: prometheus
   namespace: "{{ rke_argocd_namespace }}"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -10,24 +10,23 @@ spec:
   project: default
 
   source:
-    repoURL: https://github.com/longhorn/longhorn.git
-    targetRevision: "{{ rke_longhorn_release }}"
-    path: chart
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: "{{ rke_prometheus_release }}"
+    chart: kube-prometheus-stack
 
     helm:
-      releaseName: longhorn
+      releaseName: prometheus
 
   destination:
+    namespace: default
     server: https://kubernetes.default.svc
-    namespace: longhorn
 
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-      allowEmpty: false
     syncOptions:
-      - CreateNamespace=true
+      - Validate=false
     retry:
       limit: 5
       backoff:

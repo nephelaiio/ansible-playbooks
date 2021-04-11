@@ -2,12 +2,19 @@
 ** DONE deploy cloudflare argo loadbalancer to home k8s
 ** DONE publish argocd as argo.nephelai.io
 ** DONE Deploy prometheus to k8s cluster
-** TODO integrate argo with Okta
-** TODO set up secrets management for argocd
+** TODO deploy keycloak
+** TODO publish keycloak
+** TODO integrate argo with keycloak
+** TODO deploy kasten
+** TODO publish kasten
+** TODO integrate kasten with keycloak
+** TODO deploy confluent platform
+** DONE set up secrets management for argocd
+** TODO test secrets management for argocd
 ** NO publish keycloak as auth.nephelai.io
 ** NO integrate keycloak to jumpcloud ldap
 ** TODO publish awx as awx.nephelai.io
-** TODO integrate awx with okta
+** TODO integrate awx with keycloak
 ** NO integrate awx with keycloak
 ** TODO Deploy kasten to k8s
 ** TODO create test postgresql service to home k8s

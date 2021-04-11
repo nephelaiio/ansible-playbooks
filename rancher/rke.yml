@@ -227,30 +227,6 @@
       pip:
         name: openshift
 
-    - block:
-
-        - name: add helm repos
-          community.kubernetes.helm_repository:
-            name: "{{ item.name }}"
-            repo_url: "{{ item.url }}"
-          loop_control:
-            label: "{{ item.name }}"
-          loop:
-            - name: sealed-secrets
-              url: https://bitnami-labs.github.io/sealed-secrets
-          tags:
-            - helm
-
-        - name: deploy sealed secrets helm chart
-          community.kubernetes.helm:
-            name: sealed-secrets-controller
-            chart_ref: sealed-secrets/sealed-secrets
-            release_namespace: kube-system
-          tags:
-            - longhorn
-
-      run_once: yes
-
     - name: set argocd metadata
       set_fact:
         rke_argocd_dir: "{{ rke_manifest_dir }}/argocd"
@@ -338,29 +314,72 @@
               namespace: default
           when: rke_argocd_state == 'absent'
 
-        - name: list argo manifests
+        - name: list argo manifests for default project
           find:
-            paths: "{{ playbook_dir }}/manifests/argocd"
+            paths: "{{ default_dir }}"
             patterns:
               - ".*\\.yml$"
               - ".*\\.j2.yml$"
               - ".*\\.yml.j2$"
             use_regex: true
             recurse: true
+          vars:
+            default_dir: "{{ playbook_dir }}/manifests/argocd/default"
           delegate_to: localhost
-          register: argo_manifests
+          register: argo_manifests_default
           tags:
             - argo
 
-        - name: manage argo manifests
+        - name: manage argo manifests for default project
           k8s:
             state: "{{ k8s_state }}"
             definition: "{{ lookup('template', item) | from_yaml }}"
           vars:
             k8s_state: "{{ (item | basename) is match('^_.*') | ternary('absent', 'present') }}"
           loop_control:
-            label: "{{ item | basename | regex_replace('^_', '') }}"
-          loop: "{{ argo_manifests.files | map(attribute='path') | list }}"
+            label: "{{ item | regex_replace(playbook_dir + '/manifests/argocd', '') }}"
+          loop: "{{ argo_manifests_default.files | map(attribute='path') | list }}"
+          tags:
+            - argo
+
+        - name: list argo manifest directories
+          find:
+            paths: "{{ basedir }}"
+            file_type: directory
+            recurse: no
+          vars:
+            basedir: "{{ playbook_dir }}/manifests/argocd/"
+          delegate_to: localhost
+          register: argo_manifest_directories
+          tags:
+            - argo
+
+        - name: list argo manifests for payload projects
+          find:
+            paths: "{{ manifest_dirs }}"
+            patterns:
+              - ".*\\.yml$"
+              - ".*\\.j2.yml$"
+              - ".*\\.yml.j2$"
+            use_regex: true
+            recurse: true
+          vars:
+            default_dir: "{{ playbook_dir }}/manifests/argocd/default"
+            manifest_dirs: "{{ argo_manifest_directories.files | map(attribute='path') | list | difference([default_dir]) }}"
+          delegate_to: localhost
+          register: argo_manifests_payload
+          tags:
+            - argo
+
+        - name: manage argo manifests for payload projects
+          k8s:
+            state: "{{ k8s_state }}"
+            definition: "{{ lookup('template', item) | from_yaml }}"
+          vars:
+            k8s_state: "{{ (item | basename) is match('^_.*') | ternary('absent', 'present') }}"
+          loop_control:
+            label: "{{ item | regex_replace(playbook_dir + '/manifests/argocd', '') }}"
+          loop: "{{ argo_manifests_payload.files | map(attribute='path') | list }}"
           tags:
             - argo
 

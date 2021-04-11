@@ -1,0 +1,40 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kasten
+  namespace: "{{ rke_argocd_namespace }}"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+
+  source:
+    repoURL: https://charts.kasten.io
+    targetRevision: "{{ rke_kasten_release }}"
+    chart: k10
+
+    helm:
+      releaseName: kasten
+      values: |
+        global:
+          persistence:
+            storageClass: longhorn
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kasten-io
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

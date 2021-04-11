@@ -6,26 +6,28 @@ metadata:
   namespace: "{{ rke_argocd_namespace }}"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
 spec:
   project: default
 
   source:
     repoURL: https://github.com/zalando/postgres-operator.git
-    targetRevision: "{{ rke_prometheus_release }}"
     path: charts/postgres-operator
 
     helm:
       releaseName: postgres-operator
-      valueFiles:
-        - values-crd.yaml
 
   destination:
     server: https://kubernetes.default.svc
+    namespace: default
 
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
     retry:
       limit: 5
       backoff:

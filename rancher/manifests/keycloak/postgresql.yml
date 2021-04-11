@@ -1,0 +1,21 @@
+---
+apiVersion: "acid.zalan.do/v1"
+kind: postgresql
+metadata:
+  name: keycloak-db
+  namespace: "{{ keycloak_namespace }}"
+spec:
+  teamId: keycloak
+  volume:
+    size: "{{ keycloak_db_size }}"
+  numberOfInstances: {{ keycloak_db_instances }}
+  users:
+    zalando:
+      - superuser
+      - createdb
+    keycloak: []
+  databases:
+    keycloak: keycloak
+  preparedDatabases: {}
+  postgresql:
+    version: "13"

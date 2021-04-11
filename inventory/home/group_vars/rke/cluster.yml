@@ -5,7 +5,7 @@ rke_manifest_dir: "{{ rke_cluster_dir }}/manifests"
 rke_cluster_dir: /opt/rke
 
 # see https://github.com/rancher/rke/releases
-rke_release: v1.2.6
+rke_release: v1.2.7
 # see https://github.com/helm/helm/releases
 rke_helm_release: v3.5.3
 # see https://github.com/kubernetes/kubernetes/releases
@@ -28,12 +28,7 @@ rke_argocd_manifest: "https://raw.githubusercontent.com/argoproj/argo-cd/{{ rke_
 rke_argocd_hostname: argo.nephelai.io
 rke_argocd_admin_passhash: "$2a$10$dElje63ZfOL2Bc9ztwHAI.c21bftWNg0/W8nxvMBR.HGDHT3J7f56"
 
-# see https://github.com/prometheus-community/helm-charts/releases
-rke_prometheus_release: kube-prometheus-stack-14.5.0
-
-# see https://github.com/zalando/postgres-operator/releases
-rke_postgresoperator_release: v1.6.2
-
-# see https://github.com/longhorn/longhorn/releases
-rke_longhorn_release: v1.1.0
-rke_longhorn_namespace: longhorn
+rke_prometheus_release: 14.6.2
+rke_postgresoperator_namespace: zalando
+rke_kasten_release: 3.0.12
+rke_sealedsecrets_release: 1.13.2

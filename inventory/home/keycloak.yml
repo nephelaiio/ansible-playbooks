@@ -1,4 +1,0 @@
----
-keycloak:
-  children:
-    rke_control:
