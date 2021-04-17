@@ -20,3 +20,5 @@ inventory/artifacts/
 /library/**
 /inventory/credentials/kube_user.creds
 files/
+.k10primer.yaml
+**/insecure/*
