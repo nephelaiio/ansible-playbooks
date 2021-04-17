@@ -10,25 +10,3 @@ rke_release: v1.2.7
 rke_helm_release: v3.5.3
 # see https://github.com/kubernetes/kubernetes/releases
 rke_kubectl_release: v1.20.5
-
-rke_externaldns_pdns_url: "{{ pdns_url }}"
-rke_externaldns_pdns_api_key: "{{ pdns_api_key }}"
-
-rke_certmanager_issuer_name: "{{ base_domain }}"
-rke_certmanager_acme_email: "{{ acme_certificate_email }}"
-rke_certmanager_route53_region: "{{ aws_region }}"
-rke_certmanager_route53_accesskeyid: "{{ aws_access_key_id }}"
-rke_certmanager_route53_accesskeysecret: "{{ aws_secret_access_key }}"
-
-# see https://github.com/argoproj/argo-cd/releases
-rke_argocd_release: v2.0.0
-rke_argocd_state: present
-rke_argocd_namespace: argocd
-rke_argocd_manifest: "https://raw.githubusercontent.com/argoproj/argo-cd/{{ rke_argocd_release }}/manifests/install.yaml"
-rke_argocd_hostname: argo.nephelai.io
-rke_argocd_admin_passhash: "$2a$10$dElje63ZfOL2Bc9ztwHAI.c21bftWNg0/W8nxvMBR.HGDHT3J7f56"
-
-rke_prometheus_release: 14.6.2
-rke_postgresoperator_namespace: zalando
-rke_kasten_release: 3.0.12
-rke_sealedsecrets_release: 1.13.2
