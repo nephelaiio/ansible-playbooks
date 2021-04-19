@@ -5,22 +5,23 @@
 ** TODO deploy keycloak
 ** TODO publish keycloak
 ** TODO integrate argo with keycloak
-** TODO deploy kasten
+** DONE deploy kasten
 ** TODO publish kasten
+** TODO test kasten recover
 ** TODO integrate kasten with keycloak
 ** TODO deploy confluent platform
-** DONE set up secrets management for argocd
-** TODO test secrets management for argocd
+** DONE deploy strimzi operator
+** DONE set up secrets management
+** DONE test secrets management
+** TODO test secrets management with argocd
 ** NO publish keycloak as auth.nephelai.io
 ** NO integrate keycloak to jumpcloud ldap
 ** TODO publish awx as awx.nephelai.io
 ** TODO integrate awx with keycloak
 ** NO integrate awx with keycloak
-** TODO Deploy kasten to k8s
 ** TODO create test postgresql service to home k8s
 ** TODO deploy metabase to k8s
 ** NO integrate metabase with keycloak
-** TODO deploy strimzi to k8s
 ** TODO deploy cassandra to k8s
 ** TODO create a hello kubernetes operator
 ** NO test longhorn nfs backups

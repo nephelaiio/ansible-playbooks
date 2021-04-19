@@ -5,7 +5,7 @@ DEPLOYED="yes"
 RELEASE=v0.9.6
 
 # shellcheck disable=SC1090 disable=SC2039
-source "$(dirname "$0:A")/00-environment.zsh"
+source "$(dirname "$0:A")/environment.zsh"
 
 if [[ "$DEPLOYED" != "no" ]]; then
 
@@ -16,12 +16,15 @@ if [[ "$DEPLOYED" != "no" ]]; then
         kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
     fi
 
-    find "$(dirname "$0:A")/metallb" -type f ! -name "*.j2" ! -name ".*.j2.yml" |
-        xargs -n 1 kubectl apply -f
+    if [ -d $(dirname "$0:A")/metallb ]; then
+        find "$(dirname "$0:A")/metallb" -type f ! -name "*.j2" ! -name "*.j2.yml" |
+            xargs -n 1 kubectl apply -f
+    fi
 
 else
 
-    kubectl delete -f https://raw.githubusercontent.com/metallb/metallb/v0.9.6/manifests/namespace.yaml
-    kubectl delete -f https://raw.githubusercontent.com/metallb/metallb/v0.9.6/manifests/metallb.yaml
+    kubectl delete -f "https://raw.githubusercontent.com/metallb/metallb/$RELEASE/manifests/metallb.yaml"
+    kubectl delete secret -n metallb-system memberlist
+    kubectl delete -f "https://raw.githubusercontent.com/metallb/metallb/$RELEASE/manifests/namespace.yaml"
 
 fi

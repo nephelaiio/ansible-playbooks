@@ -53,14 +53,12 @@
           include_role:
             name: nephelaiio.docker
             apply:
-              become: yes
               tags:
                 - docker
           when: "'docker-ce' not in ansible_facts.packages"
 
         - name: disable active swap volume
           shell: swapoff -a
-          become: yes
           changed_when: false
           tags:
             - skip_ansible_lint
@@ -70,7 +68,6 @@
             state: absent
             path: /etc/fstab
             regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
-          become: yes
 
         - name: configure docker access for rke install user
           user:
@@ -78,12 +75,19 @@
             name: "{{ rke_install_user }}"
             groups:
               - docker
-          become: yes
           tags:
             - user
 
+      become: yes
       tags:
         - docker
+
+    - name: set kernel parameters
+      sysctl:
+        name: vm.max_map_count
+        value: '262144'
+        sysctl_set: yes
+      become: yes
 
     - name: create cluster directory structure
       file:
