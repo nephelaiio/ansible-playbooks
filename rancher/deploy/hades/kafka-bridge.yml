@@ -1,0 +1,36 @@
+---
+apiVersion: kafka.strimzi.io/v1alpha1
+kind: KafkaBridge
+metadata:
+  name: broker
+spec:
+  replicas: 3
+  bootstrapServers: broker-kafka-bootstrap:9092
+  http:
+    port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: broker-ingress
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/affinity-mode: "persistent"
+spec:
+  tls:
+    - hosts:
+        - bridge.nephelai.io
+      secretName: bridge.nephelai.io
+  rules:
+    - host: bridge.nephelai.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: broker-bridge-service
+                port:
+                  number: 8080

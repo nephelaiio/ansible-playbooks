@@ -4,12 +4,12 @@
 ** DONE Deploy prometheus to k8s cluster
 ** TODO deploy keycloak
 ** TODO publish keycloak
-** TODO integrate argo with keycloak
+** NO integrate argo with keycloak
 ** DONE deploy kasten
 ** TODO publish kasten
 ** TODO test kasten recover
 ** TODO integrate kasten with keycloak
-** TODO deploy confluent platform
+** DONE deploy confluent platform
 ** DONE deploy strimzi operator
 ** DONE set up secrets management
 ** DONE test secrets management
@@ -23,7 +23,6 @@
 ** TODO deploy metabase to k8s
 ** NO integrate metabase with keycloak
 ** TODO deploy cassandra to k8s
-** TODO create a hello kubernetes operator
 ** NO test longhorn nfs backups
 * infrastructure tests
 ** DONE install kubernetes on bare metal

@@ -1,0 +1,46 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broker-schema
+  namespace: hades
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: broker-schema
+  template:
+    metadata:
+      labels:
+        name: broker-schema
+    spec:
+      containers:
+        - env:
+            - name: SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS
+              value: PLAINTEXT://broker-kafka-bootstrap:9092
+            - name: SCHEMA_REGISTRY_HOST_NAME
+              value: broker-schema
+            - name: SCHEMA_REGISTRY_LISTENERS
+              value: http://0.0.0.0:8081
+          name: broker-schema
+          image: confluentinc/cp-schema-registry:6.1.1
+          ports:
+            - containerPort: 8081
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: broker-schema
+  namespace: hades
+  labels:
+    name: broker-schema
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: schema.nephelai.io
+spec:
+  ports:
+    - port: 8081
+  selector:
+    name: broker-schema
+  type: LoadBalancer

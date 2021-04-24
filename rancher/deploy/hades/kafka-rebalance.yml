@@ -2,8 +2,7 @@
 apiVersion: kafka.strimzi.io/v1alpha1
 kind: KafkaRebalance
 metadata:
-  name: athena-rebalance
-  namespace: hades
+  name: broker-rebalance
   labels:
-    strimzi.io/cluster: athena
+    strimzi.io/cluster: broker
   spec: {}

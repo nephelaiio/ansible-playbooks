@@ -1,4 +1,5 @@
 #!/usr/bin/env zsh
+set -euo pipefail
 
 DEPLOYED="yes"
 NAMESPACE="longhorn-system"
@@ -28,15 +29,17 @@ if [[ "$DEPLOYED" != "no" ]]; then
     kubectl apply -f "$GITDIR/deploy/kubernetes/snapshot-controller"
 
     if [ -d "$(dirname "$0:A")/$DEPLOYMENT" ]; then
-        find "$(dirname "$0:A")/$DEPLOYMENT" -type f ! -name "*.j2" ! -name "*.j2.yml" |
-            xargs -n 1 kubectl apply -f
+        find "$(dirname "$0:A")/$DEPLOYMENT" -type f -name "*.yml" ! -name "*.j2.yml" ! -name "_*" |
+            xargs -r -n 1 kubectl apply -n "$NAMESPACE" -f
+        find "$(dirname "$0:A")/$DEPLOYMENT" -type f -name "_*.yml" |
+            xargs -r -n 1 kubectl delete -n "$NAMESPACE" -f
     fi
 
 else
 
     if [ -d "$(dirname "$0:A")/$DEPLOYMENT" ]; then
-        find "$(dirname "$0:A")/$DEPLOYMENT" -type f ! -name "*.j2" ! -name "*.j2.yml" |
-            xargs -n 1 kubectl delete -f
+        find "$(dirname "$0:A")/$DEPLOYMENT" -type f -name "*.yml" ! -name "*.j2.yml" |
+            xargs -r -n 1 kubectl delete -f
     fi
 
     GITDIR="$TMPDIR/external-snapshotter"

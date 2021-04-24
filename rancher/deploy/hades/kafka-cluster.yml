@@ -2,8 +2,7 @@
 apiVersion: kafka.strimzi.io/v1beta2
 kind: Kafka
 metadata:
-  name: athena
-  namespace: hades
+  name: broker
 spec:
   cruiseControl: {}
   kafka:
@@ -25,7 +24,7 @@ spec:
         configuration:
           bootstrap:
             annotations:
-              external-dns.alpha.kubernetes.io/hostname: athena.nephelai.io
+              external-dns.alpha.kubernetes.io/hostname: broker.nephelai.io
     config:
       offsets.topic.replication.factor: 3
       transaction.state.log.replication.factor: 3
@@ -33,17 +32,14 @@ spec:
       log.message.format.version: "2.7"
       inter.broker.protocol.version: "2.7"
     storage:
-      type: jbod
-      volumes:
-        - id: 0
-          type: persistent-claim
-          size: 100Gi
-          deleteClaim: false
+      type: persistent-claim
+      size: 100Gi
+      deleteClaim: false
   zookeeper:
     replicas: 3
     storage:
       type: persistent-claim
-      size: 100Gi
+      size: 20Gi
       deleteClaim: false
   entityOperator:
     topicOperator: {}

@@ -1,7 +1,9 @@
 ---
 - name: bootstrap rke cluster
 
-  hosts: rke_control
+  hosts:
+    - rke_control
+    - rke_workers
 
   vars:
 
@@ -84,9 +86,22 @@
 
     - name: set kernel parameters
       sysctl:
-        name: vm.max_map_count
-        value: '262144'
+        name: "{{ item.key }}"
+        value: "{{ item.value }}"
         sysctl_set: yes
+      loop:
+        - key: vm.max_map_count
+          value: '262144'
+        - key: vm.overcommit_memory
+          value: '1'
+        - key: vm.panic_on_oom
+          value: '0'
+        - key: kernel.panic
+          value: '10'
+        - key: kernel.panic_on_oops
+          value: '1'
+        - key: kernel.keys.root_maxbytes
+          value: '25000000'
       become: yes
 
     - name: create cluster directory structure
@@ -146,7 +161,7 @@
 
     - name: build rke cluster file
       template:
-        src: templates/rke/cluster.yml.j2
+        src: templates/rke/cluster.j2.yml
         dest: "{{ rke_cluster_dir }}/cluster.yml"
         owner: "{{ rke_install_user }}"
         mode: 0640

@@ -2,8 +2,7 @@
 apiVersion: elasticsearch.k8s.elastic.co/v1
 kind: Elasticsearch
 metadata:
-  name: arachne
-  namespace: hades
+  name: elasticsearch
 spec:
   version: 7.12.0
   nodeSets:
@@ -11,7 +10,7 @@ spec:
       count: 3
       volumeClaimTemplates:
         - metadata:
-            name: arachne
+            name: elasticsearch
           spec:
             accessModes:
               - ReadWriteOnce
@@ -23,6 +22,6 @@ spec:
     service:
       metadata:
         annotations:
-          external-dns.alpha.kubernetes.io/hostname: arachne.nephelai.io
+          external-dns.alpha.kubernetes.io/hostname: elasticsearch.nephelai.io
       spec:
         type: LoadBalancer

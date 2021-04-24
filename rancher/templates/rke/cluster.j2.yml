@@ -46,3 +46,8 @@ dns:
 # `node_selector` controls ingress placement and is optional
 ingress:
   provider: none
+
+# services:
+#   etcd:
+#     uid: 52034
+#     gid: 52034

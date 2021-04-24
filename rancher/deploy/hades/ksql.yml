@@ -1,0 +1,85 @@
+# see https://gist.github.com/jkpl/6a92be829365bbdd3bad467c17894972
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ksql
+  labels:
+    app: ksql
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ksql
+  template:
+    metadata:
+      labels:
+        app: ksql
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "5556"
+    spec:
+      containers:
+        - name: ksql-server
+          image: confluentinc/cp-ksqldb-server:6.1.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: server
+              containerPort: 8088
+            - name: jmx
+              containerPort: 5555
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2Gi
+            requests:
+              cpu: 100m
+              memory: 512Mi
+          env:
+            - name: KSQL_LISTENERS
+              value: http://0.0.0.0:8088
+            - name: KSQL_KSQL_SINK_REPLICAS
+              value: '3'
+            - name: KSQL_KSQL_STREAMS_REPLICATION_FACTOR
+              value: '3'
+            - name: KSQL_KSQL_INTERNAL_TOPIC_REPLICAS
+              value: '3'
+            - name: KSQL_BOOTSTRAP_SERVERS
+              value: PLAINTEXT://broker-kafka-bootstrap:9092
+            - name: KSQL_KSQL_SERVICE_ID
+              value: broker
+            - name: KSQL_KSQL_SCHEMA_REGISTRY_URL
+              value: http://broker-schema:8081
+            - name: KSQL_OPTS
+              value: "-XX:MaxRAMPercentage=75.0"
+            - name: KSQL_JMX_PORT
+              value: "5555"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: broker-ksql
+  namespace: hades
+  labels:
+    app: broker-ksql
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: ksql.nephelai.io
+spec:
+  ports:
+    - port: 8088
+  selector:
+    app: broker-ksql
+  type: LoadBalancer
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: broker-ksql-queries
+  namespace: hades
+  labels:
+    app: broker-ksql
+data:
+  queries.sql: |-
+    -- From http://docs.confluent.io/current/ksql/docs/tutorials/basics-docker.html#create-a-stream-and-table
