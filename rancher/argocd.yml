@@ -1,0 +1,147 @@
+---
+- name: bootstrap rke cluster
+
+  hosts: rke_control
+
+  collections:
+
+    - community.kubernetes
+
+  vars:
+
+    rke_argocd_namespace: argocd
+    rke_argocd_manifest: "https://raw.githubusercontent.com/argoproj/argo-cd/{{ rke_argocd_release }}/manifests/install.yaml"
+    rke_argocd_force: yes
+
+  pre_tasks:
+
+    - name: install required pips
+      pip:
+        name: github3.py
+        extra_args: --user
+
+    - block:
+
+        - name: query latest argocd release
+          github_release:
+            user: argoproj
+            repo: argo-cd
+            action: latest_release
+          register: argocd_release_latest
+
+        - name: set argocd manifest facts
+          set_fact:
+            rke_argocd_release: "{{ argocd_release_latest.tag }}"
+            rke_argocd_force: no
+
+      when: rke_argocd_release is not defined
+
+  tasks:
+
+    - name: install required pips
+      pip:
+        name: openshift
+
+    - block:
+
+        - name: create argocd namespace
+          k8s:
+            name: "{{ rke_argocd_namespace }}"
+            api_version: v1
+            kind: Namespace
+            state: present
+          when: (rke_argocd_state | default('present')) != 'absent'
+
+        - name: install argocd
+          k8s:
+            name: "{{ rke_argocd_namespace }}"
+            resource_definition: "{{ argocd_def }}"
+            force: "{{ rke_argocd_force }}"
+            state: "{{ rke_argocd_state | default('present') }}"
+          vars:
+            argocd_def: "{{ lookup('url', rke_argocd_manifest) }}"
+
+        - name: configure argocd
+          k8s:
+            name: "{{ rke_argocd_namespace }}"
+            state: "{{ rke_argocd_state | default('present') }}"
+            template: argocd/configmap.j2.yml
+            force: yes
+
+        - name: create argocd tunnel
+          k8s:
+            name: "{{ rke_argocd_namespace }}"
+            template: argocd/cloudflare.j2.yml
+            force: yes
+            state: "{{ rke_argocd_state | default('present') }}"
+          vars:
+            target_deployment: argocd
+            target_namespace: "{{ rke_argocd_namespace }}"
+            target_hostname: "{{ rke_argocd_hostname }}"
+            target_url: "https://argocd-server.{{ rke_argocd_namespace }}.svc.cluster.local:443"
+
+        - name: destroy argocd namespace
+          k8s:
+            name: "{{ rke_argocd_namespace }}"
+            api_version: v1
+            kind: Namespace
+            state: "{{ rke_argocd_state | default('present') }}"
+          when: (rke_argocd_state | default('present')) == 'absent'
+
+        - name: list argo manifests for default project
+          find:
+            paths: "{{ manifest_dir }}"
+            patterns:
+              - ".*\\.yml$"
+              - ".*\\.j2.yml$"
+              - ".*\\.yml.j2$"
+            use_regex: true
+            recurse: true
+          vars:
+            manifest_dir: "{{ playbook_dir }}/manifests/argocd/cluster"
+          delegate_to: localhost
+          register: argo_manifests_default
+          tags:
+            - argo
+
+        - name: manage argo manifests for cluster deployments
+          k8s:
+            state: "{{ k8s_state }}"
+            template: "{{ item }}"
+          vars:
+            k8s_state: "{{ (item | basename) is match('^_.*') | ternary('absent', 'present') }}"
+          loop_control:
+            label: "{{ item | regex_replace(playbook_dir + '/manifests/argocd', '') }}"
+          loop: "{{ argo_manifests_default.files | map(attribute='path') | list }}"
+          tags:
+            - argo
+
+        - name: list argo manifests for payload projects
+          find:
+            paths: "{{ manifest_dirs }}"
+            patterns:
+              - ".*\\.yml$"
+              - ".*\\.j2.yml$"
+              - ".*\\.yml.j2$"
+            use_regex: true
+            recurse: true
+          vars:
+            manifest_dir: "{{ playbook_dir }}/manifests/argocd/apps"
+          delegate_to: localhost
+          register: argo_manifests_payload
+          tags:
+            - argo
+
+        - name: manage argo manifests for payload projects
+          k8s:
+            state: "{{ k8s_state }}"
+            template: "{{ item }}"
+          vars:
+            k8s_state: "{{ (item | basename) is match('^_.*') | ternary('absent', 'present') }}"
+          loop_control:
+            label: "{{ item | regex_replace(playbook_dir + '/manifests/argocd', '') }}"
+          loop: "{{ argo_manifests_payload.files | map(attribute='path') | list }}"
+          tags:
+            - argo
+
+      run_once: yes
