@@ -1,5 +1,5 @@
 ---
-rke:
+k8s_cluster:
   children:
     rke_control:
     rke_workers:

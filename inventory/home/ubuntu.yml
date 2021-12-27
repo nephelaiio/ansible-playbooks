@@ -1,7 +1,7 @@
 ---
 ubuntu:
   vars:
-    ubuntu_installer_image_url: https://releases.ubuntu.com/20.04.1/ubuntu-20.04.1-live-server-amd64.iso
+    ubuntu_installer_image_url: http://www.releases.ubuntu.com/20.04/ubuntu-20.04.3-live-server-amd64.iso
     ubuntu_user_pubkey: "{{ users.ansible.pubkey }}"
     ubuntu_user_name: "{{ users.ansible.username }}"
     ubuntu_user_pass: "{{ users.ansible.password }}"
