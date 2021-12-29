@@ -1,0 +1,95 @@
+---
+- name: bootstrap rke cluster
+
+  hosts: rke2_cluster
+
+  become: True
+
+  vars:
+
+    rke2_cluster_group_name: rke2_cluster
+    rke2_servers_group_name: rke2_control
+    rke2_remote_kubeconf: /etc/rancher/rke2/rke2.yml
+    rke2_download_kubeconf: True
+    rke2_download_kubeconf_path: /tmp
+    rke2_download_kubeconf_file_name: rke2.yml
+
+  roles:
+
+    - nephelaiio.plugins
+    - lablabs.rke2
+
+  pre_tasks:
+
+    - name: install package prerequisites
+      ansible.builtin.package:
+        name: open-iscsi
+      tags:
+        - always
+
+    - name: install snap prerequisites
+      community.general.snap:
+        name: "{{ item }}"
+        classic: True
+      loop:
+        - kubectl
+        - helm
+      delegate_to: localhost
+      run_once: True
+
+  post_tasks:
+
+    - name: clean up install files
+      file:
+        path: /usr/local/bin/rke2.exe
+        state: absent
+
+    - block:
+
+        - name: read kubectl config
+          ansible.builtin.set_fact:
+            rke2_kubectl_config_raw: "{{ lookup('file', rke2_kubectl_config_temp) }}"
+          vars:
+            rke2_kubectl_config_temp: "{{ rke2_download_kubeconf_path }}/{{ rke2_download_kubeconf_file_name }}"
+          become: True
+
+        - name: deserialize kubectl config
+          ansible.builtin.set_fact:
+            rke2_kubectl_config: "{{ rke2_kubectl_yaml | combine(rke2_kubectl_override) }}"
+          vars:
+            rke2_kubectl_yaml: "{{ rke2_kubectl_config_raw | from_yaml }}"
+            rke2_kubectl_cluster: "{{ rke2_kubectl_yaml.clusters | first | combine({'name': rke2_cluster_name}) }}"
+            rke2_kubectl_override:
+              clusters:
+                - "{{ rke2_kubectl_cluster }}"
+              current-context: "{{ rke2_cluster_name }}"
+              contexts:
+                - name: "{{ rke2_cluster_name }}"
+                  context:
+                    cluster: "{{ rke2_cluster_name }}"
+                    user: default
+
+
+        - name: serialize kubectl config
+          ansible.builtin.copy:
+            dest: "~/.kube/config.{{ rke2_cluster_name }}"
+            content: |
+              ---
+              {{ rke2_kubectl_config | to_nice_yaml(indent=2) }}
+
+      become: False
+      delegate_to: localhost
+      when:
+        - rke2_cluster_name is defined
+        - inventory_hostname in groups[rke2_servers_group_name]
+      tags:
+        - kubectl
+
+    - name: write kubectl config to control nodes
+      ansible.builtin.copy:
+        dest: "{{ rke2_remote_kubeconf }}"
+        content: |
+            ---
+            {{ rke2_kubectl_config_raw }}
+      when:
+        - inventory_hostname in groups[rke2_servers_group_name]

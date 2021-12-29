@@ -7,7 +7,6 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-awscli = "^1.22.26"
 ansible = "^5.1.0"
 jmespath = "^0.10.0"
 netaddr = "^0.8.0"
@@ -16,6 +15,8 @@ flake8 = "^4.0.1"
 ansible-tower-cli = "^3.3.9"
 xkcdpass = "^1.19.3"
 ansible-core = "^2.12.1"
+PyYAML = "^6.0"
+kubernetes = "^21.7.0"
 
 [tool.poetry.dev-dependencies]
 

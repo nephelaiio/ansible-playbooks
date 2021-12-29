@@ -42,9 +42,9 @@ done
 
 # verify requirements
 requirements=(ansible-playbook git)
-for r in ${requirements[@]}; do
-    if ! r_path=$(type -p $r); then
-        echo "$r executable not found in path, aborting"
+for r in "${requirements[@]}"; do
+    if ! r_path=$(type -p "$r"); then
+        echo "$r_path executable not found in path, aborting"
         exit $KO
     fi
 done
@@ -52,11 +52,7 @@ done
 # perform local role install
 sudo apt install -y libvirt-dev
 
-# upgrade pip
-pip install --upgrade pip
-
 # install requirements
-pip install -r requirements.txt
 if [ -f roles/requirements.yml ] ; then
     ansible-galaxy install -r roles/requirements.yml --force
 fi

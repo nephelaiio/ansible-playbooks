@@ -1,31 +1,12 @@
 ---
 roles:
-  - name: nginxinc.nginx
   - name: ahuffman.resolv
   - name: geerlingguy.ntp
-  - name: geerlingguy.repo-epel
-  - name: mrlesmithjr.keepalived
-  - name: brianshumate.consul
-  - name: kibatic.traefik
   - name: bertvv.hosts
-  - name: bertvv.dnsmasq
-  - name: ovirt.engine-setup
-  - name: ovirt.repositories
-  - name: ovirt.infra
+  - name: robertdebock.update
   - name: nephelaiio.plugins
-  - name: nephelaiio.pip
-  - name: nephelaiio.nfs
-  - name: nephelaiio.docker
   - name: nephelaiio.centos_installer
   - name: nephelaiio.ubuntu_installer
-  - name: nephelaiio.acme_certificate_route53
-  - name: linux-system-roles.network
-    src: https://github.com/linux-system-roles/network.git
-  - name: linux-system-roles.cockpit
-    src: https://github.com/linux-system-roles/cockpit.git
-  - name: gluster.infra
-    src: https://github.com/gluster/gluster-ansible-infra.git
-  - name: gluster.cluster
-    src: https://github.com/gluster/gluster-ansible-cluster.git
-  - name: mhutter.docker-systemd-service
-    src: https://github.com/nephelaiio/ansible-role-docker-systemd-service.git
+  - name: mrlesmithjr.nfs-server
+  - name: lablabs.rke2
+    src: git+https://github.com/teddyphreak/ansible-role-rke2.git

@@ -1,0 +1,94 @@
+---
+- name: Gather cluster facts
+
+  hosts: rke2_cluster
+
+
+- name: Upgrade rke2 cluster
+
+  hosts: rke2_cluster
+
+  become: yes
+
+  serial: 1
+
+  gather_facts: no
+
+  vars:
+
+    kubeconfig_path: /etc/rancher/rke2/rke2.yaml
+
+  roles:
+
+    - robertdebock.update
+
+  pre_tasks:
+
+    - block:
+
+        - name: stat cluster configuration file
+          ansible.builtin.stat:
+            path: "{{ kubeconfig_path }}"
+          register: kubeconfig_stat
+
+        - name: slurp kubectl config file
+          ansible.builtin.slurp:
+            src: "{{ kubeconfig_path }}"
+          register: kubeconfig_raw
+          when: kubeconfig_stat.stat.exists
+
+      delegate_to: "{{ groups['rke2_control'] | first }}"
+      run_once: True
+
+    - block:
+
+        - name: install snap prerequisites
+          community.general.snap:
+            name: "{{ item }}"
+            classic: True
+          loop:
+            - kubectl
+            - helm
+          run_once: True
+
+        - name: set kubeconfig facts
+          ansible.builtin.set_fact:
+            kubeconfig: "{{ kubeconfig_raw.content | b64decode | regex_replace('127.0.0.1', rke2_control_node) | from_yaml }}"
+          vars:
+            rke2_control_node: "{{ groups['rke2_control'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | first }}"
+
+        - name: drain node
+          kubernetes.core.k8s_drain:
+            kubeconfig: "{{ kubeconfig }}"
+            name: "{{ ansible_fqdn }}"
+            state: drain
+            delete_options:
+              ignore_daemonsets: True
+          changed_when: False
+          when: (inventory_hostname not in groups['rke2_control']) or (groups['rke2_control'] | length > 1)
+
+      delegate_to: localhost
+
+  post_tasks:
+
+    - block:
+
+        - name: uncordon node
+          kubernetes.core.k8s_drain:
+            kubeconfig: "{{ kubeconfig }}"
+            name: "{{ ansible_fqdn }}"
+            state: uncordon
+          changed_when: False
+
+        - name: wait for node ready state
+          kubernetes.core.k8s_info:
+            kubeconfig: "{{ kubeconfig }}"
+            kind: Node
+            label_selectors:
+              - "kubernetes.io/hostname = {{ ansible_fqdn }}"
+          register: rke2_node_query
+          retries: 6
+          delay: 10
+          until: (rke2_node_query.resources[0].status.conditions | selectattr('type', 'equalto', 'Ready') | first).status == "True"
+
+      delegate_to: localhost

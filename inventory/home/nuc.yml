@@ -8,8 +8,6 @@ nuc_tall:
   vars:
     ubuntu_installer_disk: /dev/nvme0n1
   hosts:
-    nuca.home.nephelai.io:
-      ansible_host: 192.168.5.70
     nucb.home.nephelai.io:
       ansible_host: 192.168.5.71
     nucc.home.nephelai.io:
