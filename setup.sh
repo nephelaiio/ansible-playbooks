@@ -50,7 +50,7 @@ for r in "${requirements[@]}"; do
 done
 
 # perform local role install
-sudo apt install -y libvirt-dev
+ansible -b -m package -a "name=libvirt-dev" localhost > /dev/null
 
 # install requirements
 if [ -f roles/requirements.yml ] ; then

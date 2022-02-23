@@ -1,4 +1,0 @@
----
-- name: deploy k8s nfs storage server
-
-  hosts: rke2_nfs

@@ -1,12 +1,10 @@
 ---
 roles:
-  - name: ahuffman.resolv
   - name: geerlingguy.ntp
-  - name: bertvv.hosts
   - name: robertdebock.update
   - name: nephelaiio.plugins
   - name: nephelaiio.centos_installer
   - name: nephelaiio.ubuntu_installer
-  - name: mrlesmithjr.nfs-server
+  - name: geerlingguy.nfs
   - name: lablabs.rke2
     src: git+https://github.com/teddyphreak/ansible-role-rke2.git

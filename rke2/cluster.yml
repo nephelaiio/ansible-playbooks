@@ -1,0 +1,249 @@
+---
+- name: bootstrap rke cluster
+
+  hosts: rke2_cluster:rke2_nfs
+
+  become: True
+
+  vars:
+
+    rke2_cluster_group_name: rke2_cluster
+    rke2_servers_group_name: rke2_control
+    rke2_remote_global_kubeconf: /etc/rancher/rke2/rke2.yml
+    rke2_remote_user_kubeconf: "~/.kube/config"
+    rke2_local_kubeconf: "~/.kube/config.{{ rke2_cluster_name }}"
+    rke2_download_kubeconf: True
+    rke2_download_kubeconf_path: /tmp
+    rke2_download_kubeconf_file_name: rke2.yml
+    rke2_nfs_export_path: /opt/k8s
+    rke2_nfs_mount_path: /opt/k8s
+
+    certmanager_namespace: cert-manager
+
+  roles:
+
+    - nephelaiio.plugins
+    - lablabs.rke2
+
+  pre_tasks:
+
+    - block:
+
+        - name: end play for nfs server nodes
+          meta: end_host
+          when:
+            - inventory_hostname in groups['rke2_nfs']
+            - inventory_hostname not in groups[rke2_servers_group_name]
+
+        - name: install package prerequisites
+          ansible.builtin.package:
+            name: open-iscsi
+
+        - name: set nfs server facts
+          set_fact:
+            nfs_server: "{{ groups['rke2_nfs'] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) | first }}"
+
+      tags: always
+
+    - name: install nfs client
+      package:
+        name: nfs-common
+
+    - block:
+
+        - name: create mount path
+          file:
+            state: directory
+            path: "{{ rke2_nfs_export_path }}"
+
+        - name: mount nfs target
+          mount:
+            src: "{{ nfs_server }}:{{ rke2_nfs_export_path }}"
+            path: "{{ rke2_nfs_mount_path }}"
+            fstype: nfs
+            opts: "defaults,rw"
+            state: mounted
+          become: yes
+
+      when: inventory_hostname not in groups['rke2_nfs']
+
+  post_tasks:
+
+    - name: clean up install files
+      file:
+        path: /usr/local/bin/rke2.exe
+        state: absent
+
+    - block:
+
+        - name: read kubectl config
+          ansible.builtin.set_fact:
+            rke2_kubectl_config_raw: "{{ lookup('file', rke2_kubectl_config_temp) }}"
+          vars:
+            rke2_kubectl_config_temp: "{{ rke2_download_kubeconf_path }}/{{ rke2_download_kubeconf_file_name }}"
+          become: True
+
+        - name: deserialize kubectl config
+          ansible.builtin.set_fact:
+            rke2_kubectl_config: "{{ rke2_kubectl_yaml | combine(rke2_kubectl_override) }}"
+          vars:
+            rke2_kubectl_yaml: "{{ rke2_kubectl_config_raw | from_yaml }}"
+            rke2_kubectl_cluster: "{{ rke2_kubectl_yaml.clusters | first | combine({'name': rke2_cluster_name}) }}"
+            rke2_kubectl_override:
+              clusters:
+                - "{{ rke2_kubectl_cluster }}"
+              current-context: "{{ rke2_cluster_name }}"
+              contexts:
+                - name: "{{ rke2_cluster_name }}"
+                  context:
+                    cluster: "{{ rke2_cluster_name }}"
+                    user: default
+
+
+        - name: serialize kubectl config
+          ansible.builtin.copy:
+            dest: "{{ rke2_local_kubeconf }}"
+            content: |
+              ---
+              {{ rke2_kubectl_config | to_nice_yaml(indent=2) }}
+
+      become: False
+      delegate_to: localhost
+      when:
+        - rke2_cluster_name is defined
+        - inventory_hostname in groups[rke2_servers_group_name]
+      tags: kubectl
+
+    - name: write kubectl global config to control nodes
+      ansible.builtin.copy:
+        dest: "{{ rke2_remote_global_kubeconf }}"
+        content: |
+            ---
+            {{ rke2_kubectl_config_raw }}
+        mode: 0600
+      when:
+        - inventory_hostname in groups[rke2_servers_group_name]
+
+    - block:
+
+        - name: create kubeconfig directory
+          file:
+            state: directory
+            path: "{{ rke2_remote_user_kubeconf | dirname }}"
+            mode: 0700
+
+        - name: write kubectl user config to control nodes
+          ansible.builtin.copy:
+            dest: "{{ rke2_remote_user_kubeconf }}"
+            content: |
+                ---
+                {{ rke2_kubectl_config_raw }}
+            mode: 0600
+
+      become: false
+      when:
+        - inventory_hostname in groups[rke2_servers_group_name]
+
+    - name: end play for worker nodes
+      meta: end_host
+      when: inventory_hostname not in groups[rke2_servers_group_name]
+      tags: always
+
+    - block:
+
+        - name: install required packages
+          package:
+            name: python3-pip
+
+        - name: install required pips
+          pip:
+            name:
+              - kubernetes
+            extra_args: --user
+
+        - name: install snap prerequisites
+          community.general.snap:
+            name: "{{ item }}"
+            classic: True
+          loop:
+            - kubectl
+            - helm
+
+        - name: install helm diff plugin
+          kubernetes.core.helm_plugin:
+            plugin_path: https://github.com/databus23/helm-diff
+
+        - name: add help repository for nfs external provisioner
+          kubernetes.core.helm_repository:
+            name: nfs-subdir-external-provisioner
+            url: https://kubernetes-sigs.github.io/nfs-subdir-external-provisioner/
+
+        - name: deploy nfs storage provisioner chart
+          kubernetes.core.helm:
+            release_name: nfs-subdir-external-provisioner
+            release_namespace: default
+            create_namespace: true
+            chart_ref: nfs-subdir-external-provisioner/nfs-subdir-external-provisioner
+            update_repo_cache: true
+            values:
+              nfs:
+                server: "{{ nfs_server }}"
+                path: "{{ rke2_nfs_export_path }}"
+
+        - meta: end_play
+
+        - name: deploy certmanager
+          k8s:
+            state: present
+            definition:
+              apiVersion: helm.cattle.io/v1
+              kind: HelmChart
+              metadata:
+                name: cert-manager
+                namespace: default
+              spec:
+                repo: https://charts.jetstack.io
+                chart: cert-manager
+                targetNamespace: "{{ certmanager_namespace }}"
+                set:
+                  installCRDs: true
+                  version: v1.7.1
+
+        - name: deploy certmanager secret
+          k8s:
+            state: present
+            definition:
+              apiVersion: v1
+              kind: Secret
+              metadata:
+                name: cloudflare-api-token-secret
+                namespace: "{{ certmanager_namespace }}"
+              type: Opaque
+              data:
+                api-token: "{{ cloudflare_token | b64encode }}"
+
+        - name: configure certmanager
+          k8s:
+            state: present
+            definition:
+              apiVersion: cert-manager.io/v1
+              kind: ClusterIssuer
+              metadata:
+                name: cloudflare
+              spec:
+                acme:
+                  server: "{{ acme_certmanager_issuer }}"
+                  email: "{{ acme_certmanager_email }}"
+                  privateKeySecretRef:
+                    name: letsencrypt
+                  solvers:
+                    - dns01:
+                        cloudflare:
+                          email: "{{ acme_certmanager_email }}"
+                          apiKeySecretRef:
+                            name: cloudflare-api-token-secret
+                            key: api-token
+
+
+      tags: manifests
+      run_once: yes

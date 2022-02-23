@@ -1,0 +1,39 @@
+---
+- name: deploy k8s nfs storage server
+
+  hosts: rke2_nfs
+
+  become: yes
+
+  roles:
+
+    - nephelaiio.plugins
+
+  vars:
+
+    rke2_export_path: /opt/k8s
+    rke2_cluster_group_name: rke2_cluster
+
+  tasks:
+
+    - name: gather cluster facts
+      setup:
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      loop: "{{ groups[rke2_cluster_group_name] }}"
+      when: item != inventory_hostname
+
+    - name: create export path
+      file:
+        state: directory
+        owner: nobody
+        group: nogroup
+        mode: 0777
+        path: "{{ rke2_export_path }}"
+
+    - name: deploy nfs server
+      include_role:
+        name: geerlingguy.nfs
+      vars:
+        nfs_clients: "{{ groups[rke2_cluster_group_name] | map('extract', hostvars, ['ansible_default_ipv4', 'address']) }}"
+        nfs_exports: "{{ nfs_clients | map('map_format', rke2_export_path + ' %s(rw,sync,no_subtree_check)') }}"
