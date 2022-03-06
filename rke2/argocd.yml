@@ -1,0 +1,150 @@
+---
+- name: bootstrap rke cluster
+
+  hosts: rke2_control
+
+  collections:
+
+    - kubernetes.core
+
+  vars:
+
+    argocd_hostname: argo.nephelai.io
+    argocd_namespace: argocd
+    argocd_force: true
+
+  pre_tasks:
+
+    - name: install required pips
+      pip:
+        name:
+          - github3.py
+          - pyopenssl
+        state: latest
+        extra_args: --user
+
+    - block:
+
+        - name: query latest argocd release
+          github_release:
+            user: argoproj
+            repo: argo-cd
+            action: latest_release
+          register: argocd_release_latest
+
+        - name: set argocd manifest facts
+          set_fact:
+            argocd_release: "{{ _release }}"
+            argocd_force: false
+          vars:
+            _manifest:
+            _release: "{{ argocd_release_latest.tag }}"
+
+      when: argocd_release is not defined
+
+    - block:
+
+        - name: query latest applicationset release
+          github_release:
+            user: argoproj-labs
+            repo: applicationset
+            action: latest_release
+          register: appset_release_latest
+
+        - name: set applicationset manifest facts
+          set_fact:
+            appset_release: "{{ _release }}"
+            appset_force: false
+          vars:
+            _manifest: 
+            _release: "{{ appset_release_latest.tag }}"
+
+      when: appset_release is not defined
+
+  tasks:
+
+    - name: install required pips
+      pip:
+        name: openshift
+
+    - name: create temp dir
+      tempfile:
+        state: directory
+        prefix: argocd
+      changed_when: false
+      register: tempdir
+
+    - block:
+
+        - name: retrieve argocd manifest
+          get_url:
+            url: "https://raw.githubusercontent.com/argoproj/argo-cd/{{ argocd_release }}/manifests/install.yaml"
+            dest: "{{ tempdir.path }}/argocd.yml"
+          changed_when: false
+
+        - name: retrieve appset manifest
+          get_url:
+            url: "https://raw.githubusercontent.com/argoproj-labs/applicationset/{{ appset_release }}/manifests/install.yaml"
+            dest: "{{ tempdir.path }}/appset.yml"
+          changed_when: false
+
+        - name: create argocd namespace
+          k8s:
+            name: "{{ argocd_namespace }}"
+            api_version: v1
+            kind: Namespace
+            state: present
+          when: (argocd_state | default('present')) != 'absent'
+
+        - name: install argocd
+          k8s:
+            namespace: "{{ argocd_namespace }}"
+            state: "{{ argocd_state | default('present') }}"
+            src: "{{ tempdir.path }}/argocd.yml"
+            force: "{{ argocd_force }}"
+
+        - name: install applicationsets
+          k8s:
+            namespace: "{{ argocd_namespace }}"
+            state: "{{ argocd_state | default('present') }}"
+            src: "{{ tempdir.path }}/appset.yml"
+            force: "{{ appset_force }}"
+
+        - name: configure argocd
+          k8s:
+            name: "{{ argocd_namespace }}"
+            state: "{{ argocd_state | default('present') }}"
+            template: argocd/configmap.j2.yml
+            force: true
+
+        - name: create argocd tunnel
+          k8s:
+            name: "{{ argocd_namespace }}"
+            template: argocd/cloudflare.j2.yml
+            force: true
+            state: "{{ argocd_state | default('present') }}"
+          vars:
+            target_deployment: argocd
+            target_namespace: "{{ argocd_namespace }}"
+            target_hostname: "{{ argocd_hostname }}"
+            target_url: "https://argocd-server.{{ argocd_namespace }}.svc.cluster.local:443"
+          when: false
+
+        - name: destroy argocd namespace
+          k8s:
+            name: "{{ argocd_namespace }}"
+            api_version: v1
+            kind: Namespace
+            state: "{{ argocd_state | default('present') }}"
+          when: (argocd_state | default('present')) == 'absent'
+
+      run_once: true
+
+      always:
+
+        - name: desroy temp dir
+          file:
+            state: absent
+            path: "{{ tempdir.path }}"
+          changed_when: false
+          register: tempdir
